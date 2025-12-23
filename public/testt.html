@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>PDF Upload Test</title>
+  </head>
+  <body style="font-family: sans-serif; padding: 40px;">
+    <h1>PDF → Text Test</h1>
+
+    <input type="file" id="file" accept=".pdf" />
+    <br /><br />
+    <button onclick="send()">Upload PDF</button>
+
+    <pre id="output" style="margin-top:20px; white-space: pre-wrap;"></pre>
+
+    <script>
+      async function send() {
+        const fileInput = document.getElementById("file");
+        const file = fileInput.files[0];
+
+        if (!file) {
+          alert("Please choose a PDF first");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        document.getElementById("output").textContent = "Reading PDF...";
+
+        try {
+          const res = await fetch("/api/extract-text", {
+            method: "POST",
+            body: formData,
+          });
+
+          const text = await res.text();
+          document.getElementById("output").textContent = text;
+        } catch (err) {
+          document.getElementById("output").textContent =
+            "Error sending PDF";
+        }
+      }
+    </script>
+  </body>
+</html>

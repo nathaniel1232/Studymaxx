@@ -1,0 +1,878 @@
+@import "tailwindcss";
+
+/* Tailwind v4 dark mode configuration */
+@theme {
+  --color-*: initial;
+  --radius-*: initial;
+}
+
+/* ========================================
+   SEMANTIC COLOR SYSTEM
+   ======================================== */
+
+:root {
+  /* Background & Base - Off-white, not pure white */
+  --background: #f5f7fa;
+  --background-elevated: #ffffff;
+  --foreground: #1a202c;
+  --foreground-muted: #718096;
+  
+  /* Surface (Cards, Panels) - Layered depth */
+  --surface: #ffffff;
+  --surface-hover: #f7fafc;
+  --surface-elevated: #ffffff;
+  
+  /* Borders & Dividers - Gentle contrast */
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --divider: #f1f5f9;
+  
+  /* Primary Accent (Blue-Purple gradient feel) */
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-light: #dbeafe;
+  --primary-foreground: #ffffff;
+  
+  /* Secondary Accent */
+  --secondary: #8b5cf6;
+  --secondary-hover: #7c3aed;
+  --secondary-light: #ede9fe;
+  
+  /* LEARNING COLOR SYSTEM - Always visible, context-driven */
+  /* Flashcards & Study - Blue (trust, focus, learning) */
+  --learning-blue: #3b82f6;
+  --learning-blue-hover: #2563eb;
+  --learning-blue-light: #dbeafe;
+  --learning-blue-dark: #1e40af;
+  
+  /* Success & Mastered - Green (growth, achievement) */
+  --learning-green: #10b981;
+  --learning-green-hover: #059669;
+  --learning-green-light: #d1fae5;
+  --learning-green-dark: #047857;
+  
+  /* Warning & Unsure - Yellow/Orange (attention, caution) */
+  --learning-yellow: #f59e0b;
+  --learning-yellow-hover: #d97706;
+  --learning-yellow-light: #fef3c7;
+  --learning-yellow-dark: #b45309;
+  
+  /* Mistakes & Bad - Red (errors, needs work) */
+  --learning-red: #ef4444;
+  --learning-red-hover: #dc2626;
+  --learning-red-light: #fee2e2;
+  --learning-red-dark: #b91c1c;
+  
+  /* Legacy status colors for backwards compatibility */
+  --success: #10b981;
+  --success-light: #d1fae5;
+  --warning: #f59e0b;
+  --warning-light: #fef3c7;
+  --error: #ef4444;
+  --error-light: #fee2e2;
+  
+  /* Shadows - Soft and premium */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  
+  /* Border Radius - Soft, modern curves */
+  --radius-sm: 0.5rem;
+  --radius: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+}
+
+/* Dark mode color overrides - Rich navy/charcoal, NOT pure black */
+html.dark {
+  /* Background & Base - Deep navy/charcoal for cozy late-night studying */
+  --background: #0f172a;
+  --background-elevated: #1e293b;
+  --foreground: #f1f5f9;
+  --foreground-muted: #94a3b8;
+  
+  /* Surface (Cards, Panels) - Layered elevation for depth */
+  --surface: #1e293b;
+  --surface-hover: #334155;
+  --surface-elevated: #334155;
+  
+  /* Borders & Dividers - Subtle but visible */
+  --border: #334155;
+  --border-hover: #475569;
+  --divider: #1e293b;
+  
+  /* Primary Accent - Vibrant but not harsh */
+  --primary: #60a5fa;
+  --primary-hover: #3b82f6;
+  --primary-light: #1e3a8a;
+  --primary-foreground: #ffffff;
+  
+  /* Secondary Accent - Soft purple */
+  --secondary: #a78bfa;
+  --secondary-hover: #8b5cf6;
+  --secondary-light: #4c1d95;
+  
+  /* LEARNING COLORS - Stay vibrant in dark mode */
+  --learning-blue: #60a5fa;
+  --learning-blue-hover: #3b82f6;
+  --learning-blue-light: #1e3a8a;
+  --learning-blue-dark: #93c5fd;
+  
+  --learning-green: #34d399;
+  --learning-green-hover: #10b981;
+  --learning-green-light: #064e3b;
+  --learning-green-dark: #6ee7b7;
+  
+  --learning-yellow: #fbbf24;
+  --learning-yellow-hover: #f59e0b;
+  --learning-yellow-light: #78350f;
+  --learning-yellow-dark: #fcd34d;
+  
+  --learning-red: #f87171;
+  --learning-red-hover: #ef4444;
+  --learning-red-light: #7f1d1d;
+  --learning-red-dark: #fca5a5;
+  
+  /* Legacy status colors */
+  --success: #34d399;
+  --success-light: #064e3b;
+  --warning: #fbbf24;
+  --warning-light: #78350f;
+  --error: #f87171;
+  --error-light: #7f1d1d;
+  
+  /* Shadows - Subtle elevation in dark mode */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow: 0 2px 4px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 8px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 10px 20px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6);
+  --shadow-xl: 0 20px 30px -5px rgb(0 0 0 / 0.7), 0 8px 10px -6px rgb(0 0 0 / 0.7);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not(.light) {
+    --background: #0a0a0f;
+    --background-elevated: #12121a;
+    --foreground: #e2e8f0;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+/* Card Styles - Soft, elevated, with depth */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.card-hover:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+
+.card-hover:active {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.card-elevated {
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Button Styles - Premium, bubbly, with satisfying interactions */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  border-radius: var(--radius-lg);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: none;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.btn:hover::before {
+  opacity: 1;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: var(--primary-foreground);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-2px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-secondary:active:not(:disabled) {
+  transform: translateY(0);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--foreground-muted);
+  box-shadow: none;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--foreground);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-ghost:active:not(:disabled) {
+  background: var(--surface);
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* GRADING BUTTONS - Colorful, emotional, with emojis */
+.btn-grade {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: var(--radius-xl);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  border: none;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  min-width: 140px;
+}
+
+.btn-grade:hover:not(:disabled) {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: var(--shadow-xl);
+}
+
+.btn-grade:active:not(:disabled) {
+  transform: translateY(-2px) scale(0.98);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-grade .emoji {
+  font-size: 1.5rem;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btn-grade:hover .emoji {
+  transform: scale(1.2) rotate(5deg);
+}
+
+/* Bad Grade - Red with danger emotion */
+.btn-grade-bad {
+  background: linear-gradient(135deg, var(--learning-red) 0%, var(--learning-red-hover) 100%);
+  color: white;
+}
+
+.btn-grade-bad:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--learning-red-hover) 0%, var(--learning-red-dark) 100%);
+}
+
+/* OK Grade - Yellow with caution emotion */
+.btn-grade-ok {
+  background: linear-gradient(135deg, var(--learning-yellow) 0%, var(--learning-yellow-hover) 100%);
+  color: white;
+}
+
+.btn-grade-ok:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--learning-yellow-hover) 0%, var(--learning-yellow-dark) 100%);
+}
+
+/* Good Grade - Green with success emotion */
+.btn-grade-good {
+  background: linear-gradient(135deg, var(--learning-green) 0%, var(--learning-green-hover) 100%);
+  color: white;
+}
+
+.btn-grade-good:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--learning-green-hover) 0%, var(--learning-green-dark) 100%);
+}
+
+/* Interactive option cards (for settings) - Premium selectable cards */
+.option-card {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: var(--shadow-sm);
+}
+
+.option-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.option-card:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.option-card.selected {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-md);
+}
+
+.option-card.selected:hover {
+  border-color: var(--primary-hover);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* Input Styles - Clean and modern */
+.input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--foreground);
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.input:hover {
+  border-color: var(--border-hover);
+}
+
+.input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.input::placeholder {
+  color: var(--foreground-muted);
+}
+
+/* Surface elevation */
+.surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.surface-elevated {
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Text utilities */
+.text-muted {
+  color: var(--foreground-muted);
+}
+
+.text-primary {
+  color: var(--primary);
+}
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: var(--divider);
+  border: none;
+}
+
+/* Icon containers - modern, rounded, with depth */
+.icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.icon-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.icon-container:hover::before {
+  opacity: 1;
+}
+
+.icon-container-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+}
+
+.icon-container-secondary {
+  background: linear-gradient(135deg, var(--secondary) 0%, #ec4899 100%);
+}
+
+.icon-container-accent {
+  background: linear-gradient(135deg, #ec4899 0%, #f97316 100%);
+}
+
+/* Arrow and navigation icons - premium, consistent style */
+.arrow-icon,
+.chevron-icon {
+  stroke-width: 2;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Subtle hover motion for arrows */
+button:hover .arrow-icon.group-hover\:translate-x-1,
+a:hover .arrow-icon.group-hover\:translate-x-1 {
+  transform: translateX(0.25rem);
+}
+
+button:hover .arrow-icon[class*="rotate-180"].group-hover\:translate-x-1,
+a:hover .arrow-icon[class*="rotate-180"].group-hover\:translate-x-1 {
+  transform: translateX(-0.25rem) rotate(180deg);
+}
+
+/* Custom Slider Styles */
+input[type="range"].slider {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="range"].slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgb(37, 99, 235);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+  transition: all 0.2s ease;
+}
+
+input[type="range"].slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.6);
+}
+
+input[type="range"].slider::-webkit-slider-thumb:active {
+  transform: scale(0.95);
+}
+
+input[type="range"].slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgb(37, 99, 235);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+  transition: all 0.2s ease;
+}
+
+input[type="range"].slider::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.6);
+}
+
+input[type="range"].slider::-moz-range-thumb:active {
+  transform: scale(0.95);
+}
+
+input[type="range"].slider:disabled::-webkit-slider-thumb {
+  cursor: not-allowed;
+  background: rgb(156, 163, 175);
+}
+
+input[type="range"].slider:disabled::-moz-range-thumb {
+  cursor: not-allowed;
+  background: rgb(156, 163, 175);
+}
+
+/* ========================================
+   TYPOGRAPHY HIERARCHY SYSTEM
+   ======================================== */
+
+/* Semantic typography roles - scale from these, don't flatten */
+.text-brand {
+  /* App title/brand - always dominant */
+  font-size: 4rem; /* 64px base */
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.text-hero {
+  /* Main hero heading */
+  font-size: 3rem; /* 48px base */
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.text-page-title {
+  /* Page titles - clearly secondary to brand */
+  font-size: 2.25rem; /* 36px base */
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.text-section-title {
+  /* Section headings - medium emphasis */
+  font-size: 1.875rem; /* 30px base */
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.text-heading {
+  /* Card titles and smaller headings */
+  font-size: 1.5rem; /* 24px base */
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.text-subheading {
+  /* Subheadings */
+  font-size: 1.25rem; /* 20px base */
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.text-body-large {
+  /* Large body text */
+  font-size: 1.125rem; /* 18px base */
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.text-body {
+  /* Standard body text - calm, readable */
+  font-size: 1rem; /* 16px base */
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.text-body-small {
+  /* Small body text */
+  font-size: 0.875rem; /* 14px base */
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.text-caption {
+  /* Captions and labels */
+  font-size: 0.75rem; /* 12px base */
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+}
+
+/* UI Scale Settings - scales FROM typography roles */
+.ui-small .text-brand {
+  font-size: 3rem; /* 48px */
+}
+
+.ui-small .text-hero {
+  font-size: 2.25rem; /* 36px */
+}
+
+.ui-small .text-page-title {
+  font-size: 1.875rem; /* 30px */
+}
+
+.ui-small .text-section-title {
+  font-size: 1.5rem; /* 24px */
+}
+
+.ui-small .text-heading {
+  font-size: 1.25rem; /* 20px */
+}
+
+.ui-small .text-subheading {
+  font-size: 1.125rem; /* 18px */
+}
+
+.ui-small .text-body-large {
+  font-size: 1rem; /* 16px */
+}
+
+.ui-small .text-body {
+  font-size: 0.875rem; /* 14px */
+}
+
+.ui-small .text-body-small {
+  font-size: 0.8125rem; /* 13px */
+}
+
+.ui-small .text-caption {
+  font-size: 0.6875rem; /* 11px */
+}
+
+.ui-large .text-brand {
+  font-size: 5rem; /* 80px */
+}
+
+.ui-large .text-hero {
+  font-size: 3.75rem; /* 60px */
+}
+
+.ui-large .text-page-title {
+  font-size: 2.875rem; /* 46px */
+}
+
+.ui-large .text-section-title {
+  font-size: 2.25rem; /* 36px */
+}
+
+.ui-large .text-heading {
+  font-size: 1.75rem; /* 28px */
+}
+
+.ui-large .text-subheading {
+  font-size: 1.5rem; /* 24px */
+}
+
+.ui-large .text-body-large {
+  font-size: 1.25rem; /* 20px */
+}
+
+.ui-large .text-body {
+  font-size: 1.125rem; /* 18px */
+}
+
+.ui-large .text-body-small {
+  font-size: 1rem; /* 16px */
+}
+
+.ui-large .text-caption {
+  font-size: 0.875rem; /* 14px */
+}
+
+/* ========================================
+   EMOTIONAL FEEDBACK & ANIMATIONS
+   ======================================== */
+
+/* Celebration animation for success */
+@keyframes celebrate {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(-5deg); }
+  50% { transform: scale(1.15) rotate(5deg); }
+  75% { transform: scale(1.1) rotate(-3deg); }
+}
+
+.celebrate {
+  animation: celebrate 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Shake animation for mistakes */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+  20%, 40%, 60%, 80% { transform: translateX(8px); }
+}
+
+.shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+/* Pulse animation for streaks */
+@keyframes pulse-glow {
+  0%, 100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.05);
+    filter: brightness(1.2);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 1s ease-in-out infinite;
+}
+
+/* Float animation for emoji feedback */
+@keyframes float-up {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px) scale(1.5);
+  }
+}
+
+.float-up {
+  animation: float-up 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Bounce in animation for cards */
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.05) translateY(-5px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+.bounce-in {
+  animation: bounce-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Shine effect for achievements */
+@keyframes shine {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.shine {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shine 2s ease-in-out infinite;
+}
+
+/* Progress bar fill animation */
+@keyframes fill-progress {
+  from { width: 0%; }
+}
+
+.progress-fill {
+  animation: fill-progress 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Streak fire animation */
+@keyframes fire-flicker {
+  0%, 100% { 
+    transform: scale(1) rotate(0deg);
+    filter: hue-rotate(0deg);
+  }
+  25% { 
+    transform: scale(1.05) rotate(-2deg);
+    filter: hue-rotate(5deg);
+  }
+  50% { 
+    transform: scale(1.1) rotate(2deg);
+    filter: hue-rotate(-5deg);
+  }
+  75% { 
+    transform: scale(1.05) rotate(-1deg);
+    filter: hue-rotate(3deg);
+  }
+}
+
+.fire-flicker {
+  animation: fire-flicker 1.5s ease-in-out infinite;
+}
+
+/* Heart beat for lives */
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  10% { transform: scale(1.1); }
+  20% { transform: scale(1); }
+  30% { transform: scale(1.15); }
+  40% { transform: scale(1); }
+}
+
+.heartbeat {
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+/* Glow effect for active elements */
+.glow-blue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5), var(--shadow-lg);
+}
+
+.glow-green {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.5), var(--shadow-lg);
+}
+
+.glow-yellow {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.5), var(--shadow-lg);
+}
+
+.glow-red {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5), var(--shadow-lg);
+}
