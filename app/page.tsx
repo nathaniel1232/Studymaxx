@@ -105,10 +105,20 @@ export default function Home() {
             {/* Main Content - Centered */}
             <div className="text-center max-w-2xl mx-auto relative z-10" style={{ marginTop: '15vh' }}>
               <div className="flex items-center justify-center gap-3 mb-6">
-                <h1 className="text-brand bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-pulse" style={{ animationDuration: '3s' }}>
+                <h1 className="text-brand font-black" style={{ 
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  filter: 'drop-shadow(0 4px 6px rgba(139, 92, 246, 0.3))'
+                }}>
                   StudyMaxx
                 </h1>
-                <span className="px-3 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/50 animate-bounce" style={{ animationDuration: '2s' }}>
+                <span className="px-4 py-2 text-xs font-bold rounded-full shadow-lg animate-bounce" style={{ 
+                  background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                  color: 'white',
+                  animationDuration: '2s'
+                }}>
                   BETA
                 </span>
               </div>
@@ -128,7 +138,18 @@ export default function Home() {
               {/* Primary CTA - EPIC BUTTON */}
               <button
                 onClick={handleCreateNew}
-                className="inline-flex items-center justify-center gap-3 px-12 py-6 text-xl font-black rounded-3xl shadow-2xl transform hover:scale-110 hover:-translate-y-2 transition-all duration-300 mb-8 bg-gradient-to-r from-blue-500 via-purple-600 to-pink-600 hover:from-blue-400 hover:via-purple-500 hover:to-pink-500 text-white hover:shadow-purple-500/70 ring-4 ring-purple-300/30 hover:ring-purple-400/50 animate-pulse" style={{ animationDuration: '2s' }}
+                className="inline-flex items-center justify-center gap-3 px-12 py-6 text-xl font-black rounded-3xl shadow-2xl transform hover:scale-110 hover:-translate-y-2 transition-all duration-300 mb-8 text-white"
+                style={{
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%)',
+                  boxShadow: '0 20px 40px rgba(139, 92, 246, 0.5), 0 0 0 4px rgba(139, 92, 246, 0.2)',
+                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%)';
+                }}
               >
                 <span className="drop-shadow-lg">{settings.language === "no" ? "✨ Lag studiesett" : "✨ Create study set"}</span>
                 <ArrowIcon size={24} />
