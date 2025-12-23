@@ -776,17 +776,8 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                 className="flex-1 px-6 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:scale-105 hover:shadow-lg"
               >
                 <span className="flex items-center justify-center gap-2">
-                  <span>←</span>
-                  <span>Previous</span>
-                </span>
-              </button>
-              <button
-                onClick={handleMastered}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold rounded-2xl transition-all duration-200 shadow-lg hover:scale-105 hover:shadow-xl"
-              >
-                <span className="flex items-center justify-center gap-2">
-                  <span>✅</span>
-                  <span>Got it</span>
+                  <ArrowIcon direction="left" size={18} />
+                  <span>{t("previous")}</span>
                 </span>
               </button>
               <button
@@ -794,7 +785,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                 disabled={currentIndex === flashcards.length - 1}
                 className="flex-1 px-6 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 border border-gray-200 dark:border-gray-700 flex items-center justify-center gap-2 hover:scale-105 hover:shadow-lg"
               >
-                <span>Next</span>
+                <span>{t("next")}</span>
                 <ArrowIcon size={18} />
               </button>
             </div>

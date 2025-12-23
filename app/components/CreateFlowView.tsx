@@ -32,6 +32,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   
+  // Math mode (only for math subjects)
+  const [includeMathProblems, setIncludeMathProblems] = useState(false);
+  
   // Step 3: Grade
   const [targetGrade, setTargetGrade] = useState<Grade | null>(null);
   
@@ -77,6 +80,12 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
         { grade: "E", label: `E — ${t("passing")}`, description: t("essential_knowledge") }
       ];
     }
+  };
+
+  // Check if subject is math-related
+  const isMathSubject = () => {
+    const mathKeywords = ['math', 'maths', 'mathematics', 'matte', 'matematikk', 'algebra', 'calculus', 'geometry', 'statistics'];
+    return mathKeywords.some(keyword => subject.toLowerCase().includes(keyword));
   };
 
   // Map grade to difficulty settings
@@ -625,6 +634,43 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
           {/* STEP 3: Choose Grade */}
           {currentStep === 3 && (
             <div className="space-y-8">
+              {/* Math mode selection (only for math subjects) */}
+              {isMathSubject() && (
+                <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl border-2 border-blue-200 dark:border-blue-800">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                    📐 {settings.language === "no" ? "Ekstra matematikkøvelse" : "Extra Math Practice"}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    {settings.language === "no" 
+                      ? "Vil du ha regneoppgaver i tillegg til kunnskapskort?" 
+                      : "Do you want calculation problems in addition to flashcards?"}
+                  </p>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={includeMathProblems}
+                      onChange={(e) => setIncludeMathProblems(e.target.checked)}
+                      className="w-5 h-5 rounded border-2 border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                      {settings.language === "no" 
+                        ? "Ja, inkluder regneoppgaver (anbefalt for matte)" 
+                        : "Yes, include calculation problems (recommended for math)"}
+                    </span>
+                  </label>
+                  {includeMathProblems && (
+                    <p className="mt-3 text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                      <span>💡</span>
+                      <span>
+                        {settings.language === "no"
+                          ? "Flashcards vil fortsatt være inkludert for å hjelpe deg med teori og konsepter."
+                          : "Flashcards will still be included to help you with theory and concepts."}
+                      </span>
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                   {t("what_grade_aiming")}
