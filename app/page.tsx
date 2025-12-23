@@ -124,7 +124,7 @@ export default function Home() {
               {/* Primary CTA */}
               <button
                 onClick={handleCreateNew}
-                className="btn btn-primary inline-flex items-center justify-center gap-3 px-10 py-5 text-xl font-bold rounded-2xl shadow-lg transform hover:scale-105 transition-all duration-200 mb-8"
+                className="inline-flex items-center justify-center gap-3 px-10 py-5 text-xl font-bold rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-300 mb-8 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-500 hover:via-purple-500 hover:to-pink-500 text-white hover:shadow-purple-500/50"
               >
                 <span>{settings.language === "no" ? "Lag studiesett" : "Create study set"}</span>
                 <ArrowIcon size={20} />

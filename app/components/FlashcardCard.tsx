@@ -22,17 +22,21 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
 
   // Determine card color based on rating with animated highlight
   const getCardColor = () => {
+    // Base blue color - always present
+    const baseBlue = "bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 dark:from-blue-600 dark:via-blue-700 dark:to-indigo-700";
+    
+    // Add subtle glow based on rating
     if (currentRating === 'good') {
-      return "bg-gradient-to-br from-green-400 via-green-500 to-emerald-600 dark:from-green-500 dark:via-green-600 dark:to-emerald-700 shadow-2xl shadow-green-500/50 border-4 border-green-300 dark:border-green-600";
+      return `${baseBlue} shadow-2xl shadow-green-400/60 ring-4 ring-green-400/30`;
     }
     if (currentRating === 'ok') {
-      return "bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-600 dark:from-yellow-500 dark:via-yellow-600 dark:to-orange-700 shadow-2xl shadow-yellow-500/50 border-4 border-yellow-300 dark:border-yellow-600";
+      return `${baseBlue} shadow-2xl shadow-yellow-400/60 ring-4 ring-yellow-400/30`;
     }
     if (currentRating === 'bad') {
-      return "bg-gradient-to-br from-red-400 via-red-500 to-red-600 dark:from-red-500 dark:via-red-600 dark:to-red-700 shadow-2xl shadow-red-500/50 border-4 border-red-300 dark:border-red-600";
+      return `${baseBlue} shadow-2xl shadow-red-400/60 ring-4 ring-red-400/30`;
     }
-    // Default blue learning color (always visible, not white)
-    return "bg-gradient-to-br from-blue-400 via-blue-500 to-cyan-600 dark:from-blue-500 dark:via-blue-600 dark:to-cyan-700 shadow-xl";
+    // Default blue with nice shadow
+    return `${baseBlue} shadow-xl shadow-blue-500/30`;
   };
 
   return (
@@ -72,7 +76,7 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
         </div>
       </div>
 
-      {/* Self-Rating Buttons - Clean, no emojis */}
+      {/* Self-Rating Buttons - Colorful and lively */}
       {onRate && (
         <div className="mt-8 flex items-center justify-center gap-4">
           <button
@@ -80,10 +84,10 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
               e.stopPropagation();
               onRate(card.id, 'bad');
             }}
-            className={`px-8 py-4 rounded-2xl font-bold text-base transition-all duration-200 transform hover:scale-105 hover:-translate-y-2 hover:shadow-2xl uppercase tracking-wide ${
+            className={`px-8 py-4 rounded-2xl font-bold text-base transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 uppercase tracking-wide ${
               currentRating === 'bad' 
-                ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-2xl shadow-red-500/50' 
-                : 'bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 border-2 border-red-300 dark:border-red-700 hover:border-red-500 shadow-lg'
+                ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-2xl shadow-red-500/50 scale-105' 
+                : 'bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30 text-red-700 dark:text-red-300 border-2 border-red-200 dark:border-red-700 hover:border-red-400 hover:shadow-xl hover:shadow-red-300/30'
             }`}
           >
             {t("bad")}
@@ -93,10 +97,10 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
               e.stopPropagation();
               onRate(card.id, 'ok');
             }}
-            className={`px-8 py-4 rounded-2xl font-bold text-base transition-all duration-200 transform hover:scale-105 hover:-translate-y-2 hover:shadow-2xl uppercase tracking-wide ${
+            className={`px-8 py-4 rounded-2xl font-bold text-base transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 uppercase tracking-wide ${
               currentRating === 'ok' 
-                ? 'bg-gradient-to-r from-yellow-500 to-orange-600 text-white shadow-2xl shadow-yellow-500/50' 
-                : 'bg-white dark:bg-gray-800 text-yellow-600 dark:text-yellow-500 border-2 border-yellow-300 dark:border-yellow-700 hover:border-yellow-500 shadow-lg'
+                ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-2xl shadow-yellow-500/50 scale-105' 
+                : 'bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/30 dark:to-orange-800/30 text-yellow-700 dark:text-yellow-300 border-2 border-yellow-200 dark:border-yellow-700 hover:border-yellow-400 hover:shadow-xl hover:shadow-yellow-300/30'
             }`}
           >
             {t("ok")}
@@ -106,10 +110,10 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
               e.stopPropagation();
               onRate(card.id, 'good');
             }}
-            className={`px-8 py-4 rounded-2xl font-bold text-base transition-all duration-200 transform hover:scale-105 hover:-translate-y-2 hover:shadow-2xl uppercase tracking-wide ${
+            className={`px-8 py-4 rounded-2xl font-bold text-base transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 uppercase tracking-wide ${
               currentRating === 'good' 
-                ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-2xl shadow-green-500/50' 
-                : 'bg-white dark:bg-gray-800 text-green-600 dark:text-green-400 border-2 border-green-300 dark:border-green-700 hover:border-green-500 shadow-lg'
+                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-2xl shadow-green-500/50 scale-105' 
+                : 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-800/30 text-green-700 dark:text-green-300 border-2 border-green-200 dark:border-green-700 hover:border-green-400 hover:shadow-xl hover:shadow-green-300/30'
             }`}
           >
             {t("good")}
