@@ -430,20 +430,22 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
   };
 
   const handleRateCard = (cardId: string, rating: 'bad' | 'ok' | 'good') => {
+    console.log('⭐ handleRateCard called:', { cardId, rating, currentIndex });
+    
     // Update ratings
     setCardRatings(prev => {
       const newRatings = new Map(prev);
       newRatings.set(cardId, rating);
+      console.log('📊 Updated ratings:', Array.from(newRatings.entries()));
       return newRatings;
     });
     
     // Auto-advance to next card after rating (with slight delay for visual feedback)
     setTimeout(() => {
       setCurrentIndex(prev => {
-        if (prev < flashcards.length - 1) {
-          return prev + 1;
-        }
-        return prev;
+        const next = prev < flashcards.length - 1 ? prev + 1 : prev;
+        console.log('➡️ Moving from index', prev, 'to', next);
+        return next;
       });
     }, 600);
   };
