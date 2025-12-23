@@ -20,99 +20,99 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
     setIsFlipped(false);
   }, [card.id]);
 
-  // Determine card color based on rating with animated highlight
+  // Modern, clean card colors with smooth transitions
   const getCardColor = () => {
     if (currentRating === 'good') {
-      return "bg-gradient-to-br from-emerald-400 via-green-500 to-teal-600 dark:from-emerald-500 dark:via-green-600 dark:to-teal-700 shadow-2xl shadow-green-500/60 ring-4 ring-green-300/40";
+      return "bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 border-2 border-green-300 dark:border-green-700";
     }
     if (currentRating === 'ok') {
-      return "bg-gradient-to-br from-amber-400 via-orange-500 to-yellow-600 dark:from-amber-500 dark:via-orange-600 dark:to-yellow-700 shadow-2xl shadow-orange-500/60 ring-4 ring-orange-300/40";
+      return "bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-900/30 dark:to-amber-900/30 border-2 border-yellow-300 dark:border-yellow-700";
     }
     if (currentRating === 'bad') {
-      return "bg-gradient-to-br from-rose-400 via-red-500 to-pink-600 dark:from-rose-500 dark:via-red-600 dark:to-pink-700 shadow-2xl shadow-red-500/60 ring-4 ring-red-300/40";
+      return "bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 border-2 border-red-300 dark:border-red-700";
     }
-    // Default colorful gradient - vibrant and eye-catching
-    return "bg-gradient-to-br from-blue-400 via-purple-500 to-pink-600 dark:from-blue-500 dark:via-purple-600 dark:to-pink-700 shadow-2xl shadow-purple-500/50";
+    // Default clean white card with subtle shadow
+    return "bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow-lg";
   };
 
   return (
     <div
       onClick={() => setIsFlipped(!isFlipped)}
-      className={`mb-8 cursor-pointer perspective transition-all duration-300 ${
-        isFlipped ? "scale-105" : "scale-100"
+      className={`mb-6 cursor-pointer transition-all duration-200 ${
+        isFlipped ? "" : ""
       }`}
     >
       <div
-        className={`relative w-full min-h-[360px] rounded-3xl p-10 flex flex-col items-center justify-center transition-all duration-500 transform ${getCardColor()}`}
+        className={`relative w-full min-h-[320px] rounded-2xl p-8 flex flex-col items-center justify-center transition-all duration-300 ${getCardColor()}`}
       >
-        {/* Rating Badge - Clean, no emojis */}
+        {/* Rating Badge */}
         {currentRating && (
-          <div className={`absolute top-6 right-6 px-5 py-2.5 rounded-full text-sm font-bold uppercase tracking-wider shadow-lg ${
-            currentRating === 'good' ? 'bg-white/95 text-green-700 dark:bg-green-100 dark:text-green-900' :
-            currentRating === 'ok' ? 'bg-white/95 text-yellow-700 dark:bg-yellow-100 dark:text-yellow-900' :
-            'bg-white/95 text-red-700 dark:bg-red-100 dark:text-red-900'
+          <div className={`absolute top-4 right-4 px-4 py-1.5 rounded-lg text-xs font-semibold ${
+            currentRating === 'good' ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' :
+            currentRating === 'ok' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' :
+            'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300'
           }`}>
-            {currentRating === 'good' ? t("good") : currentRating === 'ok' ? t("ok") : t("bad")}
+            {currentRating === 'good' ? '😊 ' + t("good") : currentRating === 'ok' ? '😐 ' + t("ok") : '😞 ' + t("bad")}
           </div>
         )}
 
         {/* Card Content */}
         <div className="text-center max-w-2xl">
-          <p className="text-sm font-bold text-white/90 mb-6 uppercase tracking-widest">
+          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-4 uppercase tracking-wider">
             {isFlipped ? t("answer") : t("question")}
           </p>
-          <p className="text-3xl md:text-4xl font-bold text-white leading-relaxed">
+          <p className="text-2xl md:text-3xl font-semibold text-gray-900 dark:text-white leading-relaxed">
             {isFlipped ? card.answer : card.question}
           </p>
         </div>
 
         {/* Flip Hint */}
-        <div className="absolute bottom-6 text-sm text-white/80 font-medium">
+        <div className="absolute bottom-4 text-xs text-gray-400 dark:text-gray-500 font-medium">
           {isFlipped ? t("click_to_see_question") : t("click_to_reveal")}
         </div>
       </div>
 
-      {/* Self-Rating Buttons - SUPER COLORFUL */}
+      {/* Clean Rating Buttons with Clear Feedback */}
       {onRate && (
-        <div className="mt-8 flex items-center justify-center gap-4">
+        <div className="mt-6 flex items-center justify-center gap-3">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onRate(card.id, 'bad');
             }}
-            className={`px-8 py-4 rounded-2xl font-bold text-base transition-all duration-300 transform hover:scale-110 hover:-translate-y-2 hover:rotate-1 uppercase tracking-wide ${
+            className={`px-8 py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
               currentRating === 'bad' 
-                ? 'bg-gradient-to-br from-red-500 via-rose-500 to-pink-600 text-white shadow-2xl shadow-red-500/70 scale-105 ring-4 ring-red-300/30' 
-                : 'bg-gradient-to-br from-red-400 to-rose-500 text-white shadow-lg hover:shadow-2xl hover:shadow-red-400/60 border-2 border-red-300/50'
+                ? 'bg-red-500 text-white shadow-lg scale-105 ring-2 ring-red-300' 
+                : 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 border border-red-200 dark:border-red-800'
             }`}
           >
-            {t("bad")}
+            😞 {t("bad")}
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onRate(card.id, 'ok');
             }}
-            className={`px-8 py-4 rounded-2xl font-bold text-base transition-all duration-300 transform hover:scale-110 hover:-translate-y-2 hover:rotate-1 uppercase tracking-wide ${
+            className={`px-8 py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
               currentRating === 'ok' 
-                ? 'bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-600 text-white shadow-2xl shadow-yellow-500/70 scale-105 ring-4 ring-yellow-300/30' 
-                : 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-lg hover:shadow-2xl hover:shadow-yellow-400/60 border-2 border-yellow-300/50'
+                ? 'bg-yellow-500 text-white shadow-lg scale-105 ring-2 ring-yellow-300' 
+                : 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-400 dark:hover:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800'
             }`}
           >
-            {t("ok")}
+            😐 {t("ok")}
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation();
               onRate(card.id, 'good');
             }}
-            className={`px-8 py-4 rounded-2xl font-bold text-base transition-all duration-300 transform hover:scale-110 hover:-translate-y-2 hover:rotate-1 uppercase tracking-wide ${
+            className={`px-8 py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
               currentRating === 'good' 
-                ? 'bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 text-white shadow-2xl shadow-green-500/70 scale-105 ring-4 ring-green-300/30' 
-                : 'bg-gradient-to-br from-green-400 to-emerald-500 text-white shadow-lg hover:shadow-2xl hover:shadow-green-400/60 border-2 border-green-300/50'
+                ? 'bg-green-500 text-white shadow-lg scale-105 ring-2 ring-green-300' 
+                : 'bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30 border border-green-200 dark:border-green-800'
             }`}
           >
-            {t("good")}
+            😊 {t("good")}
           </button>
         </div>
       )}
