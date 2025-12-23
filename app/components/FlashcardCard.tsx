@@ -23,13 +23,13 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
   // Determine card color based on rating with animated highlight
   const getCardColor = () => {
     if (currentRating === 'good') {
-      return "bg-gradient-to-br from-emerald-400 via-green-500 to-teal-600 dark:from-emerald-500 dark:via-green-600 dark:to-teal-700 shadow-2xl shadow-green-500/70 ring-4 ring-green-300/50 animate-pulse";
+      return "bg-gradient-to-br from-emerald-400 via-green-500 to-teal-600 dark:from-emerald-500 dark:via-green-600 dark:to-teal-700 shadow-2xl shadow-green-500/60 ring-4 ring-green-300/40";
     }
     if (currentRating === 'ok') {
-      return "bg-gradient-to-br from-amber-400 via-orange-500 to-yellow-600 dark:from-amber-500 dark:via-orange-600 dark:to-yellow-700 shadow-2xl shadow-orange-500/70 ring-4 ring-orange-300/50 animate-pulse";
+      return "bg-gradient-to-br from-amber-400 via-orange-500 to-yellow-600 dark:from-amber-500 dark:via-orange-600 dark:to-yellow-700 shadow-2xl shadow-orange-500/60 ring-4 ring-orange-300/40";
     }
     if (currentRating === 'bad') {
-      return "bg-gradient-to-br from-rose-400 via-red-500 to-pink-600 dark:from-rose-500 dark:via-red-600 dark:to-pink-700 shadow-2xl shadow-red-500/70 ring-4 ring-red-300/50 animate-pulse";
+      return "bg-gradient-to-br from-rose-400 via-red-500 to-pink-600 dark:from-rose-500 dark:via-red-600 dark:to-pink-700 shadow-2xl shadow-red-500/60 ring-4 ring-red-300/40";
     }
     // Default colorful gradient - vibrant and eye-catching
     return "bg-gradient-to-br from-blue-400 via-purple-500 to-pink-600 dark:from-blue-500 dark:via-purple-600 dark:to-pink-700 shadow-2xl shadow-purple-500/50";

@@ -114,10 +114,9 @@ export default function Home() {
                 }}>
                   StudyMaxx
                 </h1>
-                <span className="px-4 py-2 text-xs font-bold rounded-full shadow-lg animate-bounce" style={{ 
+                <span className="px-4 py-2 text-xs font-bold rounded-full shadow-lg" style={{ 
                   background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                  color: 'white',
-                  animationDuration: '2s'
+                  color: 'white'
                 }}>
                   BETA
                 </span>

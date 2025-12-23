@@ -635,10 +635,9 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                       key={i} 
                       className={`w-16 h-16 rounded-full transition-all duration-300 $${
                         i < lives 
-                          ? 'bg-white shadow-2xl shadow-white/50 scale-110 animate-pulse' 
+                          ? 'bg-white shadow-2xl shadow-white/50 scale-110' 
                           : 'bg-white/20 opacity-40'
                       }`}
-                      style={{ animationDuration: i < lives ? `${1.5 + i * 0.3}s` : undefined }}
                     />
                   ))}
                 </div>
@@ -649,9 +648,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                 <p className="text-sm text-white font-bold uppercase tracking-wide mb-4 drop-shadow-lg">
                   🔥 {t("streak")}
                 </p>
-                <p className={`text-5xl font-black flex items-center justify-center ${
-                  currentStreak > 0 ? 'animate-bounce' : ''
-                }`} style={{ animationDuration: '1s' }}>
+                <p className="text-5xl font-black flex items-center justify-center">
                   {currentStreak > 0 ? (
                     <span className="text-white drop-shadow-2xl">
                       {currentStreak}
