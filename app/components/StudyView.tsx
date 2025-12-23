@@ -433,6 +433,13 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
     const newRatings = new Map(cardRatings);
     newRatings.set(cardId, rating);
     setCardRatings(newRatings);
+    
+    // Auto-advance to next card after rating (with slight delay for visual feedback)
+    setTimeout(() => {
+      if (currentIndex < flashcards.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+      }
+    }, 800);
   };
 
   const handleRetakeFailedCards = () => {
@@ -516,9 +523,9 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
           {!currentSetId && (
             <button
               onClick={() => setShowSaveDialog(true)}
-              className="px-6 py-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-2xl transition-all border-2 border-gray-300 dark:border-gray-600 hover:border-indigo-400 hover:shadow-lg transform hover:scale-105"
+              className="px-6 py-3 bg-gradient-to-r from-indigo-400 to-purple-500 hover:from-indigo-300 hover:to-purple-400 text-white font-bold rounded-2xl transition-all shadow-lg hover:shadow-2xl hover:shadow-indigo-400/50 transform hover:scale-105 hover:-translate-y-1"
             >
-              {t("save")}
+              💾 {t("save")}
             </button>
           )}
         </div>
@@ -774,7 +781,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               <button
                 onClick={handlePrevious}
                 disabled={currentIndex === 0}
-                className="flex-1 px-6 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 border border-gray-200 dark:border-gray-700 hover:scale-105 hover:shadow-lg"
+                className="flex-1 px-6 py-4 rounded-2xl font-bold text-base transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none shadow-lg bg-gradient-to-r from-slate-400 to-slate-500 hover:from-slate-300 hover:to-slate-400 text-white disabled:from-gray-300 disabled:to-gray-400"
               >
                 <span className="flex items-center justify-center gap-2">
                   <ArrowIcon direction="left" size={18} />
@@ -784,10 +791,12 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               <button
                 onClick={handleNext}
                 disabled={currentIndex === flashcards.length - 1}
-                className="flex-1 px-6 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 border border-gray-200 dark:border-gray-700 flex items-center justify-center gap-2 hover:scale-105 hover:shadow-lg"
+                className="flex-1 px-6 py-4 rounded-2xl font-bold text-base transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none shadow-lg bg-gradient-to-r from-blue-400 to-cyan-500 hover:from-blue-300 hover:to-cyan-400 text-white disabled:from-gray-300 disabled:to-gray-400"
               >
-                <span>{t("next")}</span>
-                <ArrowIcon size={18} />
+                <span className="flex items-center justify-center gap-2">
+                  <span>{t("next")}</span>
+                  <ArrowIcon size={18} />
+                </span>
               </button>
             </div>
           </>
