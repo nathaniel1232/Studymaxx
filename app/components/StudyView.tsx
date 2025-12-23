@@ -467,17 +467,17 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
           <div className="w-20" />
         </div>
 
-        {/* Mode Switcher & Actions */}
+        {/* Mode Switcher & Actions - COLORFUL */}
         <div className="flex gap-3 mb-8 flex-wrap">
           <button
             onClick={() => setStudyMode("review")}
-            className={`px-6 py-3 font-bold rounded-2xl transition-all transform hover:scale-105 ${
+            className={`px-6 py-3 font-bold rounded-2xl transition-all transform hover:scale-105 hover:-translate-y-1 ${
               studyMode === "review"
-                ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl"
-                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600 hover:border-blue-400 hover:shadow-lg"
+                ? "bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 text-white shadow-2xl shadow-blue-500/50 ring-4 ring-blue-300/30"
+                : "bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 text-blue-700 dark:text-blue-300 border-2 border-blue-300 dark:border-blue-600 hover:shadow-xl hover:shadow-blue-400/30"
             }`}
           >
-            {t("study")}
+            📚 {t("study")}
           </button>
           <button
             onClick={() => {
@@ -489,20 +489,20 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               setMaxStreak(0);
               setIsQuizEnded(false);
             }}
-            className={`px-6 py-3 font-bold rounded-2xl transition-all transform hover:scale-105 ${
+            className={`px-6 py-3 font-bold rounded-2xl transition-all transform hover:scale-105 hover:-translate-y-1 ${
               studyMode === "test"
-                ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-xl"
-                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-2 border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:shadow-lg"
+                ? "bg-gradient-to-r from-purple-500 via-pink-500 to-rose-600 text-white shadow-2xl shadow-purple-500/50 ring-4 ring-purple-300/30"
+                : "bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 text-purple-700 dark:text-purple-300 border-2 border-purple-300 dark:border-purple-600 hover:shadow-xl hover:shadow-purple-400/30"
             }`}
           >
-            <span>{t("test_yourself")}</span>
+            <span>🎯 {t("test_yourself")}</span>
           </button>
           <button
             onClick={handleShuffle}
             disabled={studyMode === "test"}
-            className="px-6 py-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-2xl transition-all border-2 border-gray-300 dark:border-gray-600 hover:border-orange-400 hover:shadow-lg transform hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+            className="px-6 py-3 bg-gradient-to-r from-orange-400 to-amber-500 hover:from-orange-300 hover:to-amber-400 text-white font-bold rounded-2xl transition-all shadow-lg hover:shadow-2xl hover:shadow-orange-400/50 transform hover:scale-105 hover:-translate-y-1 disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
           >
-            {t("shuffle")}
+            🔀 {t("shuffle")}
           </button>
           {/* Share button - DISABLED for production launch */}
           {ENABLE_SHARE && currentSetId && (
@@ -617,9 +617,9 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
         <div className="grid grid-cols-2 gap-4 mb-8">
           {studyMode === "test" ? (
             <>
-              {/* Lives Display */}
-              <div className="bg-gradient-to-br from-pink-50 to-red-50 dark:from-pink-950/30 dark:to-red-950/30 backdrop-blur-sm rounded-3xl p-6 border-2 border-pink-200 dark:border-pink-800">
-                <p className="text-sm text-pink-700 dark:text-pink-300 font-bold uppercase tracking-wide mb-4">
+              {/* Lives Display - COLORFUL */}
+              <div className="bg-gradient-to-br from-pink-400 via-rose-500 to-red-500 dark:from-pink-600 dark:via-rose-600 dark:to-red-700 rounded-3xl p-6 shadow-2xl shadow-pink-500/50 ring-4 ring-pink-300/30">
+                <p className="text-sm text-white font-bold uppercase tracking-wide mb-4 drop-shadow-lg">
                   {t("lives")}
                 </p>
                 <div className="flex items-center gap-3 justify-center">
@@ -628,50 +628,51 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                       key={i} 
                       className={`w-16 h-16 rounded-full transition-all duration-300 $${
                         i < lives 
-                          ? 'bg-gradient-to-br from-pink-400 to-red-500 shadow-lg shadow-pink-500/50 scale-110' 
-                          : 'bg-gray-200 dark:bg-gray-700 opacity-30'
+                          ? 'bg-white shadow-2xl shadow-white/50 scale-110 animate-pulse' 
+                          : 'bg-white/20 opacity-40'
                       }`}
+                      style={{ animationDuration: i < lives ? `${1.5 + i * 0.3}s` : undefined }}
                     />
                   ))}
                 </div>
               </div>
 
-              {/* Streak Display */}
-              <div className="bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-950/30 dark:to-yellow-950/30 backdrop-blur-sm rounded-3xl p-6 border-2 border-orange-200 dark:border-orange-800">
-                <p className="text-sm text-orange-700 dark:text-orange-300 font-bold uppercase tracking-wide mb-4">
-                  {t("streak")}
+              {/* Streak Display - FIRE */}
+              <div className="bg-gradient-to-br from-orange-400 via-amber-500 to-yellow-500 dark:from-orange-600 dark:via-amber-600 dark:to-yellow-600 rounded-3xl p-6 shadow-2xl shadow-orange-500/50 ring-4 ring-orange-300/30">
+                <p className="text-sm text-white font-bold uppercase tracking-wide mb-4 drop-shadow-lg">
+                  🔥 {t("streak")}
                 </p>
                 <p className={`text-5xl font-black flex items-center justify-center ${
-                  currentStreak > 0 ? 'fire-flicker' : ''
-                }`}>
+                  currentStreak > 0 ? 'animate-bounce' : ''
+                }`} style={{ animationDuration: '1s' }}>
                   {currentStreak > 0 ? (
-                    <span className="bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
+                    <span className="text-white drop-shadow-2xl">
                       {currentStreak}
                     </span>
                   ) : (
-                    <span className="text-gray-300 dark:text-gray-600">—</span>
+                    <span className="text-white/40">—</span>
                   )}
                 </p>
               </div>
             </>
           ) : (
             <>
-              {/* Progress Display (Review Mode) */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 backdrop-blur-sm rounded-3xl p-6 border-2 border-blue-200 dark:border-blue-800">
-                <p className="text-sm text-blue-700 dark:text-blue-300 font-bold uppercase tracking-wide mb-4">
-                  {t("progress")}
+              {/* Progress Display (Review Mode) - COLORFUL */}
+              <div className="bg-gradient-to-br from-blue-400 via-cyan-500 to-teal-500 dark:from-blue-600 dark:via-cyan-600 dark:to-teal-600 rounded-3xl p-6 shadow-2xl shadow-blue-500/50 ring-4 ring-blue-300/30">
+                <p className="text-sm text-white font-bold uppercase tracking-wide mb-4 drop-shadow-lg">
+                  📊 {t("progress")}
                 </p>
-                <p className="text-4xl font-black bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <p className="text-4xl font-black text-white drop-shadow-2xl">
                   {currentIndex + 1} / {flashcards.length}
                 </p>
               </div>
 
-              {/* Mastered Display (Review Mode) */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 backdrop-blur-sm rounded-3xl p-6 border-2 border-green-200 dark:border-green-800">
-                <p className="text-sm text-green-700 dark:text-green-300 font-bold uppercase tracking-wide mb-4">
-                  {t("mastered")}
+              {/* Mastered Display (Review Mode) - COLORFUL */}
+              <div className="bg-gradient-to-br from-green-400 via-emerald-500 to-teal-500 dark:from-green-600 dark:via-emerald-600 dark:to-teal-600 rounded-3xl p-6 shadow-2xl shadow-green-500/50 ring-4 ring-green-300/30">
+                <p className="text-sm text-white font-bold uppercase tracking-wide mb-4 drop-shadow-lg">
+                  ✨ {t("mastered")}
                 </p>
-                <p className="text-4xl font-black bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent">
+                <p className="text-4xl font-black text-white drop-shadow-2xl">
                   {masteredCards.size} / {flashcards.length}
                 </p>
               </div>

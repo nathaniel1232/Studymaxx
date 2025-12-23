@@ -68,9 +68,13 @@ export default function Home() {
   };
 
   return (
-    <main style={{ background: 'var(--background)' }} className="min-h-screen">
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950">
       {viewMode === "home" && (
-        <div className="min-h-screen px-4 py-8 flex flex-col">
+        <div className="min-h-screen px-4 py-8 flex flex-col relative overflow-hidden">
+          {/* Animated background blobs */}
+          <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-400/20 to-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }}></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-pink-400/20 to-orange-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '6s', animationDelay: '1s' }}></div>
+          <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-blue-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '2s' }}></div>
           {/* Header */}
           <header className="max-w-4xl mx-auto w-full pt-8 mb-auto">
             <div className="flex justify-end items-center mb-12">
@@ -99,12 +103,12 @@ export default function Home() {
             </div>
 
             {/* Main Content - Centered */}
-            <div className="text-center max-w-2xl mx-auto" style={{ marginTop: '15vh' }}>
+            <div className="text-center max-w-2xl mx-auto relative z-10" style={{ marginTop: '15vh' }}>
               <div className="flex items-center justify-center gap-3 mb-6">
-                <h1 className="text-brand" style={{ color: 'var(--foreground)' }}>
+                <h1 className="text-brand bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-pulse" style={{ animationDuration: '3s' }}>
                   StudyMaxx
                 </h1>
-                <span className="px-3 py-1 text-xs font-bold rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                <span className="px-3 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/50 animate-bounce" style={{ animationDuration: '2s' }}>
                   BETA
                 </span>
               </div>
@@ -121,13 +125,13 @@ export default function Home() {
                   : "Upload notes, PDFs, or paste text. Get flashcards and quiz questions in seconds."}
               </p>
               
-              {/* Primary CTA */}
+              {/* Primary CTA - EPIC BUTTON */}
               <button
                 onClick={handleCreateNew}
-                className="inline-flex items-center justify-center gap-3 px-10 py-5 text-xl font-bold rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-300 mb-8 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-500 hover:via-purple-500 hover:to-pink-500 text-white hover:shadow-purple-500/50"
+                className="inline-flex items-center justify-center gap-3 px-12 py-6 text-xl font-black rounded-3xl shadow-2xl transform hover:scale-110 hover:-translate-y-2 transition-all duration-300 mb-8 bg-gradient-to-r from-blue-500 via-purple-600 to-pink-600 hover:from-blue-400 hover:via-purple-500 hover:to-pink-500 text-white hover:shadow-purple-500/70 ring-4 ring-purple-300/30 hover:ring-purple-400/50 animate-pulse" style={{ animationDuration: '2s' }}
               >
-                <span>{settings.language === "no" ? "Lag studiesett" : "Create study set"}</span>
-                <ArrowIcon size={20} />
+                <span className="drop-shadow-lg">{settings.language === "no" ? "✨ Lag studiesett" : "✨ Create study set"}</span>
+                <ArrowIcon size={24} />
               </button>
 
               {/* Saved sets link */}
