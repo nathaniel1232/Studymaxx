@@ -86,7 +86,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                   <div className="flex gap-2 ml-4">
                     <button
                       onClick={() => onLoadSet(set.flashcards, set.id)}
-                      className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-2xl transition-all shadow-lg"
+                      className="px-6 py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold rounded-2xl transition-all shadow-lg"
                     >
                       {t("study")}
                     </button>

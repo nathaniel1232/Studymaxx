@@ -11,39 +11,39 @@
    ======================================== */
 
 :root {
-  /* Background & Base - Off-white, not pure white */
-  --background: #f5f7fa;
+  /* Background & Base - Fresh modern palette */
+  --background: #f8f9fa;
   --background-elevated: #ffffff;
-  --foreground: #1a202c;
-  --foreground-muted: #718096;
+  --foreground: #1a1a1a;
+  --foreground-muted: #6b7280;
   
-  /* Surface (Cards, Panels) - Layered depth */
+  /* Surface (Cards, Panels) - Clean elevation */
   --surface: #ffffff;
-  --surface-hover: #f7fafc;
+  --surface-hover: #fafbfc;
   --surface-elevated: #ffffff;
   
-  /* Borders & Dividers - Gentle contrast */
-  --border: #e2e8f0;
-  --border-hover: #cbd5e1;
-  --divider: #f1f5f9;
+  /* Borders & Dividers - Subtle but visible */
+  --border: #e5e7eb;
+  --border-hover: #d1d5db;
+  --divider: #f3f4f6;
   
-  /* Primary Accent (Blue-Purple gradient feel) */
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --primary-light: #dbeafe;
+  /* Primary Accent - Modern teal/cyan */
+  --primary: #14b8a6;
+  --primary-hover: #0d9488;
+  --primary-light: #ccfbf1;
   --primary-foreground: #ffffff;
   
-  /* Secondary Accent */
-  --secondary: #8b5cf6;
-  --secondary-hover: #7c3aed;
-  --secondary-light: #ede9fe;
+  /* Secondary Accent - Modern indigo */
+  --secondary: #6366f1;
+  --secondary-hover: #4f46e5;
+  --secondary-light: #e0e7ff;
   
   /* LEARNING COLOR SYSTEM - Always visible, context-driven */
-  /* Flashcards & Study - Blue (trust, focus, learning) */
-  --learning-blue: #3b82f6;
-  --learning-blue-hover: #2563eb;
-  --learning-blue-light: #dbeafe;
-  --learning-blue-dark: #1e40af;
+  /* Flashcards & Study - Teal (trust, focus, learning) */
+  --learning-blue: #14b8a6;
+  --learning-blue-hover: #0d9488;
+  --learning-blue-light: #ccfbf1;
+  --learning-blue-dark: #0f766e;
   
   /* Success & Mastered - Green (growth, achievement) */
   --learning-green: #10b981;
@@ -85,40 +85,40 @@
   --radius-xl: 1.5rem;
 }
 
-/* Dark mode color overrides - Rich navy/charcoal, NOT pure black */
+/* Dark mode color overrides - High contrast, modern */
 html.dark {
-  /* Background & Base - Deep navy/charcoal for cozy late-night studying */
-  --background: #0f172a;
-  --background-elevated: #1e293b;
-  --foreground: #f1f5f9;
-  --foreground-muted: #94a3b8;
+  /* Background & Base - Deep with excellent contrast */
+  --background: #111827;
+  --background-elevated: #1f2937;
+  --foreground: #f9fafb;
+  --foreground-muted: #9ca3af;
   
-  /* Surface (Cards, Panels) - Layered elevation for depth */
-  --surface: #1e293b;
-  --surface-hover: #334155;
-  --surface-elevated: #334155;
+  /* Surface (Cards, Panels) - Clear elevation */
+  --surface: #1f2937;
+  --surface-hover: #374151;
+  --surface-elevated: #374151;
   
-  /* Borders & Dividers - Subtle but visible */
-  --border: #334155;
-  --border-hover: #475569;
-  --divider: #1e293b;
+  /* Borders & Dividers - Clearly visible */
+  --border: #374151;
+  --border-hover: #4b5563;
+  --divider: #1f2937;
   
-  /* Primary Accent - Vibrant but not harsh */
-  --primary: #60a5fa;
-  --primary-hover: #3b82f6;
-  --primary-light: #1e3a8a;
+  /* Primary Accent - Bright and clear */
+  --primary: #2dd4bf;
+  --primary-hover: #14b8a6;
+  --primary-light: #134e4a;
   --primary-foreground: #ffffff;
   
-  /* Secondary Accent - Soft purple */
-  --secondary: #a78bfa;
-  --secondary-hover: #8b5cf6;
-  --secondary-light: #4c1d95;
+  /* Secondary Accent - Vibrant indigo */
+  --secondary: #818cf8;
+  --secondary-hover: #6366f1;
+  --secondary-light: #312e81;
   
-  /* LEARNING COLORS - Stay vibrant in dark mode */
-  --learning-blue: #60a5fa;
-  --learning-blue-hover: #3b82f6;
-  --learning-blue-light: #1e3a8a;
-  --learning-blue-dark: #93c5fd;
+  /* LEARNING COLORS - High contrast in dark mode */
+  --learning-blue: #2dd4bf;
+  --learning-blue-hover: #14b8a6;
+  --learning-blue-light: #134e4a;
+  --learning-blue-dark: #5eead4;
   
   --learning-green: #34d399;
   --learning-green-hover: #10b981;
@@ -866,13 +866,43 @@ input[type="range"].slider:disabled::-moz-range-thumb {
 }
 
 .glow-green {
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.5), var(--shadow-lg);
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.6), 0 0 60px rgba(16, 185, 129, 0.4), var(--shadow-xl);
+  animation: glow-pulse-green 2s ease-in-out infinite;
 }
 
 .glow-yellow {
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.5), var(--shadow-lg);
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.6), 0 0 60px rgba(245, 158, 11, 0.4), var(--shadow-xl);
+  animation: glow-pulse-yellow 2s ease-in-out infinite;
 }
 
 .glow-red {
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5), var(--shadow-lg);
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.6), 0 0 60px rgba(239, 68, 68, 0.4), var(--shadow-xl);
+  animation: glow-pulse-red 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse-green {
+  0%, 100% { 
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.6), 0 0 60px rgba(16, 185, 129, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.8), 0 0 80px rgba(16, 185, 129, 0.6);
+  }
+}
+
+@keyframes glow-pulse-yellow {
+  0%, 100% { 
+    box-shadow: 0 0 30px rgba(245, 158, 11, 0.6), 0 0 60px rgba(245, 158, 11, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 40px rgba(245, 158, 11, 0.8), 0 0 80px rgba(245, 158, 11, 0.6);
+  }
+}
+
+@keyframes glow-pulse-red {
+  0%, 100% { 
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.6), 0 0 60px rgba(239, 68, 68, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 40px rgba(239, 68, 68, 0.8), 0 0 80px rgba(239, 68, 68, 0.6);
+  }
 }

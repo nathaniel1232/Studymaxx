@@ -35,7 +35,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
             <span>{t("back")}</span>
           </button>
 
-          <h1 className="text-page-title bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-page-title bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent mb-2">
             {t("settings")}
           </h1>
           <p className="text-body text-gray-500 dark:text-gray-400">
