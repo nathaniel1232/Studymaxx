@@ -18,43 +18,48 @@ export default function PremiumModal({ onClose, isOpen, setsCreated = 1, customM
   const features = getPremiumFeatures();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0, 0, 0, 0.7)' }}>
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4" 
+      style={{ background: 'rgba(0, 0, 0, 0.7)' }}
+      onClick={onClose}
+    >
       <div 
-        className="card-elevated max-w-lg w-full p-8 relative animate-scale-in"
-        style={{ borderRadius: 'var(--radius-2xl)' }}
+        className="card-elevated max-w-md w-full p-6 relative animate-scale-in max-h-[90vh] overflow-y-auto"
+        style={{ borderRadius: 'var(--radius-xl)' }}
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
+        {/* Close button - larger and more visible */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-          aria-label="Close"
+          className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors z-10"
+          aria-label="Lukk"
         >
-          <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M18 6L6 18M6 6l12 12" />
+          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <path d="M15 9L9 15M9 9l6 6" />
           </svg>
         </button>
 
-        {/* Icon */}
-        <div className="flex justify-center mb-6">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-4xl">
+        {/* Icon - smaller */}
+        <div className="flex justify-center mb-4">
+          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-2xl">
             ⭐
           </div>
         </div>
 
-        {/* Title */}
-        <h2 className="text-3xl font-bold text-center mb-4 bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+        {/* Title - smaller */}
+        <h2 className="text-2xl font-bold text-center mb-3 bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
           {t("upgrade_to_premium")}
         </h2>
 
-        {/* Description */}
-        <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
+        {/* Description - smaller */}
+        <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-4">
           {customMessage || t("free_limit_reached")}
         </p>
 
         {!customMessage && (
           <>
-            {/* Stats */}
-            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-6">
+            {/* Stats - more compact */}
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 mb-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-600 dark:text-gray-400">{t("study_sets_created")}</span>
             <span className="font-bold text-teal-600 dark:text-teal-400">{setsCreated} / 1</span>
@@ -67,15 +72,15 @@ export default function PremiumModal({ onClose, isOpen, setsCreated = 1, customM
           </div>
         </div>
 
-        {/* Features */}
-        <div className="space-y-4 mb-8">
-          <h3 className="font-semibold text-gray-900 dark:text-white">
+        {/* Features - more compact */}
+        <div className="space-y-3 mb-4">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
             {t("premium_includes")}:
           </h3>
           
-          <div className="space-y-2">
-            {features.map((feature, idx) => (
-              <div key={idx} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <div className="space-y-1.5">
+            {features.slice(0, 6).map((feature, idx) => (
+              <div key={idx} className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300">
                 <span>{feature}</span>
               </div>
             ))}
@@ -85,10 +90,10 @@ export default function PremiumModal({ onClose, isOpen, setsCreated = 1, customM
         )}
 
         {customMessage && (
-          <div className="mb-6">
-            <div className="space-y-2">
+          <div className="mb-4">
+            <div className="space-y-1.5">
               {features.slice(0, 5).map((feature, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <div key={idx} className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300">
                   <span>{feature}</span>
                 </div>
               ))}
@@ -96,47 +101,40 @@ export default function PremiumModal({ onClose, isOpen, setsCreated = 1, customM
           </div>
         )}
 
-        {/* Why Premium Explanation */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6">
-          <div className="flex gap-3">
-            <div className="text-xl">💡</div>
-            <div className="text-sm text-blue-900 dark:text-blue-200">
+        {/* Why Premium - more compact */}
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-3">
+          <div className="flex gap-2">
+            <div className="text-lg">💡</div>
+            <div className="text-xs text-blue-900 dark:text-blue-200">
               <strong>{t("why_premium")}</strong> {t("ai_costs_money")}
             </div>
           </div>
         </div>
 
-        {/* Coming Soon Notice */}
-        <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-5 mb-4">
-          <div className="flex gap-3 items-start">
-            <div className="text-2xl">🚀</div>
+        {/* Coming Soon Notice - more compact */}
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg p-3 mb-3">
+          <div className="flex gap-2 items-start">
+            <div className="text-lg">🚀</div>
             <div>
-              <h3 className="font-bold text-amber-900 dark:text-amber-200 mb-1">
+              <h3 className="text-sm font-bold text-amber-900 dark:text-amber-200 mb-1">
                 Premium lanseres snart!
               </h3>
-              <p className="text-sm text-amber-800 dark:text-amber-300 mb-3">
-                Vi jobber med å integrere betalingsløsningen. Premium vil være tilgjengelig om kort tid med månedlig abonnement for kun <strong>49 kr/måned</strong>.
+              <p className="text-xs text-amber-800 dark:text-amber-300 mb-2">
+                Månedlig abonnement for kun <strong>49 kr/måned</strong>.
               </p>
               <p className="text-xs text-amber-700 dark:text-amber-400">
-                💌 Vil du bli varslet når Premium er klart? Send en e-post til <a href="mailto:studymaxxer@gmail.com" className="underline font-medium">studymaxxer@gmail.com</a>
+                💌 Varsling: <a href="mailto:studymaxxer@gmail.com" className="underline font-medium">studymaxxer@gmail.com</a>
               </p>
             </div>
           </div>
         </div>
 
-        {/* CTA Button */}
-        <button
-          className="w-full py-4 bg-gradient-to-r from-gray-400 to-gray-500 text-white font-bold rounded-xl shadow-lg text-lg cursor-not-allowed opacity-75"
-          disabled
-        >
-          Kommer snart...
-        </button>
-
+        {/* CTA Button - smaller */}
         <button
           onClick={onClose}
-          className="w-full mt-3 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-colors"
+          className="w-full py-3 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold rounded-lg transition-all text-sm"
         >
-          Lukk
+          OK, jeg forstår
         </button>
       </div>
 

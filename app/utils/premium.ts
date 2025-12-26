@@ -25,9 +25,9 @@ export interface UsageLimits {
 
 // Free tier limits - generous but protected
 export const FREE_LIMITS: UsageLimits = {
-  maxSetsPerDay: 3, // Changed from 1 to 3 - more generous for students
+  maxSetsPerDay: 2, // 2 sets per day for free users
   maxFlashcardsPerSet: 15,
-  maxAIGenerationsPerDay: 3, // Changed from 1 to 3 - allows multiple attempts
+  maxAIGenerationsPerDay: 2, // 2 AI generations per day
   canUploadPDF: false,
   canUploadImages: false,
   canUseYouTube: false,
