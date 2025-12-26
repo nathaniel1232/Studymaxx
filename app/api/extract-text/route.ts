@@ -13,6 +13,8 @@ import {
   detectLanguage,
   ExtractionResult
 } from "../../utils/textExtraction";
+import { supabase } from "@/app/utils/supabase";
+import { canUseFeature } from "@/app/utils/premium";
 
 /**
  * ROBUST FILE-TO-TEXT EXTRACTION PIPELINE
@@ -31,11 +33,41 @@ export async function POST(req: Request) {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     const youtubeUrl = formData.get("youtubeUrl") as string | null;
+    const userId = formData.get("userId") as string | null;
+
+    // Check premium status
+    let isPremium = false;
+    if (userId && supabase) {
+      try {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('is_premium')
+          .eq('id', userId)
+          .single();
+
+        isPremium = userData?.is_premium || false;
+      } catch (error) {
+        console.error('Failed to fetch user premium status:', error);
+      }
+    }
 
     // ===========================================
     // STRATEGY 1: YouTube Video Transcript
     // ===========================================
     if (youtubeUrl) {
+      // Check if user can use YouTube feature
+      const youtubeCheck = canUseFeature('youtube', isPremium);
+      if (!youtubeCheck.allowed) {
+        return NextResponse.json(
+          { 
+            error: youtubeCheck.reason,
+            premiumRequired: true,
+            featureType: 'youtube'
+          },
+          { status: 403 }
+        );
+      }
+
       try {
         // Validate YouTube URL format
         const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w-]+/;
@@ -142,6 +174,19 @@ export async function POST(req: Request) {
     // STRATEGY 2: PDF Extraction
     // ===========================================
     if (fileType === 'pdf') {
+      // Check if user can upload PDFs
+      const pdfCheck = canUseFeature('pdf', isPremium);
+      if (!pdfCheck.allowed) {
+        return NextResponse.json(
+          { 
+            error: pdfCheck.reason,
+            premiumRequired: true,
+            featureType: 'pdf'
+          },
+          { status: 403 }
+        );
+      }
+
       try {
         console.log("📑 Extracting from PDF...");
         const pdfParse = require("pdf-parse");
@@ -226,6 +271,19 @@ export async function POST(req: Request) {
     // STRATEGY 5: Image OCR (Tesseract)
     // ===========================================
     else if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'image'].includes(fileType)) {
+      // Check if user can upload images
+      const imageCheck = canUseFeature('image', isPremium);
+      if (!imageCheck.allowed) {
+        return NextResponse.json(
+          { 
+            error: imageCheck.reason,
+            premiumRequired: true,
+            featureType: 'image'
+          },
+          { status: 403 }
+        );
+      }
+
       try {
         console.log("🖼️ Performing OCR on image...");
         warnings.push("OCR processing may take 10-30 seconds depending on image quality.");

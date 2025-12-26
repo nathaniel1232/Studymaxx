@@ -1,14 +1,21 @@
 "use client";
 
 import { useTranslation } from "../contexts/SettingsContext";
+import { getPremiumFeatures } from "../utils/premium";
 
 interface PremiumModalProps {
   onClose: () => void;
+  isOpen: boolean;
   setsCreated?: number;
+  customMessage?: string;
 }
 
-export default function PremiumModal({ onClose, setsCreated = 1 }: PremiumModalProps) {
+export default function PremiumModal({ onClose, isOpen, setsCreated = 1, customMessage }: PremiumModalProps) {
   const t = useTranslation();
+
+  if (!isOpen) return null;
+
+  const features = getPremiumFeatures();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0, 0, 0, 0.7)' }}>
@@ -41,13 +48,15 @@ export default function PremiumModal({ onClose, setsCreated = 1 }: PremiumModalP
 
         {/* Description */}
         <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
-          {t("free_limit_reached")}
+          {customMessage || t("free_limit_reached")}
         </p>
 
-        {/* Stats */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-gray-600 dark:text-gray-400">{t("study_sets_created")}</span>
+        {!customMessage && (
+          <>
+            {/* Stats */}
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-gray-600 dark:text-gray-400">{t("study_sets_created")}</span>
             <span className="font-bold text-teal-600 dark:text-teal-400">{setsCreated} / 1</span>
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -64,40 +73,28 @@ export default function PremiumModal({ onClose, setsCreated = 1 }: PremiumModalP
             {t("premium_includes")}:
           </h3>
           
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">♾️</div>
-              <div>
-                <div className="font-medium text-gray-900 dark:text-white">{t("unlimited_study_sets")}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">{t("create_as_many")}</div>
+          <div className="space-y-2">
+            {features.map((feature, idx) => (
+              <div key={idx} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <span>{feature}</span>
               </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">📄</div>
-              <div>
-                <div className="font-medium text-gray-900 dark:text-white">{t("pdf_support")}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">{t("upload_pdf_docs")}</div>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">🎥</div>
-              <div>
-                <div className="font-medium text-gray-900 dark:text-white">{t("youtube_support")}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">{t("learn_from_videos")}</div>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="text-2xl">🖼️</div>
-              <div>
-                <div className="font-medium text-gray-900 dark:text-white">{t("image_ocr")}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">{t("scan_photos")}</div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
+          </>
+        )}
+
+        {customMessage && (
+          <div className="mb-6">
+            <div className="space-y-2">
+              {features.slice(0, 5).map((feature, idx) => (
+                <div key={idx} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <span>{feature}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Why Premium Explanation */}
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6">

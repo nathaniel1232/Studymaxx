@@ -862,6 +862,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
       {/* Premium Modal */}
       {showPremiumModal && (
         <PremiumModal 
+          isOpen={showPremiumModal}
           onClose={() => setShowPremiumModal(false)}
           setsCreated={setsCreated}
         />

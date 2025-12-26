@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { generateFlashcards } from "../utils/flashcardGenerator";
 import { Flashcard } from "../utils/storage";
 import { useTranslation } from "../contexts/SettingsContext";
 import ArrowIcon from "./icons/ArrowIcon";
+import { canUseFeature, FREE_LIMITS, getUserLimits } from "../utils/premium";
+import PremiumModal from "./PremiumModal";
 
 interface InputViewProps {
   onGenerateFlashcards: (cards: Flashcard[]) => void;
@@ -18,6 +20,9 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
   const t = useTranslation();
   const [selectedMaterial, setSelectedMaterial] = useState<MaterialType>(null);
   const [textInput, setTextInput] = useState("");
+  const [isPremium, setIsPremium] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [premiumModalReason, setPremiumModalReason] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   
@@ -27,6 +32,24 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
   
   // Multiple files support
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; text: string }[]>([]);
+
+  // Check premium status on mount
+  useEffect(() => {
+    // TODO: Check if user is premium from Supabase
+    // For now, check localStorage or assume free
+    setIsPremium(false);
+  }, []);
+
+  // Handler for locked premium features
+  const handleLockedFeature = (feature: 'pdf' | 'image' | 'youtube', featureName: string) => {
+    const check = canUseFeature(feature, isPremium);
+    if (!check.allowed) {
+      setPremiumModalReason(`${featureName} is a Premium feature. Upgrade to unlock unlimited ${featureName.toLowerCase()} and more!`);
+      setShowPremiumModal(true);
+      return true;
+    }
+    return false;
+  };
 
   const handleTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setTextInput(e.target.value);
@@ -334,9 +357,17 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
 
               {/* PDF/Documents Option */}
               <button
-                onClick={() => setSelectedMaterial("pdf")}
-                className="group p-8 border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl hover:border-blue-300 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+                onClick={() => {
+                  if (handleLockedFeature('pdf', 'PDF uploads')) return;
+                  setSelectedMaterial("pdf");
+                }}
+                className="group relative p-8 border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl hover:border-blue-300 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
               >
+                {!isPremium && (
+                  <div className="absolute -top-3 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                    ⭐ Premium
+                  </div>
+                )}
                 <div className="text-5xl mb-4">📄</div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Files</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -346,9 +377,17 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
 
               {/* YouTube Option */}
               <button
-                onClick={() => setSelectedMaterial("youtube")}
-                className="group p-8 border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl hover:border-blue-300 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+                onClick={() => {
+                  if (handleLockedFeature('youtube', 'YouTube transcripts')) return;
+                  setSelectedMaterial("youtube");
+                }}
+                className="group relative p-8 border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl hover:border-blue-300 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
               >
+                {!isPremium && (
+                  <div className="absolute -top-3 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                    ⭐ Premium
+                  </div>
+                )}
                 <div className="text-5xl mb-4">📺</div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">YouTube</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -358,9 +397,17 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
 
               {/* Image Option */}
               <button
-                onClick={() => setSelectedMaterial("image")}
-                className="group p-8 border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl hover:border-blue-300 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+                onClick={() => {
+                  if (handleLockedFeature('image', 'Image OCR')) return;
+                  setSelectedMaterial("image");
+                }}
+                className="group relative p-8 border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl hover:border-blue-300 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
               >
+                {!isPremium && (
+                  <div className="absolute -top-3 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                    ⭐ Premium
+                  </div>
+                )}
                 <div className="text-5xl mb-4">🖼️</div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Image</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -579,19 +626,37 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
               <div>
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
                   Number of flashcards: {numberOfFlashcards}
+                  {!isPremium && numberOfFlashcards > FREE_LIMITS.maxFlashcardsPerSet && (
+                    <span className="ml-2 text-xs text-amber-600 dark:text-amber-400 font-normal">
+                      (Max {FREE_LIMITS.maxFlashcardsPerSet} for free users)
+                    </span>
+                  )}
                 </label>
                 <input
                   type="range"
                   min="3"
-                  max="20"
-                  value={numberOfFlashcards}
-                  onChange={(e) => setNumberOfFlashcards(parseInt(e.target.value))}
+                  max={isPremium ? "20" : FREE_LIMITS.maxFlashcardsPerSet.toString()}
+                  value={Math.min(numberOfFlashcards, isPremium ? 20 : FREE_LIMITS.maxFlashcardsPerSet)}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (!isPremium && value > FREE_LIMITS.maxFlashcardsPerSet) {
+                      setPremiumModalReason(`Free users are limited to ${FREE_LIMITS.maxFlashcardsPerSet} flashcards per set. Upgrade to Premium for unlimited flashcards!`);
+                      setShowPremiumModal(true);
+                      return;
+                    }
+                    setNumberOfFlashcards(value);
+                  }}
                   className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
                 <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
                   <span>3</span>
-                  <span>20</span>
+                  <span>{isPremium ? '20' : FREE_LIMITS.maxFlashcardsPerSet}</span>
                 </div>
+                {!isPremium && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    ⭐ Premium users can create up to 20 flashcards
+                  </p>
+                )}
               </div>
             </div>
 
@@ -618,6 +683,15 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
           </form>
         )}
       </div>
+
+      {/* Premium Modal */}
+      {showPremiumModal && (
+        <PremiumModal
+          isOpen={showPremiumModal}
+          onClose={() => setShowPremiumModal(false)}
+          customMessage={premiumModalReason}
+        />
+      )}
     </div>
   );
 }

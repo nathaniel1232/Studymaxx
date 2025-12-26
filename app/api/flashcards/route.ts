@@ -1,5 +1,7 @@
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
+import { supabase } from "@/app/utils/supabase";
+import { canUseAI, validateFlashcardCount, FREE_LIMITS } from "@/app/utils/premium";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -239,13 +241,70 @@ export async function POST(request: NextRequest) {
       numberOfFlashcards = 7, 
       difficulty = "Medium",
       subject = "",
-      targetGrade = ""
+      targetGrade = "",
+      userId
     } = await request.json();
 
     if (!text || text.length < 20) {
       return NextResponse.json(
         { error: "Please provide at least 20 characters of text" },
         { status: 400 }
+      );
+    }
+
+    // Check premium status and enforce limits
+    let isPremium = false;
+    let userPlan = {
+      isPremium: false,
+      setsCreated: 0,
+      lastResetDate: new Date().toISOString(),
+    };
+
+    if (userId && supabase) {
+      try {
+        const { data: userData, error } = await supabase
+          .from('users')
+          .select('is_premium, sets_created, last_reset_date')
+          .eq('id', userId)
+          .single();
+
+        if (!error && userData) {
+          isPremium = userData.is_premium || false;
+          userPlan = {
+            isPremium,
+            setsCreated: userData.sets_created || 0,
+            lastResetDate: userData.last_reset_date || new Date().toISOString(),
+          };
+        }
+      } catch (error) {
+        console.error('Failed to fetch user premium status:', error);
+      }
+    }
+
+    // Check if user can use AI
+    const aiCheck = canUseAI(userPlan);
+    if (!aiCheck.allowed) {
+      return NextResponse.json(
+        { 
+          error: aiCheck.reason,
+          premiumRequired: true,
+          limitType: 'ai_generation'
+        },
+        { status: 403 }
+      );
+    }
+
+    // Validate flashcard count for free users
+    const countCheck = validateFlashcardCount(numberOfFlashcards, isPremium);
+    if (!countCheck.valid) {
+      return NextResponse.json(
+        { 
+          error: countCheck.reason,
+          premiumRequired: true,
+          limitType: 'flashcard_count',
+          maxAllowed: FREE_LIMITS.maxFlashcardsPerSet
+        },
+        { status: 403 }
       );
     }
 
