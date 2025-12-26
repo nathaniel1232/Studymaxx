@@ -16,27 +16,36 @@ export default function SharePage() {
   const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
-    if (!shareId) {
-      setError("Invalid share link");
-      setIsLoading(false);
-      return;
-    }
+    const loadSharedSet = async () => {
+      if (!shareId) {
+        setError("Invalid share link");
+        setIsLoading(false);
+        return;
+      }
 
-    const set = getFlashcardSetByShareId(shareId);
-    if (!set) {
-      setError("This study set doesn't exist or is no longer shared");
-      setIsLoading(false);
-      return;
-    }
+      try {
+        const set = await getFlashcardSetByShareId(shareId);
+        if (!set) {
+          setError("This study set doesn't exist or is no longer shared");
+          setIsLoading(false);
+          return;
+        }
 
-    setFlashcardSet(set);
-    setIsLoading(false);
+        setFlashcardSet(set);
+      } catch (error) {
+        setError("Failed to load study set");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSharedSet();
   }, [shareId]);
 
-  const handleCopyToMyCollection = () => {
+  const handleCopyToMyCollection = async () => {
     if (!shareId) return;
 
-    const copiedSet = copySharedSet(shareId);
+    const copiedSet = await copySharedSet(shareId);
     if (copiedSet) {
       setIsCopied(true);
       setTimeout(() => {

@@ -294,7 +294,7 @@ export function useTranslation() {
       "generating_quiz": { en: "Generating quiz questions", no: "Genererer quizspørsmål" },
       "while_you_wait": { en: "While you wait...", no: "Mens du venter..." },
       "excellence": { en: "Excellence", no: "Perfeksjon" },
-      "master_every_detail": { en: "Master every detail", no: "Mestr alle detaljer" },
+      "master_every_detail": { en: "Master every detail", no: "Mestrer alle detaljer" },
       "very_good": { en: "Very Good", no: "Veldig Bra" },
       "strong_understanding": { en: "Strong understanding", no: "Sterk forståelse" },
       "solid_foundations": { en: "Solid foundations", no: "Solide grunnlag" },
@@ -453,7 +453,33 @@ export function useTranslation() {
       "failed_extract_youtube": { en: "Failed to extract YouTube transcript", no: "Kunne ikke ekstrahere YouTube-transkripsjon" },
       "youtube_needs_captions": { en: "Failed to extract YouTube transcript. Make sure the video has captions.", no: "Kunne ikke ekstrahere YouTube-transkripsjon. Sjekk at videoen har undertekster." },
       "transcript_extracted": { en: "Transcript extracted! Review it and click 'Generate flashcards' when ready.", no: "Transkripsjon ekstrahert! Se over den og klikk 'Generer kunnskapskort' når du er klar." },
-      "provide_more_content": { en: "Please provide more content to generate meaningful flashcards.", no: "Vennligst gi mer innhold for å generere meningsfulle kunnskapskort." }
+      "provide_more_content": { en: "Please provide more content to generate meaningful flashcards.", no: "Vennligst gi mer innhold for å generere meningsfulle kunnskapskort." },
+      
+      // Premium
+      "upgrade_to_premium": { en: "Upgrade to Premium", no: "Oppgrader til Premium" },
+      "free_limit_reached": { en: "You've reached your free study set limit. Upgrade to premium to create unlimited study sets and unlock more features!", no: "Du har nådd grensen for gratis studiesett. Oppgrader til premium for å lage ubegrensede studiesett og låse opp flere funksjoner!" },
+      "study_sets_created": { en: "Study sets created", no: "Studiesett opprettet" },
+      "premium_includes": { en: "Premium includes", no: "Premium inkluderer" },
+      "unlimited_study_sets": { en: "Unlimited Study Sets", no: "Ubegrensede Studiesett" },
+      "create_as_many": { en: "Create as many sets as you want", no: "Lag så mange sett du vil" },
+      "pdf_support": { en: "PDF Support", no: "PDF-støtte" },
+      "upload_pdf_docs": { en: "Upload and learn from PDF documents", no: "Last opp og lær fra PDF-dokumenter" },
+      "youtube_support": { en: "YouTube Support", no: "YouTube-støtte" },
+      "learn_from_videos": { en: "Learn from video transcripts", no: "Lær fra videotranskripsjon" },
+      "image_ocr": { en: "Image OCR", no: "Bilde-OCR" },
+      "scan_photos": { en: "Scan photos of notes and textbooks", no: "Skann bilder av notater og lærebøker" },
+      "why_premium": { en: "Why Premium?", no: "Hvorfor Premium?" },
+      "ai_costs_money": { en: "Generating flashcards with AI costs money. Premium helps us cover these costs while keeping the free tier available for everyone.", no: "Generering av kunnskapskort med AI koster penger. Premium hjelper oss å dekke disse kostnadene mens vi holder gratisversjonen tilgjengelig for alle." },
+      "coming_soon": { en: "Coming Soon", no: "Kommer snart" },
+      "payment_coming_soon": { en: "Payment integration coming soon!", no: "Betalingsintegrasjon kommer snart!" },
+      "premium_feature": { en: "Premium Feature", no: "Premium-funksjon" },
+      "premium_required": { en: "This feature requires premium", no: "Denne funksjonen krever premium" },
+      
+      // Contact
+      "contact_us": { en: "Contact Us", no: "Kontakt oss" },
+      "contact_description": { en: "Have questions, feedback, or issues? Get in touch!", no: "Har du spørsmål, tilbakemeldinger eller problemer? Ta kontakt!" },
+      "contact_email": { en: "Email", no: "E-post" },
+      "send_email": { en: "Send us an email", no: "Send oss en e-post" }
     };
     
     let text = translations[key]?.[settings.language] || key;

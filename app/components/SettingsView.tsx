@@ -196,6 +196,38 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
             </div>
           </section>
 
+          {/* Contact Section */}
+          <section className="card-elevated p-6" style={{ borderRadius: 'var(--radius-xl)' }}>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span>✉️</span>
+              {t("contact_us")}
+            </h2>
+
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+              {t("contact_description")}
+            </p>
+
+            <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 border-2 border-teal-200 dark:border-teal-800 rounded-xl p-5">
+              <div className="flex items-start gap-4">
+                <div className="text-3xl">📧</div>
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-900 dark:text-white mb-2">
+                    {t("contact_email")}
+                  </div>
+                  <a 
+                    href="mailto:studymaxxer@gmail.com"
+                    className="text-teal-600 dark:text-teal-400 font-medium hover:underline text-lg break-all"
+                  >
+                    studymaxxer@gmail.com
+                  </a>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    {t("send_email")}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* About Section */}
           <section className="card-elevated p-6" style={{ borderRadius: 'var(--radius-xl)' }}>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">

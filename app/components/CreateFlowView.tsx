@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { generateFlashcards } from "../utils/flashcardGenerator";
-import { Flashcard } from "../utils/storage";
+import { Flashcard, getOrCreateUserId, getSavedFlashcardSets } from "../utils/storage";
 import { getStudyFact } from "../utils/studyFacts";
 import { useTranslation, useSettings } from "../contexts/SettingsContext";
 import ArrowIcon from "./icons/ArrowIcon";
+import PremiumModal from "./PremiumModal";
 
 interface CreateFlowViewProps {
   onGenerateFlashcards: (cards: Flashcard[], subject: string, grade: string) => void;
@@ -41,6 +42,48 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
   // Step 4: Loading
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
+  
+  // Premium state
+  const [isPremium, setIsPremium] = useState(false);
+  const [setsCreated, setSetsCreated] = useState(0);
+  const [canCreateMore, setCanCreateMore] = useState(true);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [premiumCheckLoading, setPremiumCheckLoading] = useState(true);
+
+  // Check premium status on mount
+  useEffect(() => {
+    checkPremiumStatus();
+  }, []);
+
+  const checkPremiumStatus = async () => {
+    try {
+      const userId = getOrCreateUserId();
+      const response = await fetch(`/api/premium/check?userId=${userId}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setIsPremium(data.isPremium);
+        setSetsCreated(data.setsCreated);
+        setCanCreateMore(data.canCreateMore);
+      } else {
+        // Fallback to localStorage count
+        const savedSets = getSavedFlashcardSets();
+        const userSets = savedSets.filter(set => set.userId === userId);
+        setSetsCreated(userSets.length);
+        setCanCreateMore(userSets.length < 1);
+      }
+    } catch (error) {
+      console.error('Premium check failed:', error);
+      // Fallback to localStorage count
+      const userId = getOrCreateUserId();
+      const savedSets = getSavedFlashcardSets();
+      const userSets = savedSets.filter(set => set.userId === userId);
+      setSetsCreated(userSets.length);
+      setCanCreateMore(userSets.length < 1);
+    } finally {
+      setPremiumCheckLoading(false);
+    }
+  };
 
   // Subject examples
   const getSubjectExamples = () => [
@@ -140,6 +183,13 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
       setError(t("please_choose_grade") || "Please choose your target grade");
       return;
     }
+    
+    // Check if user can create more sets
+    if (!canCreateMore && !isPremium) {
+      setShowPremiumModal(true);
+      return;
+    }
+    
     setError("");
     setCurrentStep(4);
     handleGenerate();
@@ -267,6 +317,20 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
       );
 
       onGenerateFlashcards(cards, subject, targetGrade);
+      
+      // Increment the user's sets_created counter
+      try {
+        const userId = getOrCreateUserId();
+        await fetch('/api/premium/increment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId })
+        });
+        // Refresh premium status
+        await checkPremiumStatus();
+      } catch (error) {
+        console.error('Failed to increment counter:', error);
+      }
     } catch (err: any) {
       setError(err.message || "Failed to generate flashcards");
       setIsGenerating(false);
@@ -434,9 +498,20 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
 
                   {/* PDF/DOCX */}
                   <button
-                    onClick={() => setSelectedMaterial("pdf")}
-                    className="card card-hover p-6 text-left"
+                    onClick={() => {
+                      if (!isPremium) {
+                        setShowPremiumModal(true);
+                      } else {
+                        setSelectedMaterial("pdf");
+                      }
+                    }}
+                    className="card card-hover p-6 text-left relative"
                   >
+                    {!isPremium && (
+                      <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                        Premium
+                      </div>
+                    )}
                     <div className="flex items-center gap-4">
                       <div className="text-4xl">📄</div>
                       <div>
@@ -450,9 +525,20 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
 
                   {/* YouTube */}
                   <button
-                    onClick={() => setSelectedMaterial("youtube")}
-                    className="card card-hover p-6 text-left"
+                    onClick={() => {
+                      if (!isPremium) {
+                        setShowPremiumModal(true);
+                      } else {
+                        setSelectedMaterial("youtube");
+                      }
+                    }}
+                    className="card card-hover p-6 text-left relative"
                   >
+                    {!isPremium && (
+                      <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                        Premium
+                      </div>
+                    )}
                     <div className="flex items-center gap-4">
                       <div className="text-4xl">📺</div>
                       <div>
@@ -466,9 +552,20 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
 
                   {/* Image */}
                   <button
-                    onClick={() => setSelectedMaterial("image")}
-                    className="card card-hover p-6 text-left"
+                    onClick={() => {
+                      if (!isPremium) {
+                        setShowPremiumModal(true);
+                      } else {
+                        setSelectedMaterial("image");
+                      }
+                    }}
+                    className="card card-hover p-6 text-left relative"
                   >
+                    {!isPremium && (
+                      <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                        Premium
+                      </div>
+                    )}
                     <div className="flex items-center gap-4">
                       <div className="text-4xl">🖼️</div>
                       <div>
@@ -761,6 +858,14 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
         </div>
       </div>
       </div>
+      
+      {/* Premium Modal */}
+      {showPremiumModal && (
+        <PremiumModal 
+          onClose={() => setShowPremiumModal(false)}
+          setsCreated={setsCreated}
+        />
+      )}
     </>
   );
 }

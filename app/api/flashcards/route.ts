@@ -1,7 +1,7 @@
-import Groq from "groq-sdk";
+import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 interface Flashcard {
   id: string;
@@ -271,8 +271,8 @@ export async function POST(request: NextRequest) {
         setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000)
       );
       
-      const completionPromise = groq.chat.completions.create({
-          model: "llama-3.3-70b-versatile",
+      const completionPromise = openai.chat.completions.create({
+          model: "gpt-4o-mini",
           temperature: 0.3,
           max_tokens: 4096,
           messages: [
@@ -303,19 +303,48 @@ CRITICAL RULES:
 
 📋 LEARNING OBJECTIVES / OVERVIEW INPUT:
 If the input is a list of learning objectives or chapter overview:
-- DO NOT try to find information from page numbers or textbook references
-- DO NOT skip topics marked as "skip" or "hopp over" - CREATE flashcards for them anyway
-- CREATE flashcards that TEST the concepts/skills mentioned
-- Use your general knowledge to create appropriate questions
-- Focus on the KEY CONCEPTS mentioned, not specific textbook content
+- The input describes WHAT to know, not HOW or explanations
+- Your job: CREATE FLASHCARDS that test the knowledge mentioned
+- DO NOT reference page numbers or "skip" instructions
+- Use your knowledge to create appropriate factual questions
 
-Example: "5.1: Den genetiske koden: Celledeling - forskjellen på mitose og meiose"
-✓ CORRECT: "Hva er forskjellen på mitose og meiose?"
-❌ WRONG: Trying to find page content about mitosis
+EXAMPLES OF PROPER FLASHCARD GENERATION:
 
-Example: "Du kan hoppe over Photo 51 s. 225"
-✓ CORRECT: Ignore this instruction and create flashcards for other topics
-❌ WRONG: Trying to reference page 225
+Input: "5.1: Den genetiske koden: Celledeling - forskjellen på mitose og meiose"
+✓ CORRECT flashcards:
+  - Q: "Hva er mitose?" A: "Celledeling som gir to identiske celler"
+  - Q: "Hva er meiose?" A: "Celledeling som gir fire kjønnsceller med halvparten av kromosomene"
+  - Q: "Hva er forskjellen på mitose og meiose?" A: "Mitose gir identiske celler, meiose gir kjønnsceller med halvert kromosomsett"
+❌ WRONG:
+  - Q: "Hva står i kapittel 5.1?" (references textbook)
+  - Q: "Hva skal du kunne om celledeling?" (meta-question)
+  - Q: "Gi et eksempel på celledeling: Mitose" (wrong format)
+
+Input: "Kraft og bevegelse - tyngdekraft, friksjon, luftmotstand"
+✓ CORRECT flashcards:
+  - Q: "Hva er en kraft?" A: "En påvirkning som kan endre bevegelsen eller formen til et objekt"
+  - Q: "Hva er tyngdekraft?" A: "Kraften som trekker objekter mot jordoverflaten"
+  - Q: "Hva er et eksempel på en kraft?" A: "Tyngdekraft"
+  - Q: "Nevn en vanlig type friksjon" A: "Glidefriksjon"
+  - Q: "Hva er forskjellen på friksjon og luftmotstand?" A: "Friksjon virker mellom faste overflater, luftmotstand virker i luft"
+❌ WRONG:
+  - Q: "Gi et eksempel på en type kraft: Tyngdekraft" (wrong format)
+  - Q: "Hva betyr det å forstå kraft?" (meta-question)
+  - Q: "En type kraft er tyngdekraft" (not a question)
+
+Input: "Fotosyntese - prosessen, reaktanter og produkter"
+✓ CORRECT flashcards:
+  - Q: "Hva er fotosyntese?" A: "Prosessen der planter omdanner lys, vann og CO₂ til glukose og oksygen"
+  - Q: "Hva er reaktantene i fotosyntese?" A: "Karbondioksid, vann og lys"
+  - Q: "Hva er produktene i fotosyntese?" A: "Glukose og oksygen"
+  - Q: "Hva er et eksempel på fotosyntese?" A: "Planter som lager mat fra sollys"
+❌ WRONG:
+  - Q: "Hva skal du kunne om fotosyntese?" (meta-question)
+  - Q: "Forklar fotosyntese" (too vague)
+
+Input: "Du kan hoppe over Photo 51 s. 225"
+✓ CORRECT: Ignore this and create flashcards for other topics
+❌ WRONG: Trying to create flashcards about page 225
 
 SUBJECT-SPECIFIC BEHAVIOR:
 
@@ -405,19 +434,81 @@ A) FACTUAL NOTES / DEFINITIONS:
 
 B) LEARNING OBJECTIVES / EXAM OVERVIEW:
 - Input contains: bullet points, "you should know", "læringsmål", "målark", "oversikt", "eksamen"
-- DO NOT copy objective text into flashcards
-- Instead: CREATE flashcards that TEACH what the student needs to learn
-- Think: "What would a student need to DO to meet this objective?"
+- CRITICAL: The input describes WHAT students should KNOW, not explanations
+- Your job: DERIVE good flashcards based on those goals
+
+🎯 FLASHCARD TYPES TO GENERATE:
+
+A) DEFINITION CARDS (Most important)
+Format: "Hva er [term]?" / "What is [term]?"
+Answer: Short, precise, 1 sentence
+Example:
+  Q: "Hva er en kraft?"
+  A: "En påvirkning som kan endre bevegelsen eller formen til et objekt"
+
+B) EXAMPLE CARDS
+❌ NEVER use: "Gi et eksempel på..."
+✓ Instead use:
+  - "Hva er et eksempel på en kraft?"
+  - "Nevn en vanlig type kraft"
+Answer: Correct term, properly spelled
+Example:
+  Q: "Hva er et eksempel på en kraft?"
+  A: "Tyngdekraft"
+
+C) COMPARISON CARDS (when text mentions differences)
+Format: "Hva er forskjellen på [A] og [B]?"
+Example:
+  Q: "Hva er forskjellen på masse og vekt?"
+  A: "Masse er hvor mye stoff et objekt inneholder, mens vekt er kraften tyngdekraften virker med på objektet"
+
+D) FORMULA CARDS (math/physics)
+When formulas are mentioned: create separate cards
+Example:
+  Q: "Hvordan regner du ut fart?"
+  A: "Fart = strekning / tid"
+Or:
+  Q: "Hvilken formel brukes for å regne ut fart?"
+  A: "v = s / t"
+
+E) KEY TERM CARDS
+If text contains technical terms (kraft, friksjon, energi, spenning, motstand):
+Create individual "Hva er...?" cards for each
+
+🚫 NEVER CREATE:
+❌ "Hva betyr det å forklare..."
+❌ "Hva menes med at du skal kunne..."
+❌ "Gi et eksempel på [term]: [Answer]" (wrong format)
+❌ Meta-questions about the learning objective itself
+
+✅ ALWAYS FOCUS ON:
+✓ Actual subject knowledge
+✓ Natural, textbook-like questions
+✓ Proper Norwegian (no "en type ... er ..."-formulations)
+✓ Questions that sound natural when spoken aloud
+
+DIFFICULTY ADAPTATION:
+- High grades (A/B): More explanation cards, full sentences, include connections
+- Lower grades (C/D/E): Shorter answers, fewer details, focus on essentials
+
+QUALITY STANDARDS (CRITICAL):
+- Flashcards must be pedagogically sound
+- Language must be natural and correct
+- Questions should feel like they came from a teacher
+- Usable directly for studying
+- Comparable to Quizlet and Gizmo quality
 
 For non-language subjects:
   Input: "Understand photosynthesis"
-  Good: Q: "What is photosynthesis?" A: "The process by which plants convert light into energy"
-  Bad: Q: "What should you understand?" A: "Photosynthesis"
+  ✓ GOOD: Q: "What is photosynthesis?" A: "The process by which plants convert light into energy"
+  ✓ GOOD: Q: "What is an example of photosynthesis?" A: "Plants making food from sunlight"
+  ❌ BAD: Q: "What should you understand?" A: "Photosynthesis"
+  ❌ BAD: Q: "Gi et eksempel på fotosyntese" (wrong format)
 
 For language subjects:
   Input: "Use present and past tense correctly"
-  Good: Q: "Choose correct tense: Yesterday I ___ (go) to the store." A: "went"
-  Bad: Q: "What is past tense?" A: "A verb form referring to the past"
+  ✓ GOOD: Q: "Choose correct tense: Yesterday I ___ (go) to the store." A: "went"
+  ❌ BAD: Q: "What is past tense?" A: "A verb form referring to the past"
 
 CONTENT GUIDELINES:
 - If material is brief, focus on quality over quantity
@@ -429,19 +520,26 @@ CONTENT GUIDELINES:
 - All expansions must stay factual and on-topic
 
 PREFERRED question formats (adapt to input language):
-✓ "What is [concept]?" / "Hva er [konsept]?"
-✓ "Why does [thing] happen?" / "Hvorfor skjer [ting]?"
-✓ "How does [process] work?" / "Hvordan fungerer [prosess]?"
-✓ "What is the difference between [A] and [B]?" / "Hva er forskjellen mellom [A] og [B]?"
-✓ "What causes [outcome]?" / "Hva forårsaker [resultat]?"
+✓ "Hva er [konsept]?" / "What is [concept]?"
+✓ "Hva er et eksempel på [konsept]?" / "What is an example of [concept]?"
+✓ "Nevn en vanlig type [konsept]" / "Name a common type of [concept]"
+✓ "Hvorfor skjer [ting]?" / "Why does [thing] happen?"
+✓ "Hvordan fungerer [prosess]?" / "How does [process] work?"
+✓ "Hva er forskjellen mellom [A] og [B]?" / "What is the difference between [A] and [B]?"
+✓ "Hvilken formel brukes for [beregning]?" / "Which formula is used for [calculation]?"
+✓ "Hvordan regner du ut [verdi]?" / "How do you calculate [value]?"
 
 NEVER DO:
+❌ "Gi et eksempel på..." / "Give an example of..." (meta-question format)
 ❌ "Summarize the text" / "Oppsummer teksten"
+❌ "Hva betyr det å..." / "What does it mean to..."
+❌ "En type [X] er [Y]" (unnatural phrasing)
 ❌ Translate the input language (keep everything in original language)
 ❌ Vague or unanswerable questions
 ❌ Duplicate questions with different wording
 ❌ Copy learning objectives as questions
 ❌ Generic questions like "What should you know?"
+❌ Spelling errors or incorrect Norwegian/English
 
 QUIZ MODE DISTRACTORS (CRITICAL - APPLIES TO ALL SUBJECTS):
 🎯 CORE RULE: ALL answer options must belong to the SAME SEMANTIC CATEGORY as the correct answer.
@@ -614,7 +712,7 @@ ${text}`,
       
       completion = await Promise.race([completionPromise, timeoutPromise]);
     } catch (error: any) {
-      console.error("Groq API Error:", error);
+      console.error("OpenAI API Error:", error);
       
       if (error.message?.includes('timeout')) {
         return NextResponse.json(

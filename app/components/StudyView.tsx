@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import FlashcardCard from "./FlashcardCard";
-import { saveFlashcardSet, shareFlashcardSet, shuffleArray, Flashcard } from "../utils/storage";
+import { saveFlashcardSet, shareFlashcardSet, shuffleArray, Flashcard, getSavedFlashcardSets } from "../utils/storage";
 import { getStudyFact } from "../utils/studyFacts";
 import { useTranslation, useSettings } from "../contexts/SettingsContext";
 import LoginModal from "./LoginModal";
 import ArrowIcon from "./icons/ArrowIcon";
+import Toast, { ToastType } from "./Toast";
+import { getCurrentUser } from "../utils/supabase";
 
 type StudyMode = "review" | "test";
 
@@ -14,6 +16,11 @@ interface StudyViewProps {
   flashcards: Flashcard[];
   currentSetId: string | null;
   onBack: () => void;
+}
+
+interface ToastMessage {
+  message: string;
+  type: ToastType;
 }
 
 export default function StudyView({ flashcards: initialFlashcards, currentSetId, onBack }: StudyViewProps) {
@@ -29,10 +36,12 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   
   // Feature flags - set to false to hide unfinished features
-  const ENABLE_LOGIN_MODAL = false; // Login/auth not ready for production
-  const ENABLE_SHARE = false; // Share feature not fully tested
+  const ENABLE_LOGIN_MODAL = true; // Login/auth enabled
+  const ENABLE_SHARE = true; // Share feature enabled
   
   // Self-rating state (for review mode)
   const [cardRatings, setCardRatings] = useState<Map<string, 'bad' | 'ok' | 'good'>>(new Map());
@@ -47,6 +56,38 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
   const [currentStreak, setCurrentStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(0);
   const [isQuizEnded, setIsQuizEnded] = useState(false);
+  
+  const showToast = (message: string, type: ToastType = "success") => {
+    setToast({ message, type });
+  };
+  
+  // Check if user is logged in and show login modal if needed
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const user = await getCurrentUser();
+        setIsLoggedIn(!!user);
+        
+        // Show login modal if:
+        // 1. User is not logged in
+        // 2. This is a new set (not currentSetId)
+        // 3. User has 0 or 1 saved sets (first time)
+        if (!user && !currentSetId && ENABLE_LOGIN_MODAL) {
+          const savedSets = getSavedFlashcardSets();
+          if (savedSets.length <= 1) {
+            // Delay modal by 2 seconds to let them see the flashcards first
+            setTimeout(() => {
+              setShowLoginModal(true);
+            }, 2000);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking login status:', error);
+      }
+    };
+    
+    checkLoginStatus();
+  }, [currentSetId]);
 
   const currentCard = flashcards[currentIndex];
   const progressPercentage = Math.round(
@@ -334,13 +375,13 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
 
   const handleSaveSet = () => {
     if (!setName.trim()) {
-      alert(t("enter_name_for_set"));
+      showToast(t("enter_name_for_set"), "warning");
       return;
     }
     saveFlashcardSet(setName, flashcards);
     setShowSaveDialog(false);
     setSetName("");
-    alert(t("set_saved_successfully"));
+    showToast(t("set_saved_successfully"), "success");
     
     // Show login modal after successful save (DISABLED for production)
     if (ENABLE_LOGIN_MODAL) {
@@ -348,29 +389,34 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
     }
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     // Share feature disabled for initial launch
     if (!ENABLE_SHARE) {
       return;
     }
     
     if (!currentSetId) {
-      alert(t("save_before_sharing"));
+      showToast(t("save_before_sharing"), "warning");
       return;
     }
 
-    const result = shareFlashcardSet(currentSetId);
-    if (result) {
-      setShareUrl(result.shareUrl);
-      setShowShareDialog(true);
-    } else {
-      alert(t("share_link_failed"));
+    try {
+      const result = await shareFlashcardSet(currentSetId);
+      if (result) {
+        setShareUrl(result.shareUrl);
+        setShowShareDialog(true);
+      } else {
+        showToast(t("share_link_failed"), "error");
+      }
+    } catch (error) {
+      console.error('Share error:', error);
+      showToast(t("share_link_failed"), "error");
     }
   };
 
   const handleCopyShareLink = () => {
     navigator.clipboard.writeText(shareUrl);
-    alert(t("link_copied_clipboard"));
+    showToast(t("link_copied_clipboard"), "success");
   };
 
   const handleTestAnswer = (correct: boolean) => {
@@ -992,11 +1038,20 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
         )}
       </div>
       
-      {/* Login Modal - DISABLED for production launch */}
-      {ENABLE_LOGIN_MODAL && showLoginModal && (
+      {/* Login Modal */}
+      {showLoginModal && (
         <LoginModal 
           onClose={() => setShowLoginModal(false)} 
           onSkip={() => setShowLoginModal(false)} 
+        />
+      )}
+      
+      {/* Toast Notifications */}
+      {toast && (
+        <Toast 
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
         />
       )}
     </div>

@@ -147,7 +147,7 @@ export const shuffleArray = <T,>(array: T[]): T[] => {
 /**
  * Enable sharing for a flashcard set
  */
-export const shareFlashcardSet = (setId: string): { shareId: string; shareUrl: string } | null => {
+export const shareFlashcardSet = async (setId: string): Promise<{ shareId: string; shareUrl: string } | null> => {
   if (typeof window === "undefined") return null;
 
   const savedSets = getSavedFlashcardSets();
@@ -161,13 +161,32 @@ export const shareFlashcardSet = (setId: string): { shareId: string; shareUrl: s
     savedSets[setIndex].isShared = true;
   }
 
-  // Save to shared sets storage (global share registry)
   const sharedSet = savedSets[setIndex];
+
+  // Try to save to server first
+  try {
+    const response = await fetch('/api/share', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ studySet: sharedSet })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      
+      // Update local storage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(savedSets));
+      
+      return { shareId: data.shareId, shareUrl: data.shareUrl };
+    }
+  } catch (error) {
+    console.error('Failed to share via server, falling back to localStorage:', error);
+  }
+
+  // Fallback to localStorage
   const sharedSets = getSharedSetsRegistry();
   sharedSets[sharedSet.shareId!] = sharedSet;
   localStorage.setItem(SHARED_SETS_KEY, JSON.stringify(sharedSets));
-
-  // Update local sets
   localStorage.setItem(STORAGE_KEY, JSON.stringify(savedSets));
 
   const shareUrl = `${window.location.origin}/share/${sharedSet.shareId}`;
@@ -192,9 +211,22 @@ const getSharedSetsRegistry = (): Record<string, FlashcardSet> => {
 /**
  * Get a flashcard set by share ID
  */
-export const getFlashcardSetByShareId = (shareId: string): FlashcardSet | null => {
+export const getFlashcardSetByShareId = async (shareId: string): Promise<FlashcardSet | null> => {
   if (typeof window === "undefined") return null;
 
+  // Try to fetch from server first
+  try {
+    const response = await fetch(`/api/share?shareId=${shareId}`);
+    
+    if (response.ok) {
+      const data = await response.json();
+      return data.studySet;
+    }
+  } catch (error) {
+    console.error('Failed to fetch from server, falling back to localStorage:', error);
+  }
+
+  // Fallback to localStorage
   const sharedSets = getSharedSetsRegistry();
   return sharedSets[shareId] || null;
 };
@@ -202,17 +234,17 @@ export const getFlashcardSetByShareId = (shareId: string): FlashcardSet | null =
 /**
  * Copy shared set to user's collection
  */
-export const copySharedSet = (shareId: string): FlashcardSet | null => {
+export const copySharedSet = async (shareId: string): Promise<FlashcardSet | null> => {
   if (typeof window === "undefined") return null;
 
-  const sharedSet = getFlashcardSetByShareId(shareId);
+  const sharedSet = await getFlashcardSetByShareId(shareId);
   if (!sharedSet) return null;
 
   const userId = getOrCreateUserId();
   const copiedSet: FlashcardSet = {
-    ...sharedSet,
     id: Date.now().toString(),
     name: `${sharedSet.name} (Copy)`,
+    flashcards: sharedSet.flashcards,
     createdAt: new Date().toISOString(),
     userId,
     shareId: undefined, // Don't copy the shareId
