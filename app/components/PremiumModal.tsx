@@ -106,17 +106,38 @@ export default function PremiumModal({ onClose, isOpen, setsCreated = 1, customM
           </div>
         </div>
 
-        {/* CTA Button (Coming Soon) */}
+        {/* Coming Soon Notice */}
+        <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-xl p-5 mb-4">
+          <div className="flex gap-3 items-start">
+            <div className="text-2xl">🚀</div>
+            <div>
+              <h3 className="font-bold text-amber-900 dark:text-amber-200 mb-1">
+                Premium lanseres snart!
+              </h3>
+              <p className="text-sm text-amber-800 dark:text-amber-300 mb-3">
+                Vi jobber med å integrere betalingsløsningen. Premium vil være tilgjengelig om kort tid med månedlig abonnement for kun <strong>49 kr/måned</strong>.
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400">
+                💌 Vil du bli varslet når Premium er klart? Send en e-post til <a href="mailto:studymaxxer@gmail.com" className="underline font-medium">studymaxxer@gmail.com</a>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA Button */}
         <button
-          className="w-full py-4 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-bold rounded-xl transition-all shadow-lg text-lg"
-          onClick={onClose}
+          className="w-full py-4 bg-gradient-to-r from-gray-400 to-gray-500 text-white font-bold rounded-xl shadow-lg text-lg cursor-not-allowed opacity-75"
+          disabled
         >
-          {t("coming_soon")}
+          Kommer snart...
         </button>
 
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
-          {t("payment_coming_soon")}
-        </p>
+        <button
+          onClick={onClose}
+          className="w-full mt-3 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-colors"
+        >
+          Lukk
+        </button>
       </div>
 
       <style jsx>{`

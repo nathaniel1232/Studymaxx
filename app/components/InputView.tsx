@@ -461,6 +461,23 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                   autoFocus
                 />
                 
+                {/* Character and flashcard estimate */}
+                {selectedMaterial === "notes" && textInput.length > 0 && (
+                  <div className="mt-2 flex items-center justify-between text-sm">
+                    <span className="text-gray-500 dark:text-gray-400">
+                      {textInput.length} tegn
+                    </span>
+                    <span className="text-gray-700 dark:text-gray-300 font-medium">
+                      Vil generere ca. {Math.min(numberOfFlashcards, Math.max(3, Math.floor(textInput.trim().split(/\s+/).length / 30)))} kunnskapskort
+                      {!isPremium && numberOfFlashcards > FREE_LIMITS.maxFlashcardsPerSet && (
+                        <span className="ml-2 text-amber-600 dark:text-amber-400">
+                          (maks {FREE_LIMITS.maxFlashcardsPerSet} for gratis)
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
+                
                 {/* Optional: Add images to notes */}
                 {selectedMaterial === "notes" && (
                   <div className="mt-4">

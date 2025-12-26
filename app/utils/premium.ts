@@ -23,11 +23,11 @@ export interface UsageLimits {
   canShareSets: boolean;
 }
 
-// Free tier limits
+// Free tier limits - generous but protected
 export const FREE_LIMITS: UsageLimits = {
-  maxSetsPerDay: 1,
+  maxSetsPerDay: 3, // Changed from 1 to 3 - more generous for students
   maxFlashcardsPerSet: 15,
-  maxAIGenerationsPerDay: 1,
+  maxAIGenerationsPerDay: 3, // Changed from 1 to 3 - allows multiple attempts
   canUploadPDF: false,
   canUploadImages: false,
   canUseYouTube: false,
