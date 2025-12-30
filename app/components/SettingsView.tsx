@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSettings, useTranslation, Theme, Language, UIScale, GradeSystem } from "../contexts/SettingsContext";
 import { studyFacts } from "../utils/studyFacts";
 import ArrowIcon from "./icons/ArrowIcon";
+import { getCurrentUser, signOut, supabase } from "../utils/supabase";
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -13,6 +14,47 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
   const t = useTranslation();
   const { settings, updateTheme, updateLanguage, updateUIScale, updateGradeSystem } = useSettings();
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [isPremium, setIsPremium] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadUserInfo();
+  }, []);
+
+  const loadUserInfo = async () => {
+    setIsLoading(true);
+    try {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+
+      if (currentUser && supabase) {
+        // Fetch user's premium status from database
+        const { data, error } = await supabase
+          .from('users')
+          .select('is_premium')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (!error && data) {
+          setIsPremium(data.is_premium || false);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user info:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      window.location.reload(); // Refresh to clear session
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   const handleUpdateSetting = (updateFn: () => void) => {
     updateFn();
@@ -54,6 +96,116 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
 
         {/* Settings sections */}
         <div className="space-y-6">
+          {/* Account Section */}
+          {!user && (
+            <section className="card-elevated p-6" style={{ borderRadius: 'var(--radius-xl)' }}>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <span>👤</span>
+                Account
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Sign in to sync your study sets across devices and unlock Premium features.
+              </p>
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('showLogin'))}
+                className="w-full py-4 rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-bold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+              >
+                <span>✨</span>
+                <span>Sign In / Create Account</span>
+              </button>
+            </section>
+          )}
+          {user && (
+            <section className="card-elevated p-6" style={{ borderRadius: 'var(--radius-xl)' }}>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <span>👤</span>
+                Account
+              </h2>
+
+              <div className="space-y-4">
+                {/* Email */}
+                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+                  <div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Email</div>
+                    <div className="font-medium text-gray-900 dark:text-white">{user.email}</div>
+                  </div>
+                  <span className="text-2xl">📧</span>
+                </div>
+
+                {/* Premium Status */}
+                <div className={`flex items-center justify-between p-4 rounded-xl border-2 ${
+                  isPremium 
+                    ? 'bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 border-amber-300 dark:border-amber-700'
+                    : 'bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700'
+                }`}>
+                  <div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Subscription</div>
+                    <div className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                      {isPremium ? (
+                        <span className="text-amber-600 dark:text-amber-400">⭐ Premium</span>
+                      ) : (
+                        <span>Free</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {isPremium ? (
+                      <>
+                        <button
+                          onClick={async () => {
+                            if (!user?.id) return;
+                            try {
+                              const response = await fetch('/api/stripe/portal', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userId: user.id })
+                              });
+                              const data = await response.json();
+                              console.log('Portal response:', data);
+                              if (data.url) {
+                                window.location.href = data.url;
+                              } else {
+                                alert(`Error: ${data.error || 'Failed to open portal. Please contact support.'}`);
+                              }
+                            } catch (error) {
+                              console.error('Failed to open portal:', error);
+                              alert('Failed to open subscription management. Please contact support.');
+                            }
+                          }}
+                          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-medium rounded-lg transition-all text-sm"
+                        >
+                          Manage Subscription
+                        </button>
+                        <span className="text-3xl">✨</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-2xl">🆓</span>
+                        <button
+                          onClick={() => {
+                            window.alert("Premium upgrade coming soon! In the meantime, you can upgrade from the main page.");
+                          }}
+                          className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-lg transition-all hover:scale-105 shadow-md text-sm"
+                        >
+                          Upgrade
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sign Out Button */}
+                <button
+                  onClick={handleSignOut}
+                  className="w-full p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors font-medium text-red-600 dark:text-red-400 flex items-center justify-center gap-2"
+                >
+                  <span>🚪</span>
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </section>
+          )}
+
           {/* Appearance Section */}
           <section className="card-elevated p-6" style={{ borderRadius: 'var(--radius-xl)' }}>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">

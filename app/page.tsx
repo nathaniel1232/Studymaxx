@@ -6,10 +6,15 @@ import CreateFlowView from "./components/CreateFlowView";
 import StudyView from "./components/StudyView";
 import SavedSetsView from "./components/SavedSetsView";
 import SettingsView from "./components/SettingsView";
+import LoginModal from "./components/LoginModal";
+import PremiumModal from "./components/PremiumModal";
+import UserProfileDropdown from "./components/UserProfileDropdown";
+import StudyFactBadge from "./components/StudyFactBadge";
 import { updateLastStudied, Flashcard, getSavedFlashcardSets, FlashcardSet } from "./utils/storage";
 import { getStudyFact } from "./utils/studyFacts";
 import { useTranslation, useSettings } from "./contexts/SettingsContext";
 import ArrowIcon from "./components/icons/ArrowIcon";
+import { getCurrentUser, onAuthStateChange, supabase } from "./utils/supabase";
 
 type ViewMode = "home" | "input" | "createFlow" | "studying" | "saved" | "settings";
 
@@ -22,11 +27,127 @@ export default function Home() {
   const [currentSubject, setCurrentSubject] = useState<string>("");
   const [currentGrade, setCurrentGrade] = useState<string>("");
   const [savedSets, setSavedSets] = useState<FlashcardSet[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [isPremium, setIsPremium] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   // Load saved sets after hydration
   useEffect(() => {
-    setSavedSets(getSavedFlashcardSets());
+    const loadSavedSets = async () => {
+      const sets = await getSavedFlashcardSets();
+      setSavedSets(sets);
+    };
+    loadSavedSets();
   }, [viewMode]); // Reload when view changes
+
+  // Check for Premium purchase success and activate
+  useEffect(() => {
+    const checkPremiumSuccess = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const premiumStatus = urlParams.get('premium');
+      
+      if (premiumStatus === 'success' && user && supabase) {
+        console.log('[Premium] Payment success detected - activating Premium...');
+        
+        try {
+          // Get session token
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            console.error('[Premium] No session found');
+            return;
+          }
+
+          // Call activation endpoint
+          const response = await fetch('/api/premium/activate', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            console.log('[Premium] ✅ Premium activated:', data);
+            setIsPremium(true);
+            
+            // Remove the URL parameter
+            window.history.replaceState({}, '', '/');
+            
+            // Show success message
+            alert('🎉 Premium activated! All features unlocked. Refreshing page...');
+            window.location.reload();
+          } else {
+            console.error('[Premium] Activation failed:', await response.text());
+          }
+        } catch (error) {
+          console.error('[Premium] Activation error:', error);
+        }
+      }
+    };
+    
+    checkPremiumSuccess();
+  }, [user]);
+
+  // Check auth status
+  useEffect(() => {
+    const loadUser = async () => {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+      
+      if (currentUser && supabase) {
+        // Sync user to database
+        try {
+          await fetch('/api/auth/sync-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: currentUser.id,
+              email: currentUser.email,
+            }),
+          });
+        } catch (error) {
+          console.error('Failed to sync user:', error);
+        }
+
+        // Get premium status
+        const { data } = await supabase
+          .from('users')
+          .select('is_premium')
+          .eq('id', currentUser.id)
+          .single();
+        
+        setIsPremium(data?.is_premium || false);
+      }
+    };
+    
+    loadUser();
+    const unsubscribe = onAuthStateChange((newUser) => {
+      setUser(newUser);
+      if (newUser && supabase) {
+        // Sync user to database
+        fetch('/api/auth/sync-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: newUser.id,
+            email: newUser.email,
+          }),
+        }).catch(console.error);
+
+        // Get premium status
+        supabase
+          .from('users')
+          .select('is_premium')
+          .eq('id', newUser.id)
+          .single()
+          .then(({ data }) => setIsPremium(data?.is_premium || false));
+      } else {
+        setIsPremium(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleGenerateFlashcards = (cards: Flashcard[], subject?: string, grade?: string) => {
     setFlashcards(cards);
@@ -79,8 +200,8 @@ export default function Home() {
           </div>
 
           {/* Top Navigation */}
-          <nav className="max-w-7xl mx-auto w-full flex justify-between items-center mb-8 relative z-10">
-            <div className="flex items-center gap-3">
+          <nav className="max-w-7xl mx-auto w-full flex justify-between items-center mb-8 relative" style={{ zIndex: 100 }}>
+            <div className="flex items-center gap-3" style={{ position: 'relative', zIndex: 1 }}>
               <div className="text-2xl font-black bg-gradient-to-r from-teal-600 via-cyan-600 to-indigo-600 bg-clip-text text-transparent">
                 StudyMaxx
               </div>
@@ -89,23 +210,58 @@ export default function Home() {
               </span>
             </div>
             
-            <button
-              onClick={handleViewSettings}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all hover:scale-105"
-              style={{ 
-                background: 'var(--surface)',
-                border: '1px solid var(--border)',
-                color: 'var(--foreground-muted)',
-                boxShadow: 'var(--shadow-sm)'
-              }}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span>{t("settings")}</span>
-            </button>
+            <div className="flex items-center gap-3" style={{ position: 'relative', zIndex: 1000 }}>
+              {user ? (
+                <UserProfileDropdown 
+                  user={user} 
+                  isPremium={isPremium}
+                  onNavigateSettings={handleViewSettings}
+                  onUpgradePremium={() => setShowPremiumModal(true)}
+                />
+              ) : (
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all hover:scale-105 bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg"
+                >
+                  Sign In
+                </button>
+              )}
+              <button
+                onClick={handleViewSettings}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all hover:scale-105"
+                style={{ 
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--foreground-muted)',
+                  boxShadow: 'var(--shadow-sm)'
+                }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>{t("settings")}</span>
+              </button>
+            </div>
           </nav>
+          
+          {/* Login Modal */}
+          {showLoginModal && (
+            <LoginModal 
+              onClose={() => setShowLoginModal(false)}
+              onSkip={() => setShowLoginModal(false)}
+            />
+          )}
+
+          {/* Premium Modal */}
+          {showPremiumModal && (
+            <PremiumModal
+              isOpen={showPremiumModal}
+              onClose={() => setShowPremiumModal(false)}
+              setsCreated={savedSets.length}
+              onRequestLogin={() => setShowLoginModal(true)}
+            />
+          )}
 
           {/* Hero Section */}
           <div className="flex-1 flex items-center justify-center relative z-10">
@@ -129,6 +285,17 @@ export default function Home() {
                   ? "Last opp PDF-er, bilder eller lim inn tekst. Få personlige studiesett på sekunder."
                   : "Upload PDFs, images, or paste text. Get personalized study sets in seconds."}
               </p>
+
+              {/* Free tier info */}
+              {!isPremium && (
+                <div className="mb-8 inline-block px-6 py-3 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
+                  <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                    {settings.language === "no"
+                      ? "🎁 1 gratis studiesett per 24 timer"
+                      : "🎁 1 free study set every 24 hours"}
+                  </p>
+                </div>
+              )}
               
               {/* Primary CTA */}
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
@@ -164,6 +331,33 @@ export default function Home() {
                       : `My sets (${savedSets.length})`}
                   </button>
                 )}
+              </div>
+
+              {/* Study Fact Badge */}
+              <div className="mb-8 flex justify-center">
+                <StudyFactBadge context="general" position="inline" />
+              </div>
+
+              {/* What is StudyMaxx? Section */}
+              <div className="mb-12 max-w-2xl mx-auto p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%)', border: '2px solid var(--border)' }}>
+                <h3 className="text-xl font-bold mb-3 text-center" style={{ color: 'var(--foreground)' }}>
+                  {settings.language === "no" ? "💡 Hva er StudyMaxx?" : "💡 What is StudyMaxx?"}
+                </h3>
+                <div className="text-base leading-relaxed space-y-2" style={{ color: 'var(--foreground)' }}>
+                  {settings.language === "no" ? (
+                    <>
+                      <p><strong>Notater</strong> → <strong>Kunnskapskort</strong> → <strong>Bedre karakterer</strong></p>
+                      <p>Bruk AI til å gjøre notater om til effektive studiesett. Øv, test deg selv, og hev karakterene dine.</p>
+                      <p className="text-sm font-bold" style={{ color: '#14b8a6' }}>Studer smartere, ikke lengre. Oppnå main character energy i fagene dine.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p><strong>Notes</strong> → <strong>Flashcards</strong> → <strong>Better Grades</strong></p>
+                      <p>Use AI to turn your notes into effective study sets. Practice, self-test, and ascend your grades.</p>
+                      <p className="text-sm font-bold" style={{ color: '#14b8a6' }}>Study smarter, not longer. Achieve main character energy in your studies.</p>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Feature highlights */}
@@ -233,6 +427,7 @@ export default function Home() {
         <CreateFlowView
           onGenerateFlashcards={handleGenerateFlashcards}
           onBack={handleBackToHome}
+          onRequestLogin={() => setShowLoginModal(true)}
         />
       )}
       {viewMode === "studying" && (

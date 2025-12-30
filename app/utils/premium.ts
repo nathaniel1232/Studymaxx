@@ -1,17 +1,21 @@
 /**
- * Premium subscription utilities
+ * Premium subscription utilities - SERVER-SIDE ENFORCEMENT
  * Centralized logic for checking premium status and enforcing limits
+ * CRITICAL: All checks must happen server-side to protect AI costs
  */
 
-export interface UserPlan {
+export interface UserStatus {
+  id: string;
   isPremium: boolean;
-  setsCreated: number;
-  lastResetDate: string;
+  studySetCount: number;
+  dailyAiCount: number;
+  lastAiReset: Date;
+  email?: string;
   accountId?: string;
 }
 
 export interface UsageLimits {
-  maxSetsPerDay: number;
+  maxStudySets: number;
   maxFlashcardsPerSet: number;
   maxAIGenerationsPerDay: number;
   canUploadPDF: boolean;
@@ -23,11 +27,11 @@ export interface UsageLimits {
   canShareSets: boolean;
 }
 
-// Free tier limits - generous but protected
+// Free tier limits - HARD LIMITS enforced server-side
 export const FREE_LIMITS: UsageLimits = {
-  maxSetsPerDay: 2, // 2 sets per day for free users
-  maxFlashcardsPerSet: 15,
-  maxAIGenerationsPerDay: 2, // 2 AI generations per day
+  maxStudySets: 1, // 1 study set total (not per day!)
+  maxFlashcardsPerSet: 10, // Only 10 cards for free
+  maxAIGenerationsPerDay: 1, // 1 AI generation per day
   canUploadPDF: false,
   canUploadImages: false,
   canUseYouTube: false,
@@ -39,8 +43,8 @@ export const FREE_LIMITS: UsageLimits = {
 
 // Premium tier (unlimited)
 export const PREMIUM_LIMITS: UsageLimits = {
-  maxSetsPerDay: Infinity,
-  maxFlashcardsPerSet: Infinity,
+  maxStudySets: Infinity,
+  maxFlashcardsPerSet: 30, // 30 cards for premium
   maxAIGenerationsPerDay: Infinity,
   canUploadPDF: true,
   canUploadImages: true,
@@ -59,42 +63,51 @@ export function getUserLimits(isPremium: boolean): UsageLimits {
 }
 
 /**
- * Check if user can create a new study set
+ * SERVER-SIDE: Check if user needs daily AI counter reset
+ * Returns true if reset was needed
  */
-export function canCreateSet(userPlan: UserPlan): { allowed: boolean; reason?: string } {
-  if (userPlan.isPremium) {
-    return { allowed: true };
-  }
-
-  // Check if daily limit exceeded
-  const today = new Date().toISOString().split('T')[0];
-  const lastReset = userPlan.lastResetDate?.split('T')[0];
-
-  if (lastReset === today && userPlan.setsCreated >= FREE_LIMITS.maxSetsPerDay) {
-    return {
-      allowed: false,
-      reason: `Free users can create ${FREE_LIMITS.maxSetsPerDay} study set per day. Upgrade to Premium for unlimited sets!`,
-    };
-  }
-
-  return { allowed: true };
+export function shouldResetDailyCounter(lastAiReset: Date): boolean {
+  const now = new Date();
+  const lastReset = new Date(lastAiReset);
+  
+  // Reset if different day
+  return (
+    now.getFullYear() !== lastReset.getFullYear() ||
+    now.getMonth() !== lastReset.getMonth() ||
+    now.getDate() !== lastReset.getDate()
+  );
 }
 
 /**
- * Check if user can generate flashcards (AI usage)
+ * SERVER-SIDE: Central function to check if user can use AI
+ * This is the ONE TRUTH for AI usage permission
+ * MUST be called before every AI generation
  */
-export function canUseAI(userPlan: UserPlan): { allowed: boolean; reason?: string } {
-  if (userPlan.isPremium) {
+export function canUseAI(userStatus: UserStatus): {
+  allowed: boolean;
+  statusCode?: number;
+  reason?: string;
+} {
+  // Premium users always allowed
+  if (userStatus.isPremium) {
     return { allowed: true };
   }
 
-  const today = new Date().toISOString().split('T')[0];
-  const lastReset = userPlan.lastResetDate?.split('T')[0];
-
-  if (lastReset === today && userPlan.setsCreated >= FREE_LIMITS.maxAIGenerationsPerDay) {
+  // Free users: Check study set limit first
+  if (userStatus.studySetCount >= FREE_LIMITS.maxStudySets) {
     return {
       allowed: false,
-      reason: `Free users can generate ${FREE_LIMITS.maxAIGenerationsPerDay} AI study set per day. Upgrade to Premium for unlimited AI generations!`,
+      statusCode: 402, // Payment Required
+      reason: `Free users can create ${FREE_LIMITS.maxStudySets} study set total. Upgrade to Premium for unlimited sets!`,
+    };
+  }
+
+  // Free users: Check daily AI limit
+  if (userStatus.dailyAiCount >= FREE_LIMITS.maxAIGenerationsPerDay) {
+    return {
+      allowed: false,
+      statusCode: 429, // Too Many Requests
+      reason: `Free users can use AI ${FREE_LIMITS.maxAIGenerationsPerDay} time per day. Upgrade to Premium for unlimited AI generations!`,
     };
   }
 
@@ -104,12 +117,16 @@ export function canUseAI(userPlan: UserPlan): { allowed: boolean; reason?: strin
 /**
  * Check if flashcard count is within limits
  */
-export function validateFlashcardCount(count: number, isPremium: boolean): { valid: boolean; reason?: string } {
+export function validateFlashcardCount(
+  count: number,
+  isPremium: boolean
+): { valid: boolean; statusCode?: number; reason?: string } {
   const limits = getUserLimits(isPremium);
 
   if (count > limits.maxFlashcardsPerSet) {
     return {
       valid: false,
+      statusCode: 402,
       reason: `Free users are limited to ${FREE_LIMITS.maxFlashcardsPerSet} flashcards per set. Upgrade to Premium for unlimited flashcards!`,
     };
   }
@@ -123,7 +140,7 @@ export function validateFlashcardCount(count: number, isPremium: boolean): { val
 export function canUseFeature(
   feature: 'pdf' | 'image' | 'youtube' | 'regenerate' | 'difficulty' | 'sync' | 'share',
   isPremium: boolean
-): { allowed: boolean; reason?: string } {
+): { allowed: boolean; statusCode?: number; reason?: string } {
   if (isPremium) {
     return { allowed: true };
   }
@@ -140,41 +157,127 @@ export function canUseFeature(
 
   return {
     allowed: false,
+    statusCode: 402,
     reason: `${featureNames[feature]} is a Premium feature. Upgrade to unlock!`,
   };
 }
 
 /**
- * Get premium feature list for upgrade modal
+ * Get premium feature list - CONVERSION-FOCUSED COPY
+ * Tone: Motivating, "maxxing" energy, not corporate
  */
 export function getPremiumFeatures(): string[] {
   return [
-    '✨ Unlimited study sets',
-    '🤖 Unlimited AI generations',
-    '📄 PDF & document uploads',
-    '🎥 YouTube transcript support',
-    '🖼️ Image OCR scanning',
-    '🎯 Difficulty selection',
-    '🔄 Flashcard regeneration',
-    '☁️ Save & sync across devices',
-    '🔗 Shareable study set links',
-    '⚡ Priority AI quality (GPT-4o mini)',
+    '✨ Unlimited study sets — create without limits',
+    '🤖 Unlimited AI generations — never wait',
+    '📄 PDF uploads — study from any document',
+    '🎥 YouTube learning — turn videos into flashcards',
+    '🖼️ Image scanning — snap notes, get flashcards',
+    '🎯 Difficulty targeting — train for your goal grade',
+    '🔄 Regenerate endlessly — perfect every card',
+    '☁️ Cloud sync — study anywhere, anytime',
+    '🔗 Share your sets — help friends ascend too',
+    '⚡ Priority AI — faster, smarter flashcards',
   ];
 }
 
 /**
- * Pricing info (for future implementation)
+ * Get short premium pitch for modals
+ * "Ascend your grades" branding
+ */
+export function getPremiumPitch(): string {
+  return "StudyMaxx uses real AI to transform your notes into powerful flashcards. Premium unlocks the full study experience — no limits, no waiting.";
+}
+
+/**
+ * Get motivational tagline
+ */
+export function getMotivationalTagline(): string {
+  const taglines = [
+    "Study smarter, not longer",
+    "This is how top students study",
+    "Turn notes into results",
+    "Ascend your grades",
+    "Level up your learning",
+    "Maximize every study session",
+  ];
+  return taglines[Math.floor(Math.random() * taglines.length)];
+}
+
+/**
+ * Get pricing based on user's location/currency
+ * Detects currency from browser locale or defaults to EUR
+ */
+export function getLocalizedPricing() {
+  // Detect user's locale
+  let userLocale = 'en-NO'; // Default to Norway
+  let userCurrency = 'NOK';
+  
+  if (typeof window !== 'undefined') {
+    userLocale = navigator.language || 'en-NO';
+    
+    // Extract currency from locale
+    const localeParts = userLocale.split('-');
+    const country = localeParts[1] || 'NO';
+    
+    // Map countries to currencies
+    const currencyMap: { [key: string]: string } = {
+      'NO': 'NOK', 'SE': 'SEK', 'DK': 'DKK',
+      'US': 'USD', 'CA': 'CAD',
+      'GB': 'GBP',
+      'AU': 'AUD', 'NZ': 'NZD',
+      // Eurozone countries
+      'AT': 'EUR', 'BE': 'EUR', 'DE': 'EUR', 'ES': 'EUR',
+      'FI': 'EUR', 'FR': 'EUR', 'IE': 'EUR', 'IT': 'EUR',
+      'NL': 'EUR', 'PT': 'EUR', 'GR': 'EUR', 'EE': 'EUR',
+    };
+    
+    userCurrency = currencyMap[country] || 'EUR';
+  }
+  
+  // Price mapping (equivalent to ~39 NOK)
+  const prices: { [key: string]: { amount: number; symbol: string; display: string } } = {
+    'NOK': { amount: 39, symbol: 'kr', display: '39 kr' },
+    'SEK': { amount: 45, symbol: 'kr', display: '45 kr' },
+    'DKK': { amount: 34, symbol: 'kr', display: '34 kr' },
+    'EUR': { amount: 3.90, symbol: '€', display: '€3.90' },
+    'USD': { amount: 3.99, symbol: '$', display: '$3.99' },
+    'GBP': { amount: 3.40, symbol: '£', display: '£3.40' },
+    'CAD': { amount: 5.49, symbol: '$', display: '$5.49 CAD' },
+    'AUD': { amount: 6.49, symbol: '$', display: '$6.49 AUD' },
+    'NZD': { amount: 6.99, symbol: '$', display: '$6.99 NZD' },
+  };
+  
+  const pricing = prices[userCurrency] || prices['EUR'];
+  
+  return {
+    currency: userCurrency,
+    amount: pricing.amount,
+    symbol: pricing.symbol,
+    display: pricing.display,
+    interval: 'month',
+  };
+}
+
+/**
+ * Pricing info - DYNAMIC based on location
  */
 export const PRICING = {
-  monthly: {
-    price: 4.99,
-    currency: 'USD',
-    interval: 'month',
-  },
+  monthly: getLocalizedPricing(),
   yearly: {
-    price: 39.99,
-    currency: 'USD',
+    // Yearly pricing TBD
+    price: 0,
+    currency: 'NOK',
     interval: 'year',
-    savings: '33%',
+    displayPrice: 'Coming soon',
   },
 };
+
+// Legacy exports for backward compatibility
+export interface UserPlan {
+  isPremium: boolean;
+  setsCreated: number;
+  lastResetDate: string;
+  accountId?: string;
+}
+

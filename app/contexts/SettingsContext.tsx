@@ -23,7 +23,7 @@ interface SettingsContextType {
 }
 
 const defaultSettings: AppSettings = {
-  theme: "system",
+  theme: "dark",
   language: "en",
   uiScale: "default",
   gradeSystem: "A-F"
@@ -382,6 +382,8 @@ export function useTranslation() {
       "email": { en: "Email", no: "E-post" },
       "enter_email": { en: "Enter your email...", no: "Skriv inn e-posten din..." },
       "send_magic_link": { en: "Send magic link", no: "Send magisk lenke" },
+      "magic_link_sent_title": { en: "Check Your Email!", no: "Sjekk e-posten din!" },
+      "magic_link_sent": { en: "We've sent a magic link to {email}. Click it to log in instantly.", no: "Vi har sendt en magisk lenke til {email}. Klikk på den for å logge inn umiddelbart." },
       "sending": { en: "Sending...", no: "Sender..." },
       "or": { en: "or", no: "eller" },
       "continue_with_google": { en: "Continue with Google", no: "Fortsett med Google" },
@@ -390,6 +392,9 @@ export function useTranslation() {
       "check_your_email": { en: "Check your email!", no: "Sjekk e-posten din!" },
       "magic_link_sent": { en: "We've sent a magic link to {email}. Click it to log in instantly.", no: "Vi har sendt en magisk lenke til {email}. Klikk på den for å logge inn umiddelbart." },
       "profile": { en: "Profile", no: "Profil" },
+      "account": { en: "Account", no: "Konto" },
+      "sign_out": { en: "Sign out", no: "Logg ut" },
+      "upgrade_premium": { en: "Upgrade to Premium", no: "Oppgrader til Premium" },
       "profile_coming_soon": { en: "Profile coming soon! For now, you can save flashcards locally.", no: "Profil kommer snart! Foreløpig kan du lagre kunnskapskort lokalt." },
       "enter_set_name": { en: "Name your flashcard set...", no: "Navngi kunnskapskortsett..." },
       "set_saved": { en: "Flashcard set saved successfully!", no: "Kunnskapskortsettet ble lagret!" },
@@ -455,10 +460,24 @@ export function useTranslation() {
       "transcript_extracted": { en: "Transcript extracted! Review it and click 'Generate flashcards' when ready.", no: "Transkripsjon ekstrahert! Se over den og klikk 'Generer kunnskapskort' når du er klar." },
       "provide_more_content": { en: "Please provide more content to generate meaningful flashcards.", no: "Vennligst gi mer innhold for å generere meningsfulle kunnskapskort." },
       
-      // Premium
+      // Premium and Rate Limiting
       "upgrade_to_premium": { en: "Upgrade to Premium", no: "Oppgrader til Premium" },
       "free_limit_reached": { en: "You've reached your free study set limit. Upgrade to premium to create unlimited study sets and unlock more features!", no: "Du har nådd grensen for gratis studiesett. Oppgrader til premium for å lage ubegrensede studiesett og låse opp flere funksjoner!" },
+      "daily_limit_reached": { en: "Daily Limit Reached", no: "Daglig grense nådd" },
+      "ascend_to_premium": { en: "Ascend to Premium", no: "Oppgrader til Premium" },
+      "come_back_tomorrow": { en: "Come back tomorrow", no: "Kom tilbake i morgen" },
+      "study_smarter_not_longer": { en: "Study smarter, not longer", no: "Studer smartere, ikke lenger" },
       "study_sets_created": { en: "Study sets created", no: "Studiesett opprettet" },
+      "limit_reached_upgrade": { en: "You've reached your daily free generation limit. Upgrade to Premium for unlimited AI generations, or come back tomorrow for another free generation.", no: "Du har nådd din daglige gratisgrense. Oppgrader til Premium for ubegrensede AI-genereringer, eller kom tilbake i morgen for en ny gratis generering." },
+      "daily_generation_limit": { en: "Daily Generation Limit", no: "Daglig genereringsgrense" },
+      "free_users_daily_limit": { en: "Free users: 1 AI generation per day", no: "Gratisbrukere: 1 AI-generering per dag" },
+      "premium_unlimited": { en: "Premium: Unlimited generations", no: "Premium: Ubegrensede genereringer" },
+      "current_plan": { en: "Current Plan", no: "Nåværende plan" },
+      "subscription": { en: "Subscription", no: "Abonnement" },
+      "upgrade_premium": { en: "Upgrade to Premium", no: "Oppgrader til Premium" },
+      "account": { en: "Account", no: "Konto" },
+      "sign_out": { en: "Sign out", no: "Logg ut" },
+      
       "premium_includes": { en: "Premium includes", no: "Premium inkluderer" },
       "unlimited_study_sets": { en: "Unlimited Study Sets", no: "Ubegrensede Studiesett" },
       "create_as_many": { en: "Create as many sets as you want", no: "Lag så mange sett du vil" },
@@ -470,6 +489,7 @@ export function useTranslation() {
       "scan_photos": { en: "Scan photos of notes and textbooks", no: "Skann bilder av notater og lærebøker" },
       "why_premium": { en: "Why Premium?", no: "Hvorfor Premium?" },
       "ai_costs_money": { en: "Generating flashcards with AI costs money. Premium helps us cover these costs while keeping the free tier available for everyone.", no: "Generering av kunnskapskort med AI koster penger. Premium hjelper oss å dekke disse kostnadene mens vi holder gratisversjonen tilgjengelig for alle." },
+      "ai_costs_explanation": { en: "AI flashcard generation uses advanced language models that have real computational costs. Your premium subscription helps us provide this service sustainably while keeping StudyMaxx free for students who need it most.", no: "AI-generering av kunnskapskort bruker avanserte språkmodeller som har reelle beregningskostnader. Ditt premium-abonnement hjelper oss å tilby denne tjenesten bærekraftig mens vi holder StudyMaxx gratis for studenter som trenger det mest." },
       "coming_soon": { en: "Coming Soon", no: "Kommer snart" },
       "payment_coming_soon": { en: "Payment integration coming soon!", no: "Betalingsintegrasjon kommer snart!" },
       "premium_feature": { en: "Premium Feature", no: "Premium-funksjon" },

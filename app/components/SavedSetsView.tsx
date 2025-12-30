@@ -9,6 +9,7 @@ import {
 } from "../utils/storage";
 import { useTranslation } from "../contexts/SettingsContext";
 import ArrowIcon from "./icons/ArrowIcon";
+import StudyFactBadge from "./StudyFactBadge";
 
 interface SavedSetsViewProps {
   onLoadSet: (flashcards: Flashcard[], setId: string) => void;
@@ -20,13 +21,18 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
   const [savedSets, setSavedSets] = useState<SavedFlashcardSet[]>([]);
 
   useEffect(() => {
-    setSavedSets(getSavedFlashcardSets());
+    const loadSets = async () => {
+      const sets = await getSavedFlashcardSets();
+      setSavedSets(sets);
+    };
+    loadSets();
   }, []);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm(t("confirm_delete") || "Are you sure you want to delete this flashcard set?")) {
-      deleteFlashcardSet(id);
-      setSavedSets(getSavedFlashcardSets());
+      await deleteFlashcardSet(id);
+      const sets = await getSavedFlashcardSets();
+      setSavedSets(sets);
     }
   };
 
@@ -65,7 +71,13 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
             </p>
           </div>
         ) : (
-          <div className="grid gap-4">
+          <>
+            {/* Study fact badge */}
+            <div className="mb-6">
+              <StudyFactBadge context="spaced-repetition" position="inline" />
+            </div>
+            
+            <div className="grid gap-4">
             {savedSets.map((set) => (
               <div
                 key={set.id}
@@ -101,6 +113,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
               </div>
             ))}
           </div>
+          </>
         )}
       </div>
     </div>

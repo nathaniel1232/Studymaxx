@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import FlashcardCard from "./FlashcardCard";
+import StudyFactBadge from "./StudyFactBadge";
 import { saveFlashcardSet, shareFlashcardSet, shuffleArray, Flashcard, getSavedFlashcardSets } from "../utils/storage";
 import { getStudyFact } from "../utils/studyFacts";
 import { useTranslation, useSettings } from "../contexts/SettingsContext";
@@ -73,7 +74,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
         // 2. This is a new set (not currentSetId)
         // 3. User has 0 or 1 saved sets (first time)
         if (!user && !currentSetId && ENABLE_LOGIN_MODAL) {
-          const savedSets = getSavedFlashcardSets();
+          const savedSets = await getSavedFlashcardSets();
           if (savedSets.length <= 1) {
             // Delay modal by 2 seconds to let them see the flashcards first
             setTimeout(() => {
@@ -373,19 +374,25 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
     setCurrentIndex(0);
   };
 
-  const handleSaveSet = () => {
+  const handleSaveSet = async () => {
     if (!setName.trim()) {
       showToast(t("enter_name_for_set"), "warning");
       return;
     }
-    saveFlashcardSet(setName, flashcards);
-    setShowSaveDialog(false);
-    setSetName("");
-    showToast(t("set_saved_successfully"), "success");
     
-    // Show login modal after successful save (DISABLED for production)
-    if (ENABLE_LOGIN_MODAL) {
-      setShowLoginModal(true);
+    try {
+      await saveFlashcardSet(setName, flashcards);
+      setShowSaveDialog(false);
+      setSetName("");
+      showToast(t("set_saved_successfully"), "success");
+      
+      // Only show login modal if user is NOT logged in
+      if (ENABLE_LOGIN_MODAL && !isLoggedIn) {
+        setShowLoginModal(true);
+      }
+    } catch (error) {
+      console.error('[StudyView] Error saving flashcard set:', error);
+      showToast(t("save_failed") || "Failed to save flashcard set", "error");
     }
   };
 
@@ -626,6 +633,11 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               <p className="text-sm text-gray-700 dark:text-gray-300 break-all font-mono">
                 {shareUrl}
               </p>
+            </div>
+
+            {/* Study fact in share dialog */}
+            <div className="mb-6">
+              <StudyFactBadge context="general" position="inline" />
             </div>
 
             <div className="flex gap-3">

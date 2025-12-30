@@ -7,6 +7,7 @@ import { useTranslation } from "../contexts/SettingsContext";
 import ArrowIcon from "./icons/ArrowIcon";
 import { canUseFeature, FREE_LIMITS, getUserLimits } from "../utils/premium";
 import PremiumModal from "./PremiumModal";
+import { supabase } from "../utils/supabase";
 
 interface InputViewProps {
   onGenerateFlashcards: (cards: Flashcard[]) => void;
@@ -33,12 +34,72 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
   // Multiple files support
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; text: string }[]>([]);
 
-  // Check premium status on mount
+  // Check premium status on mount AND when session changes
   useEffect(() => {
-    // TODO: Check if user is premium from Supabase
-    // For now, check localStorage or assume free
-    setIsPremium(false);
+    checkPremiumStatus();
+    
+    // Listen for auth state changes
+    if (supabase) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        console.log('[InputView] Auth state changed:', event, 'Has session:', !!session);
+        if (session) {
+          checkPremiumStatus();
+        } else {
+          setIsPremium(false);
+        }
+      });
+      
+      return () => subscription.unsubscribe();
+    }
   }, []);
+
+  const checkPremiumStatus = async () => {
+    try {
+      if (!supabase) {
+        console.log('[InputView] Supabase not configured');
+        setIsPremium(false);
+        return;
+      }
+
+      // Get the current session token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      console.log('[InputView] Session check:', {
+        hasSession: !!session,
+        userId: session?.user?.id,
+        email: session?.user?.email,
+        error: sessionError
+      });
+      
+      if (sessionError || !session) {
+        console.log('[InputView] No session found - user not logged in');
+        setIsPremium(false);
+        return;
+      }
+
+      // Call the API with the auth token
+      const response = await fetch('/api/premium/check', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[InputView] Premium status received:', data);
+        setIsPremium(data.isPremium);
+      } else if (response.status === 401) {
+        console.log('[InputView] User not authenticated - treating as free user');
+        setIsPremium(false);
+      } else {
+        console.log('[InputView] Premium check API failed:', response.status);
+        setIsPremium(false);
+      }
+    } catch (error) {
+      console.error('Premium check failed:', error);
+      setIsPremium(false);
+    }
+  };
 
   // Handler for locked premium features
   const handleLockedFeature = (feature: 'pdf' | 'image' | 'youtube', featureName: string) => {

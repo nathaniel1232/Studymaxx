@@ -5,7 +5,9 @@
 CREATE TABLE IF NOT EXISTS public.users (
   id TEXT PRIMARY KEY, -- User ID (anonymous or authenticated)
   is_premium BOOLEAN DEFAULT FALSE,
-  sets_created INTEGER DEFAULT 0,
+  study_set_count INTEGER DEFAULT 0, -- Total study sets created
+  daily_ai_count INTEGER DEFAULT 0, -- AI generations today
+  last_ai_reset TIMESTAMPTZ DEFAULT NOW(), -- Last time daily counter was reset
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   email TEXT, -- Optional: for authenticated users

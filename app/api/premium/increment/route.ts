@@ -1,28 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/app/utils/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  throw new Error("Supabase credentials not configured");
+}
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 /**
- * Increment the user's sets_created count
+ * Increment the user's study_set_count
  * Called after successfully creating a study set
+ * NOW USES AUTHENTICATED USER ID
  */
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await request.json();
-
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID required' }, { status: 400 });
+    // Get authenticated user from Authorization header
+    const authHeader = request.headers.get("authorization");
+    
+    if (!authHeader) {
+      return NextResponse.json({ 
+        error: 'Not authenticated' 
+      }, { status: 401 });
     }
 
-    // If no Supabase, return success (client handles localStorage)
-    if (!supabase) {
-      return NextResponse.json({ success: true, reason: 'no_database' });
+    // Verify token and get user
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return NextResponse.json({
+        error: 'Invalid authentication'
+      }, { status: 401 });
     }
 
-    // Increment sets_created using RPC or fetch current and increment
+    const userId = user.id;
+
     // First get the current value
     const { data: userData, error: fetchError } = await supabase
       .from('users')
-      .select('sets_created')
+      .select('study_set_count')
       .eq('id', userId)
       .single();
 
@@ -35,21 +54,20 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('users')
       .update({ 
-        sets_created: (userData?.sets_created || 0) + 1,
-        updated_at: new Date().toISOString()
+        study_set_count: (userData?.study_set_count || 0) + 1
       })
       .eq('id', userId)
       .select()
       .single();
 
     if (error) {
-      console.error('Error incrementing sets_created:', error);
+      console.error('Error incrementing study_set_count:', error);
       return NextResponse.json({ error: 'Failed to update counter' }, { status: 500 });
     }
 
     return NextResponse.json({ 
       success: true, 
-      setsCreated: data.sets_created 
+      setsCreated: data.study_set_count 
     });
 
   } catch (error) {

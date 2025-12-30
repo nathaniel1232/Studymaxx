@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Auth Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 50px auto; 
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        button { 
+            background: #14b8a6; 
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover { 
+            background: #0d9488; 
+        }
+        .status { 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-top: 20px;
+        }
+        .success { 
+            background: #d1fae5; 
+            color: #065f46; 
+        }
+        .error { 
+            background: #fee2e2; 
+            color: #991b1b; 
+        }
+        .info { 
+            background: #dbeafe; 
+            color: #1e40af; 
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        h1 { color: #111827; }
+        h2 { color: #374151; margin-top: 0; }
+        code { 
+            background: #f3f4f6; 
+            padding: 2px 6px; 
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .user-info {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔐 Supabase Authentication Test</h1>
+    
+    <div class="card">
+        <h2>Step 1: Check Configuration</h2>
+        <button onclick="checkConfig()">Check Supabase Config</button>
+        <div id="configStatus"></div>
+    </div>
+
+    <div class="card">
+        <h2>Step 2: Test Magic Link</h2>
+        <input type="email" id="emailInput" placeholder="Enter your email" value="">
+        <button onclick="sendMagicLink()">Send Magic Link</button>
+        <div id="magicLinkStatus"></div>
+    </div>
+
+    <div class="card">
+        <h2>Step 3: Test Google OAuth</h2>
+        <button onclick="signInWithGoogle()">Sign In with Google</button>
+        <div id="googleStatus"></div>
+    </div>
+
+    <div class="card">
+        <h2>Current Session Status</h2>
+        <button onclick="checkSession()">Check Session</button>
+        <button onclick="signOut()">Sign Out</button>
+        <div id="sessionStatus"></div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+        const supabaseUrl = 'https://zvcawkxlhzhldhydxliv.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2Y2F3a3hsaHpobGRoeWR4bGl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3NDIwMDAsImV4cCI6MjA4MjMxODAwMH0.Sjxu2lBasXvcH5Pfhi34uskE6P8KOd9F1_BoSTQ9sBI';
+
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+        window.checkConfig = function() {
+            const status = document.getElementById('configStatus');
+            status.className = 'status info';
+            status.innerHTML = `
+                <strong>✅ Configuration Loaded</strong><br>
+                URL: <code>${supabaseUrl}</code><br>
+                Key: <code>${supabaseAnonKey.substring(0, 30)}...</code>
+            `;
+        };
+
+        window.sendMagicLink = async function() {
+            const email = document.getElementById('emailInput').value;
+            const status = document.getElementById('magicLinkStatus');
+            
+            if (!email) {
+                status.className = 'status error';
+                status.innerHTML = '❌ Please enter an email address';
+                return;
+            }
+
+            try {
+                const { error } = await supabase.auth.signInWithOtp({
+                    email: email,
+                    options: {
+                        emailRedirectTo: window.location.origin + '/auth/callback',
+                    },
+                });
+
+                if (error) throw error;
+
+                status.className = 'status success';
+                status.innerHTML = `
+                    <strong>✅ Magic Link Sent!</strong><br>
+                    Check your email (${email}) and click the link.<br>
+                    <small>Note: Check spam folder if you don't see it.</small>
+                `;
+            } catch (error) {
+                status.className = 'status error';
+                status.innerHTML = `❌ Error: ${error.message}`;
+            }
+        };
+
+        window.signInWithGoogle = async function() {
+            const status = document.getElementById('googleStatus');
+            
+            try {
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/auth/callback',
+                    },
+                });
+
+                if (error) throw error;
+
+                status.className = 'status info';
+                status.innerHTML = '🔄 Redirecting to Google...';
+            } catch (error) {
+                status.className = 'status error';
+                status.innerHTML = `❌ Error: ${error.message}`;
+            }
+        };
+
+        window.checkSession = async function() {
+            const status = document.getElementById('sessionStatus');
+            
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+
+                if (error) throw error;
+
+                if (session) {
+                    status.className = 'status success';
+                    status.innerHTML = `
+                        <strong>✅ You are logged in!</strong>
+                        <div class="user-info">
+                            <strong>Email:</strong> ${session.user.email}<br>
+                            <strong>User ID:</strong> <code>${session.user.id}</code><br>
+                            <strong>Provider:</strong> ${session.user.app_metadata.provider || 'email'}<br>
+                            <strong>Session expires:</strong> ${new Date(session.expires_at * 1000).toLocaleString()}
+                        </div>
+                    `;
+                } else {
+                    status.className = 'status info';
+                    status.innerHTML = '❌ Not logged in. Try signing in with magic link or Google.';
+                }
+            } catch (error) {
+                status.className = 'status error';
+                status.innerHTML = `❌ Error: ${error.message}`;
+            }
+        };
+
+        window.signOut = async function() {
+            const status = document.getElementById('sessionStatus');
+            
+            try {
+                const { error } = await supabase.auth.signOut();
+                
+                if (error) throw error;
+
+                status.className = 'status success';
+                status.innerHTML = '✅ Signed out successfully!';
+            } catch (error) {
+                status.className = 'status error';
+                status.innerHTML = `❌ Error: ${error.message}`;
+            }
+        };
+
+        // Auto-check session on load
+        window.addEventListener('load', () => {
+            checkSession();
+        });
+    </script>
+</body>
+</html>

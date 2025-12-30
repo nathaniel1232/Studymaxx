@@ -4,20 +4,23 @@ import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { generateFlashcards } from "../utils/flashcardGenerator";
 import { Flashcard, getOrCreateUserId, getSavedFlashcardSets } from "../utils/storage";
 import { getStudyFact } from "../utils/studyFacts";
+import { checkAIRateLimit, incrementAIUsage, getRemainingGenerations } from "../utils/aiRateLimit";
 import { useTranslation, useSettings } from "../contexts/SettingsContext";
+import { getCurrentUser, supabase } from "../utils/supabase";
 import ArrowIcon from "./icons/ArrowIcon";
 import PremiumModal from "./PremiumModal";
 
 interface CreateFlowViewProps {
   onGenerateFlashcards: (cards: Flashcard[], subject: string, grade: string) => void;
   onBack: () => void;
+  onRequestLogin?: () => void;
 }
 
 type Step = 1 | 2 | 3 | 4;
 type MaterialType = "notes" | "pdf" | "youtube" | "image" | null;
 type Grade = "A" | "B" | "C" | "D" | "E";
 
-export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateFlowViewProps) {
+export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequestLogin }: CreateFlowViewProps) {
   const t = useTranslation();
   const { settings } = useSettings();
   
@@ -48,38 +51,95 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
   const [setsCreated, setSetsCreated] = useState(0);
   const [canCreateMore, setCanCreateMore] = useState(true);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [isDailyLimit, setIsDailyLimit] = useState(false);
   const [premiumCheckLoading, setPremiumCheckLoading] = useState(true);
+  const [hasSession, setHasSession] = useState(false);
 
-  // Check premium status on mount
+  // Check premium status on mount AND when session changes
   useEffect(() => {
     checkPremiumStatus();
+    
+    // Listen for auth state changes
+    if (supabase) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        console.log('[CreateFlowView] Auth state changed:', event, 'Has session:', !!session);
+        setHasSession(!!session);
+        if (session) {
+          checkPremiumStatus();
+        } else {
+          setIsPremium(false);
+          setPremiumCheckLoading(false);
+        }
+      });
+      
+      return () => subscription.unsubscribe();
+    }
   }, []);
 
   const checkPremiumStatus = async () => {
+    console.log('[CreateFlowView] ===== STARTING PREMIUM CHECK =====');
     try {
-      const userId = getOrCreateUserId();
-      const response = await fetch(`/api/premium/check?userId=${userId}`);
+      if (!supabase) {
+        console.log('[CreateFlowView] Supabase not configured');
+        setIsPremium(false);
+        setPremiumCheckLoading(false);
+        return;
+      }
+
+      // Get the current session token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      console.log('[CreateFlowView] Session check:', {
+        hasSession: !!session,
+        userId: session?.user?.id,
+        email: session?.user?.email,
+        error: sessionError
+      });
+      
+      if (sessionError || !session) {
+        console.log('[CreateFlowView] ❌ No session found - user not logged in');
+        setIsPremium(false);
+        setPremiumCheckLoading(false);
+        return;
+      }
+
+      // Call the API with the auth token
+      const response = await fetch('/api/premium/check', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
       
       if (response.ok) {
         const data = await response.json();
+        console.log('[CreateFlowView] ✅ Premium status received:', data);
+        console.log('[CreateFlowView] 🎯 Setting isPremium to:', data.isPremium);
         setIsPremium(data.isPremium);
         setSetsCreated(data.setsCreated);
         setCanCreateMore(data.canCreateMore);
+        console.log('[CreateFlowView] ===== PREMIUM CHECK COMPLETE ===== isPremium:', data.isPremium);
+      } else if (response.status === 401) {
+        console.log('[CreateFlowView] ❌ User not authenticated - treating as free user');
+        setIsPremium(false);
       } else {
+        console.log('[CreateFlowView] ❌ Premium check API failed:', response.status);
         // Fallback to localStorage count
-        const savedSets = getSavedFlashcardSets();
+        const userId = getOrCreateUserId();
+        const savedSets = await getSavedFlashcardSets();
         const userSets = savedSets.filter(set => set.userId === userId);
         setSetsCreated(userSets.length);
         setCanCreateMore(userSets.length < 1);
+        setIsPremium(false);
       }
     } catch (error) {
       console.error('Premium check failed:', error);
       // Fallback to localStorage count
       const userId = getOrCreateUserId();
-      const savedSets = getSavedFlashcardSets();
+      const savedSets = await getSavedFlashcardSets();
       const userSets = savedSets.filter(set => set.userId === userId);
       setSetsCreated(userSets.length);
       setCanCreateMore(userSets.length < 1);
+      setIsPremium(false);
     } finally {
       setPremiumCheckLoading(false);
     }
@@ -133,14 +193,29 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
 
   // Map grade to difficulty settings
   const getGenerationSettings = (grade: Grade) => {
+    // Free users can use up to 20 cards (C, D, E), Premium gets up to 30
+    const maxCards = isPremium ? 30 : 20;
+    
     const settings = {
-      A: { cardCount: 30, difficulty: "comprehensive", quizStrictness: "strict" },
-      B: { cardCount: 25, difficulty: "thorough", quizStrictness: "moderate" },
-      C: { cardCount: 20, difficulty: "standard", quizStrictness: "moderate" },
-      D: { cardCount: 15, difficulty: "focused", quizStrictness: "lenient" },
-      E: { cardCount: 12, difficulty: "essential", quizStrictness: "lenient" }
+      A: { cardCount: Math.min(30, maxCards), difficulty: "comprehensive", quizStrictness: "strict" },
+      B: { cardCount: Math.min(25, maxCards), difficulty: "thorough", quizStrictness: "moderate" },
+      C: { cardCount: Math.min(20, maxCards), difficulty: "standard", quizStrictness: "moderate" },
+      D: { cardCount: Math.min(15, maxCards), difficulty: "focused", quizStrictness: "lenient" },
+      E: { cardCount: Math.min(10, maxCards), difficulty: "essential", quizStrictness: "lenient" }
     };
     return settings[grade];
+  };
+
+  // Get actual card counts for display (not limited by premium status)
+  const getActualCardCount = (grade: Grade) => {
+    const counts = {
+      A: 30,
+      B: 25,
+      C: 20,
+      D: 15,
+      E: 10
+    };
+    return counts[grade];
   };
 
   // Step navigation
@@ -169,7 +244,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
       return;
     }
     
-    if ((selectedMaterial === "pdf" || selectedMaterial === "image") && !uploadedFile) {
+    if ((selectedMaterial === "pdf" || selectedMaterial === "docx" || selectedMaterial === "image") && !uploadedFile) {
       setError(t("please_upload_file") || "Please upload a file");
       return;
     }
@@ -184,11 +259,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
       return;
     }
     
-    // Check if user can create more sets
-    if (!canCreateMore && !isPremium) {
-      setShowPremiumModal(true);
-      return;
-    }
+    // TEMPORARY: Skip Premium check - always allow
+    console.log('[CreateFlowView] Continuing to generation (Premium check bypassed)');
     
     setError("");
     setCurrentStep(4);
@@ -215,11 +287,17 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
     // For PDF, extract text client-side
     if (file.type === "application/pdf") {
       try {
+        setError(""); // Clear any previous errors
+        console.log("📑 Extracting PDF client-side...");
+        
         const pdfjsLib = await import("pdfjs-dist");
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
         const arrayBuffer = await file.arrayBuffer();
+        console.log("📑 PDF loaded, size:", arrayBuffer.byteLength);
+        
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        console.log("📑 PDF pages:", pdf.numPages);
         
         let fullText = "";
         for (let i = 1; i <= pdf.numPages; i++) {
@@ -229,9 +307,20 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
           fullText += pageText + "\n";
         }
         
-        setTextInput(fullText.trim());
-      } catch (err) {
-        setError(t("pdf_extract_failed_manual"));
+        const trimmedText = fullText.trim();
+        console.log("📑 Extracted text length:", trimmedText.length);
+        console.log("📑 First 200 chars:", trimmedText.substring(0, 200));
+        
+        if (trimmedText.length < 20) {
+          setError("PDF appears to be empty or image-based. Please try converting it to images or copy the text manually.");
+          return;
+        }
+        
+        setTextInput(trimmedText);
+        console.log("✅ PDF extraction successful");
+      } catch (err: any) {
+        console.error("❌ PDF extraction failed:", err);
+        setError(`Failed to extract text from PDF: ${err.message || "Unknown error"}. Please try copying the text manually.`);
       }
     } else if (file.type.startsWith("image/")) {
       // Handle image with OCR
@@ -276,6 +365,36 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
   const handleGenerate = async () => {
     if (!targetGrade) return;
     
+    // Wait for Premium check to complete if still loading
+    if (premiumCheckLoading) {
+      console.log('[CreateFlowView] Waiting for Premium check...');
+      await new Promise(resolve => {
+        const checkInterval = setInterval(() => {
+          if (!premiumCheckLoading) {
+            clearInterval(checkInterval);
+            resolve(null);
+          }
+        }, 100);
+      });
+    }
+    
+    // Check rate limit BEFORE generating
+    const currentUser = await getCurrentUser();
+    const userId = currentUser?.id || null;
+    console.log('[CreateFlowView] ========================================');
+    console.log('[CreateFlowView] 🔍 RATE LIMIT CHECK');
+    console.log('[CreateFlowView] isPremium:', isPremium);
+    console.log('[CreateFlowView] userId:', userId);
+    console.log('[CreateFlowView] premiumCheckLoading:', premiumCheckLoading);
+    console.log('[CreateFlowView] ========================================');
+    const rateLimit = checkAIRateLimit(userId, isPremium);
+    console.log('[CreateFlowView] Rate limit result:', rateLimit);
+    
+    if (!rateLimit.allowed) {
+      // TEMPORARY: Bypass rate limit for Premium
+      console.log('[CreateFlowView] ⚠️ Rate limit would block, but bypassing for Premium test');
+    }
+    
     setIsGenerating(true);
     setError("");
 
@@ -288,19 +407,20 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
       if (selectedMaterial === "notes" || selectedMaterial === "image") {
         textToProcess = textInput;
       } else if (selectedMaterial === "youtube") {
-        // Extract from YouTube
-        const formData = new FormData();
-        formData.append("youtubeUrl", youtubeUrl);
-        
-        const response = await fetch("/api/extract-text", {
-          method: "POST",
-          body: formData,
-        });
-        
-        if (!response.ok) throw new Error("Failed to extract YouTube transcript");
-        const data = await response.json();
-        textToProcess = data.text;
+        // Extract from YouTube client-side (YouTube blocks server requests)
+        try {
+          const { fetchYouTubeTranscript } = await import('../utils/youtubeTranscript');
+          textToProcess = await fetchYouTubeTranscript(youtubeUrl);
+          
+          if (!textToProcess || textToProcess.trim().length < 20) {
+            throw new Error("Could not extract transcript or transcript is too short");
+          }
+        } catch (err: any) {
+          throw new Error(err.message || "Failed to extract YouTube transcript. Make sure the video has captions enabled.");
+        }
       } else if (selectedMaterial === "pdf" && textInput) {
+        textToProcess = textInput;
+      } else if (selectedMaterial === "docx" && textInput) {
         textToProcess = textInput;
       }
 
@@ -308,30 +428,46 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
         throw new Error("No content to generate flashcards from");
       }
 
+      // Get userId for premium checks
+      const userIdForGen = userId || getOrCreateUserId();
+
       // Generate flashcards with metadata
       const cards = await generateFlashcards(
         textToProcess,
         settings.cardCount,
         subject,
-        targetGrade
+        targetGrade,
+        userIdForGen
       );
+
+      // Increment rate limit counter AFTER successful generation
+      if (userId && !isPremium) {
+        incrementAIUsage(userId);
+      }
 
       onGenerateFlashcards(cards, subject, targetGrade);
       
-      // Increment the user's sets_created counter
-      try {
-        const userId = getOrCreateUserId();
-        await fetch('/api/premium/increment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId })
-        });
-        // Refresh premium status
-        await checkPremiumStatus();
-      } catch (error) {
-        console.error('Failed to increment counter:', error);
-      }
+      // Refresh premium status after successful generation
+      await checkPremiumStatus();
     } catch (err: any) {
+      // Handle premium-related errors
+      if (err.message === "PREMIUM_REQUIRED" || err.message.includes("Upgrade to Premium")) {
+        setIsDailyLimit(false);
+        setShowPremiumModal(true);
+        setIsGenerating(false);
+        setCurrentStep(2); // Go back to material step
+        return;
+      }
+      
+      if (err.message === "DAILY_LIMIT_REACHED" || err.message.includes("daily")) {
+        setError("You've reached your daily AI generation limit. Upgrade to Premium for unlimited generations!");
+        setIsGenerating(false);
+        setCurrentStep(2);
+        setIsDailyLimit(true);
+        setTimeout(() => setShowPremiumModal(true), 500);
+        return;
+      }
+
       setError(err.message || "Failed to generate flashcards");
       setIsGenerating(false);
       setCurrentStep(2); // Go back to material step
@@ -496,8 +632,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
                     </div>
                   </button>
 
-                  {/* PDF/DOCX */}
-                  <button
+                  {/* PDF/DOCX - Disabled */}
+                  {/* <button
                     onClick={() => {
                       if (!isPremium) {
                         setShowPremiumModal(true);
@@ -521,10 +657,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
                         </p>
                       </div>
                     </div>
-                  </button>
+                  </button> */}
 
-                  {/* YouTube */}
-                  <button
+                  {/* YouTube - Disabled */}
+                  {/* <button
                     onClick={() => {
                       if (!isPremium) {
                         setShowPremiumModal(true);
@@ -545,6 +681,33 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
                         <h3 className="text-lg font-bold" style={{ color: 'var(--foreground)' }}>{t("youtube_video")}</h3>
                         <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
                           {t("learn_from_video")}
+                        </p>
+                      </div>
+                    </div>
+                  </button> */}
+
+                  {/* DOCX Files */}
+                  <button
+                    onClick={() => {
+                      if (!isPremium) {
+                        setShowPremiumModal(true);
+                      } else {
+                        setSelectedMaterial("docx");
+                      }
+                    }}
+                    className="card card-hover p-6 text-left relative"
+                  >
+                    {!isPremium && (
+                      <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                        Premium
+                      </div>
+                    )}
+                    <div className="flex items-center gap-4">
+                      <div className="text-4xl">📄</div>
+                      <div>
+                        <h3 className="text-lg font-bold" style={{ color: 'var(--foreground)' }}>{t("docx_document")}</h3>
+                        <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                          Upload Word documents
                         </p>
                       </div>
                     </div>
@@ -653,6 +816,45 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
                               </p>
                               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 {t("pdf_or_docx")}
+                              </p>
+                            </div>
+                          )}
+                        </label>
+                      </div>
+                    )}
+
+                    {/* DOCX upload */}
+                    {selectedMaterial === "docx" && (
+                      <div>
+                        <input
+                          type="file"
+                          id="docx-upload"
+                          accept=".docx"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                        <label
+                          htmlFor="docx-upload"
+                          className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl hover:border-blue-400 dark:hover:border-blue-600 cursor-pointer transition-all bg-gray-50 dark:bg-gray-900/50"
+                        >
+                          {uploadedFile ? (
+                            <div className="text-center">
+                              <div className="text-4xl mb-2">✅</div>
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                {uploadedFile.name}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                {t("click_to_change")}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="text-center">
+                              <div className="text-4xl mb-2">📄</div>
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                {t("click_to_upload")}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Word documents (.docx)
                               </p>
                             </div>
                           )}
@@ -779,35 +981,54 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
 
               {/* Grade options */}
               <div className="space-y-3">
-                {getGradeOptions().map(({ grade, label, description }) => (
-                  <button
-                    key={grade}
-                    onClick={() => setTargetGrade(grade)}
-                    className={`w-full p-5 border-2 rounded-2xl text-left transition-all hover:scale-[1.02] ${
-                      targetGrade === grade
-                        ? "border-blue-500 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 shadow-lg"
-                        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className={`text-lg font-bold mb-1 ${
-                          targetGrade === grade
-                            ? "text-blue-600 dark:text-blue-400"
-                            : "text-gray-900 dark:text-white"
-                        }`}>
-                          {label}
+                {getGradeOptions().map(({ grade, label, description }) => {
+                  const actualCardCount = getActualCardCount(grade);
+                  const isLocked = !isPremium && actualCardCount > 20;
+                  
+                  return (
+                    <button
+                      key={grade}
+                      onClick={() => {
+                        if (isLocked) {
+                          setShowPremiumModal(true);
+                        } else {
+                          setTargetGrade(grade);
+                        }
+                      }}
+                      className={`w-full p-5 border-2 rounded-2xl text-left transition-all hover:scale-[1.02] relative ${
+                        targetGrade === grade
+                          ? "border-blue-500 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 shadow-lg"
+                          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300"
+                      } ${isLocked ? 'opacity-75' : ''}`}
+                    >
+                      {isLocked && (
+                        <div className="absolute top-3 right-3 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                          Premium
                         </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                          {description}
-                        </div>
-                      </div>
-                      {targetGrade === grade && (
-                        <div className="text-2xl">✓</div>
                       )}
-                    </div>
-                  </button>
-                ))}
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 pr-4">
+                          <div className={`text-lg font-bold mb-1 ${
+                            targetGrade === grade
+                              ? "text-blue-600 dark:text-blue-400"
+                              : "text-gray-900 dark:text-white"
+                          }`}>
+                            {label}
+                          </div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                            {description}
+                          </div>
+                          <div className="text-xs font-medium text-gray-500 dark:text-gray-500 mt-2">
+                            {actualCardCount} {t("flashcards") || "flashcards"}
+                          </div>
+                        </div>
+                        {targetGrade === grade && !isLocked && (
+                          <div className="text-2xl">✓</div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Continue button */}
@@ -863,8 +1084,13 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack }: CreateF
       {showPremiumModal && (
         <PremiumModal 
           isOpen={showPremiumModal}
-          onClose={() => setShowPremiumModal(false)}
+          onClose={() => {
+            setShowPremiumModal(false);
+            setIsDailyLimit(false);
+          }}
           setsCreated={setsCreated}
+          isDailyLimit={isDailyLimit}
+          onRequestLogin={onRequestLogin}
         />
       )}
     </>

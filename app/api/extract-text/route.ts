@@ -1,7 +1,6 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import { YoutubeTranscript } from "youtube-transcript";
 import Tesseract from "tesseract.js";
 import mammoth from "mammoth";
 import {
@@ -68,70 +67,15 @@ export async function POST(req: Request) {
         );
       }
 
-      try {
-        // Validate YouTube URL format
-        const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[\w-]+/;
-        if (!youtubeRegex.test(youtubeUrl)) {
-          return NextResponse.json(
-            { error: "Invalid YouTube URL. Please provide a valid youtube.com or youtu.be link." },
-            { status: 400 }
-          );
-        }
-
-        console.log("📺 Extracting YouTube transcript...");
-        const transcript = await YoutubeTranscript.fetchTranscript(youtubeUrl);
-        const rawText = transcript.map((item: { text: string }) => item.text).join(' ');
-        
-        // Validation
-        const validation = validateExtractedText(rawText);
-        if (!validation.valid) {
-          return NextResponse.json(
-            { error: `YouTube transcript validation failed: ${validation.reason}` },
-            { status: 400 }
-          );
-        }
-
-        // Cleanup
-        const cleanedText = cleanText(rawText);
-        const stats = getTextStats(cleanedText);
-        const language = detectLanguage(cleanedText);
-
-        console.log(`✅ YouTube extraction successful: ${stats.wordCount} words, ${language}`);
-
-        return NextResponse.json({
-          text: cleanedText,
-          metadata: {
-            fileType: 'youtube',
-            wordCount: stats.wordCount,
-            characterCount: stats.characterCount,
-            language: language,
-            extractionMethod: 'YouTube Transcript API'
-          }
-        });
-      } catch (err: any) {
-        console.error("❌ YOUTUBE TRANSCRIPT ERROR:", err);
-        
-        const errorMessage = err?.message || '';
-        
-        if (errorMessage.includes('Transcript is disabled') || errorMessage.includes('transcripts are disabled')) {
-          return NextResponse.json(
-            { error: "This video doesn't have captions yet. Try notes or PDFs instead." },
-            { status: 400 }
-          );
-        }
-        
-        if (errorMessage.includes('Video unavailable') || errorMessage.includes('not available')) {
-          return NextResponse.json(
-            { error: "This video is unavailable or private. Please try a different video." },
-            { status: 400 }
-          );
-        }
-        
-        return NextResponse.json(
-          { error: "Could not extract captions from this video. It may not have captions enabled, or the video might be unavailable." },
-          { status: 400 }
-        );
-      }
+      // YouTube transcripts must be fetched from client-side due to YouTube's bot protection
+      // The client will send us the transcript text directly
+      return NextResponse.json(
+        { 
+          error: "YouTube transcript extraction must be done from browser. Please use the client-side handler.",
+          requiresClientSide: true
+        },
+        { status: 400 }
+      );
     }
 
     // ===========================================

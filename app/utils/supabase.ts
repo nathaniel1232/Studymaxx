@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 // These should be in environment variables in production
 // For now, they can be public as they're client-side only
@@ -6,7 +6,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createBrowserClient(supabaseUrl, supabaseAnonKey)
   : null;
 
 /**
@@ -14,6 +14,39 @@ export const supabase = supabaseUrl && supabaseAnonKey
  */
 export const isSupabaseConfigured = () => {
   return supabase !== null;
+};
+
+/**
+ * Sign in with email and password
+ */
+export const signInWithEmail = async (email: string, password: string) => {
+  if (!supabase) throw new Error('Supabase not configured');
+  
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Sign up with email and password
+ */
+export const signUpWithEmail = async (email: string, password: string) => {
+  if (!supabase) throw new Error('Supabase not configured');
+  
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: `${window.location.origin}/auth/callback`,
+    },
+  });
+  
+  if (error) throw error;
+  return data;
 };
 
 /**
