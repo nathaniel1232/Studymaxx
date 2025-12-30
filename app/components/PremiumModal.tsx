@@ -36,6 +36,12 @@ export default function PremiumModal({
     setError("");
 
     try {
+      // Check if supabase is initialized
+      if (!supabase) {
+        setError("Internal error: Supabase not initialized");
+        setIsLoading(false);
+        return;
+      }
       // Check if user is authenticated
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
