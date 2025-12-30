@@ -50,19 +50,16 @@ export async function POST(request: NextRequest) {
 
     console.log(`🔓 Manual Premium activation requested for user: ${userId} (${user.email})`);
 
-    // Find the user's most recent Stripe customer ID
+    // Find the user's Stripe customer ID by searching customers
     let stripeCustomerId: string | null = null;
     try {
-      const sessions = await stripe.checkout.sessions.list({
-        limit: 10,
-        customer_details: {
-          email: user.email
-        }
+      const customers = await stripe.customers.list({
+        email: user.email,
+        limit: 1
       });
       
-      const userSession = sessions.data.find(s => s.metadata?.userId === userId);
-      if (userSession?.customer) {
-        stripeCustomerId = userSession.customer as string;
+      if (customers.data.length > 0) {
+        stripeCustomerId = customers.data[0].id;
         console.log(`Found Stripe customer ID: ${stripeCustomerId}`);
       }
     } catch (err) {
