@@ -383,7 +383,7 @@ export function useTranslation() {
       "enter_email": { en: "Enter your email...", no: "Skriv inn e-posten din..." },
       "send_magic_link": { en: "Send magic link", no: "Send magisk lenke" },
       "magic_link_sent_title": { en: "Check Your Email!", no: "Sjekk e-posten din!" },
-      "magic_link_sent": { en: "We've sent a magic link to {email}. Click it to log in instantly.", no: "Vi har sendt en magisk lenke til {email}. Klikk på den for å logge inn umiddelbart." },
+      // "magic_link_sent": { en: "We've sent a magic link to {email}. Click it to log in instantly.", no: "Vi har sendt en magisk lenke til {email}. Klikk på den for å logge inn umiddelbart." },
       "sending": { en: "Sending...", no: "Sender..." },
       "or": { en: "or", no: "eller" },
       "continue_with_google": { en: "Continue with Google", no: "Fortsett med Google" },
