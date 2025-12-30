@@ -17,7 +17,7 @@ interface CreateFlowViewProps {
 }
 
 type Step = 1 | 2 | 3 | 4;
-type MaterialType = "notes" | "pdf" | "youtube" | "image" | null;
+type MaterialType = "notes" | "pdf" | "youtube" | "image" | "docx" | null;
 type Grade = "A" | "B" | "C" | "D" | "E";
 
 export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequestLogin }: CreateFlowViewProps) {
