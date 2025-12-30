@@ -394,7 +394,7 @@ export function useTranslation() {
       "profile": { en: "Profile", no: "Profil" },
       "account": { en: "Account", no: "Konto" },
       "sign_out": { en: "Sign out", no: "Logg ut" },
-      "upgrade_premium": { en: "Upgrade to Premium", no: "Oppgrader til Premium" },
+      // "upgrade_premium": { en: "Upgrade to Premium", no: "Oppgrader til Premium" },
       "profile_coming_soon": { en: "Profile coming soon! For now, you can save flashcards locally.", no: "Profil kommer snart! Foreløpig kan du lagre kunnskapskort lokalt." },
       "enter_set_name": { en: "Name your flashcard set...", no: "Navngi kunnskapskortsett..." },
       "set_saved": { en: "Flashcard set saved successfully!", no: "Kunnskapskortsettet ble lagret!" },
