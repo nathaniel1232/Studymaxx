@@ -474,9 +474,9 @@ export function useTranslation() {
       "premium_unlimited": { en: "Premium: Unlimited generations", no: "Premium: Ubegrensede genereringer" },
       "current_plan": { en: "Current Plan", no: "Nåværende plan" },
       "subscription": { en: "Subscription", no: "Abonnement" },
-      "upgrade_premium": { en: "Upgrade to Premium", no: "Oppgrader til Premium" },
-      "account": { en: "Account", no: "Konto" },
-      "sign_out": { en: "Sign out", no: "Logg ut" },
+      // "upgrade_premium": { en: "Upgrade to Premium", no: "Oppgrader til Premium" },
+      // "account": { en: "Account", no: "Konto" },
+      // "sign_out": { en: "Sign out", no: "Logg ut" },
       
       "premium_includes": { en: "Premium includes", no: "Premium inkluderer" },
       "unlimited_study_sets": { en: "Unlimited Study Sets", no: "Ubegrensede Studiesett" },
