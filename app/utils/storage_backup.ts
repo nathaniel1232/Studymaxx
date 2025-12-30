@@ -24,11 +24,11 @@ export interface FlashcardSet {
 }
 
 // For backwards compatibility
-      createdAt: new Date().toISOString(),
-      userId,
-      subject,
-      grade
-    };
+	  createdAt: new Date().toISOString(),
+	  userId: "anonymous", // or use getOrCreateUserId() if available
+	  subject,
+	  grade
+	};
 
     savedSets.push(newSet);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(savedSets));
