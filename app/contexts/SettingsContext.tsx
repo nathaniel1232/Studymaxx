@@ -392,7 +392,7 @@ export function useTranslation() {
       "check_your_email": { en: "Check your email!", no: "Sjekk e-posten din!" },
       "magic_link_sent": { en: "We've sent a magic link to {email}. Click it to log in instantly.", no: "Vi har sendt en magisk lenke til {email}. Klikk på den for å logge inn umiddelbart." },
       "profile": { en: "Profile", no: "Profil" },
-      "account": { en: "Account", no: "Konto" },
+      // "account": { en: "Account", no: "Konto" },
       "sign_out": { en: "Sign out", no: "Logg ut" },
       // "upgrade_premium": { en: "Upgrade to Premium", no: "Oppgrader til Premium" },
       "profile_coming_soon": { en: "Profile coming soon! For now, you can save flashcards locally.", no: "Profil kommer snart! Foreløpig kan du lagre kunnskapskort lokalt." },
