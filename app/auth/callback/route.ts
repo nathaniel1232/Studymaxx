@@ -59,7 +59,8 @@ export async function GET(request: Request) {
       // Successfully authenticated, redirect to home
       // The session is now set in cookies by Supabase
       revalidatePath('/', 'layout');
-      const response = NextResponse.redirect(new URL('/', origin));
+      // Redirect with a param to trigger page refresh on client
+      const response = NextResponse.redirect(new URL('/?auth=success', origin));
       return response;
     } catch (error) {
       console.error('[AUTH CALLBACK] Exception:', error);

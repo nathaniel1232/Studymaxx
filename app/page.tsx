@@ -89,6 +89,30 @@ export default function Home() {
     checkPremiumSuccess();
   }, [user]);
 
+  // Handle OAuth success redirect - refresh auth state
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const authSuccess = urlParams.get('auth');
+    
+    if (authSuccess === 'success') {
+      console.log('[Auth] OAuth callback detected - refreshing session...');
+      // Clear the param
+      window.history.replaceState({}, '', '/');
+      
+      // Force Supabase to refresh the session from cookies
+      if (supabase) {
+        supabase.auth.refreshSession().then(() => {
+          console.log('[Auth] Session refreshed after OAuth callback');
+          // This will trigger onAuthStateChange listener
+        }).catch(error => {
+          console.error('[Auth] Failed to refresh session:', error);
+          // Fallback: reload the page to force fresh auth check
+          setTimeout(() => window.location.reload(), 500);
+        });
+      }
+    }
+  }, []);
+
   // Check auth status
   useEffect(() => {
     const loadUser = async () => {
