@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { revalidatePath } from 'next/cache';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -56,7 +57,10 @@ export async function GET(request: Request) {
 
       console.log('[AUTH CALLBACK] Success, redirecting to:', origin);
       // Successfully authenticated, redirect to home
-      return NextResponse.redirect(new URL('/', origin));
+      // The session is now set in cookies by Supabase
+      revalidatePath('/', 'layout');
+      const response = NextResponse.redirect(new URL('/', origin));
+      return response;
     } catch (error) {
       console.error('[AUTH CALLBACK] Exception:', error);
       return NextResponse.redirect(new URL('/?error=auth_exception', origin));
