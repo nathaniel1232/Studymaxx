@@ -5,13 +5,23 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get('code');
   const error = requestUrl.searchParams.get('error');
   const error_description = requestUrl.searchParams.get('error_description');
+  const state = requestUrl.searchParams.get('state');
 
   // Get the origin
   const host = request.headers.get('host') || '';
   const protocol = request.headers.get('x-forwarded-proto') || 'https';
   const origin = `${protocol}://${host}`;
 
-  console.log('[AUTH CALLBACK] Received:', { code: code ? 'yes' : 'no', error, host, protocol });
+  console.log('[AUTH CALLBACK]', {
+    url: request.url,
+    code: code ? 'present' : 'missing',
+    error,
+    error_description,
+    host,
+    protocol,
+    origin,
+    state: state ? 'present' : 'missing'
+  });
 
   // Check for OAuth errors from Google/Supabase
   if (error) {

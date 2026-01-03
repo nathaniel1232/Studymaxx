@@ -71,10 +71,17 @@ export const signInWithMagicLink = async (email: string) => {
 export const signInWithGoogle = async () => {
   if (!supabase) throw new Error('Supabase not configured');
   
+  // Use explicit redirect URL for production
+  const redirectUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}/auth/callback`
+    : 'https://studymaxx.net/auth/callback';
+  
+  console.log('[Auth] Google OAuth redirect URL:', redirectUrl);
+  
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo: redirectUrl,
     },
   });
   
