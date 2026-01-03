@@ -25,7 +25,7 @@ export interface FlashcardSet {
 
 export type SavedFlashcardSet = FlashcardSet;
 
-const STORAGE_KEY = "studymaxx_flashcard_sets";
+export const STORAGE_KEY = "studymaxx_flashcard_sets";
 const USER_ID_KEY = "studymaxx_user_id";
 const SHARED_SETS_KEY = "studymaxx_shared_sets";
 const USER_AGE_KEY = "studymaxx_user_age";
@@ -46,7 +46,7 @@ const generateShareId = (): string => {
   return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 };
 
-const getAuthToken = async (): Promise<string | null> => {
+export const getAuthToken = async (): Promise<string | null> => {
   if (!supabase) return null;
   const { data: { session } } = await supabase.auth.getSession();
   return session?.access_token || null;

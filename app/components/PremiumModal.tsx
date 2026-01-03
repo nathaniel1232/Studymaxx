@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "../contexts/SettingsContext";
 import { getPremiumFeatures, getPremiumPitch, PRICING } from "../utils/premium";
 import { supabase } from "../utils/supabase";
@@ -25,6 +25,40 @@ export default function PremiumModal({
   const t = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Monitor auth state continuously
+  useEffect(() => {
+    if (!supabase) {
+      return;
+    }
+
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase!.auth.getSession();
+        setIsLoggedIn(!!session);
+      } catch (error) {
+        console.error("Error checking auth:", error);
+      }
+    };
+    
+    checkAuth();
+
+    // Subscribe to auth state changes
+    try {
+      const { data: { subscription } } = supabase!.auth.onAuthStateChange(
+        (event, session) => {
+          setIsLoggedIn(!!session);
+        }
+      );
+
+      return () => {
+        subscription?.unsubscribe();
+      };
+    } catch (error) {
+      console.error("Error subscribing to auth:", error);
+    }
+  }, []);
 
   if (!isOpen) return null;
 
@@ -219,6 +253,21 @@ export default function PremiumModal({
             </div>
           </div>
 
+          {/* Login reminder for unauthenticated users */}
+          {!isLoggedIn && (
+            <div className="bg-gradient-to-br from-blue-900/60 to-cyan-900/60 rounded-2xl p-5 mb-6 border-2 border-blue-600">
+              <div className="flex items-start gap-3">
+                <div className="text-3xl">🔐</div>
+                <div>
+                  <h3 className="font-bold text-blue-100 mb-2">Sign in required</h3>
+                  <p className="text-sm text-gray-200 leading-relaxed">
+                    To upgrade to Premium, you need to sign in to your account. This keeps your subscription and study data secure.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Pricing Card */}
           <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl p-6 mb-5" style={{ color: '#ffffff' }}>
             <div className="flex items-center justify-between mb-4">
@@ -226,7 +275,7 @@ export default function PremiumModal({
                 <div className="text-5xl font-black" style={{ color: '#ffffff' }}>
                   {PRICING.monthly.display}
                 </div>
-                <div className="text-lg font-bold opacity-90" style={{ color: '#ffffff' }}>per month</div>
+                <div className="text-lg font-bold opacity-90" style={{ color: '#ffffff' }}>{t("per_month") || "per month"}</div>
               </div>
               <div className="text-right">
                 <div className="text-sm opacity-75 line-through" style={{ color: '#ffffff' }}>
@@ -253,7 +302,16 @@ export default function PremiumModal({
           {/* CTA Buttons */}
           <div className="space-y-3">
             <button
-              onClick={handleUpgrade}
+              onClick={() => {
+                if (isLoggedIn) {
+                  handleUpgrade();
+                } else {
+                  onClose(); // Close premium modal first
+                  if (onRequestLogin) {
+                    onRequestLogin(); // Then open login modal
+                  }
+                }
+              }}
               disabled={isLoading}
               className="w-full py-5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 hover:from-amber-600 hover:via-orange-600 hover:to-amber-600 disabled:from-gray-400 disabled:to-gray-500 text-white font-black rounded-2xl transition-all text-xl shadow-2xl hover:shadow-3xl hover:scale-105 disabled:cursor-not-allowed flex items-center justify-center gap-3"
             >
@@ -262,10 +320,16 @@ export default function PremiumModal({
                   <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
                   <span>Processing...</span>
                 </>
-              ) : (
+              ) : isLoggedIn ? (
                 <>
                   <span>⚡</span>
                   <span>Ascend to Premium Now</span>
+                  <span>→</span>
+                </>
+              ) : (
+                <>
+                  <span>🔐</span>
+                  <span>Sign in to Continue</span>
                   <span>→</span>
                 </>
               )}
@@ -286,7 +350,7 @@ export default function PremiumModal({
           <div className="mt-6 pt-6 border-t-2 border-gray-700 flex items-center justify-center gap-6 text-sm font-semibold" style={{ color: '#9ca3af' }}>
             <div className="flex items-center gap-2">
               <span>🔒</span>
-              <span>Secure payment</span>
+              <span>{t("secure_payment") || "Secure payment"}</span>
             </div>
             <div className="flex items-center gap-2">
               <span>✓</span>

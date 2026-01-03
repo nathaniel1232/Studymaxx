@@ -136,7 +136,7 @@ export default function UserProfileDropdown({ user, isPremium, onNavigateSetting
                 }}
               >
                 <span>⭐</span>
-                <span>Premium Member</span>
+                <span>{t("premium_member") || "Premium Member"}</span>
               </div>
             )}
           </div>

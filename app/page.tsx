@@ -245,24 +245,6 @@ export default function Home() {
             </div>
           </nav>
           
-          {/* Login Modal */}
-          {showLoginModal && (
-            <LoginModal 
-              onClose={() => setShowLoginModal(false)}
-              onSkip={() => setShowLoginModal(false)}
-            />
-          )}
-
-          {/* Premium Modal */}
-          {showPremiumModal && (
-            <PremiumModal
-              isOpen={showPremiumModal}
-              onClose={() => setShowPremiumModal(false)}
-              setsCreated={savedSets.length}
-              onRequestLogin={() => setShowLoginModal(true)}
-            />
-          )}
-
           {/* Hero Section */}
           <div className="flex-1 flex items-center justify-center relative z-10">
             <div className="text-center max-w-4xl mx-auto px-4 py-12">
@@ -446,6 +428,23 @@ export default function Home() {
       {viewMode === "settings" && (
         <SettingsView 
           onBack={handleBackToHome}
+        />
+      )}
+
+      {/* Modals - rendered at all times, not just in home view */}
+      {showLoginModal && (
+        <LoginModal 
+          onClose={() => setShowLoginModal(false)}
+          onSkip={() => setShowLoginModal(false)}
+        />
+      )}
+
+      {showPremiumModal && (
+        <PremiumModal
+          isOpen={showPremiumModal}
+          onClose={() => setShowPremiumModal(false)}
+          setsCreated={savedSets.length}
+          onRequestLogin={() => setShowLoginModal(true)}
         />
       )}
     </main>

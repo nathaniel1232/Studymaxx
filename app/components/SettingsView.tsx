@@ -126,7 +126,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                 {/* Email */}
                 <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
                   <div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Email</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t("email")}</div>
                     <div className="font-medium text-gray-900 dark:text-white">{user.email}</div>
                   </div>
                   <span className="text-2xl">📧</span>
@@ -144,7 +144,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                       {isPremium ? (
                         <span className="text-amber-600 dark:text-amber-400">⭐ Premium</span>
                       ) : (
-                        <span>Free</span>
+                        <span>{t("free") || "Free"}</span>
                       )}
                     </div>
                   </div>

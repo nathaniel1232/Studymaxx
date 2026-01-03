@@ -111,21 +111,42 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
       style={{ 
         background: 'rgba(0, 0, 0, 0.7)', 
         backdropFilter: 'blur(8px)',
-        zIndex: 10000
+        zIndex: 10000,
+        animation: 'fadeIn 0.3s ease-out'
       }}
       onClick={onClose}
     >
       <div 
-        className="card-elevated max-w-md w-full p-10 rounded-3xl shadow-2xl bounce-in"
+        className="max-w-md w-full rounded-3xl shadow-2xl overflow-hidden"
         style={{ 
           background: 'var(--surface-elevated)', 
           border: '2px solid var(--border)',
           position: 'relative',
           zIndex: 10001,
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)'
+          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+          animation: 'slideUp 0.3s ease-out',
+          maxHeight: '85vh',
+          overflowY: 'auto'
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        <style>{`
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+          @keyframes slideUp {
+            from { 
+              opacity: 0;
+              transform: translateY(30px);
+            }
+            to { 
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}</style>
+        <div className="p-8">
         {magicLinkSent ? (
           <>
             {/* Magic Link Sent Confirmation */}
@@ -288,8 +309,7 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
               </p>
             </div>
           </>
-        )}
-      </div>
+        )}        </div>      </div>
     </div>
   );
 }

@@ -51,11 +51,30 @@ interface Flashcard {
 
 /**
  * Get or create user in database
+ * For anonymous users (starting with 'anon_'), return a default free user status
  */
 async function getOrCreateUser(userId: string): Promise<UserStatus | null> {
+  // For anonymous users, return default free tier status without database
+  if (userId.startsWith('anon_') || userId.startsWith('anon-')) {
+    console.log("[API /generate] Anonymous user detected, using local limits");
+    return {
+      id: userId,
+      isPremium: false,
+      studySetCount: 0,
+      dailyAiCount: 0,
+      lastAiReset: new Date(),
+    };
+  }
+
   if (!supabase) {
-    console.error("Supabase not configured");
-    return null;
+    console.error("Supabase not configured, using default user status");
+    return {
+      id: userId,
+      isPremium: false,
+      studySetCount: 0,
+      dailyAiCount: 0,
+      lastAiReset: new Date(),
+    };
   }
 
   try {
@@ -94,7 +113,14 @@ async function getOrCreateUser(userId: string): Promise<UserStatus | null> {
 
       if (createError) {
         console.error("Error creating user:", createError);
-        return null;
+        // Return default status instead of null
+        return {
+          id: userId,
+          isPremium: false,
+          studySetCount: 0,
+          dailyAiCount: 0,
+          lastAiReset: new Date(),
+        };
       }
 
       return {
@@ -107,10 +133,24 @@ async function getOrCreateUser(userId: string): Promise<UserStatus | null> {
     }
 
     console.error("Error fetching user:", error);
-    return null;
+    // Return default status instead of null
+    return {
+      id: userId,
+      isPremium: false,
+      studySetCount: 0,
+      dailyAiCount: 0,
+      lastAiReset: new Date(),
+    };
   } catch (err) {
     console.error("Exception in getOrCreateUser:", err);
-    return null;
+    // Return default status instead of null
+    return {
+      id: userId,
+      isPremium: false,
+      studySetCount: 0,
+      dailyAiCount: 0,
+      lastAiReset: new Date(),
+    };
   }
 }
 
