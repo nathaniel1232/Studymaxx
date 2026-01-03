@@ -8,7 +8,15 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
-  const origin = requestUrl.origin;
+  
+  // Get the correct origin - use from URL if available, otherwise from request headers
+  let origin = requestUrl.origin;
+  const host = request.headers.get('host');
+  const protocol = request.headers.get('x-forwarded-proto') || 'http';
+  
+  if (host) {
+    origin = `${protocol}://${host}`;
+  }
 
   if (code && supabaseUrl && supabaseAnonKey) {
     try {
