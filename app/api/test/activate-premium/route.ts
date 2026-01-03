@@ -1,16 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
-// ⚠️ WARNING: This is a TEST endpoint only - Remove before production!
-// Set ENABLE_TEST_ENDPOINTS=true in .env.local to use
+// ⚠️ WARNING: This endpoint is DEPRECATED
+// Use `node scripts/activate-premium.js <email>` instead
+// Keep this for emergency only, disabled by default
 
 export async function POST(request: Request) {
-  // Check if test endpoints are enabled
-  if (process.env.ENABLE_TEST_ENDPOINTS !== 'true') {
-    return new Response(
-      JSON.stringify({ error: 'Test endpoints are disabled' }),
-      { status: 403 }
-    );
-  }
+  // Test endpoints disabled - use CLI script instead
+  return new Response(
+    JSON.stringify({ 
+      error: 'This endpoint is disabled for security',
+      message: 'Use: node scripts/activate-premium.js <email> instead'
+    }),
+    { status: 403 }
+  );
 
   try {
     const { email } = await request.json();
