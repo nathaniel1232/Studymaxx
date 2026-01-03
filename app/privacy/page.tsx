@@ -39,7 +39,7 @@ export default function PrivacyPage() {
                 StudyMaxx is designed with your privacy in mind. We collect minimal information to provide our service:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Study content:</strong> Notes, PDFs, and other materials you upload are processed to generate flashcards. This content is sent to our AI service (Groq) for processing only.</li>
+                <li><strong>Study content:</strong> Notes, PDFs, and other materials you upload are processed to generate flashcards. This content is sent to our AI service (OpenAI GPT-4o mini) for processing only.</li>
                 <li><strong>Local storage:</strong> Your flashcard sets and settings are stored locally in your browser. We do not store this data on our servers.</li>
                 <li><strong>Optional account data:</strong> If you create an account (Supabase), we store your email address and authentication tokens securely.</li>
               </ul>
@@ -65,7 +65,7 @@ export default function PrivacyPage() {
                 We do not sell or share your personal information with third parties. However:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Groq AI:</strong> Your study content is sent to Groq's API for AI processing. Groq's privacy policy applies to this data.</li>
+                <li><strong>OpenAI API:</strong> Your study content is sent to OpenAI's API for AI processing to generate flashcards. OpenAI's privacy policy applies to this data.</li>
                 <li><strong>Supabase:</strong> If you create an account, authentication and data storage is handled by Supabase.</li>
               </ul>
             </section>
