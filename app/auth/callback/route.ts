@@ -9,13 +9,17 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
   
-  // Get the correct origin - use from URL if available, otherwise from request headers
-  let origin = requestUrl.origin;
-  const host = request.headers.get('host');
-  const protocol = request.headers.get('x-forwarded-proto') || 'http';
+  // Determine the correct origin
+  // In production (Vercel), use studymaxx.net
+  // In development, use the request origin
+  let origin: string;
   
-  if (host) {
-    origin = `${protocol}://${host}`;
+  if (process.env.NODE_ENV === 'production') {
+    // Always use studymaxx.net in production
+    origin = 'https://studymaxx.net';
+  } else {
+    // In development, use the actual request origin
+    origin = requestUrl.origin;
   }
 
   if (code && supabaseUrl && supabaseAnonKey) {
