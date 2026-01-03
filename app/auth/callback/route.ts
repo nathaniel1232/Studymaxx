@@ -1,74 +1,42 @@
-import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
-import { revalidatePath } from 'next/cache';
+import { type NextRequest, NextResponse } from 'next/server';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
-  
-  // Get the actual host from the request headers
+  const error = requestUrl.searchParams.get('error');
+  const error_description = requestUrl.searchParams.get('error_description');
+
+  // Get the origin
   const host = request.headers.get('host') || '';
-  const protocol = request.headers.get('x-forwarded-proto') || request.headers.get('x-proto') || 'https';
-  
-  // Build the origin from actual request headers
+  const protocol = request.headers.get('x-forwarded-proto') || 'https';
   const origin = `${protocol}://${host}`;
-  
-  console.log('[AUTH CALLBACK] Host:', host, 'Protocol:', protocol, 'Origin:', origin);
 
-  if (code && supabaseUrl && supabaseAnonKey) {
-    try {
-      const cookieStore = await cookies();
-      
-      // Create a Supabase client with proper SSR support
-      const supabase = createServerClient(
-        supabaseUrl,
-        supabaseAnonKey,
-        {
-          cookies: {
-            getAll() {
-              return cookieStore.getAll();
-            },
-            setAll(cookiesToSet) {
-              try {
-                cookiesToSet.forEach(({ name, value, options }) =>
-                  cookieStore.set(name, value, options)
-                );
-              } catch {
-                // The `setAll` method was called from a Server Component.
-                // This can be ignored if you have middleware refreshing
-                // user sessions.
-              }
-            },
-          },
-        }
-      );
+  console.log('[AUTH CALLBACK] Received:', { code: code ? 'yes' : 'no', error, host, protocol });
 
-      // Exchange the code for a session
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
-
-      if (error) {
-        console.error('[AUTH CALLBACK] Auth error:', error);
-        return NextResponse.redirect(new URL('/?error=auth_failed', origin));
-      }
-
-      console.log('[AUTH CALLBACK] Success, redirecting to:', origin);
-      // Successfully authenticated, redirect to home
-      // The session is now set in cookies by Supabase
-      revalidatePath('/', 'layout');
-      // Redirect with a param to trigger page refresh on client
-      const response = NextResponse.redirect(new URL('/?auth=success', origin));
-      return response;
-    } catch (error) {
-      console.error('[AUTH CALLBACK] Exception:', error);
-      return NextResponse.redirect(new URL('/?error=auth_exception', origin));
+  // Check for OAuth errors from Google/Supabase
+  if (error) {
+    console.error('[AUTH CALLBACK] OAuth error:', error, error_description);
+    const errorUrl = new URL('/', origin);
+    errorUrl.searchParams.set('error', error);
+    if (error_description) {
+      errorUrl.searchParams.set('error_description', error_description);
     }
+    return NextResponse.redirect(errorUrl);
   }
 
-  // If no code, redirect to home with error
-  console.log('[AUTH CALLBACK] No code provided');
-  return NextResponse.redirect(new URL('/?error=no_code', origin));
+  if (!code) {
+    console.error('[AUTH CALLBACK] No code provided');
+    const errorUrl = new URL('/', origin);
+    errorUrl.searchParams.set('error', 'no_code');
+    return NextResponse.redirect(errorUrl);
+  }
+
+  // If we have a code, the middleware will handle the exchangeCodeForSession
+  // Just redirect to home with success param - middleware processes the code
+  console.log('[AUTH CALLBACK] Code received, middleware will exchange it');
+  const successUrl = new URL('/', origin);
+  successUrl.searchParams.set('auth', 'success');
+  
+  const response = NextResponse.redirect(successUrl);
+  return response;
 }
