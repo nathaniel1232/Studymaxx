@@ -9,18 +9,14 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
   
-  // Determine the correct origin
-  // In production (Vercel), use studymaxx.net
-  // In development, use the request origin
-  let origin: string;
+  // Get the actual host from the request headers
+  const host = request.headers.get('host') || '';
+  const protocol = request.headers.get('x-forwarded-proto') || request.headers.get('x-proto') || 'https';
   
-  if (process.env.NODE_ENV === 'production') {
-    // Always use studymaxx.net in production
-    origin = 'https://studymaxx.net';
-  } else {
-    // In development, use the actual request origin
-    origin = requestUrl.origin;
-  }
+  // Build the origin from actual request headers
+  const origin = `${protocol}://${host}`;
+  
+  console.log('[AUTH CALLBACK] Host:', host, 'Protocol:', protocol, 'Origin:', origin);
 
   if (code && supabaseUrl && supabaseAnonKey) {
     try {
@@ -54,18 +50,20 @@ export async function GET(request: Request) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
 
       if (error) {
-        console.error('Auth callback error:', error);
+        console.error('[AUTH CALLBACK] Auth error:', error);
         return NextResponse.redirect(new URL('/?error=auth_failed', origin));
       }
 
+      console.log('[AUTH CALLBACK] Success, redirecting to:', origin);
       // Successfully authenticated, redirect to home
       return NextResponse.redirect(new URL('/', origin));
     } catch (error) {
-      console.error('Auth callback exception:', error);
+      console.error('[AUTH CALLBACK] Exception:', error);
       return NextResponse.redirect(new URL('/?error=auth_exception', origin));
     }
   }
 
   // If no code, redirect to home with error
+  console.log('[AUTH CALLBACK] No code provided');
   return NextResponse.redirect(new URL('/?error=no_code', origin));
 }
