@@ -550,7 +550,11 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   {getSubjectExamples().map((example) => (
                     <button
                       key={example.name}
-                      onClick={() => setSubject(example.name)}
+                      onClick={() => {
+                        setSubject(example.name);
+                        // Auto-advance to next step after selection
+                        setTimeout(() => setCurrentStep(2), 300);
+                      }}
                       className={`p-4 border-2 rounded-xl font-medium transition-all hover:scale-105 ${
                         subject === example.name
                           ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
@@ -564,7 +568,11 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   
                   {/* Other button */}
                   <button
-                    onClick={() => setSubject("Other")}
+                    onClick={() => {
+                      setSubject("Other");
+                      // Auto-advance to next step after selection
+                      setTimeout(() => setCurrentStep(2), 300);
+                    }}
                     className={`p-4 border-2 rounded-xl font-medium transition-all hover:scale-105 md:col-span-3 ${
                       subject === "Other"
                         ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"

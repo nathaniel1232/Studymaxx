@@ -27,6 +27,7 @@ interface ToastMessage {
 export default function StudyView({ flashcards: initialFlashcards, currentSetId, onBack }: StudyViewProps) {
   const t = useTranslation();
   const { settings } = useSettings();
+  const [originalFlashcards] = useState<Flashcard[]>(initialFlashcards); // Keep original set for saving
   const [flashcards, setFlashcards] = useState<Flashcard[]>(initialFlashcards);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [masteredCards, setMasteredCards] = useState<Set<string>>(new Set());
@@ -381,7 +382,8 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
     }
     
     try {
-      await saveFlashcardSet(setName, flashcards);
+      // Always save the ORIGINAL set, not the filtered one (e.g., if reviewing mistakes)
+      await saveFlashcardSet(setName, originalFlashcards);
       setShowSaveDialog(false);
       setSetName("");
       showToast(t("set_saved_successfully"), "success");
@@ -500,6 +502,10 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
     setCurrentIndex(0);
     setTestResults(new Map());
     setStudyMode("review");
+    
+    // Important: DO NOT save the set when reviewing mistakes
+    // Only review the failed cards, don't overwrite the original set
+    showToast(t("reviewing_mistakes_only"), "info");
   };
 
   const isTestComplete = studyMode === "test" && testResults.size === flashcards.length;
