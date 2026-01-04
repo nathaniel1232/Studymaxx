@@ -541,21 +541,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                 </p>
               </div>
 
-              {/* Text input */}
-              <div>
-                <input
-                  type="text"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleContinueFromStep1()}
-                  placeholder={t("type_subject")}
-                  className="input text-lg px-6 py-4"
-                  style={{ borderRadius: 'var(--radius-lg)' }}
-                  autoFocus
-                />
-              </div>
-
-              {/* Quick examples */}
+              {/* Subject selection buttons */}
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
                   {t("choose_common")}
@@ -575,6 +561,19 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       <div className="text-sm">{example.name}</div>
                     </button>
                   ))}
+                  
+                  {/* Other button */}
+                  <button
+                    onClick={() => setSubject("Other")}
+                    className={`p-4 border-2 rounded-xl font-medium transition-all hover:scale-105 md:col-span-3 ${
+                      subject === "Other"
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="text-2xl mb-1">➕</div>
+                    <div className="text-sm">Other</div>
+                  </button>
                 </div>
               </div>
 

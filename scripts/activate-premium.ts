@@ -1,40 +1,11 @@
-#!/usr/bin/env node
+import { createClient } from '@supabase/supabase-js';
+import * as dotenv from 'dotenv';
 
-/**
- * CLI script to activate premium for a user
- * Usage: node scripts/activate-premium.js <email>
- * Example: node scripts/activate-premium.js william@example.com
- */
+// Load environment variables
+dotenv.config({ path: '.env.local' });
 
-const fs = require('fs');
-const path = require('path');
-const { createClient } = require('@supabase/supabase-js');
-
-// Read .env.local file manually
-function loadEnv() {
-  const envPath = path.join(process.cwd(), '.env.local');
-  if (!fs.existsSync(envPath)) {
-    console.error('❌ Error: .env.local file not found');
-    process.exit(1);
-  }
-  
-  const envContent = fs.readFileSync(envPath, 'utf-8');
-  const env = {};
-  
-  envContent.split('\n').forEach(line => {
-    if (line.trim() && !line.startsWith('#')) {
-      const [key, ...valueParts] = line.split('=');
-      const value = valueParts.join('=').trim().replace(/^"(.*)"$/, '$1');
-      env[key.trim()] = value;
-    }
-  });
-  
-  return env;
-}
-
-const env = loadEnv();
-const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !serviceRoleKey) {
   console.error('❌ Error: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set in .env.local');
@@ -44,8 +15,8 @@ if (!supabaseUrl || !serviceRoleKey) {
 const email = process.argv[2];
 
 if (!email) {
-  console.error('❌ Usage: node scripts/activate-premium.js <email>');
-  console.error('Example: node scripts/activate-premium.js william@example.com');
+  console.error('❌ Usage: npx ts-node scripts/activate-premium.ts <email>');
+  console.error('Example: npx ts-node scripts/activate-premium.ts william@example.com');
   process.exit(1);
 }
 
@@ -87,7 +58,7 @@ async function activatePremium() {
     console.log(`✅ Premium activated for ${email}`);
     console.log(`User ID: ${user.id}`);
     process.exit(0);
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Exception:', error.message);
     process.exit(1);
   }
