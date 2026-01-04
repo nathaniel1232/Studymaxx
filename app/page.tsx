@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Analytics } from "@vercel/analytics/next";
 import InputView from "./components/InputView";
 import CreateFlowView from "./components/CreateFlowView";
 import StudyView from "./components/StudyView";
@@ -214,6 +215,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen relative overflow-hidden" style={{ background: 'var(--background)' }}>
+      <Analytics />
       {viewMode === "home" && (
         <div className="min-h-screen px-4 py-6 flex flex-col relative">
           {/* Animated gradient mesh background */}
