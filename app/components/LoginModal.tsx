@@ -249,7 +249,7 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
                   className="block w-full text-sm font-medium hover:underline"
                   style={{ color: 'var(--foreground-muted)' }}
                 >
-                  {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
+                  {isSignUp ? t("already_have_account") || "Already have an account? Sign in" : t("no_account_create_one") || "Don't have an account? Sign up"}
                 </button>
               )}
               <button
@@ -264,6 +264,16 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
                 {isMagicLink ? "Use password instead" : "🪄 Use magic link (passwordless)"}
               </button>
             </div>
+
+            {/* ONBOARDING GUIDANCE - Show guidance based on state */}
+            {isSignUp && (
+              <div className="mb-6 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800">
+                <p className="text-xs font-medium text-blue-900 dark:text-blue-200 flex items-start gap-2">
+                  <span className="text-base">ℹ️</span>
+                  <span>{t("verify_email_required") || "We'll send you a verification email. You must click the link before you can log in."}</span>
+                </p>
+              </div>
+            )}
 
             {/* Divider */}
             <div className="flex items-center gap-3 my-6">

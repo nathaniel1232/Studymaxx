@@ -502,7 +502,14 @@ export function useTranslation() {
       "contact_us": { en: "Contact Us", no: "Kontakt oss" },
       "contact_description": { en: "Have questions, feedback, or issues? Get in touch!", no: "Har du spørsmål, tilbakemeldinger eller problemer? Ta kontakt!" },
       "contact_email": { en: "Email", no: "E-post" },
-      "send_email": { en: "Send us an email", no: "Send oss en e-post" }
+      "send_email": { en: "Send us an email", no: "Send oss en e-post" },
+      
+      // Auth/Onboarding guidance
+      "no_account_create_one": { en: "Don't have an account? Create one first.", no: "Har du ikke konto? Lag en først." },
+      "verify_email_required": { en: "We sent you an email. You must verify your account before you can log in.", no: "Vi har sendt deg en e-post. Du må verifisere kontoen før du kan logge inn." },
+      "check_your_inbox": { en: "Check your inbox and click the verification link.", no: "Sjekk innboksen og klikk på verifikasjonslenken." },
+      "already_have_account": { en: "Already have an account?", no: "Har du allerede en konto?" },
+      "switch_to_login": { en: "Switch to login", no: "Bytt til pålogging" }
     };
     
     let text = translations[key]?.[settings.language] || key;

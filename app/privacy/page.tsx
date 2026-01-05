@@ -118,8 +118,8 @@ export default function PrivacyPage() {
               </h2>
               <p>
                 If you have questions about this privacy policy, please contact us at{" "}
-                <a href="mailto:contact@studymaxx.app" className="text-blue-600 dark:text-blue-400 hover:underline">
-                  contact@studymaxx.app
+                <a href="mailto:studymaxxer@gmail.com" className="text-blue-600 dark:text-blue-400 hover:underline">
+                  studymaxxer@gmail.com
                 </a>
               </p>
             </section>

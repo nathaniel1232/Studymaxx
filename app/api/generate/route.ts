@@ -239,22 +239,44 @@ async function generateWithAI(
 ): Promise<Flashcard[]> {
   const systemPrompt = `You are an expert educational assistant that creates high-quality flashcards.
 Create ${numberOfFlashcards} flashcards in ${language} based on the provided text.
-Each flashcard should have a clear question and a comprehensive answer.
+Each flashcard should have a clear question, a comprehensive answer, and 3 plausible wrong answers (distractors).
 Return a JSON object with a "flashcards" array containing flashcard objects.
 
 Example format:
 {
   "flashcards": [
-    {"id": "1", "question": "What is...", "answer": "The answer is..."},
-    {"id": "2", "question": "How does...", "answer": "It works by..."}
+    {"id": "1", "question": "What is...", "answer": "The answer is...", "distractors": ["Wrong1", "Wrong2", "Wrong3"]},
+    {"id": "2", "question": "How does...", "answer": "It works by...", "distractors": ["Wrong1", "Wrong2", "Wrong3"]}
   ]
 }
 
-Rules:
-- Questions should be clear and specific
-- Answers should be concise but complete
-- Focus on key concepts and important information
-- Use the same language as the input text`;
+Rules for QUESTIONS:
+- Clear and specific
+- Test conceptual understanding
+- Avoid ambiguous phrasing
+
+Rules for ANSWERS:
+- Concise but complete
+- Use precise terminology
+- Match the language length of distractors
+
+Rules for DISTRACTORS (wrong answers):
+- **CRITICAL**: Make them plausible and educationally valuable
+- Each should be a common misconception or related concept
+- Use same language structure and complexity as correct answer
+- Differ in meaning, not just length or formatting
+- Should require actual knowledge to distinguish from the correct answer
+- Avoid obviously wrong answers
+- Test understanding, not trick the student
+
+Example:
+Question: "What is photosynthesis?"
+Correct: "Process where plants convert light energy into chemical energy"
+Distractors: [
+  "Process where plants absorb nutrients from soil",
+  "Process where plants break down glucose for energy",
+  "Process where plants release oxygen at night"
+]`;
 
   try {
     const completion = await openai.chat.completions.create({
