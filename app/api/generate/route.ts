@@ -288,7 +288,6 @@ Distractors: [
       temperature: 0.7,
       max_tokens: 4000,
       response_format: { type: "json_object" },
-      timeout: 30000, // 30 second timeout
     });
 
     const content = completion.choices[0]?.message?.content;
