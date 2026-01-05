@@ -129,15 +129,15 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         setCanCreateMore(data.canCreateMore);
         
         // Update remaining generations
-        const remaining = getRemainingGenerations(session?.user?.id || '');
-        setRemainingGenerations(remaining);
+        const remaining = getRemainingGenerations(session?.user?.id || '', data.isPremium);
+        setRemainingGenerations(parseInt(remaining) || 3);
         
         console.log('[CreateFlowView] ===== PREMIUM CHECK COMPLETE ===== isPremium:', data.isPremium);
       } else if (response.status === 401) {
         console.log('[CreateFlowView] ❌ User not authenticated - treating as free user');
         setIsPremium(false);
-        const remaining = getRemainingGenerations('');
-        setRemainingGenerations(remaining);
+        const remaining = getRemainingGenerations('', false);
+        setRemainingGenerations(parseInt(remaining) || 3);
       } else {
         console.log('[CreateFlowView] ❌ Premium check API failed:', response.status);
         // Fallback to localStorage count
@@ -145,8 +145,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         const savedSets = await getSavedFlashcardSets();
         const userSets = savedSets.filter(set => set.userId === userId);
         setSetsCreated(userSets.length);
-        const remaining = getRemainingGenerations(userId);
-        setRemainingGenerations(remaining);
+        const remaining = getRemainingGenerations(userId, false);
+        setRemainingGenerations(parseInt(remaining) || 3);
         setCanCreateMore(userSets.length < 1);
         setIsPremium(false);
       }
