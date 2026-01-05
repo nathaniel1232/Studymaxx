@@ -48,10 +48,12 @@ export async function POST(request: NextRequest) {
 
     const userId = user.id;
 
-    console.log(`🔓 Manual Premium activation requested for user: ${userId} (${user.email})`);
+    console.log(`🔓 Premium activation requested for user: ${userId} (${user.email})`);
 
     // Find the user's Stripe customer ID by searching customers
     let stripeCustomerId: string | null = null;
+    let hasActiveSubscription = false;
+    
     try {
       const customers = await stripe.customers.list({
         email: user.email,
@@ -61,9 +63,31 @@ export async function POST(request: NextRequest) {
       if (customers.data.length > 0) {
         stripeCustomerId = customers.data[0].id;
         console.log(`Found Stripe customer ID: ${stripeCustomerId}`);
+        
+        // Check if they have an active subscription
+        const subscriptions = await stripe.subscriptions.list({
+          customer: stripeCustomerId,
+          status: 'active',
+          limit: 1
+        });
+        
+        hasActiveSubscription = subscriptions.data.length > 0;
+        console.log(`Has active subscription: ${hasActiveSubscription}`);
       }
     } catch (err) {
       console.error('Failed to fetch Stripe customer:', err);
+      return NextResponse.json({
+        error: 'Failed to verify payment status'
+      }, { status: 500 });
+    }
+
+    // Only activate if they have a Stripe subscription
+    if (!hasActiveSubscription) {
+      console.log(`❌ No active subscription found for ${user.email}`);
+      return NextResponse.json({
+        error: 'No active subscription found',
+        premium: false
+      }, { status: 402 });
     }
 
     // Check if user exists in users table
