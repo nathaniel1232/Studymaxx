@@ -546,21 +546,24 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
                   {t("choose_common")}
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {getSubjectExamples().map((example) => (
                     <button
                       key={example.name}
                       onClick={() => {
                         setSubject(example.name);
                       }}
-                      className={`p-4 border-2 rounded-xl font-medium transition-all hover:scale-105 ${
+                      className={`group relative p-5 border-3 rounded-2xl font-bold transition-all duration-300 transform ${
                         subject === example.name
-                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-gray-300"
+                          ? "border-blue-600 bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-2xl shadow-blue-500/50 scale-105 hover:scale-110"
+                          : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-blue-400 hover:shadow-lg hover:scale-105"
                       }`}
                     >
-                      <div className="text-2xl mb-1">{example.emoji}</div>
-                      <div className="text-sm">{example.name}</div>
+                      <div className={`text-4xl mb-2 transition-all ${subject === example.name ? 'scale-110' : 'scale-100'}`}>{example.emoji}</div>
+                      <div className={`text-sm font-bold tracking-wide ${subject === example.name ? 'text-white' : ''}`}>{example.name}</div>
+                      {subject === example.name && (
+                        <div className="absolute top-1 right-2 text-2xl animate-pulse">✓</div>
+                      )}
                     </button>
                   ))}
                   
@@ -569,14 +572,17 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     onClick={() => {
                       setSubject("Other");
                     }}
-                    className={`p-4 border-2 rounded-xl font-medium transition-all hover:scale-105 md:col-span-3 ${
+                    className={`group relative p-5 border-3 rounded-2xl font-bold transition-all duration-300 transform md:col-span-3 ${
                       subject === "Other"
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-                        : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-gray-300"
+                        ? "border-blue-600 bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-2xl shadow-blue-500/50 scale-105 hover:scale-110"
+                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-blue-400 hover:shadow-lg hover:scale-105"
                     }`}
                   >
-                    <div className="text-2xl mb-1">➕</div>
-                    <div className="text-sm">Other</div>
+                    <div className={`text-4xl mb-2 transition-all ${subject === "Other" ? 'scale-110' : 'scale-100'}`}>➕</div>
+                    <div className={`text-sm font-bold tracking-wide ${subject === "Other" ? 'text-white' : ''}`}>Other</div>
+                    {subject === "Other" && (
+                      <div className="absolute top-1 right-2 text-2xl animate-pulse">✓</div>
+                    )}
                   </button>
                 </div>
               </div>
