@@ -31,6 +31,7 @@ export default function Home() {
   const [savedSets, setSavedSets] = useState<FlashcardSet[]>([]);
   const [user, setUser] = useState<any>(null);
   const [isPremium, setIsPremium] = useState(false);
+  const [remainingStudySets, setRemainingStudySets] = useState(3);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning" } | null>(null);
@@ -40,9 +41,16 @@ export default function Home() {
     const loadSavedSets = async () => {
       const sets = await getSavedFlashcardSets();
       setSavedSets(sets);
+      
+      // Update remaining study sets for free users
+      if (!isPremium) {
+        const MAX_STUDY_SETS = 3;
+        const remaining = Math.max(0, MAX_STUDY_SETS - sets.length);
+        setRemainingStudySets(remaining);
+      }
     };
     loadSavedSets();
-  }, [viewMode]); // Reload when view changes
+  }, [viewMode, isPremium]); // Reload when view changes or premium status changes
 
   // Check for Premium purchase success and activate
   useEffect(() => {
@@ -328,8 +336,8 @@ export default function Home() {
                 <div className="mb-8 inline-block px-6 py-3 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
                   <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
                     {settings.language === "no"
-                      ? "🎁 3 gratis studiesett per 24 timer"
-                      : "🎁 3 free study sets every 24 hours"}
+                      ? `🎁 ${remainingStudySets} gratis studiesett${remainingStudySets !== 1 ? '' : ''} igjen i dag`
+                      : `🎁 ${remainingStudySets} free study set${remainingStudySets !== 1 ? 's' : ''} left today`}
                   </p>
                 </div>
               )}

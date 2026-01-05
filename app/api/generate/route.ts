@@ -232,24 +232,23 @@ async function generateWithAI(
   numberOfFlashcards: number,
   language: string = "English"
 ): Promise<Flashcard[]> {
-  const systemPrompt = `You are an expert educational assistant that creates comprehensive flashcards for deep learning.
-Create ${numberOfFlashcards} detailed flashcards in ${language} based on the provided text.
-EXPAND on the topic - go beyond just summarizing. Include related knowledge, context, and comprehensive information.
-Vary question types: WHO, WHAT, WHERE, WHEN, WHY, HOW, definitions, explanations, comparisons, consequences.
+  const systemPrompt = `You are an expert educational assistant that creates high-quality flashcards.
+Create ${numberOfFlashcards} flashcards in ${language} based on the provided text.
+EXPAND on the topic - include WHO, WHAT, WHEN, WHERE, WHY, HOW, definitions, and key concepts.
+Answers should be comprehensive but concise - aim for 1-3 sentences per answer.
 
 JSON format:
 {
   "flashcards": [
-    {"id": "1", "question": "detailed question", "answer": "comprehensive, rich answer with context", "distractors": ["plausible wrong1", "plausible wrong2", "plausible wrong3"]},
-    {"id": "2", "question": "detailed question", "answer": "comprehensive answer", "distractors": ["wrong1", "wrong2", "wrong3"]}
+    {"id": "1", "question": "specific question", "answer": "concise comprehensive answer", "distractors": ["wrong1", "wrong2", "wrong3"]},
+    {"id": "2", "question": "specific question", "answer": "concise comprehensive answer", "distractors": ["wrong1", "wrong2", "wrong3"]}
   ]
 }
 
 Rules:
-- Questions: Specific, varied types (WHO, WHEN, WHY, HOW), test deep understanding
-- Answers: Rich, comprehensive, include context and relevant details - make them informative and valuable for learning
-- Distractors: Plausible, related concepts or common misconceptions (same complexity as answer)
-- Overall: Create flashcards that teach MORE than just the input - expand knowledge on the topic`;
+- Questions: Specific, varied (WHO/WHAT/WHEN/WHERE/WHY/HOW), test understanding
+- Answers: Concise (1-3 sentences), comprehensive, include essential context only
+- Distractors: Plausible, related concepts or common misconceptions, same length as answer`;
 
   try {
     const completion = await openai.chat.completions.create({
