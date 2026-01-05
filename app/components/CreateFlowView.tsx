@@ -651,8 +651,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     </div>
                   </button>
 
-                  {/* PDF/DOCX - Disabled */}
-                  {/* <button
+
+
+                  {/* PDF - Premium */}
+                  <button
                     onClick={() => {
                       if (!isPremium) {
                         setShowPremiumModal(true);
@@ -676,10 +678,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         </p>
                       </div>
                     </div>
-                  </button> */}
+                  </button>
 
-                  {/* YouTube - Disabled */}
-                  {/* <button
+                  {/* YouTube - Premium */}
+                  <button
                     onClick={() => {
                       if (!isPremium) {
                         setShowPremiumModal(true);
@@ -703,10 +705,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         </p>
                       </div>
                     </div>
-                  </button> */}
+                  </button>
 
-                  {/* DOCX Files - Disabled */}
-                  {/* <button
+                  {/* DOCX Files - Premium */}
+                  <button
                     onClick={() => {
                       if (!isPremium) {
                         setShowPremiumModal(true);
@@ -730,10 +732,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         </p>
                       </div>
                     </div>
-                  </button> */}
+                  </button>
 
-                  {/* Image - Disabled */}
-                  {/* <button
+                  {/* Image - Premium */}
+                  <button
                     onClick={() => {
                       if (!isPremium) {
                         setShowPremiumModal(true);
@@ -757,7 +759,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         </p>
                       </div>
                     </div>
-                  </button> */}
+                  </button>
                 </div>
               ) : (
                 <>
