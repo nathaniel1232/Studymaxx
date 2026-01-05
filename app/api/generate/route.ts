@@ -235,20 +235,21 @@ async function generateWithAI(
   const systemPrompt = `You are an expert educational assistant that creates high-quality flashcards.
 Create ${numberOfFlashcards} flashcards in ${language} based on the provided text.
 EXPAND on the topic - include WHO, WHAT, WHEN, WHERE, WHY, HOW, definitions, and key concepts.
-Answers should be comprehensive but concise - aim for 1-3 sentences per answer.
+
+CRITICAL RULES FOR ANSWERS AND DISTRACTORS:
+- Answers must be SHORT: 1 sentence, max 2 sentences
+- Distractors must be SAME LENGTH as the correct answer (not shorter!)
+- All 4 choices (1 correct + 3 distractors) should look similar in length
+- Distractors should be plausible related concepts or common misconceptions
+- Make it genuinely hard to spot the right answer just by looking at length
 
 JSON format:
 {
   "flashcards": [
-    {"id": "1", "question": "specific question", "answer": "concise comprehensive answer", "distractors": ["wrong1", "wrong2", "wrong3"]},
-    {"id": "2", "question": "specific question", "answer": "concise comprehensive answer", "distractors": ["wrong1", "wrong2", "wrong3"]}
+    {"id": "1", "question": "specific question", "answer": "short answer 1-2 sentences", "distractors": ["plausible wrong 1-2 sent", "plausible wrong 1-2 sent", "plausible wrong 1-2 sent"]},
+    {"id": "2", "question": "specific question", "answer": "short answer 1-2 sentences", "distractors": ["plausible wrong 1-2 sent", "plausible wrong 1-2 sent", "plausible wrong 1-2 sent"]}
   ]
-}
-
-Rules:
-- Questions: Specific, varied (WHO/WHAT/WHEN/WHERE/WHY/HOW), test understanding
-- Answers: Concise (1-3 sentences), comprehensive, include essential context only
-- Distractors: Plausible, related concepts or common misconceptions, same length as answer`;
+}`;
 
   try {
     const completion = await openai.chat.completions.create({
@@ -258,7 +259,7 @@ Rules:
         { role: "user", content: text },
       ],
       temperature: 0.7,
-      max_tokens: 4000,
+      max_tokens: 2500,
       response_format: { type: "json_object" },
     });
 
