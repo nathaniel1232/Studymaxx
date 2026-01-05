@@ -280,14 +280,15 @@ Distractors: [
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // COST CONTROL: Use cheaper model
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: text },
       ],
       temperature: 0.7,
-      max_tokens: 2000, // Increased to handle longer responses
+      max_tokens: 4000,
       response_format: { type: "json_object" },
+      timeout: 30000, // 30 second timeout
     });
 
     const content = completion.choices[0]?.message?.content;
@@ -399,7 +400,14 @@ Distractors: [
     }));
   } catch (error: any) {
     console.error("AI generation error:", error);
-    throw new Error(`AI generation failed: ${error.message}`);
+    // Provide more helpful error messages
+    if (error.message?.includes("timeout") || error.code === "ECONNABORTED") {
+      throw new Error("AI service took too long to respond. Please try again with a shorter text or fewer flashcards.");
+    }
+    if (error.message?.includes("429")) {
+      throw new Error("Too many requests to AI service. Please wait a moment and try again.");
+    }
+    throw new Error(`AI generation failed: ${error.message || "Unknown error occurred"}`);
   }
 }
 
