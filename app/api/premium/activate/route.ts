@@ -47,45 +47,55 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = user.id;
+    const userEmail = user.email;
 
-    console.log(`🔓 Premium activation requested for user: ${userId} (${user.email})`);
+    console.log(`[Premium Activate] User: ${userId} (${userEmail})`);
 
-    // Find the user's Stripe customer ID by searching customers
+    // Find the user's Stripe customer by searching with the email
     let stripeCustomerId: string | null = null;
     let hasActiveSubscription = false;
     
     try {
+      // List all customers to find ones matching this email
       const customers = await stripe.customers.list({
-        email: user.email,
-        limit: 1
+        email: userEmail,
+        limit: 100
       });
       
-      if (customers.data.length > 0) {
-        stripeCustomerId = customers.data[0].id;
-        console.log(`Found Stripe customer ID: ${stripeCustomerId}`);
-        
-        // Check if they have an active subscription
+      console.log(`[Premium Activate] Found ${customers.data.length} customers for email: ${userEmail}`);
+      
+      // Check each customer for active subscriptions
+      for (const customer of customers.data) {
         const subscriptions = await stripe.subscriptions.list({
-          customer: stripeCustomerId,
-          status: 'active',
+          customer: customer.id,
           limit: 1
         });
         
-        hasActiveSubscription = subscriptions.data.length > 0;
-        console.log(`Has active subscription: ${hasActiveSubscription}`);
+        if (subscriptions.data.length > 0) {
+          const sub = subscriptions.data[0];
+          console.log(`[Premium Activate] Found subscription for customer ${customer.id}: status=${sub.status}`);
+          
+          if (sub.status === 'active' || sub.status === 'trialing') {
+            stripeCustomerId = customer.id;
+            hasActiveSubscription = true;
+            console.log(`[Premium Activate] ✅ Active subscription found: ${sub.id}`);
+            break;
+          }
+        }
       }
-    } catch (err) {
-      console.error('Failed to fetch Stripe customer:', err);
+    } catch (err: any) {
+      console.error('[Premium Activate] Failed to fetch Stripe customer:', err);
       return NextResponse.json({
-        error: 'Failed to verify payment status'
+        error: 'Failed to verify payment status',
+        details: err.message
       }, { status: 500 });
     }
 
     // Only activate if they have a Stripe subscription
     if (!hasActiveSubscription) {
-      console.log(`❌ No active subscription found for ${user.email}`);
+      console.log(`[Premium Activate] ❌ No active subscription found for ${userEmail}`);
       return NextResponse.json({
-        error: 'No active subscription found',
+        error: 'No active subscription found. Please complete payment first.',
         premium: false
       }, { status: 402 });
     }
