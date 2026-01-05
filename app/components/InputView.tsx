@@ -125,132 +125,142 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
     setError("");
 
     try {
-      const file = files[0];
-      const fileType = file.type;
-      const fileName = file.name.toLowerCase();
+      const newUploadedFiles = [...uploadedFiles];
+      let allText = textInput;
+      const errors: string[] = [];
 
-      // Handle PDF files CLIENT-SIDE with pdf.js
-      if (fileType === "application/pdf" || fileName.endsWith(".pdf")) {
+      // Process all selected files
+      for (let fileIndex = 0; fileIndex < files.length; fileIndex++) {
+        const file = files[fileIndex];
+        const fileType = file.type;
+        const fileName = file.name.toLowerCase();
+
         try {
-          console.log("📄 Extracting PDF client-side...");
-          const pdfjsLib = await import("pdfjs-dist");
-          
-          // Set worker path
-          pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-          
-          // Read file as array buffer
-          const arrayBuffer = await file.arrayBuffer();
-          
-          // Load PDF
-          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-          console.log(`📄 PDF loaded: ${pdf.numPages} pages`);
-          
-          let fullText = "";
-          
-          // Extract text from each page
-          for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-            const page = await pdf.getPage(pageNum);
-            const textContent = await page.getTextContent();
-            const pageText = textContent.items
-              .map((item: any) => item.str)
-              .join(" ");
-            fullText += pageText + "\n\n";
+          // Handle PDF files CLIENT-SIDE with pdf.js
+          if (fileType === "application/pdf" || fileName.endsWith(".pdf")) {
+            try {
+              console.log(`📄 Extracting PDF ${fileIndex + 1}/${files.length} client-side...`);
+              const pdfjsLib = await import("pdfjs-dist");
+              
+              // Set worker path
+              pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+              
+              // Read file as array buffer
+              const arrayBuffer = await file.arrayBuffer();
+              
+              // Load PDF
+              const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+              console.log(`📄 PDF loaded: ${pdf.numPages} pages`);
+              
+              let fullText = "";
+              
+              // Extract text from each page
+              for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                const page = await pdf.getPage(pageNum);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items
+                  .map((item: any) => item.str)
+                  .join(" ");
+                fullText += pageText + "\n\n";
+              }
+              
+              if (!fullText || fullText.trim().length < 20) {
+                errors.push(`${file.name}: No text found in PDF`);
+                continue;
+              }
+              
+              console.log(`✅ Extracted ${fullText.length} characters from PDF`);
+              
+              // Add to uploaded files
+              const newFile = { name: file.name, text: fullText.trim() };
+              newUploadedFiles.push(newFile);
+              
+              // Add to text input
+              allText = allText 
+                ? `${allText}\n\n--- From ${file.name} ---\n${fullText.trim()}` 
+                : fullText.trim();
+            } catch (pdfError: any) {
+              errors.push(`${file.name}: ${pdfError.message || "Failed to extract"}`);
+              continue;
+            }
           }
-          
-          if (!fullText || fullText.trim().length < 20) {
-            setError("No text found in PDF. It may be image-based or scanned. Try converting to images and using OCR.");
-            setIsLoading(false);
-            return;
+          // Handle DOCX/DOC files - send to server
+          else if (fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+                   fileName.endsWith(".docx") ||
+                   fileName.endsWith(".doc")) {
+            
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const res = await fetch("/api/extract-text", {
+              method: "POST",
+              body: formData,
+            });
+
+            if (!res.ok) {
+              const data = await res.json();
+              errors.push(`${file.name}: ${data.error || "Failed to extract"}`);
+              continue;
+            }
+
+            const { text: extractedText, metadata } = await res.json();
+            
+            if (!extractedText || extractedText.trim().length === 0) {
+              errors.push(`${file.name}: No text found`);
+              continue;
+            }
+            
+            const newFile = { name: file.name, text: extractedText };
+            newUploadedFiles.push(newFile);
+            
+            const fileInfo = metadata ? ` (${metadata.wordCount} words)` : '';
+            allText = allText ? `${allText}\n\n--- From ${file.name}${fileInfo} ---\n${extractedText}` : extractedText;
           }
-          
-          console.log(`✅ Extracted ${fullText.length} characters from PDF`);
-          
-          // Add to uploaded files
-          const newFile = { name: file.name, text: fullText.trim() };
-          setUploadedFiles([...uploadedFiles, newFile]);
-          
-          // Add to text input
-          setTextInput(prev => 
-            prev 
-              ? `${prev}\n\n--- From ${file.name} ---\n${fullText.trim()}` 
-              : fullText.trim()
-          );
-          
-          setIsLoading(false);
-          return;
-        } catch (pdfError: any) {
-          console.error("PDF extraction error:", pdfError);
-          setError(`Failed to extract PDF: ${pdfError.message || "Unknown error"}`);
-          setIsLoading(false);
-          return;
+          // Handle images with Tesseract OCR
+          else if (fileType.startsWith("image/")) {
+            console.log(`🖼️ Processing image ${fileIndex + 1}/${files.length}...`);
+            const Tesseract = await import("tesseract.js");
+            const result = await Tesseract.recognize(file, "eng", {
+              logger: (m) => console.log(m),
+            });
+            
+            const extractedText = result.data.text;
+            
+            if (!extractedText || extractedText.trim().length === 0) {
+              errors.push(`${file.name}: No text found in image`);
+              continue;
+            }
+            
+            // Add to uploaded files list
+            const newFile = { name: file.name, text: extractedText };
+            newUploadedFiles.push(newFile);
+            
+            // Also add to main text input
+            allText = allText ? `${allText}\n\n--- From ${file.name} ---\n${extractedText}` : extractedText;
+          }
+          else {
+            errors.push(`${file.name}: Unsupported file type`);
+          }
+        } catch (fileError) {
+          errors.push(`${file.name}: ${fileError instanceof Error ? fileError.message : "Unknown error"}`);
         }
       }
 
-      // Handle DOCX/DOC files - send to server
-      if (fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-          fileName.endsWith(".docx") ||
-          fileName.endsWith(".doc")) {
-        
-        const formData = new FormData();
-        formData.append("file", file);
+      // Update state with all processed files
+      setUploadedFiles(newUploadedFiles);
+      setTextInput(allText);
 
-        const res = await fetch("/api/extract-text", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!res.ok) {
-          const data = await res.json();
-          setError(data.error || t("failed_extract_text"));
-          setIsLoading(false);
-          return;
+      // Show results or errors
+      if (errors.length > 0) {
+        if (newUploadedFiles.length > uploadedFiles.length) {
+          // Some files processed successfully
+          setError(`Processed ${newUploadedFiles.length - uploadedFiles.length} file(s). Issues: ${errors.join(", ")}`);
+        } else {
+          // All files failed
+          setError(errors.join(", "));
         }
-
-        const { text: extractedText, metadata } = await res.json();
-        
-        if (!extractedText || extractedText.trim().length === 0) {
-          setError("No text found in the document.");
-          setIsLoading(false);
-          return;
-        }
-        
-        const newFile = { name: file.name, text: extractedText };
-        setUploadedFiles([...uploadedFiles, newFile]);
-        
-        const fileInfo = metadata ? ` (${metadata.wordCount} words)` : '';
-        setTextInput(prev => prev ? `${prev}\n\n--- From ${file.name}${fileInfo} ---\n${extractedText}` : extractedText);
-        
-        setIsLoading(false);
-        return;
       }
 
-      // Handle images with Tesseract OCR
-      if (fileType.startsWith("image/")) {
-        const Tesseract = await import("tesseract.js");
-        const result = await Tesseract.recognize(file, "eng", {
-          logger: (m) => console.log(m),
-        });
-        
-        const extractedText = result.data.text;
-        
-        if (!extractedText || extractedText.trim().length === 0) {
-          setError("No text found in the image. Please try a clearer image.");
-          setIsLoading(false);
-          return;
-        }
-        
-        // Add to uploaded files list
-        const newFile = { name: file.name, text: extractedText };
-        setUploadedFiles([...uploadedFiles, newFile]);
-        
-        // Also add to main text input
-        setTextInput(prev => prev ? `${prev}\n\n--- From ${file.name} ---\n${extractedText}` : extractedText);
-        
-        setIsLoading(false);
-        return;
-      }
-
-      setError("Unsupported file type. Please upload an image.");
       setIsLoading(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("failed_process_file"));
@@ -549,6 +559,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                       id="notes-file-input"
                       type="file"
                       accept="image/*"
+                      multiple
                       onChange={handleImageUpload}
                       disabled={isLoading}
                       className="w-full px-4 py-3 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50 dark:bg-gray-900 text-sm"
@@ -592,6 +603,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                   id="file-input"
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleImageUpload}
                   disabled={isLoading}
                   className="w-full px-5 py-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50 dark:bg-gray-900"
@@ -639,6 +651,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                   id="pdf-input"
                   type="file"
                   accept="application/pdf,.pdf,.docx,.doc,.txt,image/*"
+                  multiple
                   onChange={handleImageUpload}
                   disabled={isLoading}
                   className="w-full px-5 py-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50 dark:bg-gray-900"
