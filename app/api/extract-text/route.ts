@@ -230,7 +230,7 @@ export async function POST(req: Request) {
 
       try {
         console.log("🖼️ Performing OCR on image...");
-        warnings.push("OCR processing may take 10-30 seconds depending on image quality.");
+        warnings.push("OCR processing may take 10-20 seconds depending on image quality.");
 
         const result = await Tesseract.recognize(buffer, 'eng+nor', {
           logger: (m) => {

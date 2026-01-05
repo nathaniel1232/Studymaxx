@@ -259,7 +259,7 @@ JSON format:
         { role: "user", content: text },
       ],
       temperature: 0.7,
-      max_tokens: 2500,
+      max_tokens: 3200,
       response_format: { type: "json_object" },
     });
 
