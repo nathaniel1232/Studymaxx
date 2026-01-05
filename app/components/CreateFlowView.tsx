@@ -552,8 +552,6 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       key={example.name}
                       onClick={() => {
                         setSubject(example.name);
-                        // Auto-advance to next step after selection
-                        setTimeout(() => setCurrentStep(2), 300);
                       }}
                       className={`p-4 border-2 rounded-xl font-medium transition-all hover:scale-105 ${
                         subject === example.name
@@ -570,8 +568,6 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   <button
                     onClick={() => {
                       setSubject("Other");
-                      // Auto-advance to next step after selection
-                      setTimeout(() => setCurrentStep(2), 300);
                     }}
                     className={`p-4 border-2 rounded-xl font-medium transition-all hover:scale-105 md:col-span-3 ${
                       subject === "Other"

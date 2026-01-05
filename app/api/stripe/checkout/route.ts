@@ -64,36 +64,36 @@ export async function POST(req: NextRequest) {
 
     // Map country to currency and price
     const currencyMap: { [key: string]: { currency: string; amount: number } } = {
-      // Nordic countries - NOK
-      "NO": { currency: "nok", amount: 3900 }, // 39 NOK
-      "SE": { currency: "sek", amount: 4500 }, // ~39 NOK
-      "DK": { currency: "dkk", amount: 3400 }, // ~39 NOK
+      // Nordic countries - NOK (base 29 kr)
+      "NO": { currency: "nok", amount: 2900 }, // 29 NOK
+      "SE": { currency: "sek", amount: 3500 }, // ~29 NOK
+      "DK": { currency: "dkk", amount: 2600 }, // ~29 NOK
       
       // Eurozone
-      "AT": { currency: "eur", amount: 390 }, // 3.90 EUR
-      "BE": { currency: "eur", amount: 390 },
-      "DE": { currency: "eur", amount: 390 },
-      "ES": { currency: "eur", amount: 390 },
-      "FI": { currency: "eur", amount: 390 },
-      "FR": { currency: "eur", amount: 390 },
-      "IE": { currency: "eur", amount: 390 },
-      "IT": { currency: "eur", amount: 390 },
-      "NL": { currency: "eur", amount: 390 },
-      "PT": { currency: "eur", amount: 390 },
+      "AT": { currency: "eur", amount: 299 }, // 2.99 EUR
+      "BE": { currency: "eur", amount: 299 },
+      "DE": { currency: "eur", amount: 299 },
+      "ES": { currency: "eur", amount: 299 },
+      "FI": { currency: "eur", amount: 299 },
+      "FR": { currency: "eur", amount: 299 },
+      "IE": { currency: "eur", amount: 299 },
+      "IT": { currency: "eur", amount: 299 },
+      "NL": { currency: "eur", amount: 299 },
+      "PT": { currency: "eur", amount: 299 },
       
       // UK
-      "GB": { currency: "gbp", amount: 340 }, // ~39 NOK
+      "GB": { currency: "gbp", amount: 259 }, // ~29 NOK
       
       // USA & Americas
-      "US": { currency: "usd", amount: 399 }, // $3.99
-      "CA": { currency: "cad", amount: 549 }, // $5.49 CAD
+      "US": { currency: "usd", amount: 299 }, // $2.99
+      "CA": { currency: "cad", amount: 419 }, // $4.19 CAD
       
       // Other
-      "AU": { currency: "aud", amount: 649 }, // $6.49 AUD
-      "NZ": { currency: "nzd", amount: 699 }, // $6.99 NZD
+      "AU": { currency: "aud", amount: 499 }, // $4.99 AUD
+      "NZ": { currency: "nzd", amount: 549 }, // $5.49 NZD
       
       // Default fallback
-      "DEFAULT": { currency: "eur", amount: 390 }
+      "DEFAULT": { currency: "eur", amount: 299 }
     };
 
     const pricing = currencyMap[country] || currencyMap["DEFAULT"];

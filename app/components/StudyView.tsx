@@ -909,22 +909,22 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                     const isCorrectOption = option === currentCard.answer;
                     const showFeedback = selectedAnswer !== null;
                     
-                    let buttonClass = "w-full px-6 py-5 text-left font-black text-lg rounded-2xl transition-all duration-500 ease-out transform ";
+                    let buttonClass = "group relative w-full px-8 py-6 text-left font-black text-xl rounded-3xl transition-all duration-500 ease-out transform overflow-hidden ";
                     
                     if (showFeedback) {
                       if (isCorrectOption) {
                         // Always highlight the correct answer in green
-                        buttonClass += "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-2xl shadow-green-500/50 scale-105 celebrate";
+                        buttonClass += "bg-gradient-to-br from-green-500 via-emerald-500 to-green-600 text-white shadow-2xl shadow-green-500/60 scale-105 celebrate border-2 border-green-600";
                       } else if (isSelected && !isCorrectOption) {
                         // Highlight the incorrect selection in red
-                        buttonClass += "bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-2xl shadow-red-500/50 scale-105 shake";
+                        buttonClass += "bg-gradient-to-br from-red-500 via-pink-500 to-red-600 text-white shadow-2xl shadow-red-500/60 scale-105 shake border-2 border-red-600";
                       } else {
                         // Other options are dimmed
-                        buttonClass += "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 opacity-40";
+                        buttonClass += "bg-gray-300 dark:bg-gray-700 text-gray-600 dark:text-gray-400 opacity-50 border-2 border-gray-400 dark:border-gray-600";
                       }
                     } else {
-                      // Before selection - colorful interactive state
-                      buttonClass += "bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 dark:hover:from-blue-900/30 dark:hover:to-cyan-900/30 hover:scale-105 hover:shadow-xl cursor-pointer shadow-lg hover:shadow-blue-300/50";
+                      // Before selection - strong colorful interactive state
+                      buttonClass += "bg-gradient-to-br from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600 hover:scale-105 hover:shadow-2xl cursor-pointer shadow-xl hover:shadow-blue-500/60 border-2 border-blue-800 dark:border-blue-600";
                     }
                     
                     return (
@@ -934,10 +934,11 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         disabled={selectedAnswer !== null}
                         className={buttonClass}
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="text-lg">{option}</span>
-                          {showFeedback && isCorrectOption && <span className="text-2xl">✓</span>}
-                          {showFeedback && isSelected && !isCorrectOption && <span className="text-2xl">✗</span>}
+                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                        <div className="flex items-center justify-between relative z-10">
+                          <span className="text-xl">{option}</span>
+                          {showFeedback && isCorrectOption && <span className="text-3xl ml-4">✓</span>}
+                          {showFeedback && isSelected && !isCorrectOption && <span className="text-3xl ml-4">✗</span>}
                         </div>
                       </button>
                     );
@@ -962,27 +963,36 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                       <p className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 text-center">
                         {settings.language === 'no' ? 'Hvordan gikk det?' : 'How did you do?'}
                       </p>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-3 gap-4">
                         <button
                           onClick={() => handleQuizAnswer('wrong')}
-                          className="px-6 py-4 bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold rounded-2xl transition-all duration-200 shadow-lg hover:scale-110 hover:-translate-y-1 hover:shadow-xl border-2 border-red-700"
+                          className="group relative px-6 py-6 bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold rounded-3xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-110 hover:-translate-y-2 active:scale-95 border-2 border-red-700 overflow-hidden"
                         >
-                          <div className="text-3xl mb-1">❌</div>
-                          <div className="text-sm font-bold">{settings.language === 'no' ? 'Feil' : 'Wrong'}</div>
+                          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                          <span className="relative z-10 flex flex-col items-center gap-2">
+                            <div className="text-5xl">❌</div>
+                            <div className="text-base font-bold uppercase tracking-wide">{settings.language === 'no' ? 'Feil' : 'Wrong'}</div>
+                          </span>
                         </button>
                         <button
                           onClick={() => handleQuizAnswer('ok')}
-                          className="px-6 py-4 bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold rounded-2xl transition-all duration-200 shadow-lg hover:scale-110 hover:-translate-y-1 hover:shadow-xl border-2 border-yellow-700"
+                          className="group relative px-6 py-6 bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold rounded-3xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-110 hover:-translate-y-2 active:scale-95 border-2 border-yellow-700 overflow-hidden"
                         >
-                          <div className="text-3xl mb-1">⚠️</div>
-                          <div className="text-sm font-bold">OK</div>
+                          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                          <span className="relative z-10 flex flex-col items-center gap-2">
+                            <div className="text-5xl">⚠️</div>
+                            <div className="text-base font-bold uppercase tracking-wide">OK</div>
+                          </span>
                         </button>
                         <button
                           onClick={() => handleQuizAnswer('correct')}
-                          className="px-6 py-4 bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold rounded-2xl transition-all duration-200 shadow-lg hover:scale-110 hover:-translate-y-1 hover:shadow-xl border-2 border-green-700"
+                          className="group relative px-6 py-6 bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold rounded-3xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-110 hover:-translate-y-2 active:scale-95 border-2 border-green-700 overflow-hidden"
                         >
-                          <div className="text-3xl mb-1">✅</div>
-                          <div className="text-sm font-bold">{settings.language === 'no' ? 'Riktig' : 'Correct'}</div>
+                          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                          <span className="relative z-10 flex flex-col items-center gap-2">
+                            <div className="text-5xl">✅</div>
+                            <div className="text-base font-bold uppercase tracking-wide">{settings.language === 'no' ? 'Riktig' : 'Correct'}</div>
+                          </span>
                         </button>
                       </div>
                     </div>

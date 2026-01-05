@@ -174,6 +174,20 @@ export default function Home() {
     return () => unsubscribe();
   }, []);
 
+  // Listen for custom events from other components
+  useEffect(() => {
+    const handleShowLogin = () => setShowLoginModal(true);
+    const handleShowPremium = () => setShowPremiumModal(true);
+
+    window.addEventListener('showLogin', handleShowLogin);
+    window.addEventListener('showPremium', handleShowPremium);
+
+    return () => {
+      window.removeEventListener('showLogin', handleShowLogin);
+      window.removeEventListener('showPremium', handleShowPremium);
+    };
+  }, []);
+
   const handleGenerateFlashcards = (cards: Flashcard[], subject?: string, grade?: string) => {
     setFlashcards(cards);
     setCurrentSetId(null);

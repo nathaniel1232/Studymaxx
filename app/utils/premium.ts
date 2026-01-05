@@ -235,17 +235,17 @@ export function getLocalizedPricing() {
     userCurrency = currencyMap[country] || 'EUR';
   }
   
-  // Price mapping (equivalent to ~39 NOK)
+  // Price mapping (based on ~29 NOK)
   const prices: { [key: string]: { amount: number; symbol: string; display: string } } = {
-    'NOK': { amount: 39, symbol: 'kr', display: '39 kr' },
-    'SEK': { amount: 45, symbol: 'kr', display: '45 kr' },
-    'DKK': { amount: 34, symbol: 'kr', display: '34 kr' },
-    'EUR': { amount: 3.90, symbol: '€', display: '€3.90' },
-    'USD': { amount: 3.99, symbol: '$', display: '$3.99' },
-    'GBP': { amount: 3.40, symbol: '£', display: '£3.40' },
-    'CAD': { amount: 5.49, symbol: '$', display: '$5.49 CAD' },
-    'AUD': { amount: 6.49, symbol: '$', display: '$6.49 AUD' },
-    'NZD': { amount: 6.99, symbol: '$', display: '$6.99 NZD' },
+    'NOK': { amount: 29, symbol: 'kr', display: '29 kr' },
+    'SEK': { amount: 35, symbol: 'kr', display: '35 kr' },
+    'DKK': { amount: 26, symbol: 'kr', display: '26 kr' },
+    'EUR': { amount: 2.99, symbol: '€', display: '€2.99' },
+    'USD': { amount: 2.99, symbol: '$', display: '$2.99' },
+    'GBP': { amount: 2.59, symbol: '£', display: '£2.59' },
+    'CAD': { amount: 4.19, symbol: '$', display: '$4.19 CAD' },
+    'AUD': { amount: 4.99, symbol: '$', display: '$4.99 AUD' },
+    'NZD': { amount: 5.49, symbol: '$', display: '$5.49 NZD' },
   };
   
   const pricing = prices[userCurrency] || prices['EUR'];

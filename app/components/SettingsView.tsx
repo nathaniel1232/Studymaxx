@@ -183,7 +183,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                         <span className="text-2xl">🆓</span>
                         <button
                           onClick={() => {
-                            window.alert("Premium upgrade coming soon! In the meantime, you can upgrade from the main page.");
+                            window.dispatchEvent(new CustomEvent('showPremium'));
                           }}
                           className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-lg transition-all hover:scale-105 shadow-md text-sm"
                         >

@@ -317,18 +317,30 @@ export const getFlashcardSetByShareId = async (shareId: string): Promise<Flashca
   if (typeof window === "undefined") return null;
 
   try {
+    console.log(`[Storage] Fetching shared set with shareId: ${shareId}`);
     const response = await fetch(`/api/share?shareId=${shareId}`);
     
     if (response.ok) {
       const data = await response.json();
+      console.log(`[Storage] Successfully fetched shared set from server: ${data.studySet?.id}`);
       return data.studySet;
+    } else {
+      const errorData = await response.json();
+      console.warn(`[Storage] Server returned error (${response.status}):`, errorData.error);
     }
   } catch (error) {
-    console.error('Failed to fetch from server:', error);
+    console.error('[Storage] Failed to fetch from server:', error);
   }
 
+  console.log(`[Storage] Falling back to localStorage for shareId: ${shareId}`);
   const sharedSets = getSharedSetsRegistry();
-  return sharedSets[shareId] || null;
+  const result = sharedSets[shareId];
+  
+  if (!result) {
+    console.error(`[Storage] No shared set found in localStorage either for shareId: ${shareId}`);
+  }
+  
+  return result || null;
 };
 
 export const copySharedSet = async (shareId: string): Promise<FlashcardSet | null> => {
