@@ -705,8 +705,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     </div>
                   </button> */}
 
-                  {/* DOCX Files */}
-                  <button
+                  {/* DOCX Files - Disabled */}
+                  {/* <button
                     onClick={() => {
                       if (!isPremium) {
                         setShowPremiumModal(true);
@@ -730,10 +730,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         </p>
                       </div>
                     </div>
-                  </button>
+                  </button> */}
 
-                  {/* Image */}
-                  <button
+                  {/* Image - Disabled */}
+                  {/* <button
                     onClick={() => {
                       if (!isPremium) {
                         setShowPremiumModal(true);
@@ -757,7 +757,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         </p>
                       </div>
                     </div>
-                  </button>
+                  </button> */}
                 </div>
               ) : (
                 <>
