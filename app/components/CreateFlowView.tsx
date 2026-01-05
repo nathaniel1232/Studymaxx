@@ -54,13 +54,14 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   const [isDailyLimit, setIsDailyLimit] = useState(false);
   const [premiumCheckLoading, setPremiumCheckLoading] = useState(true);
   const [hasSession, setHasSession] = useState(false);
+  const [remainingGenerations, setRemainingGenerations] = useState(3);
 
   // Check premium status on mount AND when session changes
   useEffect(() => {
     // Add a small delay to ensure session is fully initialized
     const timer = setTimeout(() => {
       checkPremiumStatus();
-    }, 100);
+    }, 50);
     
     // Listen for auth state changes
     if (supabase) {
@@ -69,7 +70,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         setHasSession(!!session);
         if (session) {
           // Add delay before checking premium to allow session to fully sync
-          setTimeout(() => checkPremiumStatus(), 200);
+          setTimeout(() => checkPremiumStatus(), 100);
         } else {
           setIsPremium(false);
           setPremiumCheckLoading(false);
@@ -126,10 +127,17 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         setIsPremium(data.isPremium);
         setSetsCreated(data.setsCreated);
         setCanCreateMore(data.canCreateMore);
+        
+        // Update remaining generations
+        const remaining = getRemainingGenerations(session?.user?.id || '');
+        setRemainingGenerations(remaining);
+        
         console.log('[CreateFlowView] ===== PREMIUM CHECK COMPLETE ===== isPremium:', data.isPremium);
       } else if (response.status === 401) {
         console.log('[CreateFlowView] ❌ User not authenticated - treating as free user');
         setIsPremium(false);
+        const remaining = getRemainingGenerations('');
+        setRemainingGenerations(remaining);
       } else {
         console.log('[CreateFlowView] ❌ Premium check API failed:', response.status);
         // Fallback to localStorage count
@@ -137,6 +145,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         const savedSets = await getSavedFlashcardSets();
         const userSets = savedSets.filter(set => set.userId === userId);
         setSetsCreated(userSets.length);
+        const remaining = getRemainingGenerations(userId);
+        setRemainingGenerations(remaining);
         setCanCreateMore(userSets.length < 1);
         setIsPremium(false);
       }
@@ -453,6 +463,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       // Increment rate limit counter AFTER successful generation
       if (userId && !isPremium) {
         incrementAIUsage(userId);
+        // Update the display counter
+        setRemainingGenerations(Math.max(0, remainingGenerations - 1));
       }
 
       onGenerateFlashcards(cards, subject, targetGrade);
@@ -474,7 +486,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         setIsGenerating(false);
         setCurrentStep(2);
         setIsDailyLimit(true);
-        setTimeout(() => setShowPremiumModal(true), 500);
+        setTimeout(() => setShowPremiumModal(true), 300);
         return;
       }
 
@@ -530,7 +542,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         <div className="card-elevated p-10">
           {/* Error message */}
           {error && (
-            <div className="mb-6 p-4 rounded-xl\" style={{ 
+            <div className="mb-6 p-4 rounded-xl" style={{ 
               background: 'var(--error-light)',
               border: '1px solid var(--error)',
               color: 'var(--error)'
@@ -542,6 +554,15 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
           {/* STEP 1: Choose Subject */}
           {currentStep === 1 && (
             <div className="space-y-8">
+              {/* Show daily limit info for free users */}
+              {!isPremium && hasSession && (
+                <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                  <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
+                    ⚡ You have <strong>{remainingGenerations} generation{remainingGenerations !== 1 ? 's' : ''} left today</strong>. Upgrade to premium for unlimited.
+                  </p>
+                </div>
+              )}
+
               <div>
                 <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>
                   {t("what_subject")}

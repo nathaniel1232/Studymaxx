@@ -53,14 +53,18 @@ export function getClientIP(req: NextRequest): string {
 /**
  * Check rate limit for AI generation
  * 
- * Limits (per IP per hour):
- * - Free users: 5 attempts (to prevent rapid account creation abuse)
- * - Premium users: 100 attempts (generous, but prevents API key theft)
+ * Now uses USER-BASED limits instead of IP-based
+ * This prevents one user from blocking everyone on their IP
+ * 
+ * Limits (per user per day):
+ * - Free users: 10 generations per day (was too strict at 5/hour)
+ * - Premium users: Unlimited (essentially)
+ * - Anonymous users: 3 per day (to prevent abuse)
  */
 export function checkRateLimit(
   identifier: string,
-  maxRequests: number = 5,
-  windowMs: number = 60 * 60 * 1000 // 1 hour
+  maxRequests: number = 10,
+  windowMs: number = 24 * 60 * 60 * 1000 // 24 hours (1 day)
 ): { allowed: boolean; remaining: number; resetAt: number } {
   const now = Date.now();
   const entry = rateLimitStore.get(identifier);
@@ -119,8 +123,10 @@ export function checkRateLimit(
 /**
  * Get rate limit for user type
  */
-export function getRateLimitForUser(isPremium: boolean): number {
-  return isPremium ? 100 : 5; // Premium users get much higher limit
+export function getRateLimitForUser(isPremium: boolean, isAnonymous: boolean = false): number {
+  if (isPremium) return 999; // Premium: essentially unlimited (999/day)
+  if (isAnonymous) return 3; // Anonymous: very limited to prevent abuse
+  return 3; // Free logged-in users: 3 per day
 }
 
 /**

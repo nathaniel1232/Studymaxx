@@ -29,7 +29,7 @@ export interface UsageLimits {
 
 // Free tier limits - HARD LIMITS enforced server-side
 export const FREE_LIMITS: UsageLimits = {
-  maxStudySets: 1, // 1 study set total (not per day!)
+  maxStudySets: 3, // 3 study sets per 24 hours
   maxFlashcardsPerSet: 10, // Only 10 cards for free
   maxAIGenerationsPerDay: 1, // 1 AI generation per day
   canUploadPDF: false,
@@ -98,7 +98,7 @@ export function canUseAI(userStatus: UserStatus): {
     return {
       allowed: false,
       statusCode: 402, // Payment Required
-      reason: `Free users can create ${FREE_LIMITS.maxStudySets} study set total. Upgrade to Premium for unlimited sets!`,
+      reason: `Free users can create ${FREE_LIMITS.maxStudySets} study sets per 24 hours. Upgrade to Premium for unlimited sets!`,
     };
   }
 
@@ -170,9 +170,8 @@ export function getPremiumFeatures(): string[] {
   return [
     '✨ Unlimited study sets — create without limits',
     '🤖 Unlimited AI generations — never wait',
-    '📄 PDF uploads — study from any document',
-    '🎥 YouTube learning — turn videos into flashcards',
-    '🖼️ Image scanning — snap notes, get flashcards',
+    '�️ Image scanning — snap notes, get flashcards',
+    '📄 Word documents (DOCX) — study from uploaded files',
     '🎯 Difficulty targeting — train for your goal grade',
     '🔄 Regenerate endlessly — perfect every card',
     '☁️ Cloud sync — study anywhere, anytime',

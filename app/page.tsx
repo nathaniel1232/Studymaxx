@@ -328,8 +328,8 @@ export default function Home() {
                 <div className="mb-8 inline-block px-6 py-3 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
                   <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
                     {settings.language === "no"
-                      ? "🎁 1 gratis studiesett per 24 timer"
-                      : "🎁 1 free study set every 24 hours"}
+                      ? "🎁 3 gratis studiesett per 24 timer"
+                      : "🎁 3 free study sets every 24 hours"}
                   </p>
                 </div>
               )}
@@ -429,10 +429,83 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+
+              {/* Premium Features Section */}
+              <div className="mt-16 max-w-4xl mx-auto">
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
+                    ✨ {settings.language === "no" ? "Oppgrader til Premium" : "Upgrade to Premium"}
+                  </h3>
+                  <p style={{ color: 'var(--foreground-muted)' }}>
+                    {settings.language === "no" 
+                      ? "Lås opp ubegrenset potensial og studer uten grenser"
+                      : "Unlock unlimited potential and study without limits"}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Free Plan */}
+                  <div className="p-8 rounded-2xl border-2" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+                    <h4 className="text-lg font-bold mb-4" style={{ color: 'var(--foreground)' }}>
+                      🎓 {settings.language === "no" ? "Gratis" : "Free"}
+                    </h4>
+                    <ul className="space-y-3 text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                      <li className="flex items-start gap-2">
+                        <span>✓</span>
+                        <span><strong>3 {settings.language === "no" ? "generasjoner per dag" : "generations per day"}</strong></span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span>✓</span>
+                        <span>{settings.language === "no" ? "Studer notater" : "Study from notes"}</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span>✓</span>
+                        <span>{settings.language === "no" ? "Alle studiemoduser" : "All study modes"}</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  {/* Premium Plan */}
+                  <div className="p-8 rounded-2xl border-3 relative overflow-hidden" style={{ 
+                    background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
+                    borderColor: '#14b8a6'
+                  }}>
+                    <div className="absolute top-0 right-0 px-4 py-1 text-xs font-bold rounded-bl-lg" style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)', color: 'white' }}>
+                      {settings.language === "no" ? "ANBEFALT" : "RECOMMENDED"}
+                    </div>
+                    <h4 className="text-lg font-bold mb-4 mt-2" style={{ color: '#14b8a6' }}>
+                      👑 {settings.language === "no" ? "Premium" : "Premium"}
+                    </h4>
+                    <ul className="space-y-3 text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                      <li className="flex items-start gap-2">
+                        <span style={{ color: '#14b8a6' }}>✓</span>
+                        <span><strong>{settings.language === "no" ? "Ubegrenset" : "Unlimited"}</strong> {settings.language === "no" ? "generasjoner" : "generations"}</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span style={{ color: '#14b8a6' }}>✓</span>
+                        <span>{settings.language === "no" ? "Word dokument filer" : "Word documents (DOCX)"}</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span style={{ color: '#14b8a6' }}>✓</span>
+                        <span>{settings.language === "no" ? "Bilder med tekstgjenkjenning" : "Images with OCR"}</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span style={{ color: '#14b8a6' }}>✓</span>
+                        <span>{settings.language === "no" ? "Prioritert AI-prosessering" : "Priority processing"}</span>
+                      </li>
+                    </ul>
+                    <button
+                      onClick={() => !user ? setShowLoginModal(true) : setShowPremiumModal(true)}
+                      className="mt-6 w-full py-3 px-4 rounded-xl font-bold text-white transition-all hover:scale-105"
+                      style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)' }}
+                    >
+                      {settings.language === "no" ? "Oppgrader nå" : "Upgrade Now"}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* Footer */}
           <footer className="max-w-7xl mx-auto w-full py-8 relative z-10">
             <div className="flex flex-wrap items-center justify-center gap-4 text-sm" style={{ color: 'var(--foreground-muted)' }}>
               <a href="mailto:studymaxxer@gmail.com" className="hover:text-blue-600 transition-colors">

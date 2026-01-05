@@ -187,6 +187,7 @@ async function resetDailyCounterIfNeeded(userStatus: UserStatus): Promise<UserSt
 
 /**
  * Increment usage counters after successful AI generation
+ * Optimized: Direct update without fetching first
  */
 async function incrementUsageCounters(userId: string, isNewSet: boolean = false): Promise<void> {
   if (!supabase) {
@@ -194,7 +195,7 @@ async function incrementUsageCounters(userId: string, isNewSet: boolean = false)
   }
 
   try {
-    // First, get current values
+    // Get current values first
     const { data: currentUser, error: fetchError } = await supabase
       .from("users")
       .select("daily_ai_count, study_set_count")
@@ -206,19 +207,13 @@ async function incrementUsageCounters(userId: string, isNewSet: boolean = false)
       return;
     }
 
-    // Prepare update
-    const updates: any = {
-      daily_ai_count: currentUser.daily_ai_count + 1,
-    };
-
-    if (isNewSet) {
-      updates.study_set_count = currentUser.study_set_count + 1;
-    }
-
-    // Update with new values
+    // Update with incremented values
     const { error } = await supabase
       .from("users")
-      .update(updates)
+      .update({
+        daily_ai_count: currentUser.daily_ai_count + 1,
+        ...(isNewSet && { study_set_count: currentUser.study_set_count + 1 })
+      })
       .eq("id", userId);
 
     if (error) {
@@ -237,46 +232,24 @@ async function generateWithAI(
   numberOfFlashcards: number,
   language: string = "English"
 ): Promise<Flashcard[]> {
-  const systemPrompt = `You are an expert educational assistant that creates high-quality flashcards.
-Create ${numberOfFlashcards} flashcards in ${language} based on the provided text.
-Each flashcard should have a clear question, a comprehensive answer, and 3 plausible wrong answers (distractors).
-Return a JSON object with a "flashcards" array containing flashcard objects.
+  const systemPrompt = `You are an expert educational assistant that creates comprehensive flashcards for deep learning.
+Create ${numberOfFlashcards} detailed flashcards in ${language} based on the provided text.
+EXPAND on the topic - go beyond just summarizing. Include related knowledge, context, and comprehensive information.
+Vary question types: WHO, WHAT, WHERE, WHEN, WHY, HOW, definitions, explanations, comparisons, consequences.
 
-Example format:
+JSON format:
 {
   "flashcards": [
-    {"id": "1", "question": "What is...", "answer": "The answer is...", "distractors": ["Wrong1", "Wrong2", "Wrong3"]},
-    {"id": "2", "question": "How does...", "answer": "It works by...", "distractors": ["Wrong1", "Wrong2", "Wrong3"]}
+    {"id": "1", "question": "detailed question", "answer": "comprehensive, rich answer with context", "distractors": ["plausible wrong1", "plausible wrong2", "plausible wrong3"]},
+    {"id": "2", "question": "detailed question", "answer": "comprehensive answer", "distractors": ["wrong1", "wrong2", "wrong3"]}
   ]
 }
 
-Rules for QUESTIONS:
-- Clear and specific
-- Test conceptual understanding
-- Avoid ambiguous phrasing
-
-Rules for ANSWERS:
-- Concise but complete
-- Use precise terminology
-- Match the language length of distractors
-
-Rules for DISTRACTORS (wrong answers):
-- **CRITICAL**: Make them plausible and educationally valuable
-- Each should be a common misconception or related concept
-- Use same language structure and complexity as correct answer
-- Differ in meaning, not just length or formatting
-- Should require actual knowledge to distinguish from the correct answer
-- Avoid obviously wrong answers
-- Test understanding, not trick the student
-
-Example:
-Question: "What is photosynthesis?"
-Correct: "Process where plants convert light energy into chemical energy"
-Distractors: [
-  "Process where plants absorb nutrients from soil",
-  "Process where plants break down glucose for energy",
-  "Process where plants release oxygen at night"
-]`;
+Rules:
+- Questions: Specific, varied types (WHO, WHEN, WHY, HOW), test deep understanding
+- Answers: Rich, comprehensive, include context and relevant details - make them informative and valuable for learning
+- Distractors: Plausible, related concepts or common misconceptions (same complexity as answer)
+- Overall: Create flashcards that teach MORE than just the input - expand knowledge on the topic`;
 
   try {
     const completion = await openai.chat.completions.create({
@@ -430,18 +403,26 @@ export async function POST(req: NextRequest) {
     // IMPORTANT: Notes material type has NO LIMITS for free users
     const isNotesOnly = materialType === "notes" || !materialType;
 
-    // ANTI-ABUSE: Rate limit by IP
-    const clientIP = getClientIP(req);
-    const isPremiumPreCheck = false; // We don't know yet, check conservatively
-    const maxRequests = getRateLimitForUser(isPremiumPreCheck);
-    const rateCheck = checkRateLimit(clientIP, maxRequests);
+    // STEP 0: Get user from database first (needed for rate limit check)
+    let userStatus = await getOrCreateUser(userId);
+    if (!userStatus) {
+      return NextResponse.json(
+        { error: "Failed to get user status" },
+        { status: 500 }
+      );
+    }
+
+    // ANTI-ABUSE: Rate limit by USER ID (not IP - prevents one user blocking everyone on same network)
+    const maxRequests = getRateLimitForUser(userStatus.isPremium, userId.startsWith('anon_') || userId.startsWith('anon-'));
+    const rateCheck = checkRateLimit(userId, maxRequests);
 
     if (!rateCheck.allowed) {
       return NextResponse.json(
         {
-          error: `Too many requests from your IP. Try again in ${formatResetTime(rateCheck.resetAt)}.`,
+          error: `You've reached your daily generation limit. Try again in ${formatResetTime(rateCheck.resetAt)}.`,
           code: "RATE_LIMIT_EXCEEDED",
           resetAt: rateCheck.resetAt,
+          isPremium: userStatus.isPremium,
         },
         { 
           status: 429,
@@ -454,19 +435,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // STEP 1: Get user from database
-    let userStatus = await getOrCreateUser(userId);
-    if (!userStatus) {
-      return NextResponse.json(
-        { error: "Failed to get user status" },
-        { status: 500 }
-      );
-    }
-
-    // STEP 2: Reset daily counter if new day
+    // STEP 1: Reset daily counter if new day
     userStatus = await resetDailyCounterIfNeeded(userStatus);
 
-    // STEP 3: Check flashcard count limit (FREE users only, SKIP for notes)
+    // STEP 2: Check flashcard count limit (FREE users only, SKIP for notes)
     if (!isNotesOnly) {
       const cardCheck = validateFlashcardCount(numberOfFlashcards, userStatus.isPremium);
       if (!cardCheck.valid) {
@@ -481,7 +453,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // STEP 4: Check if user can use AI (SKIP for notes - they're always free)
+    // STEP 3: Check if user can use AI (SKIP for notes - they're always free)
     if (!isNotesOnly) {
       const aiCheck = canUseAI(userStatus);
       if (!aiCheck.allowed) {
@@ -498,14 +470,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // STEP 5: Generate flashcards with GPT-4o mini
+    // STEP 4: Generate flashcards with GPT-4o mini
     const flashcards = await generateWithAI(text, numberOfFlashcards, language || "English");
 
-    // STEP 6: Increment usage counters (only on success!)
+    // STEP 5: Increment usage counters (fire-and-forget - don't wait)
     const isNewSet = userStatus.studySetCount < FREE_LIMITS.maxStudySets || userStatus.isPremium;
-    await incrementUsageCounters(userId, isNewSet);
+    incrementUsageCounters(userId, isNewSet).catch(err => console.error("Counter increment failed:", err));
 
-    // Return success
+    // Return success immediately
     return NextResponse.json({
       flashcards,
       usage: {

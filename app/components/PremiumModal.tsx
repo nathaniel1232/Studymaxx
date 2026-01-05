@@ -284,8 +284,8 @@ export default function PremiumModal({
                 <div className="text-lg font-bold opacity-90" style={{ color: '#ffffff' }}>{t("per_month") || "per month"}</div>
               </div>
               <div className="text-right">
-                <div className="text-sm opacity-75 line-through" style={{ color: '#ffffff' }}>
-                  Worth 200+ kr
+                <div className="text-sm opacity-75" style={{ color: '#ffffff' }}>
+                  Better grades = priceless
                 </div>
                 <div className="text-lg font-bold" style={{ color: '#ffffff' }}>
                   ☕ Less than a coffee
