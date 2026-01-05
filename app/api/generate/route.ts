@@ -40,6 +40,7 @@ interface GenerateRequest {
   targetGrade?: string;
   difficulty?: string;
   language?: string;
+  materialType?: string;
 }
 
 interface Flashcard {
@@ -387,7 +388,7 @@ Rules:
 export async function POST(req: NextRequest) {
   try {
     const body: GenerateRequest = await req.json();
-    const { userId, text, numberOfFlashcards, subject, targetGrade, difficulty, language } = body;
+    const { userId, text, numberOfFlashcards, subject, targetGrade, difficulty, language, materialType } = body;
 
     // Validate input
     if (!userId || !text || !numberOfFlashcards) {
@@ -396,6 +397,9 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // IMPORTANT: Notes material type has NO LIMITS for free users
+    const isNotesOnly = materialType === "notes" || !materialType;
 
     // ANTI-ABUSE: Rate limit by IP
     const clientIP = getClientIP(req);
@@ -433,32 +437,36 @@ export async function POST(req: NextRequest) {
     // STEP 2: Reset daily counter if new day
     userStatus = await resetDailyCounterIfNeeded(userStatus);
 
-    // STEP 3: Check flashcard count limit (FREE users only)
-    const cardCheck = validateFlashcardCount(numberOfFlashcards, userStatus.isPremium);
-    if (!cardCheck.valid) {
-      return NextResponse.json(
-        {
-          error: cardCheck.reason,
-          code: "FLASHCARD_LIMIT",
-          isPremium: userStatus.isPremium,
-        },
-        { status: cardCheck.statusCode || 402 }
-      );
+    // STEP 3: Check flashcard count limit (FREE users only, SKIP for notes)
+    if (!isNotesOnly) {
+      const cardCheck = validateFlashcardCount(numberOfFlashcards, userStatus.isPremium);
+      if (!cardCheck.valid) {
+        return NextResponse.json(
+          {
+            error: cardCheck.reason,
+            code: "FLASHCARD_LIMIT",
+            isPremium: userStatus.isPremium,
+          },
+          { status: cardCheck.statusCode || 402 }
+        );
+      }
     }
 
-    // STEP 4: Check if user can use AI (THE CRITICAL CHECK)
-    const aiCheck = canUseAI(userStatus);
-    if (!aiCheck.allowed) {
-      return NextResponse.json(
-        {
-          error: aiCheck.reason,
-          code: aiCheck.statusCode === 429 ? "DAILY_LIMIT_REACHED" : "PREMIUM_REQUIRED",
-          isPremium: userStatus.isPremium,
-          studySetCount: userStatus.studySetCount,
-          dailyAiCount: userStatus.dailyAiCount,
-        },
-        { status: aiCheck.statusCode || 402 }
-      );
+    // STEP 4: Check if user can use AI (SKIP for notes - they're always free)
+    if (!isNotesOnly) {
+      const aiCheck = canUseAI(userStatus);
+      if (!aiCheck.allowed) {
+        return NextResponse.json(
+          {
+            error: aiCheck.reason,
+            code: aiCheck.statusCode === 429 ? "DAILY_LIMIT_REACHED" : "PREMIUM_REQUIRED",
+            isPremium: userStatus.isPremium,
+            studySetCount: userStatus.studySetCount,
+            dailyAiCount: userStatus.dailyAiCount,
+          },
+          { status: aiCheck.statusCode || 402 }
+        );
+      }
     }
 
     // STEP 5: Generate flashcards with GPT-4o mini

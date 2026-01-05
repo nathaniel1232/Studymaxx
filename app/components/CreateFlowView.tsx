@@ -446,7 +446,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         settings.cardCount,
         subject,
         targetGrade,
-        userIdForGen
+        userIdForGen,
+        selectedMaterial || "notes"
       );
 
       // Increment rate limit counter AFTER successful generation

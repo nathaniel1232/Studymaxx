@@ -16,6 +16,7 @@ interface FlashcardRequest {
   targetGrade?: string;
   difficulty?: string;
   userId?: string;
+  materialType?: string;
 }
 
 /**
@@ -25,7 +26,7 @@ interface FlashcardRequest {
 export async function POST(req: NextRequest) {
   try {
     const body: FlashcardRequest = await req.json();
-    const { text, numberOfFlashcards, subject, targetGrade, difficulty, userId } = body;
+    const { text, numberOfFlashcards, subject, targetGrade, difficulty, userId, materialType } = body;
 
     // Validate required fields
     if (!text || !numberOfFlashcards) {
@@ -56,6 +57,7 @@ export async function POST(req: NextRequest) {
         targetGrade,
         difficulty,
         language,
+        materialType: materialType || "notes",
       }),
     });
 
