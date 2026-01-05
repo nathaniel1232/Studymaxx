@@ -109,15 +109,10 @@ export async function POST(request: NextRequest) {
 
     if (existingUser) {
       // Update existing user to Premium
-      const updateData: any = { is_premium: true };
-      if (stripeCustomerId) {
-        updateData.stripe_customer_id = stripeCustomerId;
-      }
-
-      console.log(`[Premium Activate] Updating user ${userId}:`, updateData);
+      console.log(`[Premium Activate] Updating user ${userId} to premium`);
       const { error } = await supabase
         .from("users")
-        .update(updateData)
+        .update({ is_premium: true })
         .eq("id", userId);
 
       if (error) {
@@ -132,18 +127,13 @@ export async function POST(request: NextRequest) {
     } else {
       // Create new user as Premium
       console.log(`[Premium Activate] Creating new user ${userId} as Premium`);
-      const insertData: any = {
-        id: userId,
-        email: userEmail,
-        is_premium: true
-      };
-      if (stripeCustomerId) {
-        insertData.stripe_customer_id = stripeCustomerId;
-      }
-
       const { error } = await supabase
         .from("users")
-        .insert(insertData);
+        .insert({
+          id: userId,
+          email: userEmail,
+          is_premium: true
+        });
 
       if (error) {
         console.error("[Premium Activate] ❌ Failed to create user:", error);
