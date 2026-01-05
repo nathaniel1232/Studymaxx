@@ -662,7 +662,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         setSelectedMaterial("pdf");
                       }
                     }}
-                    className="card card-hover p-6 text-left relative"
+                    className={`card card-hover p-6 text-left relative transition-all ${!isPremium ? 'border-amber-200 dark:border-amber-800' : ''}`}
+                    style={!isPremium ? {
+                      backgroundColor: 'rgba(251, 191, 36, 0.05)',
+                    } : {}}
                   >
                     {!isPremium && (
                       <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
@@ -689,7 +692,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         setSelectedMaterial("youtube");
                       }
                     }}
-                    className="card card-hover p-6 text-left relative"
+                    className={`card card-hover p-6 text-left relative transition-all ${!isPremium ? 'border-amber-200 dark:border-amber-800' : ''}`}
+                    style={!isPremium ? {
+                      backgroundColor: 'rgba(251, 191, 36, 0.05)',
+                    } : {}}
                   >
                     {!isPremium && (
                       <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
@@ -716,7 +722,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         setSelectedMaterial("docx");
                       }
                     }}
-                    className="card card-hover p-6 text-left relative"
+                    className={`card card-hover p-6 text-left relative transition-all ${!isPremium ? 'border-amber-200 dark:border-amber-800' : ''}`}
+                    style={!isPremium ? {
+                      backgroundColor: 'rgba(251, 191, 36, 0.05)',
+                    } : {}}
                   >
                     {!isPremium && (
                       <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
@@ -743,7 +752,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         setSelectedMaterial("image");
                       }
                     }}
-                    className="card card-hover p-6 text-left relative"
+                    className={`card card-hover p-6 text-left relative transition-all ${!isPremium ? 'border-amber-200 dark:border-amber-800' : ''}`}
+                    style={!isPremium ? {
+                      backgroundColor: 'rgba(251, 191, 36, 0.05)',
+                    } : {}}
                   >
                     {!isPremium && (
                       <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
