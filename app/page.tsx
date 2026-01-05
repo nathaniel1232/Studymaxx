@@ -435,7 +435,7 @@ export default function Home() {
           {/* Footer */}
           <footer className="max-w-7xl mx-auto w-full py-8 relative z-10">
             <div className="flex flex-wrap items-center justify-center gap-4 text-sm" style={{ color: 'var(--foreground-muted)' }}>
-              <a href="mailto:contact@studymaxx.app" className="hover:text-blue-600 transition-colors">
+              <a href="mailto:studymaxxer@gmail.com" className="hover:text-blue-600 transition-colors">
                 {settings.language === "no" ? "Kontakt" : "Contact"}
               </a>
               <span>·</span>
