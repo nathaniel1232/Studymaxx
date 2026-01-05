@@ -250,6 +250,12 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
       setUploadedFiles(newUploadedFiles);
       setTextInput(allText);
 
+      // Reset the input so user can upload files again (including same files)
+      const fileInput = e.target as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = "";
+      }
+
       // Show results or errors
       if (errors.length > 0) {
         if (newUploadedFiles.length > uploadedFiles.length) {
