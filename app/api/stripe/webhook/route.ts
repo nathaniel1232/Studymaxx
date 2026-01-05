@@ -14,6 +14,20 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 /**
+ * Handle OPTIONS preflight requests
+ */
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, stripe-signature",
+    },
+  });
+}
+
+/**
  * Main webhook handler - MUST be named POST
  */
 export async function POST(request: NextRequest) {
