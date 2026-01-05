@@ -651,8 +651,59 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     </div>
                   </button>
 
+                  {/* DOCX Files - Premium */}
+                  <button
+                    onClick={() => {
+                      if (!isPremium) {
+                        setShowPremiumModal(true);
+                      } else {
+                        setSelectedMaterial("docx");
+                      }
+                    }}
+                    className="card card-hover p-6 text-left relative"
+                  >
+                    {!isPremium && (
+                      <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                        Premium
+                      </div>
+                    )}
+                    <div className="flex items-center gap-4">
+                      <div className="text-4xl">📄</div>
+                      <div>
+                        <h3 className="text-lg font-bold" style={{ color: 'var(--foreground)' }}>{t("docx_document")}</h3>
+                        <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                          Upload Word documents
+                        </p>
+                      </div>
+                    </div>
+                  </button>
 
-
+                  {/* Image - Premium */}
+                  <button
+                    onClick={() => {
+                      if (!isPremium) {
+                        setShowPremiumModal(true);
+                      } else {
+                        setSelectedMaterial("image");
+                      }
+                    }}
+                    className="card card-hover p-6 text-left relative"
+                  >
+                    {!isPremium && (
+                      <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                        Premium
+                      </div>
+                    )}
+                    <div className="flex items-center gap-4">
+                      <div className="text-4xl">🖼️</div>
+                      <div>
+                        <h3 className="text-lg font-bold" style={{ color: 'var(--foreground)' }}>{t("image")}</h3>
+                        <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                          {t("upload_image_ocr")}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
 
                 </div>
               ) : (
