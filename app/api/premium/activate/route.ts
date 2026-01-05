@@ -114,22 +114,27 @@ export async function POST(request: NextRequest) {
         updateData.stripe_customer_id = stripeCustomerId;
       }
 
+      console.log(`[Premium Activate] Updating user ${userId}:`, updateData);
       const { error } = await supabase
         .from("users")
         .update(updateData)
         .eq("id", userId);
 
       if (error) {
-        console.error("Failed to activate Premium:", error);
-        return NextResponse.json({ error: 'Failed to activate Premium' }, { status: 500 });
+        console.error("[Premium Activate] ❌ Failed to update user:", error);
+        return NextResponse.json({ 
+          error: 'Failed to activate Premium',
+          details: error.message 
+        }, { status: 500 });
       }
 
-      console.log(`✅ User ${userId} (${user.email}) activated as Premium with customer ID: ${stripeCustomerId}`);
+      console.log(`[Premium Activate] ✅ User ${userId} (${userEmail}) activated as Premium`);
     } else {
       // Create new user as Premium
+      console.log(`[Premium Activate] Creating new user ${userId} as Premium`);
       const insertData: any = {
         id: userId,
-        email: user.email,
+        email: userEmail,
         is_premium: true
       };
       if (stripeCustomerId) {
@@ -141,11 +146,14 @@ export async function POST(request: NextRequest) {
         .insert(insertData);
 
       if (error) {
-        console.error("Failed to create Premium user:", error);
-        return NextResponse.json({ error: 'Failed to create Premium user' }, { status: 500 });
+        console.error("[Premium Activate] ❌ Failed to create user:", error);
+        return NextResponse.json({ 
+          error: 'Failed to create Premium user',
+          details: error.message 
+        }, { status: 500 });
       }
 
-      console.log(`✅ User ${userId} (${user.email}) created as Premium`);
+      console.log(`[Premium Activate] ✅ User ${userId} (${userEmail}) created as Premium`);
     }
 
     return NextResponse.json({
@@ -155,7 +163,10 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('Premium activation error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('[Premium Activate] ❌ Catch block error:', error);
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error.message 
+    }, { status: 500 });
   }
 }
