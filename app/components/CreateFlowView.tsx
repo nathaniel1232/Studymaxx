@@ -147,7 +147,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         setSetsCreated(userSets.length);
         const remaining = getRemainingGenerations(userId, false);
         setRemainingGenerations(parseInt(remaining) || 3);
-        setCanCreateMore(userSets.length < 1);
+        setCanCreateMore(userSets.length < 3);
         setIsPremium(false);
       }
     } catch (error) {
@@ -157,7 +157,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       const savedSets = await getSavedFlashcardSets();
       const userSets = savedSets.filter(set => set.userId === userId);
       setSetsCreated(userSets.length);
-      setCanCreateMore(userSets.length < 1);
+      setCanCreateMore(userSets.length < 3);
       setIsPremium(false);
     } finally {
       setPremiumCheckLoading(false);
@@ -383,6 +383,13 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
   const handleGenerate = async () => {
     if (!targetGrade) return;
+    
+    // Check if free user has hit study set limit
+    if (!isPremium && !canCreateMore) {
+      setError("You've reached your limit of 3 free study sets. Upgrade to Premium for unlimited study sets!");
+      setShowPremiumModal(true);
+      return;
+    }
     
     // Wait for Premium check to complete if still loading
     if (premiumCheckLoading) {
