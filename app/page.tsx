@@ -11,6 +11,7 @@ import LoginModal from "./components/LoginModal";
 import PremiumModal from "./components/PremiumModal";
 import UserProfileDropdown from "./components/UserProfileDropdown";
 import StudyFactBadge from "./components/StudyFactBadge";
+import Toast from "./components/Toast";
 import { updateLastStudied, Flashcard, getSavedFlashcardSets, FlashcardSet } from "./utils/storage";
 import { getStudyFact } from "./utils/studyFacts";
 import { useTranslation, useSettings } from "./contexts/SettingsContext";
@@ -32,6 +33,7 @@ export default function Home() {
   const [isPremium, setIsPremium] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning" } | null>(null);
 
   // Load saved sets after hydration
   useEffect(() => {
@@ -75,14 +77,27 @@ export default function Home() {
             // Remove the URL parameter
             window.history.replaceState({}, '', '/');
             
-            // Show success message
-            alert('🎉 Premium activated! All features unlocked. Refreshing page...');
-            window.location.reload();
+            // Show success toast
+            setToast({ 
+              message: '🎉 Premium activated! All features are now unlocked. Enjoy unlimited AI generations, PDF, YouTube, and image uploads!',
+              type: 'success' 
+            });
+            
+            // Refresh the page after a short delay
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
           } else {
             console.error('[Premium] Activation failed:', await response.text());
+            // Webhook might still activate, show info toast
+            setToast({ 
+              message: 'Payment received! Your premium account will be activated shortly.',
+              type: 'info' 
+            });
           }
         } catch (error) {
           console.error('[Premium] Activation error:', error);
+          // Don't show error - webhook will handle it
         }
       }
     };
@@ -485,6 +500,16 @@ export default function Home() {
           onClose={() => setShowPremiumModal(false)}
           setsCreated={savedSets.length}
           onRequestLogin={() => setShowLoginModal(true)}
+        />
+      )}
+
+      {/* Toast Notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+          duration={4000}
         />
       )}
     </main>

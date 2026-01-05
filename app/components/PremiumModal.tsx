@@ -83,11 +83,13 @@ export default function PremiumModal({
         // User not logged in - open login modal
         if (onRequestLogin) {
           setIsLoading(false);
+          // Brief message before closing
+          setError("");
           onClose(); // Close premium modal
-          onRequestLogin(); // Open login modal
+          setTimeout(() => onRequestLogin(), 300); // Open login modal after modal closes
           return;
         } else {
-          setError("Please sign in to upgrade to Premium");
+          setError("Please sign in first to upgrade to Premium. Use the Sign In button in the top menu.");
           setIsLoading(false);
           return;
         }
@@ -110,7 +112,11 @@ export default function PremiumModal({
       const { url } = await response.json();
       
       // Redirect to Stripe Checkout
-      window.location.href = url;
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error("No checkout URL received");
+      }
     } catch (err: any) {
       console.error("Checkout error:", err);
       setError(err.message || "Failed to start checkout. Please try again.");

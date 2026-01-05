@@ -57,7 +57,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
   // Check premium status on mount AND when session changes
   useEffect(() => {
-    checkPremiumStatus();
+    // Add a small delay to ensure session is fully initialized
+    const timer = setTimeout(() => {
+      checkPremiumStatus();
+    }, 100);
     
     // Listen for auth state changes
     if (supabase) {
@@ -65,15 +68,21 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         console.log('[CreateFlowView] Auth state changed:', event, 'Has session:', !!session);
         setHasSession(!!session);
         if (session) {
-          checkPremiumStatus();
+          // Add delay before checking premium to allow session to fully sync
+          setTimeout(() => checkPremiumStatus(), 200);
         } else {
           setIsPremium(false);
           setPremiumCheckLoading(false);
         }
       });
       
-      return () => subscription.unsubscribe();
+      return () => {
+        clearTimeout(timer);
+        subscription.unsubscribe();
+      };
     }
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const checkPremiumStatus = async () => {
