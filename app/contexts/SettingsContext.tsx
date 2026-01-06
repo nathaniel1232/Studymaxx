@@ -508,9 +508,6 @@ export function useTranslation() {
       "auto_login_after_verify": { en: "You'll be automatically logged in!", no: "Du vil automatisk bli logget inn!" },
       "tip": { en: "Tip", no: "Tips" },
       "check_spam_folder": { en: "Check your spam folder if you don't see the email", no: "Sjekk spam-mappen din hvis du ikke ser e-posten" },
-      "got_it": { en: "Got it!", no: "Skjønner!" },
-      "welcome_back": { en: "Welcome Back!", no: "Velkommen tilbake!" },
-      "redirecting": { en: "Redirecting...", no: "Omdirigerer..." },
       "you_have_premium": { en: "You Have Premium!", no: "Du har Premium!" },
       "premium_active_message": { en: "You're already enjoying all premium features. Keep crushing those study goals!", no: "Du nyter allerede alle premium-funksjonene. Fortsett å knuse disse studiemålene!" },
       
