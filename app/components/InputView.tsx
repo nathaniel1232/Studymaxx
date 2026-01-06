@@ -121,6 +121,13 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    console.log(`🔍 [UPLOAD DEBUG] Selected ${files.length} file(s)`);
+    console.log(`🔍 [UPLOAD DEBUG] isPremium state: ${isPremium}`);
+    console.log(`🔍 [UPLOAD DEBUG] Input element multiple attribute: ${e.target.multiple}`);
+    for (let i = 0; i < files.length; i++) {
+      console.log(`  - File ${i + 1}: ${files[i].name} (${files[i].type})`);
+    }
+
     // Enforce file limits based on plan
     if (!isPremium && files.length > 1) {
       setError("⭐ Free users can upload 1 image at a time. Upgrade to Premium for unlimited multi-image uploads!");
@@ -263,6 +270,10 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
       }
 
       // Update state with all processed files
+      console.log(`✅ [UPLOAD DEBUG] Successfully processed ${newUploadedFiles.length - uploadedFiles.length} new file(s)`);
+      console.log(`📊 [UPLOAD DEBUG] Total files in state: ${newUploadedFiles.length}`);
+      console.log(`📝 [UPLOAD DEBUG] Total text length: ${allText.length} characters`);
+      
       setUploadedFiles(newUploadedFiles);
       setTextInput(allText);
 

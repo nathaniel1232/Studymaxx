@@ -138,7 +138,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
               </h3>
               <button
                 onClick={() => setIsCreatingFolder(!isCreatingFolder)}
-                className="px-4 py-2 text-sm bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl transition-all shadow-sm hover:shadow-md"
+                className="px-4 py-2.5 text-sm bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
               >
                 + New Folder
               </button>
@@ -162,13 +162,13 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                   <button
                     onClick={handleCreateFolder}
                     disabled={!newFolderName.trim() || isLoadingFolders}
-                    className="px-4 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all"
+                    className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
                   >
                     {isLoadingFolders ? "Creating..." : "Create"}
                   </button>
                   <button
                     onClick={() => { setIsCreatingFolder(false); setNewFolderName(""); }}
-                    className="px-4 py-2.5 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-xl transition-all"
+                    className="px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold rounded-xl transition-all border-2 border-gray-300 dark:border-gray-600"
                   >
                     Cancel
                   </button>
@@ -217,7 +217,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                     {folder.name !== "Unsorted" && (
                       <button
                         onClick={() => handleDeleteFolder(folder.id)}
-                        className="px-3 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
+                        className="px-3 py-2.5 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl transition-all border border-red-200 dark:border-red-800 font-medium shadow-sm hover:shadow"
                         title="Delete folder"
                       >
                         🗑️
@@ -270,7 +270,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                       )}
                       {/* Current folder badge */}
                       {set.folderId && (
-                        <span className="px-3 py-1.5 bg-teal-100 dark:bg-teal-900/50 text-teal-800 dark:text-teal-200 rounded-lg text-sm font-semibold border border-teal-200 dark:border-teal-700">
+                        <span className="px-3 py-1.5 bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/50 dark:to-emerald-900/50 text-teal-800 dark:text-teal-200 rounded-lg text-sm font-bold border-2 border-teal-300 dark:border-teal-600 shadow-sm">
                           📁 {folders.find(f => f.id === set.folderId)?.name || 'Unknown'}
                         </span>
                       )}
@@ -281,7 +281,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                     <div className="relative folder-dropdown">
                       <button
                         onClick={() => setMovingSetId(movingSetId === set.id ? null : set.id)}
-                        className="px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold rounded-2xl transition-all border-2 border-gray-300 dark:border-gray-600 flex items-center gap-2 shadow-sm hover:shadow-md"
+                        className="px-4 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-800/40 dark:hover:to-indigo-800/40 text-blue-900 dark:text-blue-100 font-bold rounded-xl transition-all border-2 border-blue-300 dark:border-blue-600 flex items-center gap-2 shadow-md hover:shadow-lg"
                         title="Move to folder"
                       >
                         📁
@@ -320,13 +320,13 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                     
                     <button
                       onClick={() => onLoadSet(set.flashcards, set.id)}
-                      className="px-6 py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold rounded-2xl transition-all shadow-lg"
+                      className="px-6 py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl"
                     >
                       {t("study")}
                     </button>
                     <button
                       onClick={() => handleDelete(set.id)}
-                      className="px-6 py-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl transition-all border border-gray-200 dark:border-gray-700"
+                      className="px-6 py-2.5 bg-gray-50 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-700 dark:text-gray-300 hover:text-red-700 dark:hover:text-red-400 font-semibold rounded-xl transition-all border-2 border-gray-300 dark:border-gray-600 hover:border-red-300 dark:hover:border-red-700"
                     >
                       {t("delete")}
                     </button>
