@@ -297,11 +297,11 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                     <div className="relative folder-dropdown">
                       <button
                         onClick={() => setMovingSetId(movingSetId === set.id ? null : set.id)}
-                        className="px-5 py-2.5 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold rounded-xl transition-all flex items-center gap-2.5 shadow-md hover:shadow-lg border border-gray-200 dark:border-gray-600"
-                        title="Move to folder"
+                        className="px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl transition-all flex items-center gap-2.5 shadow-lg hover:shadow-xl border-2 border-blue-400"
+                        title={t("move_to_folder") || "Move to folder"}
                       >
                         <span className="text-lg">📁</span>
-                        <span className="text-sm">Move</span>
+                        <span className="text-sm">{t("move") || "Move"}</span>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>

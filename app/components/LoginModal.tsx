@@ -178,11 +178,11 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
             <div className="text-center">
               <div className="text-6xl mb-4">🎉</div>
               <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
-                Account Created!
+                {t("account_created") || "Account Created!"}
               </h2>
               <div className="mb-6 p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800">
                 <p className="text-sm font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
-                  Check your email to activate your account:
+                  {t("check_email_to_verify") || "Check your email to activate your account:"}
                 </p>
                 <p className="text-base font-bold text-green-600 dark:text-green-400 mb-4">
                   {registeredEmail}
@@ -190,26 +190,26 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
                 <div className="text-left text-sm space-y-3 mb-4" style={{ color: 'var(--foreground-muted)' }}>
                   <p className="flex items-start gap-2">
                     <span className="text-xl mt-0.5">📧</span>
-                    <span className="font-medium">Open the verification email we just sent you</span>
+                    <span className="font-medium">{t("open_verification_email") || "Open the verification email we just sent you"}</span>
                   </p>
                   <p className="flex items-start gap-2">
                     <span className="text-xl mt-0.5">🔗</span>
-                    <span className="font-medium">Click the "Verify Email" link</span>
+                    <span className="font-medium">{t("click_verify_link") || "Click the verification link"}</span>
                   </p>
                   <p className="flex items-start gap-2">
                     <span className="text-xl mt-0.5">✅</span>
-                    <span className="font-medium">You'll be automatically logged in!</span>
+                    <span className="font-medium">{t("auto_login_after_verify") || "You'll be automatically logged in!"}</span>
                   </p>
                 </div>
                 <div className="text-xs bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded-lg border border-yellow-200 dark:border-yellow-800" style={{ color: 'var(--foreground-muted)' }}>
-                  <span className="font-semibold">💡 Tip:</span> Check your spam folder if you don't see the email
+                  <span className="font-semibold">💡 {t("tip") || "Tip"}:</span> {t("check_spam_folder") || "Check your spam folder if you don't see the email"}
                 </div>
               </div>
               <button
                 onClick={onClose}
                 className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl"
               >
-                Got it!
+                {t("got_it") || "Got it!"}
               </button>
             </div>
           </>
@@ -331,16 +331,6 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
               </button>
             </div>
 
-            {/* ONBOARDING GUIDANCE - Show guidance based on state */}
-            {isSignUp && !isMagicLink && (
-              <div className="mb-6 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800">
-                <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 flex items-start gap-2">
-                  <span className="text-lg">📝</span>
-                  <span>After signing up, you'll receive a verification email. Click the link to activate your account before signing in.</span>
-                </p>
-              </div>
-            )}
-
             {/* Divider */}
             <div className="flex items-center gap-3 my-6">
               <div className="flex-1 h-px" style={{ background: 'var(--border)' }}></div>
@@ -378,10 +368,10 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
             <div className="text-center">
               <div className="text-6xl mb-4">✅</div>
               <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>
-                {isSignUp ? "Account Created!" : "Welcome Back!"}
+                {isSignUp ? (t("account_created") || "Account Created!") : (t("welcome_back") || "Welcome Back!")}
               </h2>
               <p className="text-sm mb-6" style={{ color: 'var(--foreground-muted)' }}>
-                Redirecting...
+                {t("redirecting") || "Redirecting..."}
               </p>
             </div>
           </>

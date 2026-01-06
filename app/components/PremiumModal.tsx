@@ -335,12 +335,12 @@ export default function PremiumModal({
             <div className="space-y-3">
               <div className="w-full py-5 bg-gradient-to-r from-green-500 via-emerald-500 to-green-500 text-white font-black rounded-2xl text-xl shadow-2xl flex items-center justify-center gap-3">
                 <span>✅</span>
-                <span>You Have Premium!</span>
+                <span>{t("you_have_premium") || "You Have Premium!"}</span>
                 <span>🎉</span>
               </div>
               <div className="bg-green-900/30 border-2 border-green-700 rounded-xl p-4 text-center">
                 <p className="text-sm text-green-100 font-semibold">
-                  ✨ You're already enjoying all premium features. Keep crushing those study goals!
+                  ✨ {t("premium_active_message") || "You're already enjoying all premium features. Keep crushing those study goals!"}
                 </p>
               </div>
               <button

@@ -498,6 +498,22 @@ export function useTranslation() {
       "premium_feature": { en: "Premium Feature", no: "Premium-funksjon" },
       "premium_required": { en: "This feature requires premium", no: "Denne funksjonen krever premium" },
       
+      // New translations for UX fixes
+      "move_to_folder": { en: "Move to folder", no: "Flytt til mappe" },
+      "move": { en: "Move", no: "Flytt" },
+      "account_created": { en: "Account Created!", no: "Konto opprettet!" },
+      "check_email_to_verify": { en: "Check your email to activate your account:", no: "Sjekk e-posten din for å aktivere kontoen din:" },
+      "open_verification_email": { en: "Open the verification email we just sent you", no: "Åpne bekreftelsesmeldingen vi nettopp sendte deg" },
+      "click_verify_link": { en: "Click the verification link", no: "Klikk på bekreftelseslenken" },
+      "auto_login_after_verify": { en: "You'll be automatically logged in!", no: "Du vil automatisk bli logget inn!" },
+      "tip": { en: "Tip", no: "Tips" },
+      "check_spam_folder": { en: "Check your spam folder if you don't see the email", no: "Sjekk spam-mappen din hvis du ikke ser e-posten" },
+      "got_it": { en: "Got it!", no: "Skjønner!" },
+      "welcome_back": { en: "Welcome Back!", no: "Velkommen tilbake!" },
+      "redirecting": { en: "Redirecting...", no: "Omdirigerer..." },
+      "you_have_premium": { en: "You Have Premium!", no: "Du har Premium!" },
+      "premium_active_message": { en: "You're already enjoying all premium features. Keep crushing those study goals!", no: "Du nyter allerede alle premium-funksjonene. Fortsett å knuse disse studiemålene!" },
+      
       // Contact
       "contact_us": { en: "Contact Us", no: "Kontakt oss" },
       "contact_description": { en: "Have questions, feedback, or issues? Get in touch!", no: "Har du spørsmål, tilbakemeldinger eller problemer? Ta kontakt!" },
