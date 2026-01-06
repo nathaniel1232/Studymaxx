@@ -39,7 +39,6 @@ export async function GET(request: NextRequest) {
       });
 
       // Determine if they have an active/valid subscription
-      // Active means: status is "active"/"trialing", OR status is "canceled" but they still have access until period ends
       let hasActiveSubscription = false;
       
       for (const sub of allSubscriptions.data) {
@@ -47,8 +46,8 @@ export async function GET(request: NextRequest) {
           hasActiveSubscription = true;
           break;
         }
-        // If canceled but cancel_at_period_end is true, they still have access until the period ends
-        if (sub.status === "canceled" && sub.cancel_at_period_end) {
+        // If canceled but still in paid period, they keep access
+        if (sub.status === "canceled" && sub.current_period_end) {
           const periodEnd = new Date(sub.current_period_end * 1000);
           if (periodEnd > new Date()) {
             hasActiveSubscription = true;
