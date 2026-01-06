@@ -309,34 +309,52 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                       
                       {/* Dropdown menu */}
                       {movingSetId === set.id && (
-                        <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border-3 border-purple-200 dark:border-purple-700 py-3 animate-in fade-in slide-in-from-top-2 duration-200" style={{ zIndex: 999 }}>
-                          <div className="px-4 py-2 text-sm font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wide border-b-2 border-purple-100 dark:border-purple-800 mb-2">
-                            📁 Move to folder
+                        <>
+                          {/* Backdrop to close dropdown */}
+                          <div 
+                            className="fixed inset-0 z-[998]" 
+                            onClick={() => setMovingSetId(null)}
+                          />
+                          {/* Dropdown */}
+                          <div 
+                            className="absolute right-0 bottom-full mb-2 w-72 rounded-2xl shadow-2xl py-3 backdrop-blur-sm" 
+                            style={{ 
+                              zIndex: 999,
+                              backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                              border: '3px solid rgb(192, 132, 252)',
+                            }}
+                          >
+                            <div className="px-4 py-2 text-sm font-bold text-purple-700 uppercase tracking-wide border-b-2 border-purple-200 mb-2">
+                              📁 Move to folder
+                            </div>
+                            <div className="max-h-80 overflow-y-auto px-2">
+                              {folders.map((folder) => (
+                                <button
+                                  key={folder.id}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleMoveToFolder(set.id, folder.id);
+                                  }}
+                                  className={`w-full text-left px-4 py-3 rounded-xl font-bold transition-all mb-1 ${
+                                    set.folderId === folder.id
+                                      ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-2 border-purple-600 shadow-lg'
+                                      : 'bg-gray-100 hover:bg-purple-100 text-gray-800 border-2 border-gray-200 hover:border-purple-300'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span className="flex items-center gap-2">
+                                      <span>📂</span>
+                                      <span>{folder.name}</span>
+                                    </span>
+                                    {set.folderId === folder.id && (
+                                      <span className="text-white text-xl">✓</span>
+                                    )}
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                          <div className="max-h-64 overflow-y-auto px-2">
-                            {folders.map((folder) => (
-                              <button
-                                key={folder.id}
-                                onClick={() => handleMoveToFolder(set.id, folder.id)}
-                                className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-all mb-1 ${
-                                  set.folderId === folder.id
-                                    ? 'bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 text-purple-900 dark:text-purple-100 border-2 border-purple-300 dark:border-purple-600 shadow-sm'
-                                    : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border-2 border-transparent'
-                                }`}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span className="flex items-center gap-2">
-                                    <span>📂</span>
-                                    <span>{folder.name}</span>
-                                  </span>
-                                  {set.folderId === folder.id && (
-                                    <span className="text-purple-600 dark:text-purple-400 text-lg">✓</span>
-                                  )}
-                                </div>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
+                        </>
                       )}
                     </div>
                     
