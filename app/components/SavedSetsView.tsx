@@ -120,10 +120,8 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
     return date.toLocaleDateString() + " " + date.toLocaleTimeString();
   };
 
-  // Filter sets by selected folder
-  const filteredSets = selectedFolder
-    ? savedSets.filter(set => set.folderId === selectedFolder)
-    : savedSets;
+  // Show all sets without folder filtering (folders feature temporarily hidden)
+  const filteredSets = savedSets;
 
   return (
     <div className="flex items-center justify-center min-h-screen px-4 py-8" style={{ background: 'var(--background)' }}>
@@ -143,8 +141,8 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
           <div className="w-20" />
         </div>
 
-        {/* Folder Sidebar */}
-        <div className="mb-8">
+        {/* Folder Sidebar - TEMPORARILY HIDDEN */}
+        {/* <div className="mb-8">
           <div className="card p-6">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -243,7 +241,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
               )}
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Sets List */}
         {filteredSets.length === 0 ? (
@@ -284,17 +282,17 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                       {set.lastStudied && (
                         <span>{t("last_studied")} {formatDate(set.lastStudied)}</span>
                       )}
-                      {/* Current folder badge */}
-                      {set.folderId && (
+                      {/* Current folder badge - TEMPORARILY HIDDEN */}
+                      {/* {set.folderId && (
                         <span className="px-3 py-1.5 bg-gradient-to-r from-teal-50 to-emerald-50 dark:from-teal-900/50 dark:to-emerald-900/50 text-teal-800 dark:text-teal-200 rounded-lg text-sm font-bold border-2 border-teal-300 dark:border-teal-600 shadow-sm">
                           📁 {folders.find(f => f.id === set.folderId)?.name || 'Unknown'}
                         </span>
-                      )}
+                      )} */}
                     </div>
                   </div>
                   <div className="flex gap-3 ml-4 items-center">
-                    {/* Move to folder dropdown */}
-                    <div className="relative folder-dropdown">
+                    {/* Move to folder dropdown - TEMPORARILY HIDDEN */}
+                    {/* <div className="relative folder-dropdown">
                       <button
                         onClick={() => setMovingSetId(movingSetId === set.id ? null : set.id)}
                         className="px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-xl transition-all flex items-center gap-2.5 shadow-lg hover:shadow-xl border-2 border-blue-400"
@@ -307,15 +305,12 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                         </svg>
                       </button>
                       
-                      {/* Dropdown menu */}
                       {movingSetId === set.id && (
                         <>
-                          {/* Backdrop to close dropdown */}
                           <div 
                             className="fixed inset-0 z-[998]" 
                             onClick={() => setMovingSetId(null)}
                           />
-                          {/* Dropdown */}
                           <div 
                             className="absolute right-0 bottom-full mb-2 w-72 rounded-2xl py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700" 
                             style={{ 
@@ -355,7 +350,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                           </div>
                         </>
                       )}
-                    </div>
+                    </div> */}
                     
                     <button
                       onClick={() => onLoadSet(set.flashcards, set.id)}
