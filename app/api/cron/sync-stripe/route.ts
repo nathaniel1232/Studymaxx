@@ -32,29 +32,23 @@ export async function GET(request: NextRequest) {
     for (const customer of customers.data) {
       if (!customer.email) continue;
 
-      // Check for active subscriptions
-      const allSubscriptions = await stripe.subscriptions.list({
+      // Check for active or trialing subscriptions
+      // Note: Stripe keeps status as "active" until period ends, even if cancel_at_period_end=true
+      const activeSubscriptions = await stripe.subscriptions.list({
         customer: customer.id,
+        status: "active",
         limit: 10,
       });
 
-      // Determine if they have an active/valid subscription
-      let hasActiveSubscription = false;
-      
-      for (const sub of allSubscriptions.data) {
-        if (sub.status === "active" || sub.status === "trialing") {
-          hasActiveSubscription = true;
-          break;
-        }
-        // If canceled but still in paid period, they keep access
-        if (sub.status === "canceled" && sub.current_period_end) {
-          const periodEnd = new Date(sub.current_period_end * 1000);
-          if (periodEnd > new Date()) {
-            hasActiveSubscription = true;
-            break;
-          }
-        }
-      }
+      const trialingSubscriptions = await stripe.subscriptions.list({
+        customer: customer.id,
+        status: "trialing",
+        limit: 10,
+      });
+
+      const hasActiveSubscription = 
+        activeSubscriptions.data.length > 0 || 
+        trialingSubscriptions.data.length > 0;
 
       // Get user from database
       const { data: user } = await supabase
