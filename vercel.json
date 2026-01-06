@@ -2,5 +2,6 @@
   "crons": [{
     "path": "/api/cron/sync-stripe",
     "schedule": "0 2 * * *"
-  }]
+  }],
+  "trailingSlash": false
 }
