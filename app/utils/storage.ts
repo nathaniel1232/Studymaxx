@@ -9,6 +9,13 @@ export interface Flashcard {
   lastReviewed?: string;
 }
 
+export interface Folder {
+  id: string;
+  name: string;
+  userId: string;
+  createdAt: string;
+}
+
 export interface FlashcardSet {
   id: string;
   name: string;
@@ -21,6 +28,7 @@ export interface FlashcardSet {
   isShared?: boolean;
   subject?: string;
   grade?: string;
+  folderId?: string; // New: optional folder assignment
 }
 
 export type SavedFlashcardSet = FlashcardSet;
@@ -159,7 +167,8 @@ export const getSavedFlashcardSets = async (): Promise<FlashcardSet[]> => {
           subject: set.subject,
           grade: set.grade,
           isShared: set.is_shared,
-          shareId: set.share_id
+          shareId: set.share_id,
+          folderId: set.folder_id // Map folder_id from database
         }));
       }
     }
@@ -430,4 +439,134 @@ export const getUserFlashcardSets = async (): Promise<FlashcardSet[]> => {
   const currentUserId = getOrCreateUserId();
   
   return savedSets.filter(set => set.userId === currentUserId);
+};
+
+// ==================== FOLDER FUNCTIONS ====================
+
+/**
+ * Get all folders for the current user
+ * Automatically creates "Unsorted" folder if none exist
+ */
+export const getFolders = async (): Promise<Folder[]> => {
+  const token = await getAuthToken();
+  if (!token) return [];
+
+  try {
+    const response = await fetch('/api/folders', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) return [];
+    
+    const { folders } = await response.json();
+    return folders.map((f: any) => ({
+      id: f.id,
+      name: f.name,
+      userId: f.user_id,
+      createdAt: f.created_at
+    }));
+  } catch (error) {
+    console.error('[Storage] Failed to fetch folders:', error);
+    return [];
+  }
+};
+
+/**
+ * Create a new folder
+ */
+export const createFolder = async (name: string): Promise<Folder | null> => {
+  const token = await getAuthToken();
+  if (!token) return null;
+
+  try {
+    const response = await fetch('/api/folders', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ name })
+    });
+
+    if (!response.ok) return null;
+
+    const { folder } = await response.json();
+    return {
+      id: folder.id,
+      name: folder.name,
+      userId: folder.user_id,
+      createdAt: folder.created_at
+    };
+  } catch (error) {
+    console.error('[Storage] Failed to create folder:', error);
+    return null;
+  }
+};
+
+/**
+ * Delete a folder (flashcards become "Unsorted")
+ */
+export const deleteFolder = async (folderId: string): Promise<boolean> => {
+  const token = await getAuthToken();
+  if (!token) return false;
+
+  try {
+    const response = await fetch(`/api/folders?id=${folderId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    return response.ok;
+  } catch (error) {
+    console.error('[Storage] Failed to delete folder:', error);
+    return false;
+  }
+};
+
+/**
+ * Rename a folder
+ */
+export const renameFolder = async (folderId: string, newName: string): Promise<boolean> => {
+  const token = await getAuthToken();
+  if (!token) return false;
+
+  try {
+    const response = await fetch('/api/folders', {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id: folderId, name: newName })
+    });
+
+    return response.ok;
+  } catch (error) {
+    console.error('[Storage] Failed to rename folder:', error);
+    return false;
+  }
+};
+
+/**
+ * Move a flashcard set to a different folder
+ */
+export const moveFlashcardSetToFolder = async (setId: string, folderId: string | null): Promise<boolean> => {
+  const token = await getAuthToken();
+  if (!token) return false;
+
+  try {
+    const response = await fetch('/api/flashcard-sets', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id: setId, folder_id: folderId })
+    });
+
+    return response.ok;
+  } catch (error) {
+    console.error('[Storage] Failed to move flashcard set:', error);
+    return false;
+  }
 };

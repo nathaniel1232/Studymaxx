@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, cards, subject, grade } = body;
+    const { name, cards, subject, grade, folderId } = body;
 
     if (!name || !cards || !Array.isArray(cards)) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
         cards,
         subject: subject || null,
         grade: grade || null,
+        folder_id: folderId || null,
         study_count: 0
       })
       .select()
@@ -161,7 +162,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, last_studied, study_count } = body;
+    const { id, last_studied, study_count, folder_id } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Missing set ID' }, { status: 400 });
@@ -170,6 +171,7 @@ export async function PUT(request: NextRequest) {
     const updates: any = {};
     if (last_studied !== undefined) updates.last_studied = last_studied;
     if (study_count !== undefined) updates.study_count = study_count;
+    if (folder_id !== undefined) updates.folder_id = folder_id;
 
     // Update flashcard set
     const { data: updatedSet, error } = await supabase

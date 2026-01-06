@@ -121,6 +121,22 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    // Enforce file limits based on plan
+    if (!isPremium && files.length > 1) {
+      setError("⭐ Free users can upload 1 image at a time. Upgrade to Premium for unlimited multi-image uploads!");
+      setPremiumModalReason("Multi-image upload is a Premium feature. Upgrade to process multiple images at once!");
+      setShowPremiumModal(true);
+      e.target.value = ''; // Clear the input
+      return;
+    }
+
+    // Premium users: allow up to 10 images at once
+    if (isPremium && files.length > 10) {
+      setError("Maximum 10 images can be uploaded at once. Please select fewer files.");
+      e.target.value = '';
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
@@ -558,14 +574,19 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                 {/* Optional: Add images to notes */}
                 {selectedMaterial === "notes" && (
                   <div className="mt-4">
-                    <label htmlFor="notes-file-input" className="text-sm text-gray-600 dark:text-gray-400 mb-2 block">
+                    <label htmlFor="notes-file-input" className="text-sm text-gray-700 dark:text-gray-300 font-medium mb-2 block">
                       Optional: Add images with additional content
+                      {isPremium ? (
+                        <span className="ml-2 text-xs text-teal-600 dark:text-teal-400">✓ Premium: up to 10 images</span>
+                      ) : (
+                        <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">Free: 1 image only</span>
+                      )}
                     </label>
                     <input
                       id="notes-file-input"
                       type="file"
                       accept="image/*"
-                      multiple
+                      {...(isPremium && { multiple: true })}
                       onChange={handleImageUpload}
                       disabled={isLoading}
                       className="w-full px-4 py-3 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50 dark:bg-gray-900 text-sm"
@@ -602,14 +623,21 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
             {/* Image Upload */}
             {selectedMaterial === "image" && (
               <div className="mb-8">
-                <label htmlFor="file-input" className="block text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <label htmlFor="file-input" className="block text-lg font-semibold text-gray-900 dark:text-white mb-2">
                   Upload images
                 </label>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  {isPremium ? (
+                    <span className="text-teal-600 dark:text-teal-400 font-medium">✓ Premium: Upload up to 10 images at once</span>
+                  ) : (
+                    <span>Free plan: 1 image at a time. <button type="button" onClick={() => setShowPremiumModal(true)} className="text-amber-600 dark:text-amber-400 underline font-medium">Upgrade to Premium</button> for multi-image support.</span>
+                  )}
+                </p>
                 <input
                   id="file-input"
                   type="file"
                   accept="image/*"
-                  multiple
+                  {...(isPremium && { multiple: true })}
                   onChange={handleImageUpload}
                   disabled={isLoading}
                   className="w-full px-5 py-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50 dark:bg-gray-900"
@@ -650,20 +678,27 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
             {/* PDF Upload */}
             {selectedMaterial === "pdf" && (
               <div className="mb-8">
-                <label htmlFor="pdf-input" className="block text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <label htmlFor="pdf-input" className="block text-lg font-semibold text-gray-900 dark:text-white mb-2">
                   Upload your document or PDF
                 </label>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  {isPremium ? (
+                    <span className="text-teal-600 dark:text-teal-400 font-medium">✓ Premium: Upload multiple files at once</span>
+                  ) : (
+                    <span>Free plan: 1 file at a time</span>
+                  )}
+                </p>
                 <input
                   id="pdf-input"
                   type="file"
                   accept="application/pdf,.pdf,.docx,.doc,.txt,image/*"
-                  multiple
+                  {...(isPremium && { multiple: true })}
                   onChange={handleImageUpload}
                   disabled={isLoading}
                   className="w-full px-5 py-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50 dark:bg-gray-900"
                 />
                 <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  Supports: PDF, DOCX, TXT, PNG, JPG (max 10MB)
+                  Supports: PDF, DOCX, TXT, PNG, JPG (max 10MB per file)
                 </p>
                 
                 {/* Show uploaded PDF files */}

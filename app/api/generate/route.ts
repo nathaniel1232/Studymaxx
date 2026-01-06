@@ -230,38 +230,90 @@ async function incrementUsageCounters(userId: string, isNewSet: boolean = false)
 async function generateWithAI(
   text: string,
   numberOfFlashcards: number,
-  language: string = "English"
+  language: string = "English",
+  targetGrade?: string,
+  subject?: string
 ): Promise<Flashcard[]> {
-  const systemPrompt = `You are an expert educational assistant that creates high-quality flashcards.
+  // Determine answer complexity based on grade
+  let answerGuidance = "";
+  let vocabularyLevel = "";
+  
+  if (targetGrade) {
+    const grade = targetGrade.toUpperCase();
+    
+    if (grade === "A" || grade === "6") {
+      // Highest grade - detailed, terminology-rich
+      answerGuidance = "Answers must be 2-4 concise sentences with proper subject terminology and brief explanations. Include context where relevant.";
+      vocabularyLevel = "Use advanced subject-specific vocabulary and technical terms.";
+    } else if (grade === "B" || grade === "5") {
+      answerGuidance = "Answers should be 2-3 sentences with clear terminology. Balance detail with clarity.";
+      vocabularyLevel = "Use subject terminology but keep language accessible.";
+    } else if (grade === "C" || grade === "4") {
+      answerGuidance = "Answers should be 1-2 sentences. Use clear, direct language.";
+      vocabularyLevel = "Use simpler vocabulary with occasional subject terms.";
+    } else {
+      // D, E, F or grades 1-3 - keep it simple
+      answerGuidance = "Answers must be short: 1 sentence maximum. Use simple, clear language.";
+      vocabularyLevel = "Avoid complex vocabulary. Keep it age-appropriate and straightforward.";
+    }
+  } else {
+    // Default: medium complexity
+    answerGuidance = "Answers should be 1-2 clear sentences.";
+    vocabularyLevel = "Use clear, accessible language.";
+  }
+
+  const systemPrompt = `You are an expert educational assistant creating study materials${subject ? ` for ${subject}` : ""}.
 Create ${numberOfFlashcards} flashcards in ${language} based on the provided text.
 EXPAND on the topic - include WHO, WHAT, WHEN, WHERE, WHY, HOW, definitions, and key concepts.
 
-CRITICAL RULES FOR ANSWERS AND DISTRACTORS:
-- Answers must be SHORT: 1 sentence, max 2 sentences
-- Distractors must be SAME LENGTH as the correct answer (not shorter!)
-- All 4 choices (1 correct + 3 distractors) should look similar in length
-- Distractors should be plausible related concepts or common misconceptions
-- Make it genuinely hard to spot the right answer just by looking at length
+ANSWER QUALITY RULES:
+${answerGuidance}
+${vocabularyLevel}
+- Stay revision-friendly (not essays)
+- Include brief explanations or context when helpful
+- Use precise terminology appropriate for the content
+
+QUIZ/TEST QUALITY RULES (for distractors):
+- Create 3 plausible wrong answers that could genuinely confuse someone who partially understands the topic
+- ALL 4 choices must be similar in length and structure
+- Distractors should be:
+  * Related concepts or common misconceptions
+  * Grammatically parallel to the correct answer
+  * Not obviously wrong through process of elimination
+- Make it genuinely challenging - test understanding, not just recognition
 
 JSON format:
 {
   "flashcards": [
-    {"id": "1", "question": "specific question", "answer": "short answer 1-2 sentences", "distractors": ["plausible wrong 1-2 sent", "plausible wrong 1-2 sent", "plausible wrong 1-2 sent"]},
-    {"id": "2", "question": "specific question", "answer": "short answer 1-2 sentences", "distractors": ["plausible wrong 1-2 sent", "plausible wrong 1-2 sent", "plausible wrong 1-2 sent"]}
+    {"id": "1", "question": "specific question", "answer": "appropriate length answer", "distractors": ["plausible wrong answer", "plausible wrong answer", "plausible wrong answer"]},
+    {"id": "2", "question": "specific question", "answer": "appropriate length answer", "distractors": ["plausible wrong answer", "plausible wrong answer", "plausible wrong answer"]}
   ]
 }`;
 
   try {
-    const completion = await openai.chat.completions.create({
+    console.log("[API /generate] Starting OpenAI request...");
+    const startTime = Date.now();
+    
+    // Add timeout wrapper for OpenAI API call (longer for slow networks)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Request timeout - AI service took too long to respond")), 120000); // 2 minutes
+    });
+
+    const completionPromise = openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: text },
       ],
       temperature: 0.7,
-      max_tokens: 4500,
+      max_tokens: 3500, // Reduced from 4500 for faster response on slow networks
       response_format: { type: "json_object" },
     });
+
+    const completion = await Promise.race([completionPromise, timeoutPromise]) as any;
+    
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`[API /generate] OpenAI responded in ${elapsed}s`);
 
     const content = completion.choices[0]?.message?.content;
     const finishReason = completion.choices[0]?.finish_reason;
@@ -371,15 +423,29 @@ JSON format:
       distractors: card.distractors || [],
     }));
   } catch (error: any) {
-    console.error("AI generation error:", error);
-    // Provide more helpful error messages
-    if (error.message?.includes("timeout") || error.code === "ECONNABORTED") {
-      throw new Error("AI service took too long to respond. Please try again with a shorter text or fewer flashcards.");
+    console.error("[API /generate] AI generation error:", error);
+    console.error("[API /generate] Error code:", error.code);
+    console.error("[API /generate] Error message:", error.message);
+    
+    // Provide more helpful error messages based on error type
+    if (error.message?.includes("timeout") || error.message?.includes("Request timeout") || error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
+      throw new Error("Connection timeout - AI service took too long. Try again with shorter text or fewer flashcards.");
     }
-    if (error.message?.includes("429")) {
+    if (error.message?.includes("ECONNREFUSED") || error.message?.includes("ENOTFOUND") || error.message?.includes("Connection error")) {
+      throw new Error("Cannot connect to AI service. Check your internet connection and try again.");
+    }
+    if (error.message?.includes("429") || error.status === 429) {
       throw new Error("Too many requests to AI service. Please wait a moment and try again.");
     }
-    throw new Error(`AI generation failed: ${error.message || "Unknown error occurred"}`);
+    if (error.message?.includes("401") || error.status === 401) {
+      throw new Error("AI service authentication failed. Please contact support.");
+    }
+    if (error.message?.includes("500") || error.message?.includes("503") || error.status === 500 || error.status === 503) {
+      throw new Error("AI service is temporarily unavailable. Please try again in a moment.");
+    }
+    
+    // Generic fallback with original error message
+    throw new Error(`AI generation failed: ${error.message || "Unknown error occurred. Please try again."}`);
   }
 }
 
@@ -471,7 +537,13 @@ export async function POST(req: NextRequest) {
     }
 
     // STEP 4: Generate flashcards with GPT-4o mini
-    const flashcards = await generateWithAI(text, numberOfFlashcards, language || "English");
+    const flashcards = await generateWithAI(
+      text, 
+      numberOfFlashcards, 
+      language || "English",
+      targetGrade,
+      subject
+    );
 
     // STEP 5: Increment usage counters (fire-and-forget - don't wait)
     const isNewSet = userStatus.studySetCount < FREE_LIMITS.maxStudySets || userStatus.isPremium;

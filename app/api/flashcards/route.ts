@@ -44,32 +44,57 @@ export async function POST(req: NextRequest) {
 
     // Call /api/generate (the real AI gateway with premium enforcement)
     const generateUrl = new URL("/api/generate", req.url);
-    const generateResponse = await fetch(generateUrl.toString(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId: effectiveUserId,
-        text,
-        numberOfFlashcards,
-        subject,
-        targetGrade,
-        difficulty,
-        language,
-        materialType: materialType || "notes",
-      }),
-    });
+    
+    // Add timeout to prevent hanging requests (generous for slow networks)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 150000); // 2.5 minute timeout
+    
+    try {
+      const generateResponse = await fetch(generateUrl.toString(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: effectiveUserId,
+          text,
+          numberOfFlashcards,
+          subject,
+          targetGrade,
+          difficulty,
+          language,
+          materialType: materialType || "notes",
+        }),
+        signal: controller.signal,
+      });
 
-    const data = await generateResponse.json();
+      clearTimeout(timeoutId);
+      const data = await generateResponse.json();
 
-    // Forward the response status and data
-    if (!generateResponse.ok) {
-      return NextResponse.json(data, { status: generateResponse.status });
+      // Forward the response status and data
+      if (!generateResponse.ok) {
+        return NextResponse.json(data, { status: generateResponse.status });
+      }
+
+      // Return flashcards (unwrap from generate response)
+      return NextResponse.json(data.flashcards || data);
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      
+      if (fetchError.name === 'AbortError') {
+        console.error("[API /flashcards] Request timeout");
+        return NextResponse.json(
+          { error: "Connection timeout - request took too long. Try again with shorter text." },
+          { status: 504 }
+        );
+      }
+      
+      console.error("[API /flashcards] Fetch error:", fetchError);
+      return NextResponse.json(
+        { error: "Connection error - unable to reach AI service. Check your internet connection." },
+        { status: 503 }
+      );
     }
-
-    // Return flashcards (unwrap from generate response)
-    return NextResponse.json(data.flashcards || data);
   } catch (error: any) {
     console.error("Flashcards API error:", error);
     return NextResponse.json(
