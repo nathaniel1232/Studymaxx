@@ -297,7 +297,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                     <div className="relative folder-dropdown">
                       <button
                         onClick={() => setMovingSetId(movingSetId === set.id ? null : set.id)}
-                        className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-xl transition-all flex items-center gap-2.5 shadow-lg hover:shadow-xl border-2 border-purple-400 dark:border-purple-500"
+                        className="px-5 py-2.5 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold rounded-xl transition-all flex items-center gap-2.5 shadow-md hover:shadow-lg border border-gray-200 dark:border-gray-600"
                         title="Move to folder"
                       >
                         <span className="text-lg">📁</span>
@@ -317,12 +317,13 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                           />
                           {/* Dropdown */}
                           <div 
-                            className="absolute right-0 bottom-full mb-2 w-72 rounded-2xl shadow-2xl py-3 backdrop-blur-sm bg-white dark:bg-gray-800 border-3 border-purple-400 dark:border-purple-600" 
+                            className="absolute right-0 bottom-full mb-2 w-72 rounded-2xl py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700" 
                             style={{ 
-                              zIndex: 999
+                              zIndex: 999,
+                              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)'
                             }}
                           >
-                            <div className="px-4 py-2 text-sm font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wide border-b-2 border-purple-200 dark:border-purple-700 mb-2">
+                            <div className="px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700 mb-2">
                               📁 Move to folder
                             </div>
                             <div className="max-h-80 overflow-y-auto px-2">
@@ -333,10 +334,10 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                                     e.stopPropagation();
                                     handleMoveToFolder(set.id, folder.id);
                                   }}
-                                  className={`w-full text-left px-4 py-3 rounded-xl font-bold transition-all mb-1 ${
+                                  className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-all mb-1 ${
                                     set.folderId === folder.id
-                                      ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-2 border-purple-600 shadow-lg'
-                                      : 'bg-gray-100 hover:bg-purple-100 dark:bg-gray-700 dark:hover:bg-purple-900/40 text-gray-800 dark:text-gray-200 border-2 border-gray-200 dark:border-gray-600 hover:border-purple-300 dark:hover:border-purple-500'
+                                      ? 'bg-blue-500 text-white shadow-md'
+                                      : 'bg-gray-50 hover:bg-gray-100 dark:bg-gray-700/50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 hover:shadow-sm'
                                   }`}
                                 >
                                   <div className="flex items-center justify-between">

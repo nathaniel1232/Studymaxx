@@ -574,7 +574,6 @@ export const moveFlashcardSetToFolder = async (setId: string, folderId: string |
   const token = await getAuthToken();
   if (!token) {
     console.error('[Storage] Move failed: No auth token. User may need to sign in again.');
-    alert('Session expired. Please sign out and sign back in.');
     return false;
   }
 
@@ -592,10 +591,6 @@ export const moveFlashcardSetToFolder = async (setId: string, folderId: string |
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
       console.error('[Storage] Move failed:', response.status, errorData);
-      
-      if (response.status === 401) {
-        alert('Session expired. Please sign out and sign back in.');
-      }
       return false;
     }
 
@@ -603,7 +598,6 @@ export const moveFlashcardSetToFolder = async (setId: string, folderId: string |
     return true;
   } catch (error) {
     console.error('[Storage] Failed to move flashcard set:', error);
-    alert('Network error. Please check your connection and try again.');
     return false;
   }
 };

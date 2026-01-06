@@ -26,16 +26,22 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      setError("Please enter your email address");
+      return;
+    }
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
     
     // Magic link mode only needs email
     if (isMagicLink) {
-      if (!email.trim()) {
-        setError("Please enter your email");
-        return;
-      }
-      
       setIsLoading(true);
-      setError(null);
       
       if (!supabaseConfigured) {
         setError("Authentication not configured. Please set up Supabase.");
@@ -55,13 +61,16 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
     }
     
     // Password mode needs both email and password
-    if (!email.trim() || !password.trim()) {
-      setError("Please fill in all fields");
+    if (!password.trim()) {
+      setError("Please enter your password");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
       return;
     }
 
     setIsLoading(true);
-    setError(null);
     
     if (!supabaseConfigured) {
       setError("Authentication not configured. Please set up Supabase.");
@@ -323,11 +332,11 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
             </div>
 
             {/* ONBOARDING GUIDANCE - Show guidance based on state */}
-            {isSignUp && (
+            {isSignUp && !isMagicLink && (
               <div className="mb-6 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800">
-                <p className="text-xs font-medium text-blue-900 dark:text-blue-200 flex items-start gap-2">
-                  <span className="text-base">ℹ️</span>
-                  <span>{t("verify_email_required") || "We'll send you a verification email. You must click the link before you can log in."}</span>
+                <p className="text-sm font-semibold text-blue-900 dark:text-blue-200 flex items-start gap-2">
+                  <span className="text-lg">📝</span>
+                  <span>After signing up, you'll receive a verification email. Click the link to activate your account before signing in.</span>
                 </p>
               </div>
             )}
