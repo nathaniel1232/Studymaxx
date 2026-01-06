@@ -272,6 +272,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
               <div
                 key={set.id}
                 className="card card-hover p-6"
+                style={{ position: 'relative', zIndex: movingSetId === set.id ? 200 : 'auto' }}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -308,7 +309,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                       
                       {/* Dropdown menu */}
                       {movingSetId === set.id && (
-                        <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border-3 border-purple-200 dark:border-purple-700 py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border-3 border-purple-200 dark:border-purple-700 py-3 animate-in fade-in slide-in-from-top-2 duration-200" style={{ zIndex: 999 }}>>
                           <div className="px-4 py-2 text-sm font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wide border-b-2 border-purple-100 dark:border-purple-800 mb-2">
                             📁 Move to folder
                           </div>
