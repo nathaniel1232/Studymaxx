@@ -104,7 +104,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
       setMovingSetId(null);
       await loadData();
     } else {
-      alert('Failed to move flashcard set. Please make sure you\'re signed in.');
+      alert('Failed to move flashcard set. Please try signing out and back in, or refresh the page.');
     }
   };
 
@@ -317,14 +317,12 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                           />
                           {/* Dropdown */}
                           <div 
-                            className="absolute right-0 bottom-full mb-2 w-72 rounded-2xl shadow-2xl py-3 backdrop-blur-sm" 
+                            className="absolute right-0 bottom-full mb-2 w-72 rounded-2xl shadow-2xl py-3 backdrop-blur-sm bg-white dark:bg-gray-800 border-3 border-purple-400 dark:border-purple-600" 
                             style={{ 
-                              zIndex: 999,
-                              backgroundColor: 'rgba(255, 255, 255, 0.98)',
-                              border: '3px solid rgb(192, 132, 252)',
+                              zIndex: 999
                             }}
                           >
-                            <div className="px-4 py-2 text-sm font-bold text-purple-700 uppercase tracking-wide border-b-2 border-purple-200 mb-2">
+                            <div className="px-4 py-2 text-sm font-bold text-purple-700 dark:text-purple-400 uppercase tracking-wide border-b-2 border-purple-200 dark:border-purple-700 mb-2">
                               📁 Move to folder
                             </div>
                             <div className="max-h-80 overflow-y-auto px-2">
@@ -338,7 +336,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                                   className={`w-full text-left px-4 py-3 rounded-xl font-bold transition-all mb-1 ${
                                     set.folderId === folder.id
                                       ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-2 border-purple-600 shadow-lg'
-                                      : 'bg-gray-100 hover:bg-purple-100 text-gray-800 border-2 border-gray-200 hover:border-purple-300'
+                                      : 'bg-gray-100 hover:bg-purple-100 dark:bg-gray-700 dark:hover:bg-purple-900/40 text-gray-800 dark:text-gray-200 border-2 border-gray-200 dark:border-gray-600 hover:border-purple-300 dark:hover:border-purple-500'
                                   }`}
                                 >
                                   <div className="flex items-center justify-between">

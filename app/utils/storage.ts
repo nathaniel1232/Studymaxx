@@ -76,6 +76,7 @@ export const saveFlashcardSet = async (
     const token = await getAuthToken();
     
     if (token) {
+      console.log('[Storage] Attempting to save to Supabase with auth token');
       const response = await fetch('/api/flashcard-sets', {
         method: 'POST',
         headers: {
@@ -87,7 +88,7 @@ export const saveFlashcardSet = async (
 
       if (response.ok) {
         const { set } = await response.json();
-        console.log('[Storage] Saved to Supabase:', set.id);
+        console.log('[Storage] Saved to Supabase successfully:', set.id);
         
         return {
           id: set.id,
@@ -101,7 +102,12 @@ export const saveFlashcardSet = async (
           isShared: set.is_shared,
           shareId: set.share_id
         };
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[Storage] Supabase save failed:', response.status, errorData);
       }
+    } else {
+      console.log('[Storage] No auth token - saving to localStorage only');
     }
   } catch (error) {
     console.error('[Storage] Error saving to Supabase:', error);
@@ -567,7 +573,8 @@ export const renameFolder = async (folderId: string, newName: string): Promise<b
 export const moveFlashcardSetToFolder = async (setId: string, folderId: string | null): Promise<boolean> => {
   const token = await getAuthToken();
   if (!token) {
-    console.error('[Storage] Move failed: No auth token');
+    console.error('[Storage] Move failed: No auth token. User may need to sign in again.');
+    alert('Session expired. Please sign out and sign back in.');
     return false;
   }
 
@@ -583,8 +590,12 @@ export const moveFlashcardSetToFolder = async (setId: string, folderId: string |
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
       console.error('[Storage] Move failed:', response.status, errorData);
+      
+      if (response.status === 401) {
+        alert('Session expired. Please sign out and sign back in.');
+      }
       return false;
     }
 
@@ -592,6 +603,7 @@ export const moveFlashcardSetToFolder = async (setId: string, folderId: string |
     return true;
   } catch (error) {
     console.error('[Storage] Failed to move flashcard set:', error);
+    alert('Network error. Please check your connection and try again.');
     return false;
   }
 };
