@@ -62,14 +62,17 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
     if (!newFolderName.trim()) return;
     
     setIsLoadingFolders(true);
-    const result = await createFolder(newFolderName.trim());
+    const { folder, error } = await createFolder(newFolderName.trim());
     
-    if (result) {
+    if (folder) {
+      console.log('[SavedSetsView] Folder created, reloading data...');
       setNewFolderName("");
       setIsCreatingFolder(false);
+      // Reload data from DB to get true state
       await loadData();
     } else {
-      alert("Failed to create folder. Please try again or check if you're signed in.");
+      console.error('[SavedSetsView] Folder creation failed:', error);
+      alert(`Failed to create folder: ${error || 'Unknown error'}`);
     }
     setIsLoadingFolders(false);
   };

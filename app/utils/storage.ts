@@ -474,11 +474,16 @@ export const getFolders = async (): Promise<Folder[]> => {
 /**
  * Create a new folder
  */
-export const createFolder = async (name: string): Promise<Folder | null> => {
+export const createFolder = async (name: string): Promise<{ folder: Folder | null, error: string | null }> => {
   const token = await getAuthToken();
-  if (!token) return null;
+  if (!token) {
+    const errorMsg = 'No auth token - user not signed in';
+    console.error('[Storage]', errorMsg);
+    return { folder: null, error: errorMsg };
+  }
 
   try {
+    console.log('[Storage] Creating folder:', name);
     const response = await fetch('/api/folders', {
       method: 'POST',
       headers: {
@@ -488,18 +493,27 @@ export const createFolder = async (name: string): Promise<Folder | null> => {
       body: JSON.stringify({ name })
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('[Storage] API error:', response.status, errorData);
+      const errorMsg = errorData.details || errorData.error || 'Failed to create folder';
+      return { folder: null, error: errorMsg };
+    }
 
     const { folder } = await response.json();
+    console.log('[Storage] Folder created:', folder);
     return {
-      id: folder.id,
-      name: folder.name,
-      userId: folder.user_id,
-      createdAt: folder.created_at
+      folder: {
+        id: folder.id,
+        name: folder.name,
+        userId: folder.user_id,
+        createdAt: folder.created_at
+      },
+      error: null
     };
-  } catch (error) {
-    console.error('[Storage] Failed to create folder:', error);
-    return null;
+  } catch (error: any) {
+    console.error('[Storage] Exception:', error);
+    return { folder: null, error: error.message || 'Network error' };
   }
 };
 

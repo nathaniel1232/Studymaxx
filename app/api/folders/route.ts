@@ -68,26 +68,38 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    console.log('[Folders API] POST request received');
+    
     const authHeader = request.headers.get("authorization");
     if (!authHeader) {
+      console.error('[Folders API] No authorization header');
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
     const token = authHeader.replace("Bearer ", "");
+    console.log('[Folders API] Token:', token ? 'Present' : 'Missing');
+    
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return NextResponse.json({ error: "Invalid authentication" }, { status: 401 });
+      console.error('[Folders API] Auth error:', authError);
+      console.error('[Folders API] User:', user);
+      return NextResponse.json({ error: "Invalid authentication", details: authError?.message }, { status: 401 });
     }
+
+    console.log('[Folders API] User authenticated:', user.id);
 
     const body = await request.json();
     const { name } = body;
+    console.log('[Folders API] Folder name:', name);
 
     if (!name || typeof name !== "string" || name.trim().length === 0) {
+      console.error('[Folders API] Invalid folder name');
       return NextResponse.json({ error: "Folder name is required" }, { status: 400 });
     }
 
     // Create folder
+    console.log('[Folders API] Attempting to insert folder:', { user_id: user.id, name: name.trim() });
     const { data: folder, error } = await supabase
       .from("folders")
       .insert({ user_id: user.id, name: name.trim() })
@@ -95,17 +107,26 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
+      console.error('[Folders API] Database error:', JSON.stringify(error, null, 2));
       if (error.code === "23505") { // Unique constraint violation
         return NextResponse.json({ error: "Folder already exists" }, { status: 409 });
       }
-      console.error("[Folders API] Create error:", error);
-      return NextResponse.json({ error: "Failed to create folder" }, { status: 500 });
+      return NextResponse.json({ 
+        error: "Failed to create folder", 
+        details: error.message,
+        code: error.code,
+        hint: error.hint
+      }, { status: 500 });
     }
 
+    console.log('[Folders API] Folder created successfully:', folder);
     return NextResponse.json({ folder });
   } catch (error: any) {
     console.error("[Folders API] POST error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Internal server error", 
+      details: error.message 
+    }, { status: 500 });
   }
 }
 

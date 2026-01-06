@@ -11,13 +11,39 @@ CREATE TABLE IF NOT EXISTS folders (
 );
 
 -- Add folder_id to flashcard_sets (nullable for backward compatibility)
-ALTER TABLE flashcard_sets 
-ADD COLUMN IF NOT EXISTS folder_id UUID,
-ADD CONSTRAINT fk_folder FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE SET NULL;
+-- Only if the table exists
+DO $$ 
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables 
+             WHERE table_schema = 'public' 
+             AND table_name = 'flashcard_sets') THEN
+    
+    -- Add folder_id column if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_schema = 'public' 
+                   AND table_name = 'flashcard_sets' 
+                   AND column_name = 'folder_id') THEN
+      ALTER TABLE flashcard_sets ADD COLUMN folder_id UUID;
+    END IF;
+    
+    -- Add foreign key constraint if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints 
+                   WHERE constraint_name = 'fk_folder' 
+                   AND table_name = 'flashcard_sets') THEN
+      ALTER TABLE flashcard_sets 
+      ADD CONSTRAINT fk_folder FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE SET NULL;
+    END IF;
+    
+    -- Create index if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes 
+                   WHERE indexname = 'idx_flashcard_sets_folder_id') THEN
+      CREATE INDEX idx_flashcard_sets_folder_id ON flashcard_sets(folder_id);
+    END IF;
+  END IF;
+END $$;
 
 -- Index for faster folder queries
 CREATE INDEX IF NOT EXISTS idx_folders_user_id ON folders(user_id);
-CREATE INDEX IF NOT EXISTS idx_flashcard_sets_folder_id ON flashcard_sets(folder_id);
 
 -- Row Level Security for folders
 ALTER TABLE folders ENABLE ROW LEVEL SECURITY;
@@ -40,9 +66,16 @@ CREATE POLICY "Users can delete own folders"
 
 -- IMPORTANT: Create default "Unsorted" folder for all existing users
 -- This ensures backward compatibility
-INSERT INTO folders (user_id, name)
-SELECT DISTINCT user_id, 'Unsorted'
-FROM users
-WHERE NOT EXISTS (
-  SELECT 1 FROM folders WHERE folders.user_id = users.id AND folders.name = 'Unsorted'
-);
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables 
+             WHERE table_schema = 'public' 
+             AND table_name = 'users') THEN
+    INSERT INTO folders (user_id, name)
+    SELECT DISTINCT id, 'Unsorted'
+    FROM users
+    WHERE NOT EXISTS (
+      SELECT 1 FROM folders WHERE folders.user_id = users.id AND folders.name = 'Unsorted'
+    );
+  END IF;
+END $$;
