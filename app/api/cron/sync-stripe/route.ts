@@ -23,46 +23,66 @@ export async function GET(request: NextRequest) {
   try {
     console.log("[Cron] Starting Stripe sync...");
 
-    // Get all Stripe customers with active subscriptions
+    // Get all Stripe customers
     const customers = await stripe.customers.list({ limit: 100 });
     let activated = 0;
+    let deactivated = 0;
     let skipped = 0;
 
     for (const customer of customers.data) {
-      const subscriptions = await stripe.subscriptions.list({
+      if (!customer.email) continue;
+
+      // Check for active subscriptions
+      const activeSubscriptions = await stripe.subscriptions.list({
         customer: customer.id,
         status: "active",
       });
 
-      if (subscriptions.data.length > 0 && customer.email) {
-        // Check if they're premium in database
-        const { data: user } = await supabase
+      // Get user from database
+      const { data: user } = await supabase
+        .from("users")
+        .select("email, is_premium")
+        .eq("email", customer.email)
+        .single();
+
+      if (!user) continue;
+
+      // If they have an active subscription and aren't premium, activate them
+      if (activeSubscriptions.data.length > 0 && !user.is_premium) {
+        await supabase
           .from("users")
-          .select("email, is_premium")
-          .eq("email", customer.email)
-          .single();
+          .update({ is_premium: true })
+          .eq("email", customer.email);
 
-        if (user && !user.is_premium) {
-          // Activate them
-          await supabase
-            .from("users")
-            .update({ is_premium: true })
-            .eq("email", customer.email);
+        console.log(`[Cron] ✅ ACTIVATED: ${customer.email}`);
+        activated++;
+      } 
+      // If they don't have an active subscription but ARE premium, deactivate them
+      else if (activeSubscriptions.data.length === 0 && user.is_premium) {
+        await supabase
+          .from("users")
+          .update({ is_premium: false })
+          .eq("email", customer.email);
 
-          console.log(`[Cron] ✅ ACTIVATED: ${customer.email}`);
-          activated++;
-        } else if (user && user.is_premium) {
-          console.log(`[Cron] ✓ Already premium: ${customer.email}`);
-          skipped++;
-        }
+        console.log(`[Cron] ❌ DEACTIVATED: ${customer.email}`);
+        deactivated++;
+      } 
+      // Already in correct state
+      else if (user.is_premium && activeSubscriptions.data.length > 0) {
+        console.log(`[Cron] ✓ Already premium: ${customer.email}`);
+        skipped++;
+      } else {
+        console.log(`[Cron] ✓ Already free: ${customer.email}`);
+        skipped++;
       }
     }
 
-    console.log(`[Cron] Sync complete. Activated: ${activated}, Skipped: ${skipped}`);
+    console.log(`[Cron] Sync complete. Activated: ${activated}, Deactivated: ${deactivated}, Skipped: ${skipped}`);
 
     return NextResponse.json({
       success: true,
       activated,
+      deactivated,
       skipped,
       timestamp: new Date().toISOString(),
     });
