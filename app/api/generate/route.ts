@@ -376,30 +376,50 @@ JSON format:
       console.log("[API /generate] ✅ Parsed JSON structure:", Object.keys(parsed));
     } catch (e) {
       console.error("[API /generate] ❌ JSON parse failed:", e);
-      console.log("[API /generate] Full content:", content);
+      console.log("[API /generate] Attempting to repair JSON...");
       
-      // If it's not valid JSON, try to extract JSON array or object
-      const arrayMatch = content.match(/\[[\s\S]*\]/);
-      const objectMatch = content.match(/\{[\s\S]*\}/);
+      // Try multiple repair strategies
+      let repairedContent = content.trim();
+      
+      // Strategy 1: Remove any markdown code blocks
+      repairedContent = repairedContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+      
+      // Strategy 2: Extract JSON object or array
+      const objectMatch = repairedContent.match(/\{[\s\S]*\}/);
+      const arrayMatch = repairedContent.match(/\[[\s\S]*\]/);
       
       if (objectMatch) {
-        try {
-          parsed = JSON.parse(objectMatch[0]);
-          console.log("[API /generate] ✅ Extracted JSON object");
-        } catch (e2) {
-          console.error("[API /generate] ❌ Could not parse extracted object");
-          throw new Error("Could not parse AI response as JSON. The AI may have returned incomplete data.");
-        }
+        repairedContent = objectMatch[0];
       } else if (arrayMatch) {
-        try {
-          parsed = { flashcards: JSON.parse(arrayMatch[0]) };
-          console.log("[API /generate] ✅ Extracted JSON array");
-        } catch (e2) {
-          console.error("[API /generate] ❌ Could not parse extracted array");
-          throw new Error("Could not parse AI response as JSON. The AI may have returned incomplete data.");
-        }
-      } else {
-        throw new Error("Could not parse AI response as JSON. The AI may have returned incomplete data.");
+        repairedContent = `{"flashcards": ${arrayMatch[0]}}`;
+      }
+      
+      // Strategy 3: Fix common JSON issues
+      // Remove trailing commas before closing brackets/braces
+      repairedContent = repairedContent.replace(/,(\s*[\]}])/g, '$1');
+      
+      // Strategy 4: Ensure proper closing brackets
+      const openBraces = (repairedContent.match(/\{/g) || []).length;
+      const closeBraces = (repairedContent.match(/\}/g) || []).length;
+      const openBrackets = (repairedContent.match(/\[/g) || []).length;
+      const closeBrackets = (repairedContent.match(/\]/g) || []).length;
+      
+      if (openBrackets > closeBrackets) {
+        repairedContent += ']'.repeat(openBrackets - closeBrackets);
+      }
+      if (openBraces > closeBraces) {
+        repairedContent += '}'.repeat(openBraces - closeBraces);
+      }
+      
+      // Try parsing repaired content
+      try {
+        parsed = JSON.parse(repairedContent);
+        console.log("[API /generate] ✅ Successfully repaired and parsed JSON");
+      } catch (e2) {
+        console.error("[API /generate] ❌ JSON repair failed:", e2);
+        console.log("[API /generate] First 500 chars:", content.substring(0, 500));
+        console.log("[API /generate] Last 500 chars:", content.substring(Math.max(0, content.length - 500)));
+        throw new Error("Could not parse AI response as JSON. The AI may have returned incomplete or malformed data. Please try again.");
       }
     }
 

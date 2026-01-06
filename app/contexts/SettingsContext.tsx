@@ -511,6 +511,19 @@ export function useTranslation() {
       "you_have_premium": { en: "You Have Premium!", no: "Du har Premium!" },
       "premium_active_message": { en: "You're already enjoying all premium features. Keep crushing those study goals!", no: "Du nyter allerede alle premium-funksjonene. Fortsett å knuse disse studiemålene!" },
       
+      // Folders
+      "folders": { en: "Folders", no: "Mapper" },
+      "new_folder": { en: "New Folder", no: "Ny mappe" },
+      "folder_name": { en: "Folder Name", no: "Mappenavn" },
+      "folder_name_placeholder": { en: "e.g., Math, Biology, History...", no: "f.eks., Matte, Biologi, Historie..." },
+      "create": { en: "Create", no: "Opprett" },
+      "creating": { en: "Creating...", no: "Oppretter..." },
+      "all_sets": { en: "All Sets", no: "Alle sett" },
+      "no_folders_yet": { en: "No folders yet", no: "Ingen mapper ennå" },
+      "create_first_folder": { en: "Create your first folder to organize flashcards!", no: "Opprett din første mappe for å organisere kunnskapskort!" },
+      "delete_folder": { en: "Delete folder", no: "Slett mappe" },
+      "move_to_folder_header": { en: "Move to folder", no: "Flytt til mappe" },
+      
       // Contact
       "contact_us": { en: "Contact Us", no: "Kontakt oss" },
       "contact_description": { en: "Have questions, feedback, or issues? Get in touch!", no: "Har du spørsmål, tilbakemeldinger eller problemer? Ta kontakt!" },

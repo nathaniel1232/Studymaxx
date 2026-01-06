@@ -149,20 +149,20 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <span className="text-2xl">📁</span>
-                <span>Folders</span>
+                <span>{t("folders")}</span>
               </h3>
               <button
                 onClick={() => setIsCreatingFolder(!isCreatingFolder)}
                 className="px-4 py-2.5 text-sm bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
               >
-                + New Folder
+                + {t("new_folder")}
               </button>
             </div>
             
             {isCreatingFolder && (
               <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Folder Name
+                  {t("folder_name")}
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -170,7 +170,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                     value={newFolderName}
                     onChange={(e) => setNewFolderName(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleCreateFolder()}
-                    placeholder="e.g., Math, Biology, History..."
+                    placeholder={t("folder_name_placeholder")}
                     className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     autoFocus
                   />
@@ -179,13 +179,13 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                     disabled={!newFolderName.trim() || isLoadingFolders}
                     className="px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg"
                   >
-                    {isLoadingFolders ? "Creating..." : "Create"}
+                    {isLoadingFolders ? t("creating") : t("create")}
                   </button>
                   <button
                     onClick={() => { setIsCreatingFolder(false); setNewFolderName(""); }}
                     className="px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold rounded-xl transition-all border-2 border-gray-300 dark:border-gray-600"
                   >
-                    Cancel
+                    {t("cancel")}
                   </button>
                 </div>
               </div>
@@ -201,15 +201,15 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span>📚 All Sets</span>
+                  <span>📚 {t("all_sets")}</span>
                   <span className="text-sm opacity-75">({savedSets.length})</span>
                 </div>
               </button>
               
               {folders.length === 0 ? (
                 <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
-                  <p className="mb-2">No folders yet</p>
-                  <p className="text-xs">Create your first folder to organize flashcards!</p>
+                  <p className="mb-2">{t("no_folders_yet")}</p>
+                  <p className="text-xs">{t("create_first_folder")}</p>
                 </div>
               ) : (
                 folders.map((folder) => (
@@ -233,7 +233,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                       <button
                         onClick={() => handleDeleteFolder(folder.id)}
                         className="px-3 py-2.5 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl transition-all border border-red-200 dark:border-red-800 font-medium shadow-sm hover:shadow"
-                        title="Delete folder"
+                        title={t("delete_folder")}
                       >
                         🗑️
                       </button>
@@ -324,7 +324,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                             }}
                           >
                             <div className="px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700 mb-2">
-                              📁 Move to folder
+                              📁 {t("move_to_folder_header")}
                             </div>
                             <div className="max-h-80 overflow-y-auto px-2">
                               {folders.map((folder) => (

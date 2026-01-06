@@ -82,18 +82,9 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
       if (isSignUp) {
         const result = await signUpWithEmail(email, password);
         if (result.user) {
-          // Check if email confirmation is required
-          if (result.user.identities && result.user.identities.length === 0) {
-            // Email confirmation required
-            setEmailVerificationNeeded(true);
-            setRegisteredEmail(email);
-          } else {
-            // No confirmation needed, user is logged in
-            setSuccess(true);
-            setTimeout(() => {
-              window.location.reload();
-            }, 1500);
-          }
+          // Email confirmation is ALWAYS required for new signups
+          setEmailVerificationNeeded(true);
+          setRegisteredEmail(email);
         }
       } else {
         const result = await signInWithEmail(email, password);
