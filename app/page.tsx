@@ -500,11 +500,11 @@ export default function Home() {
                       </li>
                       <li className="flex items-start gap-2">
                         <span style={{ color: '#14b8a6' }}>✓</span>
-                        <span>{settings.language === "no" ? "Word dokument filer" : "Word documents (DOCX)"}</span>
+                        <span>{settings.language === "no" ? "Bilder med tekstgjenkjenning" : "Images with OCR"}</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span style={{ color: '#14b8a6' }}>✓</span>
-                        <span>{settings.language === "no" ? "Bilder med tekstgjenkjenning" : "Images with OCR"}</span>
+                        <span>{settings.language === "no" ? "Ubegrensede mapper" : "Unlimited folders"}</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span style={{ color: '#14b8a6' }}>✓</span>
@@ -524,7 +524,7 @@ export default function Home() {
                         className="mt-6 w-full py-3 px-4 rounded-xl font-bold text-white transition-all hover:scale-105"
                         style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)' }}
                       >
-                        {settings.language === "no" ? "Oppgrader nå - 60 kr/mnd" : "Upgrade Now - $4.99/mo"}
+                        {settings.language === "no" ? "Oppgrader nå - 29 kr/mnd" : "Upgrade Now - $2.99/mo"}
                       </button>
                     )}
                   </div>

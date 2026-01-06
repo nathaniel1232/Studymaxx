@@ -377,7 +377,7 @@ export default function PremiumModal({
                 ) : isLoggedIn ? (
                   <>
                     <span>⚡</span>
-                    <span>Upgrade to Premium - {PRICING.monthly.display}/mo</span>
+                    <span>Upgrade to Premium - $2.99/mo</span>
                     <span>→</span>
                   </>
                 ) : (
