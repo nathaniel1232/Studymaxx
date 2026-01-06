@@ -566,9 +566,13 @@ export const renameFolder = async (folderId: string, newName: string): Promise<b
  */
 export const moveFlashcardSetToFolder = async (setId: string, folderId: string | null): Promise<boolean> => {
   const token = await getAuthToken();
-  if (!token) return false;
+  if (!token) {
+    console.error('[Storage] Move failed: No auth token');
+    return false;
+  }
 
   try {
+    console.log('[Storage] Moving flashcard set:', { setId, folderId });
     const response = await fetch('/api/flashcard-sets', {
       method: 'PUT',
       headers: {
@@ -578,7 +582,14 @@ export const moveFlashcardSetToFolder = async (setId: string, folderId: string |
       body: JSON.stringify({ id: setId, folder_id: folderId })
     });
 
-    return response.ok;
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('[Storage] Move failed:', response.status, errorData);
+      return false;
+    }
+
+    console.log('[Storage] Move successful');
+    return true;
   } catch (error) {
     console.error('[Storage] Failed to move flashcard set:', error);
     return false;

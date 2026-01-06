@@ -30,6 +30,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
   const [newFolderName, setNewFolderName] = useState("");
   const [movingSetId, setMovingSetId] = useState<string | null>(null);
   const [isLoadingFolders, setIsLoadingFolders] = useState(false);
+  const [deletingFolderId, setDeletingFolderId] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -78,18 +79,32 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
   };
 
   const handleDeleteFolder = async (folderId: string) => {
-    if (confirm("Delete this folder? Flashcards will be moved to Unsorted.")) {
-      await deleteFolder(folderId);
+    setDeletingFolderId(folderId);
+  };
+
+  const confirmDeleteFolder = async () => {
+    if (!deletingFolderId) return;
+    
+    const success = await deleteFolder(deletingFolderId);
+    if (success) {
       setSelectedFolder(null);
       await loadData();
+    } else {
+      alert('Failed to delete folder. Please try again.');
     }
+    setDeletingFolderId(null);
   };
 
   const handleMoveToFolder = async (setId: string, folderId: string | null) => {
+    console.log('[SavedSetsView] Moving set to folder:', { setId, folderId });
     const success = await moveFlashcardSetToFolder(setId, folderId);
+    console.log('[SavedSetsView] Move result:', success);
+    
     if (success) {
       setMovingSetId(null);
       await loadData();
+    } else {
+      alert('Failed to move flashcard set. Please make sure you\'re signed in.');
     }
   };
 
@@ -281,10 +296,11 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                     <div className="relative folder-dropdown">
                       <button
                         onClick={() => setMovingSetId(movingSetId === set.id ? null : set.id)}
-                        className="px-4 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-800/40 dark:hover:to-indigo-800/40 text-blue-900 dark:text-blue-100 font-bold rounded-xl transition-all border-2 border-blue-300 dark:border-blue-600 flex items-center gap-2 shadow-md hover:shadow-lg"
+                        className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold rounded-xl transition-all flex items-center gap-2.5 shadow-lg hover:shadow-xl border-2 border-purple-400 dark:border-purple-500"
                         title="Move to folder"
                       >
-                        📁
+                        <span className="text-lg">📁</span>
+                        <span className="text-sm">Move</span>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
@@ -292,25 +308,30 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                       
                       {/* Dropdown menu */}
                       {movingSetId === set.id && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 py-2 z-50">
-                          <div className="px-3 py-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                            Move to folder
+                        <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border-3 border-purple-200 dark:border-purple-700 py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                          <div className="px-4 py-2 text-sm font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wide border-b-2 border-purple-100 dark:border-purple-800 mb-2">
+                            📁 Move to folder
                           </div>
-                          <div className="max-h-64 overflow-y-auto">
+                          <div className="max-h-64 overflow-y-auto px-2">
                             {folders.map((folder) => (
                               <button
                                 key={folder.id}
                                 onClick={() => handleMoveToFolder(set.id, folder.id)}
-                                className={`w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                                className={`w-full text-left px-4 py-3 rounded-xl font-semibold transition-all mb-1 ${
                                   set.folderId === folder.id
-                                    ? 'bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 font-semibold'
-                                    : 'text-gray-700 dark:text-gray-300'
+                                    ? 'bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/40 dark:to-indigo-900/40 text-purple-900 dark:text-purple-100 border-2 border-purple-300 dark:border-purple-600 shadow-sm'
+                                    : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border-2 border-transparent'
                                 }`}
                               >
-                                {folder.name}
-                                {set.folderId === folder.id && (
-                                  <span className="ml-2 text-teal-600">✓</span>
-                                )}
+                                <div className="flex items-center justify-between">
+                                  <span className="flex items-center gap-2">
+                                    <span>📂</span>
+                                    <span>{folder.name}</span>
+                                  </span>
+                                  {set.folderId === folder.id && (
+                                    <span className="text-purple-600 dark:text-purple-400 text-lg">✓</span>
+                                  )}
+                                </div>
                               </button>
                             ))}
                           </div>
@@ -338,6 +359,39 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
           </>
         )}
       </div>
+
+      {/* Delete Folder Confirmation Modal */}
+      {deletingFolderId && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 px-4" onClick={() => setDeletingFolderId(null)}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 border-2 border-gray-200 dark:border-gray-700" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center mb-6">
+              <div className="text-5xl mb-4">⚠️</div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Delete Folder?
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                This will delete the folder "<strong>{folders.find(f => f.id === deletingFolderId)?.name}</strong>".
+                <br />
+                Flashcards will be moved to Unsorted.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeletingFolderId(null)}
+                className="flex-1 px-6 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold rounded-xl transition-all border-2 border-gray-300 dark:border-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteFolder}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl"
+              >
+                Delete Folder
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
