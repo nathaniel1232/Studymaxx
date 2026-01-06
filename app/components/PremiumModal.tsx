@@ -12,6 +12,7 @@ interface PremiumModalProps {
   customMessage?: string;
   isDailyLimit?: boolean;
   onRequestLogin?: () => void;
+  isPremium?: boolean;
 }
 
 export default function PremiumModal({ 
@@ -20,7 +21,8 @@ export default function PremiumModal({
   setsCreated = 1, 
   customMessage,
   isDailyLimit = false,
-  onRequestLogin
+  onRequestLogin,
+  isPremium = false
 }: PremiumModalProps) {
   const t = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
@@ -239,13 +241,36 @@ export default function PremiumModal({
             </h3>
             
             <div className="grid grid-cols-1 gap-3">
-              {features.slice(0, 6).map((feature, idx) => (
-                <div key={idx} className="flex items-center gap-3 p-3 bg-gradient-to-r from-gray-800 to-gray-700 rounded-xl border border-gray-600">
-                  <div className="text-2xl">{feature.split(' ')[0]}</div>
-                  <div className="flex-1 text-sm font-semibold text-gray-100">{feature.split(' ').slice(1).join(' ')}</div>
-                  <div className="text-green-600 font-bold">✓</div>
-                </div>
-              ))}
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-800 to-purple-700 rounded-xl border border-purple-500">
+                <div className="text-2xl">♻️</div>
+                <div className="flex-1 text-sm font-semibold text-gray-100">Unlimited AI flashcard generations (no daily limit)</div>
+                <div className="text-green-400 font-bold text-xl">✓</div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-red-800 to-red-700 rounded-xl border border-red-500">
+                <div className="text-2xl">📄</div>
+                <div className="flex-1 text-sm font-semibold text-gray-100">Unlimited PDF uploads (extract text & generate)</div>
+                <div className="text-green-400 font-bold text-xl">✓</div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-800 to-blue-700 rounded-xl border border-blue-500">
+                <div className="text-2xl">🎥</div>
+                <div className="flex-1 text-sm font-semibold text-gray-100">Unlimited YouTube video to flashcards</div>
+                <div className="text-green-400 font-bold text-xl">✓</div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-green-800 to-green-700 rounded-xl border border-green-500">
+                <div className="text-2xl">🖼️</div>
+                <div className="flex-1 text-sm font-semibold text-gray-100">Unlimited image uploads (OCR text extraction)</div>
+                <div className="text-green-400 font-bold text-xl">✓</div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-orange-800 to-orange-700 rounded-xl border border-orange-500">
+                <div className="text-2xl">📂</div>
+                <div className="flex-1 text-sm font-semibold text-gray-100">Unlimited folders to organize flashcard sets</div>
+                <div className="text-green-400 font-bold text-xl">✓</div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-indigo-800 to-indigo-700 rounded-xl border border-indigo-500">
+                <div className="text-2xl">💾</div>
+                <div className="flex-1 text-sm font-semibold text-gray-100">Unlimited saved study sets (no limits)</div>
+                <div className="text-green-400 font-bold text-xl">✓</div>
+              </div>
             </div>
           </div>
 
@@ -306,51 +331,75 @@ export default function PremiumModal({
           )}
 
           {/* CTA Buttons */}
-          <div className="space-y-3">
-            <button
-              onClick={() => {
-                if (isLoggedIn) {
-                  handleUpgrade();
-                } else {
-                  onClose(); // Close premium modal first
-                  if (onRequestLogin) {
-                    onRequestLogin(); // Then open login modal
+          {isPremium ? (
+            <div className="space-y-3">
+              <div className="w-full py-5 bg-gradient-to-r from-green-500 via-emerald-500 to-green-500 text-white font-black rounded-2xl text-xl shadow-2xl flex items-center justify-center gap-3">
+                <span>✅</span>
+                <span>You Have Premium!</span>
+                <span>🎉</span>
+              </div>
+              <div className="bg-green-900/30 border-2 border-green-700 rounded-xl p-4 text-center">
+                <p className="text-sm text-green-100 font-semibold">
+                  ✨ You're already enjoying all premium features. Keep crushing those study goals!
+                </p>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-full py-3 font-bold transition-colors text-base rounded-xl"
+                style={{ color: '#9ca3af', background: 'transparent' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#f9fafb'; e.currentTarget.style.background = '#374151'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = '#9ca3af'; e.currentTarget.style.background = 'transparent'; }}
+              >
+                Close
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  if (isLoggedIn) {
+                    handleUpgrade();
+                  } else {
+                    onClose(); // Close premium modal first
+                    if (onRequestLogin) {
+                      onRequestLogin(); // Then open login modal
+                    }
                   }
-                }
-              }}
-              disabled={isLoading}
-              className="w-full py-5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 hover:from-amber-600 hover:via-orange-600 hover:to-amber-600 disabled:from-gray-400 disabled:to-gray-500 text-white font-black rounded-2xl transition-all text-xl shadow-2xl hover:shadow-3xl hover:scale-105 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Processing...</span>
-                </>
-              ) : isLoggedIn ? (
-                <>
-                  <span>⚡</span>
-                  <span>Ascend to Premium Now</span>
-                  <span>→</span>
-                </>
-              ) : (
-                <>
-                  <span>🔐</span>
-                  <span>Sign in to Continue</span>
-                  <span>→</span>
-                </>
-              )}
-            </button>
+                }}
+                disabled={isLoading}
+                className="w-full py-5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 hover:from-amber-600 hover:via-orange-600 hover:to-amber-600 disabled:from-gray-400 disabled:to-gray-500 text-white font-black rounded-2xl transition-all text-xl shadow-2xl hover:shadow-3xl hover:scale-105 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Processing...</span>
+                  </>
+                ) : isLoggedIn ? (
+                  <>
+                    <span>⚡</span>
+                    <span>Upgrade to Premium - {PRICING.monthly.display}/mo</span>
+                    <span>→</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🔐</span>
+                    <span>Sign in to Continue</span>
+                    <span>→</span>
+                  </>
+                )}
+              </button>
 
-            <button
-              onClick={onClose}
-              className="w-full py-3 font-bold transition-colors text-base rounded-xl"
-              style={{ color: '#9ca3af', background: 'transparent' }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#f9fafb'; e.currentTarget.style.background = '#374151'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#9ca3af'; e.currentTarget.style.background = 'transparent'; }}
-            >
-              Maybe later
-            </button>
-          </div>
+              <button
+                onClick={onClose}
+                className="w-full py-3 font-bold transition-colors text-base rounded-xl"
+                style={{ color: '#9ca3af', background: 'transparent' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#f9fafb'; e.currentTarget.style.background = '#374151'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = '#9ca3af'; e.currentTarget.style.background = 'transparent'; }}
+              >
+                Maybe later
+              </button>
+            </div>
+          )}
 
           {/* Trust signals */}
           <div className="mt-6 pt-6 border-t-2 border-gray-700 flex items-center justify-center gap-6 text-sm font-semibold" style={{ color: '#9ca3af' }}>

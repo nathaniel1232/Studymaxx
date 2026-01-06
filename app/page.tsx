@@ -511,13 +511,22 @@ export default function Home() {
                         <span>{settings.language === "no" ? "Prioritert AI-prosessering" : "Priority processing"}</span>
                       </li>
                     </ul>
-                    <button
-                      onClick={() => !user ? setShowLoginModal(true) : setShowPremiumModal(true)}
-                      className="mt-6 w-full py-3 px-4 rounded-xl font-bold text-white transition-all hover:scale-105"
-                      style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)' }}
-                    >
-                      {settings.language === "no" ? "Oppgrader nå" : "Upgrade Now"}
-                    </button>
+                    {isPremium ? (
+                      <div className="mt-6 w-full py-3 px-4 rounded-xl font-bold text-center" style={{ 
+                        background: 'linear-gradient(135deg, #22c55e 0%, #10b981 100%)',
+                        color: 'white'
+                      }}>
+                        🎉 {settings.language === "no" ? "Du har Premium!" : "You Have Premium!"}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => !user ? setShowLoginModal(true) : setShowPremiumModal(true)}
+                        className="mt-6 w-full py-3 px-4 rounded-xl font-bold text-white transition-all hover:scale-105"
+                        style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)' }}
+                      >
+                        {settings.language === "no" ? "Oppgrader nå - 60 kr/mnd" : "Upgrade Now - $4.99/mo"}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -590,6 +599,7 @@ export default function Home() {
           onClose={() => setShowPremiumModal(false)}
           setsCreated={savedSets.length}
           onRequestLogin={() => setShowLoginModal(true)}
+          isPremium={isPremium}
         />
       )}
 

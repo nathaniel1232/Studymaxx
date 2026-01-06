@@ -176,40 +176,40 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
           <>
             {/* Email Verification Required */}
             <div className="text-center">
-              <div className="text-6xl mb-4">📧</div>
+              <div className="text-6xl mb-4">🎉</div>
               <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
-                Verify Your Email
+                Account Created!
               </h2>
-              <div className="mb-6 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800">
+              <div className="mb-6 p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800">
                 <p className="text-sm font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
-                  We've sent a verification link to:
+                  Check your email to activate your account:
                 </p>
-                <p className="text-base font-bold text-blue-600 dark:text-blue-400 mb-3">
+                <p className="text-base font-bold text-green-600 dark:text-green-400 mb-4">
                   {registeredEmail}
                 </p>
-                <div className="text-left text-sm space-y-2" style={{ color: 'var(--foreground-muted)' }}>
+                <div className="text-left text-sm space-y-3 mb-4" style={{ color: 'var(--foreground-muted)' }}>
                   <p className="flex items-start gap-2">
-                    <span className="text-green-500 mt-0.5">✓</span>
-                    <span>Click the verification link in your email</span>
+                    <span className="text-xl mt-0.5">📧</span>
+                    <span className="font-medium">Open the verification email we just sent you</span>
                   </p>
                   <p className="flex items-start gap-2">
-                    <span className="text-green-500 mt-0.5">✓</span>
-                    <span>Come back here and sign in</span>
+                    <span className="text-xl mt-0.5">🔗</span>
+                    <span className="font-medium">Click the "Verify Email" link</span>
                   </p>
                   <p className="flex items-start gap-2">
-                    <span className="text-yellow-500 mt-0.5">⚠</span>
-                    <span>Check your spam folder if you don't see it</span>
+                    <span className="text-xl mt-0.5">✅</span>
+                    <span className="font-medium">You'll be automatically logged in!</span>
                   </p>
+                </div>
+                <div className="text-xs bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded-lg border border-yellow-200 dark:border-yellow-800" style={{ color: 'var(--foreground-muted)' }}>
+                  <span className="font-semibold">💡 Tip:</span> Check your spam folder if you don't see the email
                 </div>
               </div>
               <button
-                onClick={() => {
-                  setEmailVerificationNeeded(false);
-                  setIsSignUp(false);
-                }}
+                onClick={onClose}
                 className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl"
               >
-                Got it! Take me to sign in
+                Got it!
               </button>
             </div>
           </>
