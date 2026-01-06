@@ -31,7 +31,7 @@ export interface UsageLimits {
 export const FREE_LIMITS: UsageLimits = {
   maxStudySets: 3, // 3 study sets per 24 hours
   maxFlashcardsPerSet: 10, // Only 10 cards for free
-  maxAIGenerationsPerDay: 1, // 1 AI generation per day
+  maxAIGenerationsPerDay: 3, // 3 AI generations per day (was 1)
   canUploadPDF: false,
   canUploadImages: false,
   canUseYouTube: false,
@@ -93,21 +93,12 @@ export function canUseAI(userStatus: UserStatus): {
     return { allowed: true };
   }
 
-  // Free users: Check study set limit first
-  if (userStatus.studySetCount >= FREE_LIMITS.maxStudySets) {
-    return {
-      allowed: false,
-      statusCode: 402, // Payment Required
-      reason: `Free users can create ${FREE_LIMITS.maxStudySets} study sets per 24 hours. Upgrade to Premium for unlimited sets!`,
-    };
-  }
-
-  // Free users: Check daily AI limit
+  // Free users: Check daily AI limit (this resets every 24 hours)
   if (userStatus.dailyAiCount >= FREE_LIMITS.maxAIGenerationsPerDay) {
     return {
       allowed: false,
       statusCode: 429, // Too Many Requests
-      reason: `Free users can use AI ${FREE_LIMITS.maxAIGenerationsPerDay} time per day. Upgrade to Premium for unlimited AI generations!`,
+      reason: `Free users can create ${FREE_LIMITS.maxAIGenerationsPerDay} flashcard sets per day. Upgrade to Premium for unlimited AI generations!`,
     };
   }
 

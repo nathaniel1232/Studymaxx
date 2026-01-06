@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
   console.log('[AUTH CALLBACK] Code received, middleware will exchange it');
   const successUrl = new URL('/', origin);
   successUrl.searchParams.set('auth', 'success');
+  successUrl.searchParams.set('verified', 'true'); // Add verified flag for better UX
   
   const response = NextResponse.redirect(successUrl);
   return response;

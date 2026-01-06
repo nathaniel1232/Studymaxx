@@ -17,6 +17,8 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
   const [isMagicLink, setIsMagicLink] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [emailVerificationNeeded, setEmailVerificationNeeded] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,10 +73,18 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
       if (isSignUp) {
         const result = await signUpWithEmail(email, password);
         if (result.user) {
-          setSuccess(true);
-          setTimeout(() => {
-            window.location.reload(); // Refresh to load user session
-          }, 1500);
+          // Check if email confirmation is required
+          if (result.user.identities && result.user.identities.length === 0) {
+            // Email confirmation required
+            setEmailVerificationNeeded(true);
+            setRegisteredEmail(email);
+          } else {
+            // No confirmation needed, user is logged in
+            setSuccess(true);
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
+          }
         }
       } else {
         const result = await signInWithEmail(email, password);
@@ -86,7 +96,13 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
         }
       }
     } catch (err: any) {
-      setError(err.message || `Failed to ${isSignUp ? 'sign up' : 'sign in'}`);
+      // Check for specific email not confirmed error
+      if (err.message?.includes('Email not confirmed') || err.message?.includes('email_not_confirmed')) {
+        setEmailVerificationNeeded(true);
+        setRegisteredEmail(email);
+      } else {
+        setError(err.message || `Failed to ${isSignUp ? 'sign up' : 'sign in'}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -147,7 +163,48 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
           }
         `}</style>
         <div className="p-8">
-        {magicLinkSent ? (
+        {emailVerificationNeeded ? (
+          <>
+            {/* Email Verification Required */}
+            <div className="text-center">
+              <div className="text-6xl mb-4">📧</div>
+              <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
+                Verify Your Email
+              </h2>
+              <div className="mb-6 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800">
+                <p className="text-sm font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
+                  We've sent a verification link to:
+                </p>
+                <p className="text-base font-bold text-blue-600 dark:text-blue-400 mb-3">
+                  {registeredEmail}
+                </p>
+                <div className="text-left text-sm space-y-2" style={{ color: 'var(--foreground-muted)' }}>
+                  <p className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5">✓</span>
+                    <span>Click the verification link in your email</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <span className="text-green-500 mt-0.5">✓</span>
+                    <span>Come back here and sign in</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <span className="text-yellow-500 mt-0.5">⚠</span>
+                    <span>Check your spam folder if you don't see it</span>
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setEmailVerificationNeeded(false);
+                  setIsSignUp(false);
+                }}
+                className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl"
+              >
+                Got it! Take me to sign in
+              </button>
+            </div>
+          </>
+        ) : magicLinkSent ? (
           <>
             {/* Magic Link Sent Confirmation */}
             <div className="text-center">

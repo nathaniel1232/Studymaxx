@@ -117,11 +117,20 @@ export default function Home() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const authSuccess = urlParams.get('auth');
+    const verified = urlParams.get('verified');
     
     if (authSuccess === 'success') {
       console.log('[Auth] OAuth callback detected - refreshing session...');
-      // Clear the param
+      // Clear the params
       window.history.replaceState({}, '', '/');
+      
+      // Show welcome message if verified
+      if (verified === 'true') {
+        setToast({
+          message: '✅ Email verified! Welcome to StudyMaxx. You\'re all set!',
+          type: 'success'
+        });
+      }
       
       // Force Supabase to refresh the session from cookies
       if (supabase) {

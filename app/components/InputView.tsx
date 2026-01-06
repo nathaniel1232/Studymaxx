@@ -25,6 +25,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [premiumModalReason, setPremiumModalReason] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingStage, setLoadingStage] = useState<"processing" | "analyzing" | "generating" | "finalizing" | null>(null);
   const [error, setError] = useState("");
   
   // User controls
@@ -351,10 +352,14 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
     }
 
     setIsLoading(true);
+    setLoadingStage("processing");
     setError("");
 
     try {
       console.log("Calling AI API...");
+      
+      // Show analyzing stage
+      setTimeout(() => setLoadingStage("analyzing"), 500);
       
       // Combine main text input with all uploaded files
       let combinedText = textInput;
@@ -363,6 +368,9 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
           `--- From ${file.name} ---\n${file.text}`
         ).join('\n\n');
       }
+      
+      // Show generating stage
+      setTimeout(() => setLoadingStage("generating"), 1500);
       
       const res = await fetch("/api/flashcards", {
         method: "POST",
@@ -375,6 +383,9 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
       });
 
       console.log("API response status:", res.status);
+      
+      // Show finalizing stage
+      setLoadingStage("finalizing");
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -390,6 +401,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
       setError(`AI generation failed: ${err instanceof Error ? err.message : 'Unknown error'}. Check your API key and try again.`);
     } finally {
       setIsLoading(false);
+      setLoadingStage(null);
     }
   };
 
@@ -815,9 +827,16 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl text-lg"
             >
               {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="animate-spin">⚡</span>
-                  Creating flashcards...
+                <span className="flex flex-col items-center justify-center gap-2">
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin">⚡</span>
+                    {loadingStage === "processing" && "Processing your notes..."}
+                    {loadingStage === "analyzing" && "Analyzing content..."}
+                    {loadingStage === "generating" && "Creating flashcards with AI..."}
+                    {loadingStage === "finalizing" && "Almost done..."}
+                    {!loadingStage && "Creating flashcards..."}
+                  </span>
+                  <span className="text-xs opacity-75">This usually takes 10-20 seconds</span>
                 </span>
               ) : (
                 "Create flashcards"
