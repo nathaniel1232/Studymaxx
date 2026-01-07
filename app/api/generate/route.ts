@@ -555,7 +555,7 @@ Generate ${bufferedCount} flashcards now.`;
           distractors,
         };
       })
-      .filter((card): card is Flashcard => card !== null);
+      .filter((card): card is { id: string; question: string; answer: string; distractors: string[] } => card !== null);
 
     console.log(`[API /generate] Validated: ${validatedCards.length} of ${flashcards.length} cards passed quality check`);
 

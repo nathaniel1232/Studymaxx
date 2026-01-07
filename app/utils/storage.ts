@@ -73,9 +73,9 @@ export const saveFlashcardSet = async (
   const userId = getOrCreateUserId();
   const token = await getAuthToken();
   
-  // For logged-in users: Supabase is the ONLY source of truth
+  // For logged-in users: Save to BOTH Supabase AND localStorage
   if (token) {
-    console.log('[Storage] User authenticated - saving to Supabase');
+    console.log('[Storage] User authenticated - saving to Supabase + localStorage');
     try {
       const response = await fetch('/api/flashcard-sets', {
         method: 'POST',
@@ -90,7 +90,7 @@ export const saveFlashcardSet = async (
         const { set } = await response.json();
         console.log('[Storage] ✅ Saved to Supabase successfully:', set.id);
         
-        return {
+        const newSet = {
           id: set.id,
           name: set.name,
           flashcards: set.cards,
@@ -102,6 +102,23 @@ export const saveFlashcardSet = async (
           isShared: set.is_shared,
           shareId: set.share_id
         };
+        
+        // Also save to localStorage for offline access
+        try {
+          const localSets = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+          const existingIndex = localSets.findIndex((s: any) => s.id === newSet.id);
+          if (existingIndex >= 0) {
+            localSets[existingIndex] = newSet;
+          } else {
+            localSets.push(newSet);
+          }
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(localSets));
+          console.log('[Storage] ✅ Also saved to localStorage');
+        } catch (localError) {
+          console.warn('[Storage] Failed to save to localStorage:', localError);
+        }
+        
+        return newSet;
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('[Storage] ❌ Supabase save failed:', response.status, errorData);
@@ -154,7 +171,7 @@ export const getSavedFlashcardSets = async (): Promise<FlashcardSet[]> => {
 
   const token = await getAuthToken();
   
-  // For logged-in users: Supabase is the ONLY source of truth
+  // For logged-in users: Load from BOTH Supabase AND localStorage, merge results
   if (token) {
     try {
       const response = await fetch('/api/flashcard-sets', {
@@ -167,7 +184,7 @@ export const getSavedFlashcardSets = async (): Promise<FlashcardSet[]> => {
         const { sets } = await response.json();
         console.log('[Storage] ✅ Fetched from Supabase:', sets.length, 'sets');
         
-        return sets.map((set: any) => ({
+        const supabaseSets = sets.map((set: any) => ({
           id: set.id,
           name: set.name,
           flashcards: set.cards,
@@ -180,6 +197,28 @@ export const getSavedFlashcardSets = async (): Promise<FlashcardSet[]> => {
           shareId: set.share_id,
           folderId: set.folder_id
         }));
+        
+        // Also check localStorage for any sets not in Supabase
+        try {
+          const localStored = localStorage.getItem(STORAGE_KEY);
+          if (localStored) {
+            const localSets = JSON.parse(localStored);
+            console.log('[Storage] Found', localSets.length, 'sets in localStorage');
+            
+            // Merge: Add local sets that aren't in Supabase
+            const supabaseIds = new Set(supabaseSets.map((s: any) => s.id));
+            const uniqueLocalSets = localSets.filter((s: any) => !supabaseIds.has(s.id));
+            
+            if (uniqueLocalSets.length > 0) {
+              console.log('[Storage] Found', uniqueLocalSets.length, 'unique sets in localStorage');
+              return [...supabaseSets, ...uniqueLocalSets];
+            }
+          }
+        } catch (localError) {
+          console.warn('[Storage] Failed to read localStorage:', localError);
+        }
+        
+        return supabaseSets;
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('[Storage] ❌ Supabase fetch failed:', response.status, errorData);
@@ -215,7 +254,7 @@ export const deleteFlashcardSet = async (id: string): Promise<void> => {
 
   const token = await getAuthToken();
   
-  // For logged-in users: Supabase is the ONLY source of truth
+  // For logged-in users: Delete from BOTH Supabase AND localStorage
   if (token) {
     try {
       const response = await fetch(`/api/flashcard-sets?id=${id}`, {
@@ -225,6 +264,17 @@ export const deleteFlashcardSet = async (id: string): Promise<void> => {
 
       if (response.ok) {
         console.log('[Storage] ✅ Deleted from Supabase:', id);
+        
+        // Also delete from localStorage
+        try {
+          const localSets = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+          const filtered = localSets.filter((s: any) => s.id !== id);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+          console.log('[Storage] ✅ Also deleted from localStorage');
+        } catch (localError) {
+          console.warn('[Storage] Failed to delete from localStorage:', localError);
+        }
+        
         return;
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -256,7 +306,7 @@ export const updateLastStudied = async (id: string): Promise<void> => {
   const timestamp = new Date().toISOString();
   const token = await getAuthToken();
   
-  // For logged-in users: Supabase is the ONLY source of truth
+  // For logged-in users: Update in BOTH Supabase AND localStorage
   if (token) {
     try {
       const response = await fetch('/api/flashcard-sets', {
@@ -270,6 +320,20 @@ export const updateLastStudied = async (id: string): Promise<void> => {
 
       if (response.ok) {
         console.log('[Storage] ✅ Updated in Supabase:', id);
+        
+        // Also update in localStorage
+        try {
+          const localSets = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+          const index = localSets.findIndex((s: any) => s.id === id);
+          if (index >= 0) {
+            localSets[index].lastStudied = timestamp;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(localSets));
+            console.log('[Storage] ✅ Also updated in localStorage');
+          }
+        } catch (localError) {
+          console.warn('[Storage] Failed to update localStorage:', localError);
+        }
+        
         return;
       } else {
         const errorData = await response.json().catch(() => ({}));
