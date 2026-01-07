@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
     console.error('[API] ===== POST /flashcard-sets END (ERROR) =====');
     return NextResponse.json({ error: 'Internal server error', details: String(error) }, { status: 500 });
   }
-  console.log('[API] ===== POST /flashcard-sets END (SUCCESS) =====');
+}
 
 /**
  * DELETE - Delete a flashcard set
