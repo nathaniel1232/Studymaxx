@@ -382,8 +382,10 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
     }
     
     try {
+      console.log('[StudyView] Saving flashcard set:', { name: setName, cardCount: originalFlashcards.length });
       // Always save the ORIGINAL set, not the filtered one (e.g., if reviewing mistakes)
       await saveFlashcardSet(setName, originalFlashcards);
+      console.log('[StudyView] ✅ Save successful');
       setShowSaveDialog(false);
       setSetName("");
       showToast(t("set_saved_successfully"), "success");
@@ -392,9 +394,10 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
       if (ENABLE_LOGIN_MODAL && !isLoggedIn) {
         setShowLoginModal(true);
       }
-    } catch (error) {
-      console.error('[StudyView] Error saving flashcard set:', error);
-      showToast(t("save_failed") || "Failed to save flashcard set", "error");
+    } catch (error: any) {
+      const errorMsg = error?.message || String(error) || 'Unknown error';
+      console.error('[StudyView] ❌ Error saving flashcard set:', errorMsg, error);
+      showToast(`Failed to save: ${errorMsg}`, "error");
     }
   };
 

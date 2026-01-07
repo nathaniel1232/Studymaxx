@@ -73,6 +73,8 @@ export const saveFlashcardSet = async (
   const userId = getOrCreateUserId();
   const token = await getAuthToken();
   
+  console.log('[Storage] Attempting to save:', { userId, hasToken: !!token, cardCount: flashcards.length });
+  
   // For logged-in users: Save to BOTH Supabase AND localStorage
   if (token) {
     console.log('[Storage] User authenticated - saving to Supabase + localStorage');
@@ -121,13 +123,12 @@ export const saveFlashcardSet = async (
         return newSet;
       } else {
         const errorData = await response.json().catch(() => ({}));
-        console.error('[Storage] ❌ Supabase save failed:', response.status, errorData);
-        throw new Error(`Failed to save to database: ${errorData.error || 'Unknown error'}`);
+        console.error('[Storage] ❌ Supabase save failed:', { status: response.status, ...errorData });
+        throw new Error(`Failed to save to database: ${errorData.error || response.statusText || 'Unknown error'}`);
       }
-    } catch (error) {
-      console.error('[Storage] ❌ Error saving to Supabase:', error);
-      // Re-throw error for logged-in users - don't silently fail!
-      throw error;
+    } catch (error: any) {
+      console.error('[Storage] ❌ Error saving to Supabase:', error.message);
+      throw new Error(`Failed to save flashcard set: ${error.message}`);
     }
   }
   

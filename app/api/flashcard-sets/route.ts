@@ -80,9 +80,11 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    console.log('[API] POST /flashcard-sets - Saving flashcard set...');
     const authHeader = request.headers.get("authorization");
     
     if (!authHeader) {
+      console.error('[API] No authorization header');
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
@@ -90,15 +92,21 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
+      console.error('[API] Auth error:', authError);
       return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
     }
+
+    console.log('[API] User authenticated:', user.id);
 
     const body = await request.json();
     const { name, cards, subject, grade, folderId } = body;
 
     if (!name || !cards || !Array.isArray(cards)) {
+      console.error('[API] Invalid request body:', { name: !!name, cards: !!cards, isArray: Array.isArray(cards) });
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
+
+    console.log('[API] Creating flashcard set:', { name, cardCount: cards.length, subject, grade, folderId });
 
     // Create flashcard set
     const { data: newSet, error } = await supabase
@@ -116,14 +124,19 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating flashcard set:', error);
-      return NextResponse.json({ error: 'Failed to create flashcard set' }, { status: 500 });
+      console.error('[API] ❌ Error creating flashcard set:', error);
+      console.error('[API] Error details:', JSON.stringify(error, null, 2));
+      return NextResponse.json({ 
+        error: 'Failed to create flashcard set',
+        details: error.message || 'Unknown database error'
+      }, { status: 500 });
     }
 
+    console.log('[API] ✅ Flashcard set created successfully:', newSet.id);
     return NextResponse.json({ set: newSet });
   } catch (error) {
-    console.error('Flashcard sets POST error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('[API] ❌ Flashcard sets POST error:', error);
+    return NextResponse.json({ error: 'Internal server error', details: String(error) }, { status: 500 });
   }
 }
 
