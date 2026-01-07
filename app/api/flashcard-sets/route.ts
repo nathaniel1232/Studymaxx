@@ -79,18 +79,22 @@ export async function GET(request: NextRequest) {
  * POST - Create new flashcard set
  */
 export async function POST(request: NextRequest) {
+  console.log('[API] ===== POST /flashcard-sets START =====');
   try {
     console.log('[API] POST /flashcard-sets - Saving flashcard set...');
     const authHeader = request.headers.get("authorization");
     
+    console.log('[API] Authorization header present:', !!authHeader);
     if (!authHeader) {
       console.error('[API] No authorization header');
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     const token = authHeader.replace("Bearer ", "");
+    console.log('[API] 🔑 Token extracted, checking user...');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
+    console.log('[API] Auth result:', { hasUser: !!user, hasAuthError: !!authError });
     if (authError || !user) {
       console.error('[API] Auth error:', authError);
       return NextResponse.json({ error: 'Invalid authentication' }, { status: 401 });
@@ -98,7 +102,10 @@ export async function POST(request: NextRequest) {
 
     console.log('[API] User authenticated:', user.id);
 
+    console.log('[API] 📖 Parsing request body...');
     const body = await request.json();
+    console.log('[API] 📖 Body parsed:', { keys: Object.keys(body), nameLen: body.name?.length, cardsLen: body.cards?.length });
+    
     const { name, cards, subject, grade, folderId } = body;
 
     if (!name || !cards || !Array.isArray(cards)) {
@@ -158,9 +165,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ set: newSet });
   } catch (error) {
     console.error('[API] ❌ Flashcard sets POST error:', error);
+    console.error('[API] ===== POST /flashcard-sets END (ERROR) =====');
     return NextResponse.json({ error: 'Internal server error', details: String(error) }, { status: 500 });
   }
-}
+  console.log('[API] ===== POST /flashcard-sets END (SUCCESS) =====');
 
 /**
  * DELETE - Delete a flashcard set

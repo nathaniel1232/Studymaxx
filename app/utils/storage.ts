@@ -79,6 +79,8 @@ export const saveFlashcardSet = async (
   if (token) {
     console.log('[Storage] User authenticated - saving to Supabase + localStorage');
     try {
+      console.log('[Storage] 🔄 Making POST request to /api/flashcard-sets with:', { name, cardCount: flashcards.length, subject, grade });
+      
       const response = await fetch('/api/flashcard-sets', {
         method: 'POST',
         headers: {
@@ -88,8 +90,13 @@ export const saveFlashcardSet = async (
         body: JSON.stringify({ name, cards: flashcards, subject, grade })
       });
 
+      console.log('[Storage] 📨 Got response from API:', { status: response.status, statusText: response.statusText, ok: response.ok });
+      
       if (response.ok) {
-        const { set } = await response.json();
+        const responseJson = await response.json();
+        console.log('[Storage] 📥 Response data:', responseJson);
+        
+        const { set } = responseJson;
         console.log('[Storage] ✅ Saved to Supabase successfully:', set.id);
         
         const newSet = {
@@ -122,8 +129,9 @@ export const saveFlashcardSet = async (
         
         return newSet;
       } else {
+        console.log('[Storage] 📥 Reading error response...');
         const errorData = await response.json().catch(() => ({}));
-        console.error('[Storage] ❌ Supabase save failed:', { status: response.status, error: errorData.error, details: errorData.details });
+        console.error('[Storage] ❌ Supabase save failed:', { status: response.status, error: errorData.error, details: errorData.details, fullResponse: errorData });
         const errorMsg = errorData.details || errorData.error || response.statusText || 'Unknown error';
         throw new Error(`Failed to save to database: ${errorMsg}`);
       }
