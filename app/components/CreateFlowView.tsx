@@ -35,6 +35,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   const [textInput, setTextInput] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
   
   // Math mode (only for math subjects)
   const [includeMathProblems, setIncludeMathProblems] = useState(false);

@@ -232,20 +232,28 @@ export async function POST(req: Request) {
         console.log("🖼️ Performing OCR on image...");
         warnings.push("OCR processing may take 10-20 seconds depending on image quality.");
 
-        const result = await Tesseract.recognize(buffer, 'eng+nor', {
+        // Use comprehensive language set for better recognition
+        // eng+nor+swe+dan+deu+fra+spa covers most European languages
+        const result = await Tesseract.recognize(buffer, 'eng+nor+swe+dan+deu+fra+spa', {
           logger: (m) => {
             if (m.status === 'recognizing text') {
               console.log(`OCR Progress: ${(m.progress * 100).toFixed(0)}%`);
             }
-          }
+          },
+          tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+          preserve_interword_spaces: '1',
         });
 
         extractedText = result.data.text;
-        extractionMethod = "Tesseract OCR";
+        extractionMethod = "Tesseract OCR (Multi-language)";
+        
+        console.log(`📊 OCR Stats: ${extractedText.length} chars, ${result.data.confidence.toFixed(1)}% confidence`);
 
         // OCR confidence check
-        if (result.data.confidence < 60) {
-          warnings.push("Low OCR confidence. Image quality may be poor. Consider using a clearer image.");
+        if (result.data.confidence < 50) {
+          warnings.push("Low OCR confidence. Image quality may be poor. Consider using a clearer image or higher resolution.");
+        } else if (result.data.confidence < 70) {
+          warnings.push("Moderate OCR confidence. Some text may be inaccurate.");
         }
 
         console.log(`✅ OCR complete. Confidence: ${result.data.confidence.toFixed(1)}%`);

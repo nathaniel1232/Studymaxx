@@ -436,7 +436,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
             <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
               <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
                 <span>{t("version")}</span>
-                <span className="font-medium text-gray-900 dark:text-white">1.0.0</span>
+                <span className="font-medium text-gray-900 dark:text-white">2.0.0</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
                 <span>{t("storage")}</span>
