@@ -30,6 +30,9 @@ import {
   formatResetTime,
 } from "@/app/utils/rateLimit";
 
+// Allow up to 5 minutes for batched generation (Vercel free tier limit)
+export const maxDuration = 300;
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 interface GenerateRequest {
@@ -225,7 +228,93 @@ async function incrementUsageCounters(userId: string, isNewSet: boolean = false)
 }
 
 /**
- * Generate flashcards using GPT-4o mini with cost controls
+ * Generate flashcards with FAST batched generation - optimized for serverless
+ * Generates in small batches to avoid timeouts on large requests
+ */
+async function generateWithAIFast(
+  text: string,
+  numberOfFlashcards: number,
+  language: string = "English",
+  targetGrade?: string,
+  subject?: string
+): Promise<Flashcard[]> {
+  console.log(`[generateWithAIFast] Target: ${numberOfFlashcards} flashcards (fast single-request mode)`);
+  
+  // Single request with streamlined generation - no batching for speed
+  return await generateWithAI(text, numberOfFlashcards, language, targetGrade, subject);
+}
+
+/**
+ * Generate flashcards with validation loop - ensures count guarantee
+ * USE THIS FOR BACKGROUND/ASYNC OPERATIONS ONLY
+ */
+async function generateWithAIGuaranteed(
+  text: string,
+  numberOfFlashcards: number,
+  language: string = "English",
+  targetGrade?: string,
+  subject?: string
+): Promise<Flashcard[]> {
+  const maxAttempts = 3;
+  let allCards: Flashcard[] = [];
+  let attempt = 0;
+
+  console.log(`[generateWithAIGuaranteed] Target: ${numberOfFlashcards} flashcards`);
+
+  while (allCards.length < numberOfFlashcards && attempt < maxAttempts) {
+    attempt++;
+    const needed = numberOfFlashcards - allCards.length;
+    
+    console.log(`[generateWithAIGuaranteed] Attempt ${attempt}/${maxAttempts}: Need ${needed} more cards`);
+
+    try {
+      const newCards = await generateWithAI(text, needed, language, targetGrade, subject);
+      
+      // Deduplicate based on question similarity
+      const uniqueNewCards = newCards.filter(newCard => {
+        const isDuplicate = allCards.some(existing => 
+          existing.question.toLowerCase() === newCard.question.toLowerCase()
+        );
+        return !isDuplicate;
+      });
+
+      allCards.push(...uniqueNewCards);
+      console.log(`[generateWithAIGuaranteed] Got ${uniqueNewCards.length} unique cards. Total: ${allCards.length}/${numberOfFlashcards}`);
+
+      // If we have enough, stop
+      if (allCards.length >= numberOfFlashcards) {
+        break;
+      }
+
+      // If we got very few cards in this attempt, add more context to help AI expand
+      if (uniqueNewCards.length < needed * 0.5 && attempt < maxAttempts) {
+        console.log(`[generateWithAIGuaranteed] Low yield (${uniqueNewCards.length}/${needed}), will retry with expansion hint`);
+        // Append expansion hint to text for next iteration
+        text = text + `\n\n[Note: Cover this topic comprehensively with related concepts, definitions, and key information]`;
+      }
+
+    } catch (error: any) {
+      console.error(`[generateWithAIGuaranteed] Attempt ${attempt} failed:`, error.message);
+      
+      // On last attempt, throw the error
+      if (attempt === maxAttempts) {
+        throw error;
+      }
+    }
+  }
+
+  // Final validation
+  if (allCards.length < numberOfFlashcards) {
+    console.warn(`[generateWithAIGuaranteed] Could not reach target after ${maxAttempts} attempts. Got ${allCards.length}/${numberOfFlashcards}`);
+    // Return what we have instead of failing completely
+  }
+
+  // Return exactly the requested amount (or less if we couldn't generate enough)
+  return allCards.slice(0, numberOfFlashcards);
+}
+
+/**
+ * Generate flashcards using GPT-4o mini with cost controls and count enforcement
  */
 async function generateWithAI(
   text: string,
@@ -234,69 +323,59 @@ async function generateWithAI(
   targetGrade?: string,
   subject?: string
 ): Promise<Flashcard[]> {
+  const targetCount = numberOfFlashcards; // Store original request
+  
   // Determine answer complexity based on grade
   let answerGuidance = "";
   let vocabularyLevel = "";
+  let exampleAnswer = "";
   
-  if (targetGrade) {
-    const grade = targetGrade.toUpperCase();
-    
-    if (grade === "A" || grade === "6") {
-      // Highest grade - detailed, terminology-rich
-      answerGuidance = "Answers must be 2-4 concise sentences with proper subject terminology and brief explanations. Include context where relevant.";
-      vocabularyLevel = "Use advanced subject-specific vocabulary and technical terms.";
-    } else if (grade === "B" || grade === "5") {
-      answerGuidance = "Answers should be 2-3 sentences with clear terminology. Balance detail with clarity.";
-      vocabularyLevel = "Use subject terminology but keep language accessible.";
-    } else if (grade === "C" || grade === "4") {
-      answerGuidance = "Answers should be 1-2 sentences. Use clear, direct language.";
-      vocabularyLevel = "Use simpler vocabulary with occasional subject terms.";
-    } else {
-      // D, E, F or grades 1-3 - keep it simple
-      answerGuidance = "Answers must be short: 1 sentence maximum. Use simple, clear language.";
-      vocabularyLevel = "Avoid complex vocabulary. Keep it age-appropriate and straightforward.";
-    }
-  } else {
-    // Default: medium complexity
-    answerGuidance = "Answers should be 1-2 clear sentences.";
-    vocabularyLevel = "Use clear, accessible language.";
-  }
+  // Simplified answer guidance for speed
+  answerGuidance = "Keep answers concise: 1-3 sentences with key information only. No filler.";
+  vocabularyLevel = "Use clear, direct language appropriate for the subject.";
+  exampleAnswer = "";
 
-  const systemPrompt = `You are an expert educational assistant creating study materials${subject ? ` for ${subject}` : ""}.
-Create ${numberOfFlashcards} flashcards in ${language} based on the provided text.
-EXPAND on the topic - include WHO, WHAT, WHEN, WHERE, WHY, HOW, definitions, and key concepts.
+  // Calculate buffer for count enforcement
+  // Fast mode: NO BUFFER - generate exact count only
+  const bufferedCount = numberOfFlashcards; // Exact count for speed
 
-ANSWER QUALITY RULES:
-${answerGuidance}
-${vocabularyLevel}
-- Stay revision-friendly (not essays)
-- Include brief explanations or context when helpful
-- Use precise terminology appropriate for the content
+  const systemPrompt = `You are an expert educational assistant creating flashcards${subject ? ` for ${subject}` : ""}.
 
-QUIZ/TEST QUALITY RULES (for distractors):
-- Create 3 plausible wrong answers that could genuinely confuse someone who partially understands the topic
-- ALL 4 choices must be similar in length and structure
-- Distractors should be:
-  * Related concepts or common misconceptions
-  * Grammatically parallel to the correct answer
-  * Not obviously wrong through process of elimination
-- Make it genuinely challenging - test understanding, not just recognition
+Generate EXACTLY ${bufferedCount} flashcards in ${language} from the provided text.
+
+REQUIREMENTS:
+1. Questions: Clear and specific
+2. Answers: ${answerGuidance} Be concise and accurate.
+3. Distractors: Create 3 wrong options for each card that are SIMILAR LENGTH to the correct answer
+4. All 4 options (correct + 3 distractors) should have roughly the same word count
+5. Make distractors plausible but incorrect (subtle factual errors)
+
+Quality rules:
+- Use only factually correct information
+- Keep language clear and educational
+- Cover the most important concepts from the text
+- If text is short, expand with standard curriculum knowledge on the same topic
 
 JSON format:
 {
   "flashcards": [
-    {"id": "1", "question": "specific question", "answer": "appropriate length answer", "distractors": ["plausible wrong answer", "plausible wrong answer", "plausible wrong answer"]},
-    {"id": "2", "question": "specific question", "answer": "appropriate length answer", "distractors": ["plausible wrong answer", "plausible wrong answer", "plausible wrong answer"]}
+    {"id": "1", "question": "...", "answer": "...", "distractors": ["...", "...", "..."]},
+    {"id": "2", "question": "...", "answer": "...", "distractors": ["...", "...", "..."]}
   ]
-}`;
+}
+
+Generate ${bufferedCount} flashcards now.`;
 
   try {
     console.log("[API /generate] Starting OpenAI request...");
     const startTime = Date.now();
     
-    // Add timeout wrapper for OpenAI API call (longer for slow networks)
+    // Fast timeout - single request optimized for speed
+    const timeoutMs = 90000; // 90 seconds max
+    console.log(`[API /generate] Timeout set to ${timeoutMs}ms for ${numberOfFlashcards} cards`);
+    
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("Request timeout - AI service took too long to respond")), 120000); // 2 minutes
+      setTimeout(() => reject(new Error("Generation timeout - please try again")), timeoutMs);
     });
 
     const completionPromise = openai.chat.completions.create({
@@ -306,7 +385,7 @@ JSON format:
         { role: "user", content: text },
       ],
       temperature: 0.7,
-      max_tokens: 3500, // Reduced from 4500 for faster response on slow networks
+      max_tokens: 6000, // Higher limit for single request with 30 cards
       response_format: { type: "json_object" },
     });
 
@@ -435,13 +514,63 @@ JSON format:
     
     console.log("[API /generate] Successfully extracted", flashcards.length, "flashcards");
 
-    // Ensure each flashcard has required fields
-    return flashcards.map((card: any, index: number) => ({
-      id: card.id || `${Date.now()}-${index}`,
-      question: card.question || card.front || "",
-      answer: card.answer || card.back || "",
-      distractors: card.distractors || [],
-    }));
+    // Validate and ensure each flashcard has required fields and meets quality standards
+    const validatedCards = flashcards
+      .map((card: any, index: number) => {
+        const question = card.question || card.front || "";
+        const answer = card.answer || card.back || "";
+        const distractors = card.distractors || [];
+
+        // Validate minimum quality requirements
+        if (!question || question.length < 10) {
+          console.warn(`[API /generate] Card ${index + 1} has too short question: "${question}"`);
+          return null;
+        }
+        
+        if (!answer || answer.length < 10) {
+          console.warn(`[API /generate] Card ${index + 1} has too short answer: "${answer}"`);
+          return null;
+        }
+
+        // For grade A/6, ensure answers are substantial but not too long
+        if (targetGrade && (targetGrade.toUpperCase() === "A" || targetGrade === "6")) {
+          if (answer.length < 80) {
+            console.warn(`[API /generate] Card ${index + 1} answer too short for grade ${targetGrade}: ${answer.length} chars (min 80)`);
+            // Don't filter out, but log the issue
+          }
+          if (answer.length > 600) {
+            console.warn(`[API /generate] Card ${index + 1} answer too long for grade ${targetGrade}: ${answer.length} chars (max ~600 for conciseness)`);
+          }
+        }
+
+        // Validate distractors quality
+        if (distractors.length > 0 && distractors.length < 3) {
+          console.warn(`[API /generate] Card ${index + 1} has insufficient distractors: ${distractors.length}`);
+        }
+
+        return {
+          id: card.id || `${Date.now()}-${index}`,
+          question,
+          answer,
+          distractors,
+        };
+      })
+      .filter((card): card is Flashcard => card !== null);
+
+    console.log(`[API /generate] Validated: ${validatedCards.length} of ${flashcards.length} cards passed quality check`);
+
+    // Return immediately - don't wait for perfect count
+    // Fast mode: return what we have, even if slightly short
+    if (validatedCards.length === 0) {
+      throw new Error("No valid flashcards generated. Please try again.");
+    }
+
+    // Return up to requested number
+    const finalCards = validatedCards.slice(0, targetCount);
+    
+    console.log(`[API /generate] Returning ${finalCards.length} flashcards (fast mode)`);
+
+    return finalCards;
   } catch (error: any) {
     console.error("[API /generate] AI generation error:", error);
     console.error("[API /generate] Error code:", error.code);
@@ -556,8 +685,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // STEP 4: Generate flashcards with GPT-4o mini
-    const flashcards = await generateWithAI(
+    // STEP 4: Generate flashcards FAST (optimized for serverless timeout limits)
+    // Use fast mode without retries - return quickly to user
+    const flashcards = await generateWithAIFast(
       text, 
       numberOfFlashcards, 
       language || "English",

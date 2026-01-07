@@ -41,12 +41,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(errorUrl);
   }
 
-  // If we have a code, the middleware will handle the exchangeCodeForSession
-  // Just redirect to home with success param - middleware processes the code
-  console.log('[AUTH CALLBACK] Code received, middleware will exchange it');
+  // Check if this is an email verification (has 'type=signup' in state)
+  // Only show welcome message for NEW signups, not regular logins
+  const isEmailVerification = state?.includes('type=signup') || false;
+  
+  console.log('[AUTH CALLBACK] Code received, middleware will exchange it. Is new signup:', isEmailVerification);
   const successUrl = new URL('/', origin);
   successUrl.searchParams.set('auth', 'success');
-  successUrl.searchParams.set('verified', 'true'); // Add verified flag for better UX
+  
+  // Only add verified flag for actual email verifications, not OAuth logins
+  if (isEmailVerification) {
+    successUrl.searchParams.set('verified', 'true');
+  }
   
   const response = NextResponse.redirect(successUrl);
   return response;

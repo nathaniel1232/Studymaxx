@@ -32,8 +32,12 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
   const [difficulty, setDifficulty] = useState<"Easy" | "Medium" | "Hard">("Medium");
   const [numberOfFlashcards, setNumberOfFlashcards] = useState(7);
   
-  // Multiple files support
+  // Multiple files support (legacy for DOCX/PDF)
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; text: string }[]>([]);
+  
+  // Multi-image upload (NEW - images only)
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imageProcessingProgress, setImageProcessingProgress] = useState<string>("");
 
   // Check premium status on mount AND when session changes
   useEffect(() => {
@@ -116,6 +120,132 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
   const handleTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setTextInput(e.target.value);
     setError("");
+  };
+
+  /**
+   * NEW: Multi-Image Upload Handler
+   * - ONLY for images (no PDFs, DOCX, etc.)
+   * - Stores File[] in state
+   * - Sends all images in ONE FormData to /api/process-images
+   * - Server handles OCR and text combination
+   */
+  const handleMultiImageSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Clear previous errors
+    setError("");
+    setImageProcessingProgress("");
+
+    // Convert FileList to Array
+    const filesArray = Array.from(files);
+
+    console.log(`[Multi-Image] Selected ${filesArray.length} file(s)`);
+
+    // Validate: Images only
+    const nonImageFiles = filesArray.filter(file => !file.type.startsWith('image/'));
+    if (nonImageFiles.length > 0) {
+      setError(`❌ Only image files allowed. Invalid files: ${nonImageFiles.map(f => f.name).join(', ')}`);
+      e.target.value = ''; // Clear input
+      return;
+    }
+
+    // Enforce frontend limits
+    const maxAllowed = isPremium ? 5 : 1;
+    if (filesArray.length > maxAllowed) {
+      if (!isPremium) {
+        setError(`⭐ Free users can upload 1 image at a time. Upgrade to Premium to upload up to 5 images at once!`);
+        setPremiumModalReason("Multi-image upload is a Premium feature. Upgrade to process up to 5 images at once!");
+        setShowPremiumModal(true);
+      } else {
+        setError(`Maximum 5 images can be uploaded at once. You selected ${filesArray.length}.`);
+      }
+      e.target.value = '';
+      return;
+    }
+
+    // Store images in state
+    setSelectedImages(filesArray);
+    console.log(`[Multi-Image] Stored ${filesArray.length} image(s) in state`);
+
+    // Clear the file input so user can re-select if needed
+    e.target.value = '';
+  };
+
+  /**
+   * Process and upload all selected images to backend
+   */
+  const handleProcessImages = async () => {
+    if (selectedImages.length === 0) {
+      setError("No images selected. Please select at least one image.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+    setImageProcessingProgress(`Processing ${selectedImages.length} image(s)...`);
+
+    try {
+      // Get current user ID
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setError("Please sign in to upload images.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Build FormData with ALL images
+      const formData = new FormData();
+      formData.append("userId", session.user.id);
+      
+      // Append all images with the same key "images"
+      for (let i = 0; i < selectedImages.length; i++) {
+        formData.append("images", selectedImages[i]);
+        console.log(`[Multi-Image] Appended image ${i + 1}: ${selectedImages[i].name}`);
+      }
+
+      setImageProcessingProgress(`Uploading ${selectedImages.length} image(s) for OCR processing...`);
+
+      // Send ONE request to backend
+      const response = await fetch("/api/process-images", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.premiumRequired) {
+          setPremiumModalReason(data.error);
+          setShowPremiumModal(true);
+        }
+        throw new Error(data.error || "Failed to process images");
+      }
+
+      // Success! Add extracted text to input
+      const extractedText = data.text;
+      setTextInput(prevText => 
+        prevText ? `${prevText}\n\n${extractedText}` : extractedText
+      );
+
+      // Show success message
+      setImageProcessingProgress(
+        `✅ Successfully extracted text from ${data.metadata.imagesProcessed} image(s) ` +
+        `(${data.metadata.totalCharacters} characters total)`
+      );
+
+      // Clear selected images after processing
+      setSelectedImages([]);
+
+      console.log(`[Multi-Image] ✅ Processing complete:`, data.metadata);
+
+    } catch (err) {
+      console.error("[Multi-Image] Processing failed:", err);
+      setError(err instanceof Error ? err.message : "Failed to process images");
+      setImageProcessingProgress("");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -643,57 +773,105 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
               </div>
             )}
 
-            {/* Image Upload */}
+            {/* Image Upload - NEW MULTI-IMAGE IMPLEMENTATION */}
             {selectedMaterial === "image" && (
               <div className="mb-8">
-                <label htmlFor="file-input" className="block text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  Upload images
+                <label htmlFor="multi-image-input" className="block text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                  Upload Images for OCR
                 </label>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  {isPremium ? (
-                    <span className="text-teal-600 dark:text-teal-400 font-medium">✓ Premium: Upload up to 10 images at once</span>
-                  ) : (
-                    <span>Free plan: 1 image at a time. <button type="button" onClick={() => setShowPremiumModal(true)} className="text-amber-600 dark:text-amber-400 underline font-medium">Upgrade to Premium</button> for multi-image support.</span>
-                  )}
-                </p>
+                
+                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                  <p className="text-sm text-blue-800 dark:text-blue-200 mb-2 font-medium">
+                    📸 Multi-Image Upload (Images Only)
+                  </p>
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                    {isPremium ? (
+                      <>
+                        ✓ <strong>Premium:</strong> Select up to 5 images at once for faster processing
+                      </>
+                    ) : (
+                      <>
+                        Free plan: 1 image at a time. <button type="button" onClick={() => setShowPremiumModal(true)} className="underline font-semibold">Upgrade to Premium</button> to upload up to 5 images at once.
+                      </>
+                    )}
+                  </p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                    ⚠️ Processing multiple images may take 30-60 seconds
+                  </p>
+                </div>
+
                 <input
-                  id="file-input"
+                  id="multi-image-input"
                   type="file"
                   accept="image/*"
-                  {...(isPremium && { multiple: true })}
-                  onChange={handleImageUpload}
+                  multiple={isPremium}
+                  onChange={handleMultiImageSelect}
                   disabled={isLoading}
                   className="w-full px-5 py-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50 dark:bg-gray-900"
                 />
                 
-                {/* Show uploaded files */}
-                {uploadedFiles.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    {uploadedFiles.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
-                        <span className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
-                          <span>✓</span>
-                          <span>{file.name}</span>
-                          <span className="text-xs text-green-600 dark:text-green-400">({file.text.length} chars)</span>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newFiles = uploadedFiles.filter((_, i) => i !== index);
-                            setUploadedFiles(newFiles);
-                            // Recalculate textInput
-                            setTextInput(newFiles.map(f => `--- From ${f.name} ---\n${f.text}`).join('\n\n'));
-                          }}
-                          className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                      Upload another image to add more content
-                    </p>
+                {/* Show selected images (before processing) */}
+                {selectedImages.length > 0 && (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        {selectedImages.length} image(s) selected
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedImages([])}
+                        className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {selectedImages.map((image, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
+                          <span className="text-sm text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                            <span>📎</span>
+                            <span>{image.name}</span>
+                            <span className="text-xs text-amber-600 dark:text-amber-400">
+                              ({(image.size / 1024).toFixed(1)} KB)
+                            </span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedImages(prev => prev.filter((_, i) => i !== index));
+                            }}
+                            className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Process button */}
+                    <button
+                      type="button"
+                      onClick={handleProcessImages}
+                      disabled={isLoading}
+                      className="w-full mt-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl"
+                    >
+                      {isLoading ? "Processing..." : `Process ${selectedImages.length} Image(s)`}
+                    </button>
+                    
+                    {/* Progress indicator */}
+                    {imageProcessingProgress && (
+                      <p className="mt-2 text-sm text-blue-600 dark:text-blue-400 text-center">
+                        {imageProcessingProgress}
+                      </p>
+                    )}
                   </div>
+                )}
+
+                {/* Show processing note */}
+                {selectedImages.length === 0 && !isLoading && (
+                  <p className="mt-3 text-xs text-gray-500 dark:text-gray-400 text-center">
+                    Select images above, then click "Process" to extract text via OCR
+                  </p>
                 )}
               </div>
             )}

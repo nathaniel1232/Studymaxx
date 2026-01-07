@@ -288,7 +288,7 @@ export function useTranslation() {
       "create_right_amount": { en: "We'll create the right amount of study material for your goal", no: "Vi lager riktig mengde studiemateriale for målet ditt" },
       "generate_study_set": { en: "Generate Study Set", no: "Generer Studiesett" },
       "creating_study_set": { en: "Creating your study set...", no: "Lager studiesesettet ditt..." },
-      "usually_takes": { en: "This usually takes 10-20 seconds", no: "Dette tar vanligvis 10-20 sekunder" },
+      "usually_takes": { en: "This usually takes around a minute", no: "Dette tar vanligvis rundt ett minutt" },
       "analyzing_material": { en: "Analyzing your {subject} material", no: "Analyserer {subject}-materialet ditt" },
       "creating_flashcards_grade": { en: "Creating flashcards for grade {grade}", no: "Lager kunnskapskort for karakter {grade}" },
       "generating_quiz": { en: "Generating quiz questions", no: "Genererer quizspørsmål" },

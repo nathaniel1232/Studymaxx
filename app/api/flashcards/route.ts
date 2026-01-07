@@ -9,6 +9,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+// Allow up to 5 minutes for batched generation (Vercel free tier limit)
+export const maxDuration = 300;
+
 interface FlashcardRequest {
   text: string;
   numberOfFlashcards: number;
@@ -45,9 +48,9 @@ export async function POST(req: NextRequest) {
     // Call /api/generate (the real AI gateway with premium enforcement)
     const generateUrl = new URL("/api/generate", req.url);
     
-    // Add timeout to prevent hanging requests (generous for slow networks)
+    // Add timeout to prevent hanging requests (allow time for batched generation)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 150000); // 2.5 minute timeout
+    const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout for large batches
     
     try {
       const generateResponse = await fetch(generateUrl.toString(), {

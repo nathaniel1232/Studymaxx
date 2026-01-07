@@ -48,6 +48,13 @@ CREATE INDEX IF NOT EXISTS idx_folders_user_id ON folders(user_id);
 -- Row Level Security for folders
 ALTER TABLE folders ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist to avoid errors
+DROP POLICY IF EXISTS "Users can view own folders" ON folders;
+DROP POLICY IF EXISTS "Users can create own folders" ON folders;
+DROP POLICY IF EXISTS "Users can update own folders" ON folders;
+DROP POLICY IF EXISTS "Users can delete own folders" ON folders;
+
+-- Create policies
 CREATE POLICY "Users can view own folders"
   ON folders FOR SELECT
   USING (auth.uid() = user_id);

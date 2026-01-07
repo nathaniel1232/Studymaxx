@@ -71,12 +71,12 @@ export const saveFlashcardSet = async (
   }
 
   const userId = getOrCreateUserId();
+  const token = await getAuthToken();
   
-  try {
-    const token = await getAuthToken();
-    
-    if (token) {
-      console.log('[Storage] Attempting to save to Supabase with auth token');
+  // For logged-in users: Supabase is the ONLY source of truth
+  if (token) {
+    console.log('[Storage] User authenticated - saving to Supabase');
+    try {
       const response = await fetch('/api/flashcard-sets', {
         method: 'POST',
         headers: {
@@ -88,7 +88,7 @@ export const saveFlashcardSet = async (
 
       if (response.ok) {
         const { set } = await response.json();
-        console.log('[Storage] Saved to Supabase successfully:', set.id);
+        console.log('[Storage] ✅ Saved to Supabase successfully:', set.id);
         
         return {
           id: set.id,
@@ -104,15 +104,18 @@ export const saveFlashcardSet = async (
         };
       } else {
         const errorData = await response.json().catch(() => ({}));
-        console.error('[Storage] Supabase save failed:', response.status, errorData);
+        console.error('[Storage] ❌ Supabase save failed:', response.status, errorData);
+        throw new Error(`Failed to save to database: ${errorData.error || 'Unknown error'}`);
       }
-    } else {
-      console.log('[Storage] No auth token - saving to localStorage only');
+    } catch (error) {
+      console.error('[Storage] ❌ Error saving to Supabase:', error);
+      // Re-throw error for logged-in users - don't silently fail!
+      throw error;
     }
-  } catch (error) {
-    console.error('[Storage] Error saving to Supabase:', error);
   }
-
+  
+  // For anonymous users ONLY: use localStorage
+  console.log('[Storage] Anonymous user - saving to localStorage');
   try {
     const savedSets = await getSavedFlashcardSets();
     
@@ -149,10 +152,11 @@ export const getSavedFlashcardSets = async (): Promise<FlashcardSet[]> => {
     return [];
   }
 
-  try {
-    const token = await getAuthToken();
-    
-    if (token) {
+  const token = await getAuthToken();
+  
+  // For logged-in users: Supabase is the ONLY source of truth
+  if (token) {
+    try {
       const response = await fetch('/api/flashcard-sets', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -161,7 +165,7 @@ export const getSavedFlashcardSets = async (): Promise<FlashcardSet[]> => {
 
       if (response.ok) {
         const { sets } = await response.json();
-        console.log('[Storage] Fetched from Supabase:', sets.length, 'sets');
+        console.log('[Storage] ✅ Fetched from Supabase:', sets.length, 'sets');
         
         return sets.map((set: any) => ({
           id: set.id,
@@ -174,14 +178,22 @@ export const getSavedFlashcardSets = async (): Promise<FlashcardSet[]> => {
           grade: set.grade,
           isShared: set.is_shared,
           shareId: set.share_id,
-          folderId: set.folder_id // Map folder_id from database
+          folderId: set.folder_id
         }));
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[Storage] ❌ Supabase fetch failed:', response.status, errorData);
+        throw new Error(`Failed to load from database: ${errorData.error || 'Unknown error'}`);
       }
+    } catch (error) {
+      console.error('[Storage] ❌ Error fetching from Supabase:', error);
+      // Re-throw error for logged-in users - don't silently fail!
+      throw error;
     }
-  } catch (error) {
-    console.error('[Storage] Error fetching from Supabase:', error);
   }
 
+  // For anonymous users ONLY: use localStorage
+  console.log('[Storage] Anonymous user - fetching from localStorage');
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     const sets = stored ? JSON.parse(stored) : [];
@@ -201,24 +213,33 @@ export const getSavedFlashcardSets = async (): Promise<FlashcardSet[]> => {
 export const deleteFlashcardSet = async (id: string): Promise<void> => {
   if (typeof window === "undefined") return;
 
-  try {
-    const token = await getAuthToken();
-    
-    if (token) {
+  const token = await getAuthToken();
+  
+  // For logged-in users: Supabase is the ONLY source of truth
+  if (token) {
+    try {
       const response = await fetch(`/api/flashcard-sets?id=${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (response.ok) {
-        console.log('[Storage] Deleted from Supabase:', id);
+        console.log('[Storage] ✅ Deleted from Supabase:', id);
         return;
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[Storage] ❌ Supabase delete failed:', response.status, errorData);
+        throw new Error(`Failed to delete from database: ${errorData.error || 'Unknown error'}`);
       }
+    } catch (error) {
+      console.error('[Storage] ❌ Error deleting from Supabase:', error);
+      // Re-throw error for logged-in users - don't silently fail!
+      throw error;
     }
-  } catch (error) {
-    console.error('[Storage] Error deleting from Supabase:', error);
   }
 
+  // For anonymous users ONLY: use localStorage
+  console.log('[Storage] Anonymous user - deleting from localStorage');
   try {
     const savedSets = await getSavedFlashcardSets();
     const filtered = savedSets.filter((set) => set.id !== id);
@@ -233,11 +254,11 @@ export const updateLastStudied = async (id: string): Promise<void> => {
   if (typeof window === "undefined") return;
 
   const timestamp = new Date().toISOString();
-
-  try {
-    const token = await getAuthToken();
-    
-    if (token) {
+  const token = await getAuthToken();
+  
+  // For logged-in users: Supabase is the ONLY source of truth
+  if (token) {
+    try {
       const response = await fetch('/api/flashcard-sets', {
         method: 'PUT',
         headers: {
@@ -248,14 +269,22 @@ export const updateLastStudied = async (id: string): Promise<void> => {
       });
 
       if (response.ok) {
-        console.log('[Storage] Updated in Supabase:', id);
+        console.log('[Storage] ✅ Updated in Supabase:', id);
         return;
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[Storage] ❌ Supabase update failed:', response.status, errorData);
+        throw new Error(`Failed to update in database: ${errorData.error || 'Unknown error'}`);
       }
+    } catch (error) {
+      console.error('[Storage] ❌ Error updating Supabase:', error);
+      // Re-throw error for logged-in users - don't silently fail!
+      throw error;
     }
-  } catch (error) {
-    console.error('[Storage] Error updating Supabase:', error);
   }
 
+  // For anonymous users ONLY: use localStorage
+  console.log('[Storage] Anonymous user - updating localStorage');
   try {
     const savedSets = await getSavedFlashcardSets();
     const updated = savedSets.map((set) =>

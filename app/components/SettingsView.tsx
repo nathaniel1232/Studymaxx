@@ -5,6 +5,8 @@ import { useSettings, useTranslation, Theme, Language, UIScale, GradeSystem } fr
 import { studyFacts } from "../utils/studyFacts";
 import ArrowIcon from "./icons/ArrowIcon";
 import { getCurrentUser, signOut, supabase } from "../utils/supabase";
+import ReportProblemModal from "./ReportProblemModal";
+import UpdatesModal from "./UpdatesModal";
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -17,6 +19,8 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
   const [user, setUser] = useState<any>(null);
   const [isPremium, setIsPremium] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showUpdatesModal, setShowUpdatesModal] = useState(false);
 
   useEffect(() => {
     loadUserInfo();
@@ -348,6 +352,26 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
             </div>
           </section>
 
+          {/* What's New Section */}
+          <section className="card-elevated p-6" style={{ borderRadius: 'var(--radius-xl)' }}>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span>📝</span>
+              What's New
+            </h2>
+
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Check out the latest updates and improvements
+            </p>
+
+            <button
+              onClick={() => setShowUpdatesModal(true)}
+              className="w-full p-4 rounded-xl bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 border-2 border-teal-200 dark:border-teal-800 hover:bg-gradient-to-r hover:from-teal-100 hover:to-cyan-100 dark:hover:from-teal-900/30 dark:hover:to-cyan-900/30 transition-colors font-medium text-teal-700 dark:text-teal-300 flex items-center justify-center gap-2"
+            >
+              <span>📝</span>
+              View Update Log
+            </button>
+          </section>
+
           {/* Contact Section */}
           <section className="card-elevated p-6" style={{ borderRadius: 'var(--radius-xl)' }}>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
@@ -359,26 +383,48 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
               {t("contact_description")}
             </p>
 
-            <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 border-2 border-teal-200 dark:border-teal-800 rounded-xl p-5">
-              <div className="flex items-start gap-4">
-                <div className="text-3xl">📧</div>
-                <div className="flex-1">
-                  <div className="font-semibold text-gray-900 dark:text-white mb-2">
-                    {t("contact_email")}
+            <div className="space-y-3">
+              {/* Report Problem Button */}
+              <button
+                onClick={() => setShowReportModal(true)}
+                className="w-full p-4 rounded-xl bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors font-medium text-orange-700 dark:text-orange-300 flex items-center justify-center gap-2"
+              >
+                <span>🐛</span>
+                Report a Problem
+              </button>
+
+              {/* Email Contact */}
+              <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 border-2 border-teal-200 dark:border-teal-800 rounded-xl p-5">
+                <div className="flex items-start gap-4">
+                  <div className="text-3xl">📧</div>
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-900 dark:text-white mb-2">
+                      {t("contact_email")}
+                    </div>
+                    <a 
+                      href="mailto:studymaxxer@gmail.com"
+                      className="text-teal-600 dark:text-teal-400 font-medium hover:underline text-lg break-all"
+                    >
+                      studymaxxer@gmail.com
+                    </a>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      {t("send_email")}
+                    </p>
                   </div>
-                  <a 
-                    href="mailto:studymaxxer@gmail.com"
-                    className="text-teal-600 dark:text-teal-400 font-medium hover:underline text-lg break-all"
-                  >
-                    studymaxxer@gmail.com
-                  </a>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    {t("send_email")}
-                  </p>
                 </div>
               </div>
             </div>
           </section>
+
+      {/* Modals */}
+      <ReportProblemModal 
+        isOpen={showReportModal} 
+        onClose={() => setShowReportModal(false)} 
+      />
+      <UpdatesModal 
+        isOpen={showUpdatesModal} 
+        onClose={() => setShowUpdatesModal(false)} 
+      />
 
           {/* About Section */}
           <section className="card-elevated p-6" style={{ borderRadius: 'var(--radius-xl)' }}>

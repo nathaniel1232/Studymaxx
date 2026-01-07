@@ -29,15 +29,43 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch user's flashcard sets
-    const { data: sets, error } = await supabase
+    // Try to select all columns first
+    let query = supabase
       .from('flashcard_sets')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
+    const { data: sets, error } = await query;
+
+    // If error is about folder_id column, try without it
+    if (error && error.message && error.message.includes('folder_id')) {
+      console.warn('[API] folder_id column not found, retrying without it...');
+      const { data: setsWithoutFolder, error: retryError } = await supabase
+        .from('flashcard_sets')
+        .select('id, user_id, name, cards, subject, grade, created_at, last_studied, study_count, is_shared, share_id')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (retryError) {
+        console.error('Error fetching flashcard sets (retry):', retryError);
+        console.error('Supabase error details:', JSON.stringify(retryError, null, 2));
+        return NextResponse.json({ 
+          error: 'Failed to fetch flashcard sets',
+          details: retryError.message || 'Unknown database error'
+        }, { status: 500 });
+      }
+      
+      return NextResponse.json({ sets: setsWithoutFolder || [] });
+    }
+
     if (error) {
       console.error('Error fetching flashcard sets:', error);
-      return NextResponse.json({ error: 'Failed to fetch flashcard sets' }, { status: 500 });
+      console.error('Supabase error details:', JSON.stringify(error, null, 2));
+      return NextResponse.json({ 
+        error: 'Failed to fetch flashcard sets',
+        details: error.message || 'Unknown database error'
+      }, { status: 500 });
     }
 
     return NextResponse.json({ sets: sets || [] });

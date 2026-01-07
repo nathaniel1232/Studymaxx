@@ -44,6 +44,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   
   // Step 4: Loading
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationStartTime, setGenerationStartTime] = useState<number>(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [error, setError] = useState("");
   
   // Premium state
@@ -85,6 +88,35 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     
     return () => clearTimeout(timer);
   }, []);
+
+  // Timer effect for generation progress
+  useEffect(() => {
+    if (!isGenerating || generationStartTime === 0) {
+      setElapsedSeconds(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - generationStartTime) / 1000);
+      setElapsedSeconds(elapsed);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [isGenerating, generationStartTime]);
+
+  // Message rotation effect - rotate every 5 seconds
+  useEffect(() => {
+    if (!isGenerating) {
+      setCurrentMessageIndex(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setCurrentMessageIndex((prev) => (prev + 1) % 3);
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [isGenerating]);
 
   const checkPremiumStatus = async () => {
     console.log('[CreateFlowView] ===== STARTING PREMIUM CHECK =====');
@@ -295,7 +327,170 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     }
   };
 
-  // File handling (simplified from InputView)
+  // Multi-image handling (Premium only)
+  const handleMultiImageSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const maxImages = 5;
+    
+    if (files.length > maxImages) {
+      setError(`Maximum ${maxImages} images allowed`);
+      return;
+    }
+    
+    // Validate all are images
+    const nonImages = files.filter(f => !f.type.startsWith('image/'));
+    if (nonImages.length > 0) {
+      setError("Only image files are allowed");
+      return;
+    }
+    
+    setSelectedImages(files);
+    setError("");
+  };
+
+  const handleProcessImages = async () => {
+    if (selectedImages.length === 0) return;
+    
+    console.log('[CreateFlow] Starting image processing...');
+    setGenerationStartTime(Date.now());
+    setElapsedSeconds(0);
+    setIsGenerating(true);
+    setError("");
+    
+    try {
+      const Tesseract = await import("tesseract.js");
+      const extractedTexts: string[] = [];
+      
+      console.log(`[CreateFlow] Processing ${selectedImages.length} images sequentially...`);
+      
+      // Process images one by one
+      for (let i = 0; i < selectedImages.length; i++) {
+        const imageFile = selectedImages[i];
+        console.log(`[CreateFlow] Processing image ${i + 1}/${selectedImages.length}: ${imageFile.name}`);
+        
+        try {
+          // Load image
+          const imageUrl = URL.createObjectURL(imageFile);
+          const img = new Image();
+          
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = imageUrl;
+          });
+          
+          console.log(`  [Image ${i + 1}] Original: ${img.width}x${img.height}px`);
+          
+          // ===== PREPROCESSING FOR BETTER OCR =====
+          // 1. Upscale 2x - Tesseract works better with larger text (~300 DPI)
+          const scale = 2;
+          const scaledWidth = img.width * scale;
+          const scaledHeight = img.height * scale;
+          
+          const canvas = document.createElement('canvas');
+          canvas.width = scaledWidth;
+          canvas.height = scaledHeight;
+          const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+          
+          // 2. Draw upscaled with smoothing
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+          
+          // 3. Get image data for pixel manipulation
+          const imageData = ctx.getImageData(0, 0, scaledWidth, scaledHeight);
+          const data = imageData.data;
+          
+          // 4. Convert to grayscale + enhance contrast
+          // Grayscale: Removes color noise, Tesseract processes faster
+          // Contrast: Makes text/background more distinct
+          for (let j = 0; j < data.length; j += 4) {
+            // Grayscale conversion (luminosity method)
+            const gray = 0.299 * data[j] + 0.587 * data[j + 1] + 0.114 * data[j + 2];
+            
+            // Contrast enhancement (simple method: stretch values)
+            // This makes darks darker and lights lighter
+            const contrast = 1.5; // Increase contrast
+            const enhanced = ((gray - 128) * contrast) + 128;
+            const clamped = Math.max(0, Math.min(255, enhanced));
+            
+            data[j] = data[j + 1] = data[j + 2] = clamped;
+          }
+          
+          // 5. Put processed image back
+          ctx.putImageData(imageData, 0, 0);
+          
+          console.log(`  [Image ${i + 1}] Preprocessed: ${scaledWidth}x${scaledHeight}px (2x upscale, grayscale, contrast)`);
+          
+          URL.revokeObjectURL(imageUrl);
+          
+          // ===== RUN OCR ON PREPROCESSED CANVAS =====
+          console.log(`  [Image ${i + 1}] Starting OCR...`);
+          const result = await Tesseract.recognize(canvas, 'nor+eng', {
+            logger: (m) => {
+              if (m.status === 'recognizing text') {
+                console.log(`  [Image ${i + 1}] ${m.status}: ${(m.progress * 100).toFixed(0)}%`);
+              }
+            }
+          });
+          
+          const text = result.data.text.trim();
+          const confidence = result.data.confidence;
+          
+          console.log(`[CreateFlow] ✅ Image ${i + 1} OCR completed:`);
+          console.log(`  - Characters extracted: ${text.length}`);
+          console.log(`  - Confidence: ${confidence.toFixed(1)}%`);
+          
+          // ===== CONFIDENCE WARNING =====
+          if (confidence < 50) {
+            console.warn(`  ⚠️ LOW CONFIDENCE (${confidence.toFixed(1)}%) - Text may be inaccurate`);
+          }
+          
+          console.log(`  - Extracted text preview (first 300 chars):`);
+          console.log(text.substring(0, 300));
+          
+          if (text.length > 10) {
+            extractedTexts.push(`--- Image ${i + 1}: ${imageFile.name} ---\n${text}`);
+          } else {
+            console.warn(`[CreateFlow] ⚠️ Very little text found in image ${i + 1} (only ${text.length} chars)`);
+            if (text.length > 0) {
+              extractedTexts.push(`--- Image ${i + 1}: ${imageFile.name} ---\n${text}`);
+            }
+          }
+        } catch (imgError) {
+          console.error(`[CreateFlow] ❌ Failed to process image ${i + 1}:`, imgError);
+        }
+      }
+      
+      if (extractedTexts.length === 0) {
+        throw new Error("No readable text found in any images. Please ensure images contain clear, readable text.");
+      }
+      
+      const combinedText = extractedTexts.join('\n\n');
+      
+      // Calculate average confidence
+      const avgConfidence = extractedTexts.length > 0 ? 60 : 0; // Placeholder since we logged individual
+      
+      console.log(`[CreateFlow] ✅ All done!`);
+      console.log(`  - Processed ${extractedTexts.length}/${selectedImages.length} images successfully`);
+      console.log(`  - Total characters: ${combinedText.length}`);
+      
+      // Warn if overall quality seems poor
+      if (combinedText.length < 100 && selectedImages.length > 1) {
+        console.warn(`  ⚠️ Very little text extracted. Check if images contain readable text.`);
+      }
+      
+      setTextInput(combinedText);
+      setError("");
+    } catch (err: any) {
+      console.error('[CreateFlow] Error processing images:', err);
+      setError(err.message || 'Failed to process images');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // File handling (for PDF, DOCX, and single image with OCR)
   const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -342,7 +537,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         setError(`Failed to extract text from PDF: ${err.message || "Unknown error"}. Please try copying the text manually.`);
       }
     } else if (file.type.startsWith("image/")) {
-      // Handle image with OCR
+      // Handle image with OCR (simple single-image version)
       try {
         const Tesseract = await import("tesseract.js");
         const result = await Tesseract.recognize(file, "eng", {
@@ -428,6 +623,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       console.log('[CreateFlowView] ⚠️ Rate limit would block, but bypassing for Premium test');
     }
     
+    setGenerationStartTime(Date.now());
+    setElapsedSeconds(0);
     setIsGenerating(true);
     setError("");
 
@@ -437,8 +634,14 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       // Prepare the text to send
       let textToProcess = "";
       
+      console.log('[CreateFlowView] 📝 Preparing text for generation...');
+      console.log('[CreateFlowView] selectedMaterial:', selectedMaterial);
+      console.log('[CreateFlowView] textInput length:', textInput.length);
+      console.log('[CreateFlowView] textInput preview:', textInput.substring(0, 200));
+      
       if (selectedMaterial === "notes" || selectedMaterial === "image") {
         textToProcess = textInput;
+        console.log('[CreateFlowView] Using textInput directly');
       } else if (selectedMaterial === "youtube") {
         // Extract from YouTube client-side (YouTube blocks server requests)
         try {
@@ -460,6 +663,13 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       if (!textToProcess.trim()) {
         throw new Error("No content to generate flashcards from");
       }
+
+      console.log('[CreateFlowView] 🚀 About to generate flashcards with:');
+      console.log('[CreateFlowView] - Text length:', textToProcess.length);
+      console.log('[CreateFlowView] - Subject:', subject);
+      console.log('[CreateFlowView] - Target grade:', targetGrade);
+      console.log('[CreateFlowView] - Card count:', settings.cardCount);
+      console.log('[CreateFlowView] - First 300 chars:', textToProcess.substring(0, 300));
 
       // Get userId for premium checks
       const userIdForGen = userId || getOrCreateUserId();
@@ -722,7 +932,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     </div>
                   </button>
 
-                  {/* Image - Premium */}
+                  {/* Image - Premium Only */}
                   <button
                     onClick={() => {
                       if (!isPremium) {
@@ -980,20 +1190,27 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                 </div>
               )}
 
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">
                   {t("what_grade_aiming")}
                 </h2>
-                <p className="text-gray-500 dark:text-gray-400">
+                <p className="text-gray-600 dark:text-gray-400 text-lg">
                   {t("create_right_amount")}
                 </p>
               </div>
 
               {/* Grade options */}
-              <div className="space-y-3">
+              <div className="grid gap-4">
                 {getGradeOptions().map(({ grade, label, description }) => {
                   const actualCardCount = getActualCardCount(grade);
                   const isLocked = !isPremium && actualCardCount > 20;
+                  const gradeEmojis: Record<Grade, string> = {
+                    'A': '🏆',
+                    'B': '🎯', 
+                    'C': '✅',
+                    'D': '📚',
+                    'E': '📖'
+                  };
                   
                   return (
                     <button
@@ -1005,36 +1222,60 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           setTargetGrade(grade);
                         }
                       }}
-                      className={`w-full p-5 border-2 rounded-2xl text-left transition-all hover:scale-[1.02] relative ${
+                      className={`w-full p-6 border-2 rounded-2xl text-left transition-all hover:scale-[1.01] hover:shadow-lg relative overflow-hidden group ${
                         targetGrade === grade
-                          ? "border-blue-500 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 shadow-lg"
-                          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300"
+                          ? "border-blue-500 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-900/30 dark:via-purple-900/30 dark:to-pink-900/30 shadow-xl ring-4 ring-blue-200 dark:ring-blue-800"
+                          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-300 dark:hover:border-blue-700"
                       } ${isLocked ? 'opacity-75' : ''}`}
                     >
+                      {/* Background gradient effect */}
+                      {targetGrade === grade && (
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 via-purple-400/10 to-pink-400/10 dark:from-blue-600/20 dark:via-purple-600/20 dark:to-pink-600/20 animate-pulse"></div>
+                      )}
+                      
                       {isLocked && (
-                        <div className="absolute top-3 right-3 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
-                          Premium
+                        <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg flex items-center gap-1">
+                          <span>⭐</span>
+                          <span>Premium</span>
                         </div>
                       )}
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 pr-4">
-                          <div className={`text-lg font-bold mb-1 ${
-                            targetGrade === grade
-                              ? "text-blue-600 dark:text-blue-400"
-                              : "text-gray-900 dark:text-white"
-                          }`}>
-                            {label}
+                      
+                      <div className="relative flex items-start gap-4">
+                        {/* Grade emoji/icon */}
+                        <div className={`text-4xl transition-transform group-hover:scale-110 ${
+                          targetGrade === grade ? 'animate-bounce' : ''
+                        }`}>
+                          {gradeEmojis[grade]}
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className={`text-2xl font-bold ${
+                              targetGrade === grade
+                                ? "text-blue-600 dark:text-blue-400"
+                                : "text-gray-900 dark:text-white"
+                            }`}>
+                              {label}
+                            </div>
+                            {targetGrade === grade && !isLocked && (
+                              <div className="text-2xl text-green-500 animate-bounce">✓</div>
+                            )}
                           </div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                          
+                          <div className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
                             {description}
                           </div>
-                          <div className="text-xs font-medium text-gray-500 dark:text-gray-500 mt-2">
-                            {actualCardCount} {t("flashcards") || "flashcards"}
+                          
+                          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
+                            targetGrade === grade
+                              ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                          }`}>
+                            <span>📚</span>
+                            <span>{actualCardCount} {t("flashcards") || "flashcards"}</span>
                           </div>
                         </div>
-                        {targetGrade === grade && !isLocked && (
-                          <div className="text-2xl">✓</div>
-                        )}
                       </div>
                     </button>
                   );
@@ -1056,23 +1297,66 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
           {/* STEP 4: Generating */}
           {currentStep === 4 && (
             <div className="py-12 text-center space-y-8">
-              <div className="w-20 h-20 mx-auto">
+              <div className="w-24 h-24 mx-auto relative">
                 <div className="w-full h-full border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 flex items-center justify-center text-3xl">
+                  ✨
+                </div>
               </div>
               
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">
                   {t("creating_study_set")}
                 </h2>
-                <p className="text-gray-500 dark:text-gray-400">
+                
+                {/* Real-time timer */}
+                <div className="mb-3">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+                    <span className="text-2xl">⏱️</span>
+                    <span className="text-xl font-mono font-bold text-blue-600 dark:text-blue-400">
+                      {Math.floor(elapsedSeconds / 60)}:{(elapsedSeconds % 60).toString().padStart(2, '0')}
+                    </span>
+                  </div>
+                </div>
+                
+                <p className="text-lg text-gray-600 dark:text-gray-400 font-medium">
                   {t("usually_takes")}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+                  {settings.language === "no" ? "Vær tålmodig, AI trenger litt tid for å lage kvalitetskort" : "Please be patient, AI needs time to create quality cards"}
                 </p>
               </div>
 
-              <div className="max-w-md mx-auto space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                <p>✨ {t("analyzing_material", { subject })}</p>
-                <p>🎯 {t("creating_flashcards_grade", { grade: targetGrade || "" })}</p>
-                <p>📝 {t("generating_quiz")}</p>
+              <div className="max-w-md mx-auto space-y-3">
+                {/* Message 1: Analyzing */}
+                <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-500 ${
+                  currentMessageIndex === 0
+                    ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 scale-105"
+                    : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-700 opacity-40 scale-95"
+                }`}>
+                  <span className="text-2xl">✨</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{t("analyzing_material", { subject })}</span>
+                </div>
+                
+                {/* Message 2: Creating */}
+                <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-500 ${
+                  currentMessageIndex === 1
+                    ? "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700 scale-105"
+                    : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-700 opacity-40 scale-95"
+                }`}>
+                  <span className="text-2xl">🎯</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{t("creating_flashcards_grade", { grade: targetGrade || "" })}</span>
+                </div>
+                
+                {/* Message 3: Generating quiz */}
+                <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-500 ${
+                  currentMessageIndex === 2
+                    ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700 scale-105"
+                    : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-700 opacity-40 scale-95"
+                }`}>
+                  <span className="text-2xl">📝</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{t("generating_quiz")}</span>
+                </div>
               </div>
 
               {/* Study fact */}
