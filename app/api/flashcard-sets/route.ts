@@ -108,18 +108,25 @@ export async function POST(request: NextRequest) {
 
     console.log('[API] Creating flashcard set:', { name, cardCount: cards.length, subject, grade, folderId });
 
+    // Create flashcard set - exclude folder_id if it's null/undefined (column might not exist)
+    const insertData: any = {
+      user_id: user.id,
+      name,
+      cards,
+      subject: subject || null,
+      grade: grade || null,
+      study_count: 0
+    };
+    
+    // Only include folder_id if it has a value
+    if (folderId) {
+      insertData.folder_id = folderId;
+    }
+
     // Create flashcard set
     const { data: newSet, error } = await supabase
       .from('flashcard_sets')
-      .insert({
-        user_id: user.id,
-        name,
-        cards,
-        subject: subject || null,
-        grade: grade || null,
-        folder_id: folderId || null,
-        study_count: 0
-      })
+      .insert(insertData)
       .select()
       .single();
 
