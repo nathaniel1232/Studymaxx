@@ -123,8 +123,9 @@ export const saveFlashcardSet = async (
         return newSet;
       } else {
         const errorData = await response.json().catch(() => ({}));
-        console.error('[Storage] ❌ Supabase save failed:', { status: response.status, ...errorData });
-        throw new Error(`Failed to save to database: ${errorData.error || response.statusText || 'Unknown error'}`);
+        console.error('[Storage] ❌ Supabase save failed:', { status: response.status, error: errorData.error, details: errorData.details });
+        const errorMsg = errorData.details || errorData.error || response.statusText || 'Unknown error';
+        throw new Error(`Failed to save to database: ${errorMsg}`);
       }
     } catch (error: any) {
       console.error('[Storage] ❌ Error saving to Supabase:', error.message);

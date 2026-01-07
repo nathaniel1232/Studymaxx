@@ -132,10 +132,25 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('[API] ❌ Error creating flashcard set:', error);
+      console.error('[API] Error code:', error.code);
+      console.error('[API] Error message:', error.message);
+      console.error('[API] Error hint:', error.hint);
       console.error('[API] Error details:', JSON.stringify(error, null, 2));
+      
+      // Provide detailed error info
+      let detailedMsg = error.message || 'Unknown database error';
+      if (error.code === '42703') {
+        detailedMsg = `Column does not exist: ${error.message}`;
+      } else if (error.code === '23503') {
+        detailedMsg = `Foreign key constraint error: ${error.message}`;
+      } else if (error.code === '23505') {
+        detailedMsg = `Duplicate key error: ${error.message}`;
+      }
+      
       return NextResponse.json({ 
         error: 'Failed to create flashcard set',
-        details: error.message || 'Unknown database error'
+        details: detailedMsg,
+        code: error.code
       }, { status: 500 });
     }
 
