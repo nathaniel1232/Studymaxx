@@ -239,9 +239,7 @@ export async function POST(req: Request) {
             if (m.status === 'recognizing text') {
               console.log(`OCR Progress: ${(m.progress * 100).toFixed(0)}%`);
             }
-          },
-          tessedit_pageseg_mode: Tesseract.PSM.AUTO,
-          preserve_interword_spaces: '1',
+          }
         });
 
         extractedText = result.data.text;
