@@ -187,6 +187,12 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
 
     try {
       // Get current user ID
+      if (!supabase) {
+        setError("Database connection error. Please refresh the page.");
+        setIsLoading(false);
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         setError("Please sign in to upload images.");
