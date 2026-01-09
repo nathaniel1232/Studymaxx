@@ -502,27 +502,25 @@ export default function Home() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {!isPremium && (
-                    <div className="p-8 rounded-2xl border-2" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-                      <h4 className="text-lg font-bold mb-4" style={{ color: 'var(--foreground)' }}>
-                        🎓 Free
-                      </h4>
-                      <ul className="space-y-3 text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                        <li className="flex items-start gap-2">
-                          <span className="text-teal-600 dark:text-teal-400">✓</span>
-                          <span><strong>3 study sets per day</strong></span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-teal-600 dark:text-teal-400">✓</span>
-                          <span>Paste notes & basic uploads</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-teal-600 dark:text-teal-400">✓</span>
-                          <span>All study modes</span>
-                        </li>
-                      </ul>
-                    </div>
-                  )}
+                  <div className="p-8 rounded-2xl border-2" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+                    <h4 className="text-lg font-bold mb-4" style={{ color: 'var(--foreground)' }}>
+                      🎓 Free
+                    </h4>
+                    <ul className="space-y-3 text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                      <li className="flex items-start gap-2">
+                        <span className="text-teal-600 dark:text-teal-400">✓</span>
+                        <span><strong>3 study sets per day</strong></span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-teal-600 dark:text-teal-400">✓</span>
+                        <span>Paste notes & basic uploads</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-teal-600 dark:text-teal-400">✓</span>
+                        <span>All study modes</span>
+                      </li>
+                    </ul>
+                  </div>
 
                   <div className="p-8 rounded-2xl border-3 relative overflow-hidden" style={{ 
                     background: isPremium 
