@@ -541,10 +541,10 @@ export default function Home() {
                         : 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)',
                       color: 'white' 
                     }}>
-                      {isPremium ? '✓ ACTIVE' : 'RECOMMENDED'}
+                      {isOwner ? '👑 OWNER' : (isPremium ? '✓ ACTIVE' : 'RECOMMENDED')}
                     </div>
                     <h4 className="text-lg font-bold mb-4 mt-2" style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>
-                      👑 Premium
+                      👑 Premium {isOwner && <span className="text-sm">(Owner)</span>}
                     </h4>
                     <ul className="space-y-3 text-sm" style={{ color: 'var(--foreground-muted)' }}>
                       <li className="flex items-start gap-2">
