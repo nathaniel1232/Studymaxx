@@ -7,11 +7,12 @@ import { useTranslation } from "../contexts/SettingsContext";
 interface UserProfileDropdownProps {
   user: any;
   isPremium?: boolean;
+  isOwner?: boolean;
   onNavigateSettings?: () => void;
   onUpgradePremium?: () => void;
 }
 
-export default function UserProfileDropdown({ user, isPremium, onNavigateSettings, onUpgradePremium }: UserProfileDropdownProps) {
+export default function UserProfileDropdown({ user, isPremium, isOwner, onNavigateSettings, onUpgradePremium }: UserProfileDropdownProps) {
   const t = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -78,7 +79,11 @@ export default function UserProfileDropdown({ user, isPremium, onNavigateSetting
             <div className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
               {getDisplayName()}
             </div>
-            {isPremium && (
+            {isOwner ? (
+              <div className="text-xs font-bold" style={{ color: '#22c55e' }}>
+                👑 Owner
+              </div>
+            ) : isPremium && (
               <div className="text-xs font-bold" style={{ color: '#fbbf24' }}>
                 ⭐ Premium
               </div>
