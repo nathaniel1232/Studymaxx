@@ -313,12 +313,8 @@ export default function Home() {
             </div>
           </nav>
           
-          {/* Hero Section */}
-          <div className="flex-1 flex items-center justify-center relative z-10">
-            <div className="text-center max-w-4xl mx-auto px-4 py-12">
-          
           {/* Hero Section - CLEAR & SIMPLE */}
-          <div className="flex-1 flex items-center justify-center relative z-10 max-w-7xl mx-auto w-full">
+          <div className="flex-1 flex items-center justify-center relative z-10">
             <div className="max-w-3xl mx-auto px-4 py-8">
               {/* Main Headline - Direct & Clear */}
               <h1 className="text-5xl md:text-6xl font-black mb-6 leading-tight" style={{ color: 'var(--foreground)' }}>
