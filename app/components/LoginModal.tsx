@@ -162,7 +162,7 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
             }
           }
         `}</style>
-        <div className="p-8">
+        <div className="p-10">
         {emailVerificationNeeded ? (
           <>
             {/* Email Verification Required */}

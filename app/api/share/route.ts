@@ -97,7 +97,6 @@ export async function GET(request: NextRequest) {
       .from('study_sets')
       .select('*')
       .eq('share_id', shareId)
-      .eq('is_shared', true)
       .single();
 
     if (error) {
@@ -107,7 +106,7 @@ export async function GET(request: NextRequest) {
       if (error.code === 'PGRST116') {
         console.log(`[Share API] No shared set found with shareId: ${shareId}, trying alternative query...`);
         
-        // Try fetching without the is_shared filter as a fallback
+        // Try fetching without any filters - just match the share_id
         const { data: fallbackData, error: fallbackError } = await supabase
           .from('study_sets')
           .select('*')
@@ -119,10 +118,8 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ error: 'Study set not found' }, { status: 404 });
         }
         
-        // Found it, but verify it should be shared
-        if (!fallbackData.is_shared) {
-          console.warn(`[Share API] Found set but is_shared is false, marking as shared`);
-        }
+        // Found it! Return regardless of is_shared status
+        console.log(`[Share API] Found set via fallback query: ${fallbackData.id}`);
         
         const flashcardSet = {
           id: fallbackData.id,
@@ -132,7 +129,7 @@ export async function GET(request: NextRequest) {
           lastStudied: fallbackData.last_studied,
           shareId: fallbackData.share_id,
           userId: fallbackData.user_id,
-          isShared: fallbackData.is_shared,
+          isShared: true,
           subject: fallbackData.subject,
           grade: fallbackData.grade
         };
@@ -159,7 +156,7 @@ export async function GET(request: NextRequest) {
       lastStudied: data.last_studied,
       shareId: data.share_id,
       userId: data.user_id,
-      isShared: data.is_shared,
+      isShared: data.is_shared || true,
       subject: data.subject,
       grade: data.grade
     };

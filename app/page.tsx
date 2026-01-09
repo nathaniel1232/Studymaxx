@@ -352,13 +352,13 @@ export default function Home() {
               )}
               
               {/* Primary CTA */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-14">
                 <button
                   onClick={handleCreateNew}
-                  className="group relative px-10 py-5 rounded-2xl text-lg font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                  className="group relative px-14 py-7 rounded-2xl text-xl font-bold text-white transition-all duration-300 hover:scale-107 hover:shadow-2xl"
                   style={{
                     background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 50%, #6366f1 100%)',
-                    boxShadow: '0 10px 40px rgba(20, 184, 166, 0.4)'
+                    boxShadow: '0 12px 48px rgba(20, 184, 166, 0.45)'
                   }}
                 >
                   <span className="flex items-center gap-3">
@@ -372,12 +372,12 @@ export default function Home() {
                 {savedSets.length > 0 && (
                   <button
                     onClick={handleViewSavedSets}
-                    className="px-10 py-5 rounded-2xl text-lg font-semibold transition-all duration-300 hover:scale-105"
+                    className="px-14 py-7 rounded-2xl text-xl font-bold transition-all duration-300 hover:scale-107"
                     style={{
                       background: 'var(--surface)',
-                      border: '2px solid var(--border)',
+                      border: '2.5px solid var(--border)',
                       color: 'var(--foreground)',
-                      boxShadow: 'var(--shadow-md)'
+                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
                     }}
                   >
                     {settings.language === "no" 
@@ -415,10 +415,10 @@ export default function Home() {
               </div>
 
               {/* Feature highlights */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-                <div className="p-6 rounded-2xl backdrop-blur-sm border-2 hover:scale-105 transition-transform duration-300" style={{ background: 'var(--surface)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-md)' }}>
-                  <div className="text-5xl mb-3 animate-pulse" style={{ animationDuration: '2s' }}>⚡</div>
-                  <div className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                <div className="p-12 rounded-2xl backdrop-blur-sm border-2 hover:scale-110 transition-transform duration-300" style={{ background: 'var(--surface)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-lg)' }}>
+                  <div className="text-7xl mb-4 animate-pulse" style={{ animationDuration: '2s' }}>⚡</div>
+                  <div className="font-bold text-2xl mb-3" style={{ color: 'var(--foreground)' }}>
                     {settings.language === "no" ? "Lynraskt" : "Lightning Fast"}
                   </div>
                   <div className="text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>
@@ -426,9 +426,9 @@ export default function Home() {
                   </div>
                 </div>
                 
-                <div className="p-6 rounded-2xl backdrop-blur-sm border-2 hover:scale-105 transition-transform duration-300" style={{ background: 'var(--surface)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-md)' }}>
-                  <div className="text-5xl mb-3 inline-block animate-bounce" style={{ animationDuration: '3s' }}>🎯</div>
-                  <div className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                <div className="p-12 rounded-2xl backdrop-blur-sm border-2 hover:scale-110 transition-transform duration-300" style={{ background: 'var(--surface)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-lg)' }}>
+                  <div className="text-7xl mb-4 inline-block animate-bounce" style={{ animationDuration: '3s' }}>🎯</div>
+                  <div className="font-bold text-2xl mb-3" style={{ color: 'var(--foreground)' }}>
                     {settings.language === "no" ? "Smart læring" : "Smart Learning"}
                   </div>
                   <div className="text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>
@@ -436,9 +436,9 @@ export default function Home() {
                   </div>
                 </div>
                 
-                <div className="p-6 rounded-2xl backdrop-blur-sm border-2 hover:scale-105 transition-transform duration-300" style={{ background: 'var(--surface)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-md)' }}>
-                  <div className="text-5xl mb-3 inline-block hover:rotate-12 transition-transform duration-300">📚</div>
-                  <div className="font-bold text-lg mb-2" style={{ color: 'var(--foreground)' }}>
+                <div className="p-12 rounded-2xl backdrop-blur-sm border-2 hover:scale-110 transition-transform duration-300" style={{ background: 'var(--surface)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-lg)' }}>
+                  <div className="text-7xl mb-4 inline-block hover:rotate-12 transition-transform duration-300">📚</div>
+                  <div className="font-bold text-2xl mb-3" style={{ color: 'var(--foreground)' }}>
                     {settings.language === "no" ? "Alle formater" : "All Formats"}
                   </div>
                   <div className="text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>

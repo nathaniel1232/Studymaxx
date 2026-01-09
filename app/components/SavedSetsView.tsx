@@ -251,18 +251,27 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
 
         {/* Sets List */}
         {filteredSets.length === 0 ? (
-          <div className="card-elevated p-12 text-center" style={{ borderRadius: 'var(--radius-xl)' }}>
-            <div className="text-6xl mb-6">📚</div>
+          <div className="card-elevated p-16 text-center" style={{ borderRadius: 'var(--radius-xl)' }}>
+            <div className="text-6xl mb-6">✨</div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               {selectedFolder 
-                ? "No sets in this folder yet"
-                : t("no_saved_sets_yet")}
+                ? "This folder is empty"
+                : "No study sets yet"}
             </h2>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-gray-600 dark:text-gray-400 mb-8">
               {selectedFolder
-                ? "Create flashcards or move existing sets to this folder."
-                : t("create_flashcards_to_start")}
+                ? "Create flashcards or move existing sets to get started."
+                : "Create your first study set to start learning"}
             </p>
+            <button
+              onClick={() => {
+                // This would go back to create view
+                window.location.href = '/';
+              }}
+              className="btn btn-primary"
+            >
+              Create First Set
+            </button>
           </div>
         ) : (
           <>
@@ -360,13 +369,13 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                     
                     <button
                       onClick={() => onLoadSet(set.flashcards, set.id)}
-                      className="px-6 py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl"
+                      className="px-8 py-3.5 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl text-base"
                     >
                       {t("study")}
                     </button>
                     <button
                       onClick={() => handleDelete(set.id)}
-                      className="px-6 py-2.5 bg-gray-50 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-700 dark:text-gray-300 hover:text-red-700 dark:hover:text-red-400 font-semibold rounded-xl transition-all border-2 border-gray-300 dark:border-gray-600 hover:border-red-300 dark:hover:border-red-700"
+                      className="px-8 py-3.5 bg-gray-50 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-700 dark:text-gray-300 hover:text-red-700 dark:hover:text-red-400 font-semibold rounded-xl transition-all border-2 border-gray-300 dark:border-gray-600 hover:border-red-300 dark:hover:border-red-700 text-base"
                     >
                       {t("delete")}
                     </button>

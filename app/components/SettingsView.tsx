@@ -102,8 +102,8 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
         <div className="space-y-6">
           {/* Account Section */}
           {!user && (
-            <section className="card-elevated p-6" style={{ borderRadius: 'var(--radius-xl)' }}>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <section className="card-elevated p-10" style={{ borderRadius: 'var(--radius-xl)' }}>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <span>👤</span>
                 Account
               </h2>
@@ -120,8 +120,8 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
             </section>
           )}
           {user && (
-            <section className="card-elevated p-6" style={{ borderRadius: 'var(--radius-xl)' }}>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <section className="card-elevated p-10" style={{ borderRadius: 'var(--radius-xl)' }}>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <span>👤</span>
                 Account
               </h2>
@@ -176,7 +176,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                               alert('Failed to open subscription management. Please contact support.');
                             }
                           }}
-                          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-medium rounded-lg transition-all text-sm"
+                          className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl transition-all text-base shadow-lg hover:shadow-xl"
                         >
                           Manage Subscription
                         </button>
@@ -189,7 +189,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                           onClick={() => {
                             window.dispatchEvent(new CustomEvent('showPremium'));
                           }}
-                          className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-lg transition-all hover:scale-105 shadow-md text-sm"
+                          className="px-8 py-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-xl transition-all hover:scale-105 shadow-lg hover:shadow-xl text-base"
                         >
                           Upgrade
                         </button>
@@ -201,7 +201,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                 {/* Sign Out Button */}
                 <button
                   onClick={handleSignOut}
-                  className="w-full p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors font-medium text-red-600 dark:text-red-400 flex items-center justify-center gap-2"
+                  className="w-full p-5 rounded-xl bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors font-bold text-red-600 dark:text-red-400 flex items-center justify-center gap-2 text-base"
                 >
                   <span>🚪</span>
                   <span>Sign Out</span>
@@ -211,8 +211,8 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
           )}
 
           {/* Appearance Section */}
-          <section className="card-elevated p-6" style={{ borderRadius: 'var(--radius-xl)' }}>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <section className="card-elevated p-10" style={{ borderRadius: 'var(--radius-xl)' }}>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <span>🎨</span>
               Appearance
             </h2>
@@ -263,8 +263,8 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
           </section>
 
           {/* Language & Region Section */}
-          <section className="card-elevated p-6" style={{ borderRadius: 'var(--radius-xl)' }}>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <section className="card-elevated p-10" style={{ borderRadius: 'var(--radius-xl)' }}>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <span>🌍</span>
               Language & Region
             </h2>
@@ -353,61 +353,61 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
           </section>
 
           {/* What's New Section */}
-          <section className="card-elevated p-6" style={{ borderRadius: 'var(--radius-xl)' }}>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <section className="card-elevated p-10" style={{ borderRadius: 'var(--radius-xl)' }}>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <span>📝</span>
               What's New
             </h2>
 
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-base text-gray-600 dark:text-gray-400 mb-6">
               Check out the latest updates and improvements
             </p>
 
             <button
               onClick={() => setShowUpdatesModal(true)}
-              className="w-full p-4 rounded-xl bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 border-2 border-teal-200 dark:border-teal-800 hover:bg-gradient-to-r hover:from-teal-100 hover:to-cyan-100 dark:hover:from-teal-900/30 dark:hover:to-cyan-900/30 transition-colors font-medium text-teal-700 dark:text-teal-300 flex items-center justify-center gap-2"
+              className="w-full py-6 px-6 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white font-black text-lg flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
             >
-              <span>📝</span>
-              View Update Log
+              <span className="text-2xl">📝</span>
+              <span>View Update Log</span>
             </button>
           </section>
 
           {/* Contact Section */}
-          <section className="card-elevated p-6" style={{ borderRadius: 'var(--radius-xl)' }}>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <section className="card-elevated p-10" style={{ borderRadius: 'var(--radius-xl)' }}>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <span>✉️</span>
               {t("contact_us")}
             </h2>
 
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-base text-gray-600 dark:text-gray-400 mb-6">
               {t("contact_description")}
             </p>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {/* Report Problem Button */}
               <button
                 onClick={() => setShowReportModal(true)}
-                className="w-full p-4 rounded-xl bg-orange-50 dark:bg-orange-900/20 border-2 border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors font-medium text-orange-700 dark:text-orange-300 flex items-center justify-center gap-2"
+                className="w-full py-6 px-6 rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-black text-lg flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
               >
-                <span>🐛</span>
-                Report a Problem
+                <span className="text-2xl">🐛</span>
+                <span>Report a Problem</span>
               </button>
 
               {/* Email Contact */}
-              <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 border-2 border-teal-200 dark:border-teal-800 rounded-xl p-5">
+              <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 border-2 border-teal-200 dark:border-teal-800 rounded-xl p-6">
                 <div className="flex items-start gap-4">
-                  <div className="text-3xl">📧</div>
+                  <div className="text-4xl">📧</div>
                   <div className="flex-1">
-                    <div className="font-semibold text-gray-900 dark:text-white mb-2">
+                    <div className="font-bold text-gray-900 dark:text-white mb-2 text-lg">
                       {t("contact_email")}
                     </div>
                     <a 
                       href="mailto:studymaxxer@gmail.com"
-                      className="text-teal-600 dark:text-teal-400 font-medium hover:underline text-lg break-all"
+                      className="text-teal-600 dark:text-teal-400 font-bold hover:underline text-lg break-all"
                     >
                       studymaxxer@gmail.com
                     </a>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                       {t("send_email")}
                     </p>
                   </div>
@@ -427,13 +427,13 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
       />
 
           {/* About Section */}
-          <section className="card-elevated p-6" style={{ borderRadius: 'var(--radius-xl)' }}>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <section className="card-elevated p-10" style={{ borderRadius: 'var(--radius-xl)' }}>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
               <span>ℹ️</span>
               {t("about")}
             </h2>
 
-            <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+            <div className="space-y-3 text-base text-gray-600 dark:text-gray-400">
               <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
                 <span>{t("version")}</span>
                 <span className="font-medium text-gray-900 dark:text-white">2.0.0</span>

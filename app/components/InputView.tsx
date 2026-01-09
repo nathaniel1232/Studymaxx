@@ -8,6 +8,7 @@ import ArrowIcon from "./icons/ArrowIcon";
 import { canUseFeature, FREE_LIMITS, getUserLimits } from "../utils/premium";
 import PremiumModal from "./PremiumModal";
 import { supabase } from "../utils/supabase";
+import { messages } from "../utils/messages";
 
 interface InputViewProps {
   onGenerateFlashcards: (cards: Flashcard[]) => void;
@@ -145,7 +146,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
     // Validate: Images only
     const nonImageFiles = filesArray.filter(file => !file.type.startsWith('image/'));
     if (nonImageFiles.length > 0) {
-      setError(`❌ Only image files allowed. Invalid files: ${nonImageFiles.map(f => f.name).join(', ')}`);
+      setError(messages.errors.invalidFileType);
       e.target.value = ''; // Clear input
       return;
     }
@@ -154,11 +155,11 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
     const maxAllowed = isPremium ? 5 : 1;
     if (filesArray.length > maxAllowed) {
       if (!isPremium) {
-        setError(`⭐ Free users can upload 1 image at a time. Upgrade to Premium to upload up to 5 images at once!`);
+        setError(messages.errors.premiumMultiImage);
         setPremiumModalReason("Multi-image upload is a Premium feature. Upgrade to process up to 5 images at once!");
         setShowPremiumModal(true);
       } else {
-        setError(`Maximum 5 images can be uploaded at once. You selected ${filesArray.length}.`);
+        setError(messages.errors.tooManyImages);
       }
       e.target.value = '';
       return;
@@ -177,7 +178,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
    */
   const handleProcessImages = async () => {
     if (selectedImages.length === 0) {
-      setError("No images selected. Please select at least one image.");
+      setError(messages.errors.noImages);
       return;
     }
 
@@ -188,14 +189,14 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
     try {
       // Get current user ID
       if (!supabase) {
-        setError("Database connection error. Please refresh the page.");
+        setError(messages.errors.connectionError);
         setIsLoading(false);
         return;
       }
 
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        setError("Please sign in to upload images.");
+        setError(messages.errors.signInRequired);
         setIsLoading(false);
         return;
       }
@@ -247,7 +248,8 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
 
     } catch (err) {
       console.error("[Multi-Image] Processing failed:", err);
-      setError(err instanceof Error ? err.message : "Failed to process images");
+      const errorMsg = err instanceof Error ? err.message : "";
+      setError(errorMsg || messages.errors.imageProcessingFailed);
       setImageProcessingProgress("");
     } finally {
       setIsLoading(false);
@@ -267,7 +269,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
 
     // Enforce file limits based on plan
     if (!isPremium && files.length > 1) {
-      setError("⭐ Free users can upload 1 image at a time. Upgrade to Premium for unlimited multi-image uploads!");
+      setError(messages.errors.premiumMultiImage);
       setPremiumModalReason("Multi-image upload is a Premium feature. Upgrade to process multiple images at once!");
       setShowPremiumModal(true);
       e.target.value = ''; // Clear the input
@@ -276,7 +278,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
 
     // Premium users: allow up to 10 images at once
     if (isPremium && files.length > 10) {
-      setError("Maximum 10 images can be uploaded at once. Please select fewer files.");
+      setError(messages.errors.tooManyImages);
       e.target.value = '';
       return;
     }
@@ -442,7 +444,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
     e.preventDefault();
 
     if (!textInput.trim()) {
-      setError(t("enter_text_or_upload"));
+      setError(messages.errors.noContent);
       return;
     }
 
@@ -463,7 +465,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
 
         if (!res.ok) {
           const data = await res.json();
-          setError(data.error || t("failed_extract_youtube"));
+          setError(data.error || messages.errors.youtubeExtraction);
           setIsLoading(false);
           return;
         }
@@ -473,17 +475,17 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
         setIsLoading(false);
         
         // Show success message and let user review transcript before generating
-        alert('✓ ' + t("transcript_extracted"));
+        alert(messages.success.transcriptExtracted);
         return;
       } catch (err) {
-        setError(t("youtube_needs_captions"));
+        setError(messages.errors.youtubeNeedsCaptions);
         setIsLoading(false);
         return;
       }
     }
 
     if (textInput.length < 20) {
-      setError(t("provide_more_content"));
+      setError(messages.errors.notEnoughContent);
       return;
     }
 
@@ -526,7 +528,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         console.error("API error:", data);
-        throw new Error(data?.error || "AI generation failed");
+        throw new Error(data?.error || messages.errors.generationFailed);
       }
 
       const cards = (await res.json()) as Flashcard[];
@@ -534,7 +536,8 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
       onGenerateFlashcards(cards);
     } catch (err) {
       console.error("Failed to generate with AI:", err);
-      setError(`AI generation failed: ${err instanceof Error ? err.message : 'Unknown error'}. Check your API key and try again.`);
+      const details = err instanceof Error ? err.message : '';
+      setError(details || messages.errors.generationFailed);
     } finally {
       setIsLoading(false);
       setLoadingStage(null);
@@ -581,7 +584,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
 
         {/* Material Selection Screen */}
         {!selectedMaterial ? (
-          <div className="card-elevated p-10" style={{ borderRadius: 'var(--radius-xl)' }}>
+          <div className="card-elevated p-20" style={{ borderRadius: 'var(--radius-xl)' }}>
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 What are you studying?
@@ -669,7 +672,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="card-elevated p-10" style={{ borderRadius: 'var(--radius-xl)' }}>
+          <form onSubmit={handleSubmit} className="card-elevated p-20" style={{ borderRadius: 'var(--radius-xl)' }}>
             {/* Back Button */}
             <button
               type="button"
@@ -1000,15 +1003,15 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
             </div>
 
             {error && (
-              <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
-                <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+              <div className="mb-12 p-8 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-2xl">
+                <p className="text-lg text-red-700 dark:text-red-300 font-bold">{error}</p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={isLoading || !textInput.trim()}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl text-lg"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-6 px-8 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl text-xl"
             >
               {isLoading ? (
                 <span className="flex flex-col items-center justify-center gap-2">

@@ -58,8 +58,8 @@ export default function SharePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading study set...</p>
+          <div className="w-20 h-20 border-4 border-cyan-200 dark:border-cyan-800 border-t-cyan-600 dark:border-t-cyan-400 rounded-full animate-spin mx-auto mb-6"></div>
+          <p className="text-gray-600 dark:text-gray-400 text-lg font-semibold">Loading study set...</p>
         </div>
       </div>
     );
@@ -68,19 +68,19 @@ export default function SharePage() {
   if (error || !flashcardSet) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
-        <div className="max-w-md w-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-gray-100 dark:border-gray-700 text-center">
-          <div className="text-6xl mb-4">😕</div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <div className="max-w-md w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-2xl p-10 border border-gray-100 dark:border-gray-700 text-center">
+          <div className="text-6xl mb-6">😕</div>
+          <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-3">
             Study Set Not Found
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            {error || "This study set doesn't exist or is no longer available."}
+          <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
+            {error || "This study set doesn't exist or is no longer available. The share link may have expired."}
           </p>
           <button
             onClick={() => router.push("/")}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-xl hover:shadow-lg transition-all"
+            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-black text-lg rounded-2xl hover:shadow-lg transition-all transform hover:scale-105"
           >
-            Go to Home
+            🏠 Go Back Home
           </button>
         </div>
       </div>
@@ -90,33 +90,33 @@ export default function SharePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       {/* Header with share info */}
-      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">🔗</span>
-                <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium rounded-full">
+      <div className="bg-gradient-to-r from-cyan-50 to-teal-50 dark:from-cyan-950/30 dark:to-teal-950/30 backdrop-blur-sm border-b-2 border-cyan-200 dark:border-cyan-800">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="flex items-center justify-between flex-wrap gap-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-3xl">🔗</span>
+                <span className="px-4 py-2 bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 text-sm font-black rounded-full">
                   Shared Study Set
                 </span>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2">
                 {flashcardSet.name}
               </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-gray-600 dark:text-gray-400 font-semibold">
                 {flashcardSet.flashcards.length} flashcards • Created {new Date(flashcardSet.createdAt).toLocaleDateString()}
               </p>
             </div>
             <button
               onClick={handleCopyToMyCollection}
               disabled={isCopied}
-              className={`px-6 py-3 font-bold rounded-xl transition-all ${
+              className={`px-8 py-4 font-black text-lg rounded-2xl transition-all transform hover:scale-105 ${
                 isCopied
                   ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
-                  : "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:scale-105"
+                  : "bg-gradient-to-r from-cyan-500 to-teal-600 text-white hover:shadow-xl hover:shadow-cyan-400/50"
               }`}
             >
-              {isCopied ? "✓ Copied!" : "Copy to My Collection"}
+              {isCopied ? "✓ Copied!" : "📋 Copy to Collection"}
             </button>
           </div>
         </div>

@@ -10,6 +10,7 @@ import LoginModal from "./LoginModal";
 import ArrowIcon from "./icons/ArrowIcon";
 import Toast, { ToastType } from "./Toast";
 import { getCurrentUser } from "../utils/supabase";
+import { messages } from "../utils/messages";
 
 type StudyMode = "review" | "test";
 
@@ -377,7 +378,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
 
   const handleSaveSet = async () => {
     if (!setName.trim()) {
-      showToast(t("enter_name_for_set"), "warning");
+      showToast(messages.modals.saving.title, "warning");
       return;
     }
     
@@ -388,16 +389,16 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
       console.log('[StudyView] ✅ Save successful');
       setShowSaveDialog(false);
       setSetName("");
-      showToast(t("set_saved_successfully"), "success");
+      showToast(messages.success.setCreated, "success");
       
       // Only show login modal if user is NOT logged in
       if (ENABLE_LOGIN_MODAL && !isLoggedIn) {
         setShowLoginModal(true);
       }
     } catch (error: any) {
-      const errorMsg = error?.message || String(error) || 'Unknown error';
+      const errorMsg = error?.message || String(error) || '';
       console.error('[StudyView] ❌ Error saving flashcard set:', errorMsg, error);
-      showToast(`Failed to save: ${errorMsg}`, "error");
+      showToast(messages.errors.saveFailedGeneric, "error");
     }
   };
 
@@ -408,7 +409,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
     }
     
     if (!currentSetId) {
-      showToast(t("save_before_sharing"), "warning");
+      showToast(messages.errors.saveFailedAuth, "warning");
       return;
     }
 
@@ -418,17 +419,17 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
         setShareUrl(result.shareUrl);
         setShowShareDialog(true);
       } else {
-        showToast(t("share_link_failed"), "error");
+        showToast(messages.errors.systemError, "error");
       }
     } catch (error) {
       console.error('Share error:', error);
-      showToast(t("share_link_failed"), "error");
+      showToast(messages.errors.systemError, "error");
     }
   };
 
   const handleCopyShareLink = () => {
     navigator.clipboard.writeText(shareUrl);
-    showToast(t("link_copied_clipboard"), "success");
+    showToast(messages.success.dataSynced, "success");
   };
 
   const handleTestAnswer = (correct: boolean) => {
@@ -539,7 +540,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
         <div className="flex gap-3 mb-8 flex-wrap">
           <button
             onClick={() => setStudyMode("review")}
-            className={`px-8 py-4 font-black text-base rounded-2xl transition-all duration-500 ease-out transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-2xl ${
+            className={`px-10 py-5 font-black text-lg rounded-2xl transition-all duration-500 ease-out transform hover:scale-110 hover:-translate-y-2 shadow-xl hover:shadow-2xl ${
               studyMode === "review"
                 ? "bg-gradient-to-r from-teal-500 via-cyan-500 to-blue-600 text-white shadow-teal-500/50 ring-4 ring-teal-300/40"
                 : "bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 text-teal-700 dark:text-teal-300 hover:from-teal-100 hover:to-cyan-100 dark:hover:from-teal-900/30 dark:hover:to-cyan-900/30 shadow-teal-200/50 hover:shadow-teal-300/60"
@@ -557,7 +558,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               setMaxStreak(0);
               setIsQuizEnded(false);
             }}
-            className={`px-8 py-4 font-black text-base rounded-2xl transition-all duration-500 ease-out transform hover:scale-105 hover:-translate-y-1 shadow-lg hover:shadow-2xl ${
+            className={`px-10 py-5 font-black text-lg rounded-2xl transition-all duration-500 ease-out transform hover:scale-110 hover:-translate-y-2 shadow-xl hover:shadow-2xl ${
               studyMode === "test"
                 ? "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-600 text-white shadow-indigo-500/50 ring-4 ring-indigo-300/40"
                 : "bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 text-indigo-700 dark:text-indigo-300 hover:from-indigo-100 hover:to-purple-100 dark:hover:from-indigo-900/30 dark:hover:to-purple-900/30 shadow-indigo-200/50 hover:shadow-indigo-300/60"
@@ -568,7 +569,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
           <button
             onClick={handleShuffle}
             disabled={studyMode === "test"}
-            className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-black text-base rounded-2xl transition-all duration-500 ease-out shadow-lg hover:shadow-2xl hover:shadow-amber-400/50 transform hover:scale-105 hover:-translate-y-1 disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+            className="px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-black text-lg rounded-2xl transition-all duration-500 ease-out shadow-xl hover:shadow-2xl hover:shadow-amber-400/50 transform hover:scale-110 hover:-translate-y-2 disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
           >
             🔀 {t("shuffle")}
           </button>
@@ -576,15 +577,15 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
           {ENABLE_SHARE && currentSetId && (
             <button
               onClick={handleShare}
-              className="px-6 py-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-2xl transition-all border-2 border-gray-300 dark:border-gray-600 hover:border-green-400 hover:shadow-lg transform hover:scale-105"
+              className="px-8 py-6 bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white font-black text-xl rounded-3xl transition-all shadow-xl hover:shadow-2xl transform hover:scale-110 hover:-translate-y-2"
             >
-              {t("share")}
+              🔗 {t("share")}
             </button>
           )}
           {!currentSetId && (
             <button
               onClick={() => setShowSaveDialog(true)}
-              className="px-8 py-4 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white font-black text-base rounded-2xl transition-all duration-500 ease-out shadow-lg hover:shadow-2xl hover:shadow-violet-400/50 transform hover:scale-105 hover:-translate-y-1"
+              className="px-10 py-5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white font-black text-lg rounded-2xl transition-all duration-500 ease-out shadow-xl hover:shadow-2xl hover:shadow-violet-400/50 transform hover:scale-110 hover:-translate-y-2"
             >
               💾 {t("save")}
             </button>
@@ -593,8 +594,8 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
 
         {/* Save Dialog */}
         {showSaveDialog && (
-          <div className="card-elevated p-8 mb-8" style={{ borderRadius: 'var(--radius-xl)' }}>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+          <div className="card-elevated p-12 mb-8" style={{ borderRadius: 'var(--radius-xl)' }}>
+            <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
               {t("save_this_set")}
             </h3>
             <input
@@ -627,44 +628,44 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
 
         {/* Share Dialog - DISABLED for production launch */}
         {ENABLE_SHARE && showShareDialog && (
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 mb-8 border border-gray-100 dark:border-gray-700">
-            <div className="text-center mb-6">
-              <div className="text-5xl mb-4">🔗</div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <div className="bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-cyan-900/20 dark:to-teal-900/20 rounded-3xl shadow-2xl p-10 mb-8 border-2 border-cyan-200 dark:border-cyan-800">
+            <div className="text-center mb-8">
+              <div className="text-6xl mb-4">🔗</div>
+              <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-3">
                 {t("share_study_set")}
               </h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-lg text-gray-600 dark:text-gray-400">
                 {t("anyone_can_view")}
               </p>
             </div>
             
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 mb-6">
-              <p className="text-sm text-gray-700 dark:text-gray-300 break-all font-mono">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 mb-8 border-2 border-cyan-300 dark:border-cyan-700">
+              <p className="text-base text-gray-700 dark:text-gray-300 break-all font-mono font-bold text-center">
                 {shareUrl}
               </p>
             </div>
 
             {/* Study fact in share dialog */}
-            <div className="mb-6">
+            <div className="mb-8">
               <StudyFactBadge context="general" position="inline" />
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <button
                 onClick={handleCopyShareLink}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-2xl transition-all shadow-lg"
+                className="flex-1 px-6 py-4 bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white font-black text-lg rounded-2xl transition-all shadow-lg hover:shadow-2xl transform hover:scale-105"
               >
-                {t("copy_link")}
+                📋 {t("copy_link")}
               </button>
               <button
                 onClick={() => setShowShareDialog(false)}
-                className="flex-1 px-6 py-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl transition-all border border-gray-200 dark:border-gray-700"
+                className="flex-1 px-6 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold text-lg rounded-2xl transition-all border-2 border-gray-300 dark:border-gray-600"
               >
-                {t("close")}
+                ✕ {t("close")}
               </button>
             </div>
 
-            <p className="mt-4 text-xs text-center text-gray-500 dark:text-gray-400">
+            <p className="mt-6 text-sm text-center text-gray-600 dark:text-gray-400 font-semibold">
               💡 {t("tip_sign_in")}
             </p>
           </div>

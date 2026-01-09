@@ -143,7 +143,7 @@ export default function PremiumModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Gradient Header */}
-        <div className="relative bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 p-8 rounded-t-3xl overflow-hidden">
+        <div className="relative bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 p-10 rounded-t-3xl overflow-hidden">
           {/* Animated background circles */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl animate-pulse"></div>
@@ -182,7 +182,7 @@ export default function PremiumModal({
         </div>
 
         {/* Content */}
-        <div className="p-8" style={{ background: '#1f2937', color: '#f9fafb' }}>
+        <div className="p-10" style={{ background: '#1f2937', color: '#f9fafb' }}>
           
           {/* Why Premium? - AI Costs Explanation */}
           <div className="bg-gradient-to-br from-blue-900/40 to-indigo-900/40 rounded-2xl p-5 mb-6 border-2 border-blue-700">

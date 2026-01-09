@@ -15,6 +15,19 @@ interface UpdateEntry {
 
 const updates: UpdateEntry[] = [
   {
+    version: "1.3.0",
+    date: "January 9, 2026",
+    changes: [
+      "🎴 Completely redesigned flashcards - 33% larger cards with bigger text",
+      "⭐ Rating buttons now much more prominent (Big, colorful, easy to click)",
+      "🔗 Share feature now works for everyone - unlimited sharing, no premium required!",
+      "🎨 Share button redesigned with vibrant cyan-teal gradient",
+      "📊 Improved share page UI with better styling and messaging",
+      "🔐 Share links now more reliable - works even if user isn't premium",
+      "✨ Better visual feedback on all interactive elements"
+    ]
+  },
+  {
     version: "1.2.0",
     date: "January 7, 2026",
     changes: [

@@ -60,53 +60,53 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
     >
       <div
         style={getCardStyle()}
-        className="relative w-full min-h-[360px] rounded-3xl p-10 flex flex-col items-center justify-center transition-all duration-500"
+        className="relative w-full min-h-[480px] rounded-4xl p-16 flex flex-col items-center justify-center transition-all duration-500"
       >
         {/* Rating Badge */}
         {currentRating && (
-          <div className={`absolute top-6 right-6 px-5 py-2 rounded-xl text-sm font-black shadow-lg ${
-            currentRating === 'good' ? 'bg-white/90 text-emerald-700 ring-2 ring-emerald-400' :
-            currentRating === 'ok' ? 'bg-white/90 text-amber-700 ring-2 ring-amber-400' :
-            'bg-white/90 text-rose-700 ring-2 ring-rose-400'
+          <div className={`absolute top-8 right-8 px-6 py-3 rounded-2xl text-lg font-black shadow-2xl ${
+            currentRating === 'good' ? 'bg-white/95 text-emerald-700 ring-2 ring-emerald-400' :
+            currentRating === 'ok' ? 'bg-white/95 text-amber-700 ring-2 ring-amber-400' :
+            'bg-white/95 text-rose-700 ring-2 ring-rose-400'
           }`}>
             {currentRating === 'good' ? '😊 ' + t("good") : currentRating === 'ok' ? '😐 ' + t("ok") : '😞 ' + t("bad")}
           </div>
         )}
 
         {/* Card Content */}
-        <div className="text-center max-w-2xl">
-          <p className="text-xs font-semibold text-white/80 mb-4 uppercase tracking-wider">
+        <div className="text-center max-w-4xl">
+          <p className="text-sm font-black text-white/90 mb-6 uppercase tracking-widest">
             {isFlipped ? t("answer") : t("question")}
           </p>
-          <p className="text-2xl md:text-3xl font-bold text-white leading-relaxed drop-shadow-lg">
+          <p className="text-3xl md:text-5xl font-black text-white leading-relaxed drop-shadow-xl">
             {isFlipped ? card.answer : card.question}
           </p>
         </div>
 
         {/* Flip Hint */}
-        <div className="absolute bottom-4 text-xs text-white/60 font-medium">
+        <div className="absolute bottom-6 text-sm text-white/70 font-semibold">
           {isFlipped ? t("click_to_see_question") : t("click_to_reveal")}
         </div>
       </div>
 
       {/* Rating Buttons - PREMIUM DESIGN WITH DETAILS */}
       {onRate && (
-        <div className="mt-8 flex items-center justify-center gap-5">
+        <div className="mt-10 flex items-center justify-center gap-6 flex-wrap">
           <button
             onClick={(e) => {
               e.stopPropagation();
               console.log('🔴 BAD clicked for card:', card.id);
               onRate(card.id, 'bad');
             }}
-            className={`group relative px-12 py-5 rounded-2xl font-black text-lg transition-all duration-500 ease-out shadow-lg hover:shadow-2xl overflow-hidden ${
+            className={`group relative px-10 py-6 rounded-3xl font-black text-xl transition-all duration-500 ease-out shadow-xl hover:shadow-2xl overflow-hidden ${
               currentRating === 'bad' 
-                ? 'bg-gradient-to-br from-rose-500 via-red-500 to-rose-600 text-white scale-105 shadow-rose-500/40' 
-                : 'bg-white dark:bg-gray-800 text-rose-600 dark:text-rose-400 hover:bg-gradient-to-br hover:from-rose-50 hover:to-red-50 dark:hover:from-rose-950/30 dark:hover:to-red-950/30 hover:scale-105 hover:-translate-y-1 shadow-rose-200/50 hover:shadow-rose-300/60'
+                ? 'bg-gradient-to-br from-rose-500 via-red-500 to-rose-600 text-white scale-110 shadow-rose-500/50' 
+                : 'bg-white dark:bg-gray-800 text-rose-600 dark:text-rose-400 hover:bg-gradient-to-br hover:from-rose-50 hover:to-red-50 dark:hover:from-rose-950/30 dark:hover:to-red-950/30 hover:scale-110 hover:-translate-y-2 shadow-rose-200/50 hover:shadow-rose-300/60'
             }`}
           >
             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-            <span className="relative z-10 flex items-center gap-2">
-              <span className="text-2xl">😞</span>
+            <span className="relative z-10 flex items-center gap-3">
+              <span className="text-3xl">😞</span>
               <span>{t("bad")}</span>
             </span>
           </button>
@@ -117,15 +117,15 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
               console.log('🟡 OK clicked for card:', card.id);
               onRate(card.id, 'ok');
             }}
-            className={`group relative px-12 py-5 rounded-2xl font-black text-lg transition-all duration-500 ease-out shadow-lg hover:shadow-2xl overflow-hidden ${
+            className={`group relative px-10 py-6 rounded-3xl font-black text-xl transition-all duration-500 ease-out shadow-xl hover:shadow-2xl overflow-hidden ${
               currentRating === 'ok' 
-                ? 'bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600 text-white scale-105 shadow-amber-500/40' 
-                : 'bg-white dark:bg-gray-800 text-amber-600 dark:text-amber-400 hover:bg-gradient-to-br hover:from-amber-50 hover:to-yellow-50 dark:hover:from-amber-950/30 dark:hover:to-yellow-950/30 hover:scale-105 hover:-translate-y-1 shadow-amber-200/50 hover:shadow-amber-300/60'
+                ? 'bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600 text-white scale-110 shadow-amber-500/50' 
+                : 'bg-white dark:bg-gray-800 text-amber-600 dark:text-amber-400 hover:bg-gradient-to-br hover:from-amber-50 hover:to-yellow-50 dark:hover:from-amber-950/30 dark:hover:to-yellow-950/30 hover:scale-110 hover:-translate-y-2 shadow-amber-200/50 hover:shadow-amber-300/60'
             }`}
           >
             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-            <span className="relative z-10 flex items-center gap-2">
-              <span className="text-2xl">😐</span>
+            <span className="relative z-10 flex items-center gap-3">
+              <span className="text-3xl">😐</span>
               <span>{t("ok")}</span>
             </span>
           </button>
@@ -136,15 +136,15 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
               console.log('🟢 GOOD clicked for card:', card.id);
               onRate(card.id, 'good');
             }}
-            className={`group relative px-12 py-5 rounded-2xl font-black text-lg transition-all duration-500 ease-out shadow-lg hover:shadow-2xl overflow-hidden ${
+            className={`group relative px-10 py-6 rounded-3xl font-black text-xl transition-all duration-500 ease-out shadow-xl hover:shadow-2xl overflow-hidden ${
               currentRating === 'good' 
-                ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-emerald-600 text-white scale-105 shadow-emerald-500/40'
-                : 'bg-white dark:bg-gray-800 text-emerald-600 dark:text-emerald-400 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-green-50 dark:hover:from-emerald-950/30 dark:hover:to-green-950/30 hover:scale-105 hover:-translate-y-1 shadow-emerald-200/50 hover:shadow-emerald-300/60'
+                ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-emerald-600 text-white scale-110 shadow-emerald-500/50'
+                : 'bg-white dark:bg-gray-800 text-emerald-600 dark:text-emerald-400 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-green-50 dark:hover:from-emerald-950/30 dark:hover:to-green-950/30 hover:scale-110 hover:-translate-y-2 shadow-emerald-200/50 hover:shadow-emerald-300/60'
             }`}
           >
             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-            <span className="relative z-10 flex items-center gap-2">
-              <span className="text-2xl">😊</span>
+            <span className="relative z-10 flex items-center gap-3">
+              <span className="text-3xl">😊</span>
               <span>{t("good")}</span>
             </span>
           </button>

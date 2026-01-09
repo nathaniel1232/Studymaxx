@@ -9,6 +9,7 @@ import { useTranslation, useSettings } from "../contexts/SettingsContext";
 import { getCurrentUser, supabase } from "../utils/supabase";
 import ArrowIcon from "./icons/ArrowIcon";
 import PremiumModal from "./PremiumModal";
+import { messages } from "../utils/messages";
 
 interface CreateFlowViewProps {
   onGenerateFlashcards: (cards: Flashcard[], subject: string, grade: string) => void;
@@ -273,7 +274,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   // Step navigation
   const handleContinueFromStep1 = () => {
     if (!subject.trim()) {
-      setError(t("please_enter_subject") || "Please enter a subject");
+      setError(messages.errors.subjectRequired);
       return;
     }
     setError("");
@@ -282,22 +283,22 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
   const handleContinueFromStep2 = () => {
     if (!selectedMaterial) {
-      setError(t("please_choose_material") || "Please choose a material type");
+      setError(messages.errors.materialTypeRequired);
       return;
     }
     
     if (selectedMaterial === "notes" && !textInput.trim()) {
-      setError(t("please_add_notes") || "Please add your notes");
+      setError(messages.errors.notesRequired);
       return;
     }
     
     if (selectedMaterial === "youtube" && !youtubeUrl.trim()) {
-      setError(t("please_add_youtube") || "Please add a YouTube URL");
+      setError(messages.errors.youtubeUrlRequired);
       return;
     }
     
     if ((selectedMaterial === "pdf" || selectedMaterial === "docx" || selectedMaterial === "image") && !uploadedFile) {
-      setError(t("please_upload_file") || "Please upload a file");
+      setError(messages.errors.fileRequired);
       return;
     }
     
@@ -307,7 +308,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
   const handleContinueFromStep3 = () => {
     if (!targetGrade) {
-      setError(t("please_choose_grade") || "Please choose your target grade");
+      setError(messages.errors.gradeRequired);
       return;
     }
     
@@ -334,14 +335,14 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     const maxImages = 5;
     
     if (files.length > maxImages) {
-      setError(`Maximum ${maxImages} images allowed`);
+      setError(messages.errors.tooManyImages);
       return;
     }
     
     // Validate all are images
     const nonImages = files.filter(f => !f.type.startsWith('image/'));
     if (nonImages.length > 0) {
-      setError("Only image files are allowed");
+      setError(messages.errors.invalidFileType);
       return;
     }
     
@@ -464,7 +465,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       }
       
       if (extractedTexts.length === 0) {
-        throw new Error("No readable text found in any images. Please ensure images contain clear, readable text.");
+        throw new Error(messages.errors.imageProcessingFailed);
       }
       
       const combinedText = extractedTexts.join('\n\n');
@@ -485,7 +486,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       setError("");
     } catch (err: any) {
       console.error('[CreateFlow] Error processing images:', err);
-      setError(err.message || 'Failed to process images');
+      setError(err.message || messages.errors.imageProcessingFailed);
     } finally {
       setIsGenerating(false);
     }
@@ -527,7 +528,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         console.log("📑 First 200 chars:", trimmedText.substring(0, 200));
         
         if (trimmedText.length < 20) {
-          setError("PDF appears to be empty or image-based. Please try converting it to images or copy the text manually.");
+          setError(messages.errors.pdfProcessingFailed);
           return;
         }
         
@@ -535,7 +536,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         console.log("✅ PDF extraction successful");
       } catch (err: any) {
         console.error("❌ PDF extraction failed:", err);
-        setError(`Failed to extract text from PDF: ${err.message || "Unknown error"}. Please try copying the text manually.`);
+        setError(messages.errors.pdfProcessingFailed);
       }
     } else if (file.type.startsWith("image/")) {
       // Handle image with OCR (simple single-image version)
@@ -773,15 +774,15 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         </div>
 
         {/* Main content card */}
-        <div className="card-elevated p-10">
+        <div className="card-elevated p-12">
           {/* Error message */}
           {error && (
-            <div className="mb-6 p-4 rounded-xl" style={{ 
+            <div className="mb-8 p-5 rounded-xl" style={{ 
               background: 'var(--error-light)',
               border: '1px solid var(--error)',
               color: 'var(--error)'
             }}>
-              <p className="text-sm">{error}</p>
+              <p className="text-sm font-medium">{error}</p>
             </div>
           )}
 
@@ -856,8 +857,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
               <button
                 onClick={handleContinueFromStep1}
                 disabled={!subject.trim()}
-                className="btn btn-primary w-full py-4 text-lg font-bold"
-                style={{ borderRadius: 'var(--radius-lg)' }}
+                className="btn btn-primary w-full py-4 text-lg font-bold rounded-xl"
               >
                 {t("continue")}
               </button>
@@ -1141,8 +1141,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   {/* Continue button */}
                   <button
                     onClick={handleContinueFromStep2}
-                    className="btn btn-primary w-full py-4 text-lg font-bold"
-                    style={{ borderRadius: 'var(--radius-lg)' }}
+                    className="btn btn-primary w-full py-4 text-lg font-bold rounded-xl"
                   >
                     {t("continue")}
                   </button>
@@ -1287,8 +1286,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
               <button
                 onClick={handleContinueFromStep3}
                 disabled={!targetGrade}
-                className="btn btn-primary w-full py-4 text-lg font-bold"
-                style={{ borderRadius: 'var(--radius-lg)' }}
+                className="btn btn-primary w-full py-4 text-lg font-bold rounded-xl"
               >
                 {t("generate_study_set")}
               </button>
@@ -1298,74 +1296,79 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
           {/* STEP 4: Generating */}
           {currentStep === 4 && (
             <div className="py-12 text-center space-y-8">
+              {/* Smooth animated spinner */}
               <div className="w-24 h-24 mx-auto relative">
-                <div className="w-full h-full border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
-                <div className="absolute inset-0 flex items-center justify-center text-3xl">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full animate-pulse"></div>
+                <div className="w-full h-full border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin" style={{ animationDuration: '2.5s' }}></div>
+                <div className="absolute inset-0 flex items-center justify-center text-3xl animate-bounce" style={{ animationDuration: '2s' }}>
                   ✨
                 </div>
               </div>
               
-              <div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">
+              <div className="space-y-4">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   {t("creating_study_set")}
                 </h2>
                 
-                {/* Real-time timer */}
-                <div className="mb-3">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-                    <span className="text-2xl">⏱️</span>
-                    <span className="text-xl font-mono font-bold text-blue-600 dark:text-blue-400">
-                      {Math.floor(elapsedSeconds / 60)}:{(elapsedSeconds % 60).toString().padStart(2, '0')}
-                    </span>
-                  </div>
+                {/* Friendly reassurance message */}
+                <div className="space-y-2">
+                  <p className="text-lg text-gray-700 dark:text-gray-300 font-medium">
+                    {settings.language === "no" ? "Vi lager dine læringskort nå" : "We're creating your study cards"}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {settings.language === "no" ? "Dette tar vanligvis 60-90 sekunder. Hang tight!" : "This usually takes 60-90 seconds. Hang tight!"}
+                  </p>
                 </div>
                 
-                <p className="text-lg text-gray-600 dark:text-gray-400 font-medium">
-                  {t("usually_takes")}
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-                  {settings.language === "no" ? "Vær tålmodig, AI trenger litt tid for å lage kvalitetskort" : "Please be patient, AI needs time to create quality cards"}
-                </p>
+                {/* Real-time timer */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/20 rounded-full">
+                  <span className="text-lg">⏱️</span>
+                  <span className="text-lg font-mono font-bold text-blue-600 dark:text-blue-400">
+                    {Math.floor(elapsedSeconds / 60)}:{(elapsedSeconds % 60).toString().padStart(2, '0')}
+                  </span>
+                </div>
               </div>
 
+              {/* Progress messages */}
               <div className="max-w-md mx-auto space-y-3">
-                {/* Message 1: Analyzing */}
-                <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-500 ${
+                {/* Message 1: Reading material */}
+                <div className={`flex items-center gap-3 p-4 rounded-xl border transition-all duration-500 ${
                   currentMessageIndex === 0
-                    ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 scale-105"
+                    ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 scale-105 shadow-md"
                     : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-700 opacity-40 scale-95"
                 }`}>
-                  <span className="text-2xl">✨</span>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">{t("analyzing_material", { subject })}</span>
+                  <span className="text-2xl">📖</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{settings.language === "no" ? "Analyserer ditt material..." : "Reading your material..."}</span>
                 </div>
                 
-                {/* Message 2: Creating */}
-                <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-500 ${
+                {/* Message 2: Creating cards */}
+                <div className={`flex items-center gap-3 p-4 rounded-xl border transition-all duration-500 ${
                   currentMessageIndex === 1
-                    ? "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700 scale-105"
+                    ? "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700 scale-105 shadow-md"
+                    : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-700 opacity-40 scale-95"
+                }`}>
+                  <span className="text-2xl">✍️</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{settings.language === "no" ? "Lager flashcards..." : "Creating flashcards..."}</span>
+                </div>
+                
+                {/* Message 3: Setting up questions */}
+                <div className={`flex items-center gap-3 p-4 rounded-xl border transition-all duration-500 ${
+                  currentMessageIndex === 2
+                    ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700 scale-105 shadow-md"
                     : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-700 opacity-40 scale-95"
                 }`}>
                   <span className="text-2xl">🎯</span>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">{t("creating_flashcards_grade", { grade: targetGrade || "" })}</span>
-                </div>
-                
-                {/* Message 3: Generating quiz */}
-                <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-500 ${
-                  currentMessageIndex === 2
-                    ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700 scale-105"
-                    : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-700 opacity-40 scale-95"
-                }`}>
-                  <span className="text-2xl">📝</span>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">{t("generating_quiz")}</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{settings.language === "no" ? "Setter opp spørsmål..." : "Setting up questions..."}</span>
                 </div>
               </div>
 
-              {/* Study fact */}
-              <div className="max-w-lg mx-auto mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1 font-medium">
-                  💡 {t("while_you_wait")}
+              {/* Helpful study fact - subtle and encouraging */}
+              <div className="max-w-lg mx-auto mt-8 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-800">
+                <p className="text-xs text-amber-700 dark:text-amber-300 mb-2 font-medium flex items-center justify-center gap-1">
+                  <span>💡</span>
+                  <span>{settings.language === "no" ? "Mens du venter" : "Quick tip"}</span>
                 </p>
-                <p className="text-sm text-gray-700 dark:text-gray-300">
+                <p className="text-sm text-amber-700 dark:text-amber-200">
                   {getStudyFact("flashcards", settings.language).text}
                 </p>
               </div>
