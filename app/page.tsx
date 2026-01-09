@@ -326,40 +326,76 @@ export default function Home() {
                 Paste your notes, get flashcards instantly. Study smarter.
               </p>
               
-              {/* Social proof line */}
-              <p className="text-lg mb-12 font-semibold text-teal-600 dark:text-teal-400">
-                ⭐ Try it now with example content - no signup needed
-              </p>
+              {/* Social proof line - different based on login */}
+              {!user ? (
+                <p className="text-lg mb-12 font-semibold text-teal-600 dark:text-teal-400">
+                  ⭐ Try it now with example content - no signup needed
+                </p>
+              ) : null}
 
-              {/* MAIN CTA - Try now button (not "Create") */}
-              <div className="mb-16">
-                <button
-                  onClick={() => {
-                    // Pre-fill with example content and show input view
-                    const exampleNotes = `Chapter 1: The Water Cycle\n\nEvaporation: Process where water changes from liquid to gas. Happens when the sun heats water in oceans, lakes, and rivers. Temperature affects rate.\n\nCondensation: Water vapor cools and turns back into liquid water droplets. Happens when warm air rises and cools. Forms clouds.\n\nPrecipitation: Water falls to earth as rain, snow, or sleet. Occurs when water droplets in clouds become heavy enough.\n\nCollection: Water collects in oceans, lakes, rivers, and underground. Completes the cycle.\n\nKey Facts: The water cycle is continuous and essential for all life. Plants release water through transpiration. About 97% of Earth's water is salt water.`;
-                    setFlashcards([]);
-                    setCurrentSetId(null);
-                    handleGenerateFlashcards([], 'Water Cycle', 'Grade 6');
-                    setViewMode('input');
-                    // We'll need to pass the example content to InputView
-                    window.dispatchEvent(new CustomEvent('prefillExample', { detail: exampleNotes }));
-                  }}
-                  className="group relative inline-block px-10 py-5 rounded-2xl text-xl font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-                  style={{
-                    background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)',
-                    boxShadow: '0 10px 30px rgba(20, 184, 166, 0.3)'
-                  }}
-                >
-                  ✨ Try it now (30 seconds)
-                </button>
+              {/* MAIN CTA - Different based on login status */}
+              <div className="mb-16 flex flex-col sm:flex-row items-center justify-center gap-5">
+                {user ? (
+                  // Logged-in user: Primary action is "Create study set"
+                  <button
+                    onClick={handleCreateNew}
+                    className="group relative px-10 py-5 rounded-2xl text-xl font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                    style={{
+                      background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)',
+                      boxShadow: '0 10px 30px rgba(20, 184, 166, 0.3)'
+                    }}
+                  >
+                    <span className="flex items-center gap-3">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Create study set
+                    </span>
+                  </button>
+                ) : (
+                  // Not logged in: "Try it now" with example
+                  <button
+                    onClick={() => {
+                      const exampleNotes = `Chapter 1: The Water Cycle\n\nEvaporation: Process where water changes from liquid to gas. Happens when the sun heats water in oceans, lakes, and rivers. Temperature affects rate.\n\nCondensation: Water vapor cools and turns back into liquid water droplets. Happens when warm air rises and cools. Forms clouds.\n\nPrecipitation: Water falls to earth as rain, snow, or sleet. Occurs when water droplets in clouds become heavy enough.\n\nCollection: Water collects in oceans, lakes, rivers, and underground. Completes the cycle.\n\nKey Facts: The water cycle is continuous and essential for all life. Plants release water through transpiration. About 97% of Earth's water is salt water.`;
+                      setFlashcards([]);
+                      setCurrentSetId(null);
+                      handleGenerateFlashcards([], 'Water Cycle', 'Grade 6');
+                      setViewMode('input');
+                      window.dispatchEvent(new CustomEvent('prefillExample', { detail: exampleNotes }));
+                    }}
+                    className="group relative px-10 py-5 rounded-2xl text-xl font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                    style={{
+                      background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)',
+                      boxShadow: '0 10px 30px rgba(20, 184, 166, 0.3)'
+                    }}
+                  >
+                    ✨ Try it now (30 seconds)
+                  </button>
+                )}
+                
+                {/* Secondary action: My Sets (if user exists and has sets) */}
+                {user && savedSets.length > 0 && (
+                  <button
+                    onClick={handleViewSavedSets}
+                    className="px-10 py-5 rounded-2xl text-xl font-bold transition-all duration-300 hover:scale-105"
+                    style={{
+                      background: 'var(--surface)',
+                      border: '2.5px solid var(--border)',
+                      color: 'var(--foreground)',
+                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+                    }}
+                  >
+                    📚 My sets ({savedSets.length})
+                  </button>
+                )}
               </div>
 
               {/* Before/After comparison */}
               <div className="grid md:grid-cols-2 gap-8 mb-16">
                 {/* Before */}
-                <div className="p-6 rounded-2xl border-2" style={{ background: 'rgba(0,0,0,0.02)', borderColor: 'var(--border)' }}>
+                <div className="p-6 rounded-2xl border-2" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
                   <div className="text-sm font-bold mb-3 text-red-600 dark:text-red-400">❌ Before:</div>
-                  <div className="space-y-2 text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                  <div className="space-y-2 text-sm" style={{ color: 'var(--foreground)' }}>
                     <p>📄 Messy notes from class</p>
                     <p>😩 Spend hours organizing</p>
                     <p>😴 Boring study sessions</p>
@@ -368,9 +404,9 @@ export default function Home() {
                 </div>
                 
                 {/* After */}
-                <div className="p-6 rounded-2xl border-2" style={{ background: 'rgba(20, 184, 166, 0.05)', borderColor: 'rgb(20, 184, 166)' }}>
+                <div className="p-6 rounded-2xl border-2" style={{ background: 'var(--surface)', borderColor: '#14b8a6' }}>
                   <div className="text-sm font-bold mb-3 text-emerald-600 dark:text-emerald-400">✅ After:</div>
-                  <div className="space-y-2 text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                  <div className="space-y-2 text-sm" style={{ color: 'var(--foreground)' }}>
                     <p>⚡ Flashcards in seconds</p>
                     <p>🎯 AI summarizes the key points</p>
                     <p>📱 Quiz mode (test yourself)</p>
@@ -431,11 +467,86 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Sign in note - NOT a big button, just a line */}
+              {/* Sign in note - SUBTLE for logged-out users */}
               {!user && (
                 <p className="text-center text-sm" style={{ color: 'var(--foreground-muted)' }}>
                   Want to save your sets? <button onClick={() => setShowLoginModal(true)} className="font-bold text-teal-600 dark:text-teal-400 hover:underline">Sign in free</button>
                 </p>
+              )}
+
+              {/* Premium Features Section - Restore motivation and visibility */}
+              {!isPremium && (
+                <div className="mt-16 max-w-4xl mx-auto">
+                  <div className="text-center mb-8">
+                    <h3 className="text-2xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
+                      ✨ Unlock Premium
+                    </h3>
+                    <p style={{ color: 'var(--foreground-muted)' }}>
+                      Study without limits - unlimited generations, all features, priority processing
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Free Plan */}
+                    <div className="p-8 rounded-2xl border-2" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+                      <h4 className="text-lg font-bold mb-4" style={{ color: 'var(--foreground)' }}>
+                        🎓 Free
+                      </h4>
+                      <ul className="space-y-3 text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                        <li className="flex items-start gap-2">
+                          <span className="text-teal-600 dark:text-teal-400">✓</span>
+                          <span><strong>3 study sets per day</strong></span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-teal-600 dark:text-teal-400">✓</span>
+                          <span>Paste notes & basic uploads</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-teal-600 dark:text-teal-400">✓</span>
+                          <span>All study modes</span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    {/* Premium Plan */}
+                    <div className="p-8 rounded-2xl border-3 relative overflow-hidden" style={{ 
+                      background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
+                      borderColor: '#14b8a6'
+                    }}>
+                      <div className="absolute top-0 right-0 px-4 py-1 text-xs font-bold rounded-bl-lg" style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)', color: 'white' }}>
+                        RECOMMENDED
+                      </div>
+                      <h4 className="text-lg font-bold mb-4 mt-2" style={{ color: '#14b8a6' }}>
+                        👑 Premium
+                      </h4>
+                      <ul className="space-y-3 text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                        <li className="flex items-start gap-2">
+                          <span style={{ color: '#14b8a6' }}>✓</span>
+                          <span><strong>Unlimited</strong> study sets</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span style={{ color: '#14b8a6' }}>✓</span>
+                          <span>PDF, images, YouTube transcripts</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span style={{ color: '#14b8a6' }}>✓</span>
+                          <span>Unlimited folders & organization</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span style={{ color: '#14b8a6' }}>✓</span>
+                          <span>Priority AI processing</span>
+                        </li>
+                      </ul>
+                      <button
+                        onClick={() => !user ? setShowLoginModal(true) : setShowPremiumModal(true)}
+                        className="mt-6 w-full py-3 px-4 rounded-xl font-bold text-white transition-all hover:scale-105"
+                        style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)' }}
+                      >
+                        Upgrade Now - $2.99/mo
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </div>
