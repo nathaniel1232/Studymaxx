@@ -44,6 +44,17 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
   useEffect(() => {
     checkPremiumStatus();
     
+    // Listen for prefill event from homepage
+    const handlePrefill = (event: any) => {
+      const content = event.detail;
+      if (content) {
+        setTextInput(content);
+        setSelectedMaterial("notes");
+      }
+    };
+    
+    window.addEventListener('prefillExample', handlePrefill);
+    
     // Listen for auth state changes
     if (supabase) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -55,8 +66,15 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
         }
       });
       
-      return () => subscription.unsubscribe();
+      return () => {
+        subscription.unsubscribe();
+        window.removeEventListener('prefillExample', handlePrefill);
+      };
     }
+    
+    return () => {
+      window.removeEventListener('prefillExample', handlePrefill);
+    };
   }, []);
 
   const checkPremiumStatus = async () => {
@@ -585,12 +603,12 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
         {/* Material Selection Screen */}
         {!selectedMaterial ? (
           <div className="card-elevated p-20" style={{ borderRadius: 'var(--radius-xl)' }}>
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                What are you studying?
+            <div className="mb-10">
+              <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-3">
+                Paste your notes
               </h2>
-              <p className="text-gray-500 dark:text-gray-400">
-                Choose your learning material
+              <p className="text-xl text-gray-600 dark:text-gray-400">
+                We'll turn them into flashcards instantly
               </p>
             </div>
 
@@ -598,15 +616,15 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
               {/* Notes Option - Recommended */}
               <button
                 onClick={() => setSelectedMaterial("notes")}
-                className="group relative p-8 border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 rounded-2xl hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+                className="group relative p-8 border-2 border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-2xl hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
               >
-                <div className="absolute -top-3 right-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md">
-                  Recommended
+                <div className="absolute -top-3 right-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md">
+                  Start here
                 </div>
                 <div className="text-5xl mb-4">📝</div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Notes</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Paste notes</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Paste your study notes
+                  Fastest way to get flashcards
                 </p>
               </button>
 
@@ -624,9 +642,9 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                   </div>
                 )}
                 <div className="text-5xl mb-4">📄</div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Files</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Upload files</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Upload PDF, DOCX, or images
+                  PDF, Word, images, YouTube
                 </p>
               </button>
 
@@ -1017,13 +1035,13 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                 <span className="flex flex-col items-center justify-center gap-2">
                   <span className="flex items-center gap-2">
                     <span className="animate-spin">⚡</span>
-                    {loadingStage === "processing" && "Processing your notes..."}
-                    {loadingStage === "analyzing" && "Analyzing content..."}
-                    {loadingStage === "generating" && "Creating flashcards with AI..."}
-                    {loadingStage === "finalizing" && "Almost done..."}
-                    {!loadingStage && "Creating flashcards..."}
+                    {loadingStage === "processing" && "Reading your notes..."}
+                    {loadingStage === "analyzing" && "Understanding the content..."}
+                    {loadingStage === "generating" && "Creating flashcards..."}
+                    {loadingStage === "finalizing" && "Polishing them up..."}
+                    {!loadingStage && "Making flashcards..."}
                   </span>
-                  <span className="text-xs opacity-75">This usually takes 10-20 seconds</span>
+                  <span className="text-xs opacity-75">Takes about 10-15 seconds</span>
                 </span>
               ) : (
                 "Create flashcards"

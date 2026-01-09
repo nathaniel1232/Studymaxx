@@ -60,11 +60,11 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
     >
       <div
         style={getCardStyle()}
-        className="relative w-full min-h-[480px] rounded-4xl p-16 flex flex-col items-center justify-center transition-all duration-500"
+        className="relative w-full min-h-[320px] rounded-4xl p-12 flex flex-col items-center justify-center transition-all duration-500"
       >
         {/* Rating Badge */}
         {currentRating && (
-          <div className={`absolute top-8 right-8 px-6 py-3 rounded-2xl text-lg font-black shadow-2xl ${
+          <div className={`absolute top-6 right-6 px-5 py-2 rounded-2xl text-sm font-black shadow-2xl ${
             currentRating === 'good' ? 'bg-white/95 text-emerald-700 ring-2 ring-emerald-400' :
             currentRating === 'ok' ? 'bg-white/95 text-amber-700 ring-2 ring-amber-400' :
             'bg-white/95 text-rose-700 ring-2 ring-rose-400'
@@ -74,11 +74,11 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
         )}
 
         {/* Card Content */}
-        <div className="text-center max-w-4xl">
-          <p className="text-sm font-black text-white/90 mb-6 uppercase tracking-widest">
+        <div className="text-center max-w-3xl">
+          <p className="text-xs font-black text-white/90 mb-4 uppercase tracking-widest">
             {isFlipped ? t("answer") : t("question")}
           </p>
-          <p className="text-3xl md:text-5xl font-black text-white leading-relaxed drop-shadow-xl">
+          <p className="text-lg md:text-2xl font-black text-white leading-relaxed drop-shadow-xl">
             {isFlipped ? card.answer : card.question}
           </p>
         </div>

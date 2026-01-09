@@ -264,22 +264,18 @@ export default function Home() {
       <Analytics />
       {viewMode === "home" && (
         <div className="min-h-screen px-4 py-6 flex flex-col relative">
-          {/* Animated gradient mesh background */}
+          {/* Subtle gradient background */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-gradient-to-br from-teal-400/20 via-cyan-400/20 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDuration: '8s' }}></div>
-            <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-indigo-400/20 via-purple-400/20 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }}></div>
-            <div className="absolute top-1/3 left-1/3 w-[500px] h-[500px] bg-gradient-to-br from-emerald-400/15 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDuration: '12s', animationDelay: '4s' }}></div>
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-cyan-300/10 via-teal-300/10 to-transparent rounded-full blur-3xl" style={{ animationDuration: '8s' }}></div>
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-indigo-300/10 via-purple-300/10 to-transparent rounded-full blur-3xl" style={{ animationDuration: '10s' }}></div>
           </div>
 
           {/* Top Navigation */}
-          <nav className="max-w-7xl mx-auto w-full flex justify-between items-center mb-8 relative" style={{ zIndex: 100 }}>
-            <div className="flex items-center gap-3" style={{ position: 'relative', zIndex: 1 }}>
-              <div className="text-2xl font-black bg-gradient-to-r from-teal-600 via-cyan-600 to-indigo-600 bg-clip-text text-transparent">
+          <nav className="max-w-7xl mx-auto w-full flex justify-between items-center mb-12 relative" style={{ zIndex: 100 }}>
+            <div className="flex items-center gap-2" style={{ position: 'relative', zIndex: 1 }}>
+              <div className="text-3xl font-black text-teal-600 dark:text-teal-400">
                 StudyMaxx
               </div>
-              <span className="px-3 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg">
-                BETA
-              </span>
             </div>
             
             <div className="flex items-center gap-3" style={{ position: 'relative', zIndex: 1000 }}>
@@ -320,235 +316,133 @@ export default function Home() {
           {/* Hero Section */}
           <div className="flex-1 flex items-center justify-center relative z-10">
             <div className="text-center max-w-4xl mx-auto px-4 py-12">
-              <h1 className="text-7xl md:text-8xl lg:text-9xl font-black mb-6 leading-none text-teal-600 dark:text-teal-400">
-                StudyMaxx
+          
+          {/* Hero Section - CLEAR & SIMPLE */}
+          <div className="flex-1 flex items-center justify-center relative z-10 max-w-7xl mx-auto w-full">
+            <div className="max-w-3xl mx-auto px-4 py-8">
+              {/* Main Headline - Direct & Clear */}
+              <h1 className="text-5xl md:text-6xl font-black mb-6 leading-tight" style={{ color: 'var(--foreground)' }}>
+                Turn notes into flashcards in seconds
               </h1>
               
-              <p className="text-2xl md:text-3xl mb-4 font-bold text-gray-900 dark:text-white">
-                {settings.language === "no" ? "Lær smartere" : "Study smarter"}
+              {/* Subheading - What it does */}
+              <p className="text-xl md:text-2xl mb-4 font-medium" style={{ color: 'var(--foreground-muted)' }}>
+                Paste your notes, get flashcards instantly. Study smarter.
               </p>
               
-              <p className="text-lg md:text-xl mb-3 font-medium text-gray-800 dark:text-gray-200">
-                {settings.language === "no" 
-                  ? "Transformer notater til AI-genererte kunnskapskort"
-                  : "Transform notes into AI-powered flashcards"}
-              </p>
-              
-              <p className="text-lg mb-12 max-w-2xl mx-auto" style={{ color: 'var(--foreground-muted)' }}>
-                {settings.language === "no"
-                  ? "Last opp PDF-er, bilder eller lim inn tekst. Få personlige studiesett på sekunder."
-                  : "Upload PDFs, images, or paste text. Get personalized study sets in seconds."}
+              {/* Social proof line */}
+              <p className="text-lg mb-12 font-semibold text-teal-600 dark:text-teal-400">
+                ⭐ Try it now with example content - no signup needed
               </p>
 
-              {/* Free tier info */}
-              {!isPremium && (
-                <div className="mb-8 inline-block px-6 py-3 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
-                  <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                    {settings.language === "no"
-                      ? `🎁 ${remainingStudySets} gratis studiesett${remainingStudySets !== 1 ? '' : ''} igjen i dag`
-                      : `🎁 ${remainingStudySets} free study set${remainingStudySets !== 1 ? 's' : ''} left today`}
-                  </p>
-                </div>
-              )}
-              
-              {/* Primary CTA */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-14">
+              {/* MAIN CTA - Try now button (not "Create") */}
+              <div className="mb-16">
                 <button
-                  onClick={handleCreateNew}
-                  className="group relative px-14 py-7 rounded-2xl text-xl font-bold text-white transition-all duration-300 hover:scale-107 hover:shadow-2xl"
+                  onClick={() => {
+                    // Pre-fill with example content and show input view
+                    const exampleNotes = `Chapter 1: The Water Cycle\n\nEvaporation: Process where water changes from liquid to gas. Happens when the sun heats water in oceans, lakes, and rivers. Temperature affects rate.\n\nCondensation: Water vapor cools and turns back into liquid water droplets. Happens when warm air rises and cools. Forms clouds.\n\nPrecipitation: Water falls to earth as rain, snow, or sleet. Occurs when water droplets in clouds become heavy enough.\n\nCollection: Water collects in oceans, lakes, rivers, and underground. Completes the cycle.\n\nKey Facts: The water cycle is continuous and essential for all life. Plants release water through transpiration. About 97% of Earth's water is salt water.`;
+                    setFlashcards([]);
+                    setCurrentSetId(null);
+                    handleGenerateFlashcards([], 'Water Cycle', 'Grade 6');
+                    setViewMode('input');
+                    // We'll need to pass the example content to InputView
+                    window.dispatchEvent(new CustomEvent('prefillExample', { detail: exampleNotes }));
+                  }}
+                  className="group relative inline-block px-10 py-5 rounded-2xl text-xl font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl"
                   style={{
-                    background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 50%, #6366f1 100%)',
-                    boxShadow: '0 12px 48px rgba(20, 184, 166, 0.45)'
+                    background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)',
+                    boxShadow: '0 10px 30px rgba(20, 184, 166, 0.3)'
                   }}
                 >
-                  <span className="flex items-center gap-3">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                    </svg>
-                    {settings.language === "no" ? "Lag studiesett" : "Create study set"}
-                  </span>
+                  ✨ Try it now (30 seconds)
                 </button>
-                
-                {savedSets.length > 0 && (
-                  <button
-                    onClick={handleViewSavedSets}
-                    className="px-14 py-7 rounded-2xl text-xl font-bold transition-all duration-300 hover:scale-107"
-                    style={{
-                      background: 'var(--surface)',
-                      border: '2.5px solid var(--border)',
-                      color: 'var(--foreground)',
-                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
-                    }}
-                  >
-                    {settings.language === "no" 
-                      ? `Dine sett (${savedSets.length})`
-                      : `My sets (${savedSets.length})`}
-                  </button>
-                )}
               </div>
 
-              {/* Study Fact Badge */}
-              <div className="mb-8 flex justify-center">
-                <StudyFactBadge context="general" position="inline" />
-              </div>
-
-              {/* What is StudyMaxx? Section */}
-              <div className="mb-12 max-w-2xl mx-auto p-6 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%)', border: '2px solid var(--border)' }}>
-                <h3 className="text-xl font-bold mb-3 text-center" style={{ color: 'var(--foreground)' }}>
-                  {settings.language === "no" ? "💡 Hva er StudyMaxx?" : "💡 What is StudyMaxx?"}
-                </h3>
-                <div className="text-base leading-relaxed space-y-2" style={{ color: 'var(--foreground)' }}>
-                  {settings.language === "no" ? (
-                    <>
-                      <p><strong>Notater</strong> → <strong>Kunnskapskort</strong> → <strong>Bedre karakterer</strong></p>
-                      <p>Bruk AI til å gjøre notater om til effektive studiesett. Øv, test deg selv, og hev karakterene dine.</p>
-                      <p className="text-sm font-bold" style={{ color: '#14b8a6' }}>Studer smartere, ikke lengre. Oppnå main character energy i fagene dine.</p>
-                    </>
-                  ) : (
-                    <>
-                      <p><strong>Notes</strong> → <strong>Flashcards</strong> → <strong>Better Grades</strong></p>
-                      <p>Use AI to turn your notes into effective study sets. Practice, self-test, and ascend your grades.</p>
-                      <p className="text-sm font-bold" style={{ color: '#14b8a6' }}>Study smarter, not longer. Achieve main character energy in your studies.</p>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Feature highlights */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                <div className="p-12 rounded-2xl backdrop-blur-sm border-2 hover:scale-110 transition-transform duration-300" style={{ background: 'var(--surface)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-lg)' }}>
-                  <div className="text-7xl mb-4 animate-pulse" style={{ animationDuration: '2s' }}>⚡</div>
-                  <div className="font-bold text-2xl mb-3" style={{ color: 'var(--foreground)' }}>
-                    {settings.language === "no" ? "Lynraskt" : "Lightning Fast"}
-                  </div>
-                  <div className="text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>
-                    {settings.language === "no" ? "Få studiesett på sekunder med AI" : "Get study sets in seconds with AI"}
+              {/* Before/After comparison */}
+              <div className="grid md:grid-cols-2 gap-8 mb-16">
+                {/* Before */}
+                <div className="p-6 rounded-2xl border-2" style={{ background: 'rgba(0,0,0,0.02)', borderColor: 'var(--border)' }}>
+                  <div className="text-sm font-bold mb-3 text-red-600 dark:text-red-400">❌ Before:</div>
+                  <div className="space-y-2 text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                    <p>📄 Messy notes from class</p>
+                    <p>😩 Spend hours organizing</p>
+                    <p>😴 Boring study sessions</p>
+                    <p>❓ Forgot what to study</p>
                   </div>
                 </div>
                 
-                <div className="p-12 rounded-2xl backdrop-blur-sm border-2 hover:scale-110 transition-transform duration-300" style={{ background: 'var(--surface)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-lg)' }}>
-                  <div className="text-7xl mb-4 inline-block animate-bounce" style={{ animationDuration: '3s' }}>🎯</div>
-                  <div className="font-bold text-2xl mb-3" style={{ color: 'var(--foreground)' }}>
-                    {settings.language === "no" ? "Smart læring" : "Smart Learning"}
-                  </div>
-                  <div className="text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>
-                    {settings.language === "no" ? "Tilpasset til ditt nivå og mål" : "Adapted to your level and goals"}
-                  </div>
-                </div>
-                
-                <div className="p-12 rounded-2xl backdrop-blur-sm border-2 hover:scale-110 transition-transform duration-300" style={{ background: 'var(--surface)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-lg)' }}>
-                  <div className="text-7xl mb-4 inline-block hover:rotate-12 transition-transform duration-300">📚</div>
-                  <div className="font-bold text-2xl mb-3" style={{ color: 'var(--foreground)' }}>
-                    {settings.language === "no" ? "Alle formater" : "All Formats"}
-                  </div>
-                  <div className="text-sm font-medium" style={{ color: 'var(--foreground-muted)' }}>
-                    {settings.language === "no" ? "PDF, bilder, tekst og YouTube" : "PDFs, images, text, and YouTube"}
+                {/* After */}
+                <div className="p-6 rounded-2xl border-2" style={{ background: 'rgba(20, 184, 166, 0.05)', borderColor: 'rgb(20, 184, 166)' }}>
+                  <div className="text-sm font-bold mb-3 text-emerald-600 dark:text-emerald-400">✅ After:</div>
+                  <div className="space-y-2 text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                    <p>⚡ Flashcards in seconds</p>
+                    <p>🎯 AI summarizes the key points</p>
+                    <p>📱 Quiz mode (test yourself)</p>
+                    <p>🧠 Actually remember things</p>
                   </div>
                 </div>
               </div>
 
-              {/* Premium Features Section */}
-              <div className="mt-16 max-w-4xl mx-auto">
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
-                    ✨ {settings.language === "no" ? "Oppgrader til Premium" : "Upgrade to Premium"}
-                  </h3>
-                  <p style={{ color: 'var(--foreground-muted)' }}>
-                    {settings.language === "no" 
-                      ? "Lås opp ubegrenset potensial og studer uten grenser"
-                      : "Unlock unlimited potential and study without limits"}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Free Plan */}
-                  <div className="p-8 rounded-2xl border-2" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-                    <h4 className="text-lg font-bold mb-4" style={{ color: 'var(--foreground)' }}>
-                      🎓 {settings.language === "no" ? "Gratis" : "Free"}
-                    </h4>
-                    <ul className="space-y-3 text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                      <li className="flex items-start gap-2">
-                        <span>✓</span>
-                        <span><strong>3 {settings.language === "no" ? "generasjoner per dag" : "generations per day"}</strong></span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span>✓</span>
-                        <span>{settings.language === "no" ? "Studer notater" : "Study from notes"}</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span>✓</span>
-                        <span>{settings.language === "no" ? "Alle studiemoduser" : "All study modes"}</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  {/* Premium Plan */}
-                  <div className="p-8 rounded-2xl border-3 relative overflow-hidden" style={{ 
-                    background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
-                    borderColor: '#14b8a6'
-                  }}>
-                    <div className="absolute top-0 right-0 px-4 py-1 text-xs font-bold rounded-bl-lg" style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)', color: 'white' }}>
-                      {settings.language === "no" ? "ANBEFALT" : "RECOMMENDED"}
+              {/* How it works - 3 simple steps */}
+              <div className="mb-16">
+                <h2 className="text-2xl font-bold mb-8 text-center" style={{ color: 'var(--foreground)' }}>3 simple steps</h2>
+                <div className="grid md:grid-cols-3 gap-6">
+                  {/* Step 1 */}
+                  <div className="text-center">
+                    <div className="w-14 h-14 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-teal-600 dark:text-teal-400">
+                      1
                     </div>
-                    <h4 className="text-lg font-bold mb-4 mt-2" style={{ color: '#14b8a6' }}>
-                      👑 {settings.language === "no" ? "Premium" : "Premium"}
-                    </h4>
-                    <ul className="space-y-3 text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                      <li className="flex items-start gap-2">
-                        <span style={{ color: '#14b8a6' }}>✓</span>
-                        <span><strong>{settings.language === "no" ? "Ubegrenset" : "Unlimited"}</strong> {settings.language === "no" ? "generasjoner" : "generations"}</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span style={{ color: '#14b8a6' }}>✓</span>
-                        <span>{settings.language === "no" ? "Bilder med tekstgjenkjenning" : "Images with OCR"}</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span style={{ color: '#14b8a6' }}>✓</span>
-                        <span>{settings.language === "no" ? "Ubegrensede mapper" : "Unlimited folders"}</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span style={{ color: '#14b8a6' }}>✓</span>
-                        <span>{settings.language === "no" ? "Prioritert AI-prosessering" : "Priority processing"}</span>
-                      </li>
-                    </ul>
-                    {isPremium ? (
-                      <div className="mt-6 w-full py-3 px-4 rounded-xl font-bold text-center" style={{ 
-                        background: 'linear-gradient(135deg, #22c55e 0%, #10b981 100%)',
-                        color: 'white'
-                      }}>
-                        🎉 {settings.language === "no" ? "Du har Premium!" : "You Have Premium!"}
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => !user ? setShowLoginModal(true) : setShowPremiumModal(true)}
-                        className="mt-6 w-full py-3 px-4 rounded-xl font-bold text-white transition-all hover:scale-105"
-                        style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)' }}
-                      >
-                        {settings.language === "no" ? "Oppgrader nå - 29 kr/mnd" : "Upgrade Now - $2.99/mo"}
-                      </button>
-                    )}
+                    <h3 className="font-bold mb-2" style={{ color: 'var(--foreground)' }}>Paste or upload</h3>
+                    <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Notes, PDFs, images, or YouTube links</p>
+                  </div>
+                  
+                  {/* Step 2 */}
+                  <div className="text-center">
+                    <div className="w-14 h-14 rounded-full bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-cyan-600 dark:text-cyan-400">
+                      2
+                    </div>
+                    <h3 className="font-bold mb-2" style={{ color: 'var(--foreground)' }}>AI generates</h3>
+                    <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Smart summaries in just a few seconds</p>
+                  </div>
+                  
+                  {/* Step 3 */}
+                  <div className="text-center">
+                    <div className="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                      3
+                    </div>
+                    <h3 className="font-bold mb-2" style={{ color: 'var(--foreground)' }}>Study & improve</h3>
+                    <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Quiz mode, track progress, ace your exams</p>
                   </div>
                 </div>
               </div>
+
+              {/* Quick stats */}
+              <div className="mb-16 grid grid-cols-3 gap-4">
+                <div className="text-center p-4 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                  <div className="text-3xl font-black text-teal-600 dark:text-teal-400">⚡</div>
+                  <p className="text-sm font-bold mt-2">10 seconds</p>
+                  <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>to make flashcards</p>
+                </div>
+                <div className="text-center p-4 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                  <div className="text-3xl font-black text-cyan-600 dark:text-cyan-400">🎯</div>
+                  <p className="text-sm font-bold mt-2">No setup</p>
+                  <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>just paste & go</p>
+                </div>
+                <div className="text-center p-4 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                  <div className="text-3xl font-black text-indigo-600 dark:text-indigo-400">📱</div>
+                  <p className="text-sm font-bold mt-2">Works everywhere</p>
+                  <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>phone, tablet, desktop</p>
+                </div>
+              </div>
+
+              {/* Sign in note - NOT a big button, just a line */}
+              {!user && (
+                <p className="text-center text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                  Want to save your sets? <button onClick={() => setShowLoginModal(true)} className="font-bold text-teal-600 dark:text-teal-400 hover:underline">Sign in free</button>
+                </p>
+              )}
             </div>
           </div>
-          <footer className="max-w-7xl mx-auto w-full py-8 relative z-10">
-            <div className="flex flex-wrap items-center justify-center gap-4 text-sm" style={{ color: 'var(--foreground-muted)' }}>
-              <a href="mailto:studymaxxer@gmail.com" className="hover:text-blue-600 transition-colors">
-                {settings.language === "no" ? "Kontakt" : "Contact"}
-              </a>
-              <span>·</span>
-              <a href="/privacy" className="hover:text-blue-600 transition-colors">
-                {settings.language === "no" ? "Personvern" : "Privacy"}
-              </a>
-              <span>·</span>
-              <a href="/terms" className="hover:text-blue-600 transition-colors">
-                {settings.language === "no" ? "Vilkår" : "Terms"}
-              </a>
-              <span>·</span>
-              <span>© 2025 StudyMaxx</span>
-            </div>
-          </footer>
         </div>
       )}
       
