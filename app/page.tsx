@@ -474,20 +474,35 @@ export default function Home() {
                 </p>
               )}
 
-              {/* Premium Features Section - Restore motivation and visibility */}
-              {!isPremium && (
-                <div className="mt-16 max-w-4xl mx-auto">
-                  <div className="text-center mb-8">
-                    <h3 className="text-2xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
-                      ✨ Unlock Premium
-                    </h3>
-                    <p style={{ color: 'var(--foreground-muted)' }}>
-                      Study without limits - unlimited generations, all features, priority processing
-                    </p>
-                  </div>
+              {/* Premium Features Section - Show for all users (upgrade CTA for free, status for premium) */}
+              <div className="mt-16 max-w-4xl mx-auto">
+                <div className="text-center mb-8">
+                  {isPremium ? (
+                    <>
+                      <div className="inline-block px-6 py-2 rounded-full bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40 border border-amber-300 dark:border-amber-700 mb-4">
+                        <span className="font-bold text-amber-800 dark:text-amber-300">✨ Premium Activated</span>
+                      </div>
+                      <h3 className="text-2xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
+                        🎉 You Have Premium!
+                      </h3>
+                      <p style={{ color: 'var(--foreground-muted)' }}>
+                        Enjoy unlimited study sets, all features, and priority processing
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-2xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
+                        ✨ Unlock Premium
+                      </h3>
+                      <p style={{ color: 'var(--foreground-muted)' }}>
+                        Study without limits - unlimited generations, all features, priority processing
+                      </p>
+                    </>
+                  )}
+                </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Free Plan */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {!isPremium && (
                     <div className="p-8 rounded-2xl border-2" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
                       <h4 className="text-lg font-bold mb-4" style={{ color: 'var(--foreground)' }}>
                         🎓 Free
@@ -507,47 +522,99 @@ export default function Home() {
                         </li>
                       </ul>
                     </div>
+                  )}
 
-                    {/* Premium Plan */}
-                    <div className="p-8 rounded-2xl border-3 relative overflow-hidden" style={{ 
-                      background: 'linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
-                      borderColor: '#14b8a6'
+                  <div className="p-8 rounded-2xl border-3 relative overflow-hidden" style={{ 
+                    background: isPremium 
+                      ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)'
+                      : 'linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
+                    borderColor: isPremium ? '#22c55e' : '#14b8a6'
+                  }}>
+                    <div className="absolute top-0 right-0 px-4 py-1 text-xs font-bold rounded-bl-lg" style={{ 
+                      background: isPremium 
+                        ? 'linear-gradient(135deg, #22c55e 0%, #10b981 100%)'
+                        : 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)',
+                      color: 'white' 
                     }}>
-                      <div className="absolute top-0 right-0 px-4 py-1 text-xs font-bold rounded-bl-lg" style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)', color: 'white' }}>
-                        RECOMMENDED
-                      </div>
-                      <h4 className="text-lg font-bold mb-4 mt-2" style={{ color: '#14b8a6' }}>
-                        👑 Premium
-                      </h4>
-                      <ul className="space-y-3 text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                        <li className="flex items-start gap-2">
-                          <span style={{ color: '#14b8a6' }}>✓</span>
-                          <span><strong>Unlimited</strong> study sets</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span style={{ color: '#14b8a6' }}>✓</span>
-                          <span>PDF, images, YouTube transcripts</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span style={{ color: '#14b8a6' }}>✓</span>
-                          <span>Unlimited folders & organization</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span style={{ color: '#14b8a6' }}>✓</span>
-                          <span>Priority AI processing</span>
-                        </li>
-                      </ul>
+                      {isPremium ? '✓ ACTIVE' : 'RECOMMENDED'}
+                    </div>
+                    <h4 className="text-lg font-bold mb-4 mt-2" style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>
+                      👑 Premium
+                    </h4>
+                    <ul className="space-y-3 text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                      <li className="flex items-start gap-2">
+                        <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
+                        <span><strong>Unlimited</strong> study sets</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
+                        <span>📄 PDF, 🖼️ images, 📺 YouTube transcripts</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
+                        <span>Unlimited folders & organization</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
+                        <span>⚡ Priority AI processing</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
+                        <span>🎯 Difficulty selection</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
+                        <span>📱 Multi-device sync</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
+                        <span>Share study sets with friends</span>
+                      </li>
+                    </ul>
+                    {isPremium ? (
+                      <button
+                        onClick={async () => {
+                          if (!user?.id) return;
+                          try {
+                            const response = await fetch('/api/stripe/portal', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ userId: user.id })
+                            });
+                            const data = await response.json();
+                            if (data.url) {
+                              window.location.href = data.url;
+                            } else {
+                              alert(`Error: ${data.error || 'Failed to open portal. Please contact support.'}`);
+                            }
+                          } catch (error) {
+                            console.error('Failed to open portal:', error);
+                            alert('Failed to open subscription management. Please contact support.');
+                          }
+                        }}
+                        className="mt-6 w-full py-3 px-4 rounded-xl font-bold text-white transition-all hover:scale-105 shadow-lg hover:shadow-xl"
+                        style={{ 
+                          background: 'linear-gradient(135deg, #22c55e 0%, #10b981 100%)',
+                          boxShadow: '0 4px 15px rgba(34, 197, 94, 0.3)'
+                        }}
+                      >
+                        ⚙️ Manage Subscription
+                      </button>
+                    ) : (
                       <button
                         onClick={() => !user ? setShowLoginModal(true) : setShowPremiumModal(true)}
-                        className="mt-6 w-full py-3 px-4 rounded-xl font-bold text-white transition-all hover:scale-105"
-                        style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)' }}
+                        className="mt-6 w-full py-3 px-4 rounded-xl font-bold text-white transition-all hover:scale-105 shadow-lg hover:shadow-xl"
+                        style={{ 
+                          background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)',
+                          boxShadow: '0 4px 15px rgba(20, 184, 166, 0.3)'
+                        }}
                       >
-                        Upgrade Now - $2.99/mo
+                        🚀 Upgrade Now - $2.99/mo
                       </button>
-                    </div>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
