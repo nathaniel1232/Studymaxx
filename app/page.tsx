@@ -31,6 +31,7 @@ export default function Home() {
   const [savedSets, setSavedSets] = useState<FlashcardSet[]>([]);
   const [user, setUser] = useState<any>(null);
   const [isPremium, setIsPremium] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const [remainingStudySets, setRemainingStudySets] = useState(3);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -152,6 +153,10 @@ export default function Home() {
       const currentUser = await getCurrentUser();
       setUser(currentUser);
       
+      // Check if user is owner
+      const isOwnerUser = currentUser?.email === 'studymaxxer@gmail.com';
+      setIsOwner(isOwnerUser);
+      
       if (currentUser && supabase) {
         // Sync user to database
         try {
@@ -174,13 +179,15 @@ export default function Home() {
           .eq('id', currentUser.id)
           .single();
         
-        setIsPremium(data?.is_premium || false);
+        setIsPremium(data?.is_premium || isOwnerUser);
       }
     };
     
     loadUser();
     const unsubscribe = onAuthStateChange((newUser) => {
       setUser(newUser);
+      const isOwnerUser = newUser?.email === 'studymaxxer@gmail.com';
+      setIsOwner(isOwnerUser);
       if (newUser && supabase) {
         // Sync user to database
         fetch('/api/auth/sync-user', {
@@ -198,7 +205,7 @@ export default function Home() {
           .select('is_premium')
           .eq('id', newUser.id)
           .single()
-          .then(({ data }) => setIsPremium(data?.is_premium || false));
+          .then(({ data }) => setIsPremium(data?.is_premium || isOwnerUser));
       } else {
         setIsPremium(false);
       }
@@ -613,6 +620,25 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+
+              {/* Footer Links */}
+              <footer className="max-w-7xl mx-auto w-full py-8 relative z-10 mt-8">
+                <div className="flex flex-wrap items-center justify-center gap-4 text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                  <a href="mailto:studymaxxer@gmail.com" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    Contact
+                  </a>
+                  <span>·</span>
+                  <a href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    Privacy
+                  </a>
+                  <span>·</span>
+                  <a href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    Terms
+                  </a>
+                  <span>·</span>
+                  <span>© 2025 StudyMaxx</span>
+                </div>
+              </footer>
             </div>
           </div>
         </div>
