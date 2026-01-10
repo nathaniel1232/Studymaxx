@@ -54,17 +54,17 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
   return (
     <div
       onClick={() => setIsFlipped(!isFlipped)}
-      className={`mb-8 cursor-pointer transition-all duration-300 ${
+      className={`mb-6 md:mb-8 cursor-pointer transition-all duration-300 ${
         isFlipped ? "" : ""
       }`}
     >
       <div
         style={getCardStyle()}
-        className="relative w-full min-h-[320px] rounded-4xl p-12 flex flex-col items-center justify-center transition-all duration-500"
+        className="relative w-full min-h-[280px] md:min-h-[320px] rounded-3xl md:rounded-4xl p-8 md:p-12 flex flex-col items-center justify-center transition-all duration-500"
       >
         {/* Rating Badge */}
         {currentRating && (
-          <div className={`absolute top-6 right-6 px-5 py-2 rounded-2xl text-sm font-black shadow-2xl ${
+          <div className={`absolute top-4 md:top-6 right-4 md:right-6 px-4 md:px-5 py-2 rounded-xl md:rounded-2xl text-xs md:text-sm font-black shadow-2xl ${
             currentRating === 'good' ? 'bg-white/95 text-emerald-700 ring-2 ring-emerald-400' :
             currentRating === 'ok' ? 'bg-white/95 text-amber-700 ring-2 ring-amber-400' :
             'bg-white/95 text-rose-700 ring-2 ring-rose-400'
@@ -74,40 +74,40 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
         )}
 
         {/* Card Content */}
-        <div className="text-center max-w-3xl">
-          <p className="text-xs font-black text-white/90 mb-4 uppercase tracking-widest">
+        <div className="text-center max-w-3xl px-2">
+          <p className="text-xs font-black text-white/90 mb-3 md:mb-4 uppercase tracking-widest">
             {isFlipped ? t("answer") : t("question")}
           </p>
-          <p className="text-lg md:text-2xl font-black text-white leading-relaxed drop-shadow-xl">
+          <p className="text-base md:text-lg lg:text-2xl font-black text-white leading-relaxed drop-shadow-xl">
             {isFlipped ? card.answer : card.question}
           </p>
         </div>
 
         {/* Flip Hint */}
-        <div className="absolute bottom-6 text-sm text-white/70 font-semibold">
+        <div className="absolute bottom-4 md:bottom-6 text-xs md:text-sm text-white/70 font-semibold">
           {isFlipped ? t("click_to_see_question") : t("click_to_reveal")}
         </div>
       </div>
 
       {/* Rating Buttons - PREMIUM DESIGN WITH DETAILS */}
       {onRate && (
-        <div className="mt-10 flex items-center justify-center gap-6 flex-wrap">
+        <div className="mt-6 md:mt-10 flex items-center justify-center gap-3 md:gap-6 flex-wrap px-4">
           <button
             onClick={(e) => {
               e.stopPropagation();
               console.log('🔴 BAD clicked for card:', card.id);
               onRate(card.id, 'bad');
             }}
-            className={`group relative px-10 py-6 rounded-3xl font-black text-xl transition-all duration-500 ease-out shadow-xl hover:shadow-2xl overflow-hidden ${
+            className={`group relative px-6 md:px-10 py-3 md:py-6 rounded-2xl md:rounded-3xl font-bold md:font-black text-sm md:text-xl transition-all duration-500 ease-out shadow-lg md:shadow-xl hover:shadow-xl md:hover:shadow-2xl overflow-hidden active:scale-95 ${
               currentRating === 'bad' 
-                ? 'bg-gradient-to-br from-rose-500 via-red-500 to-rose-600 text-white scale-110 shadow-rose-500/50' 
-                : 'bg-white dark:bg-gray-800 text-rose-600 dark:text-rose-400 hover:bg-gradient-to-br hover:from-rose-50 hover:to-red-50 dark:hover:from-rose-950/30 dark:hover:to-red-950/30 hover:scale-110 hover:-translate-y-2 shadow-rose-200/50 hover:shadow-rose-300/60'
+                ? 'bg-gradient-to-br from-rose-500 via-red-500 to-rose-600 text-white scale-105 md:scale-110 shadow-rose-500/50' 
+                : 'bg-white dark:bg-gray-800 text-rose-600 dark:text-rose-400 hover:bg-gradient-to-br hover:from-rose-50 hover:to-red-50 dark:hover:from-rose-950/30 dark:hover:to-red-950/30 hover:scale-105 md:hover:scale-110 hover:-translate-y-1 md:hover:-translate-y-2 shadow-rose-200/50 hover:shadow-rose-300/60'
             }`}
           >
             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-            <span className="relative z-10 flex items-center gap-3">
-              <span className="text-3xl">😞</span>
-              <span>{t("bad")}</span>
+            <span className="relative z-10 flex items-center gap-2 md:gap-3">
+              <span className="text-xl md:text-3xl">😞</span>
+              <span className="hidden sm:inline">{t("bad")}</span>
             </span>
           </button>
           
@@ -117,16 +117,16 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
               console.log('🟡 OK clicked for card:', card.id);
               onRate(card.id, 'ok');
             }}
-            className={`group relative px-10 py-6 rounded-3xl font-black text-xl transition-all duration-500 ease-out shadow-xl hover:shadow-2xl overflow-hidden ${
+            className={`group relative px-6 md:px-10 py-3 md:py-6 rounded-2xl md:rounded-3xl font-bold md:font-black text-sm md:text-xl transition-all duration-500 ease-out shadow-lg md:shadow-xl hover:shadow-xl md:hover:shadow-2xl overflow-hidden active:scale-95 ${
               currentRating === 'ok' 
-                ? 'bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600 text-white scale-110 shadow-amber-500/50' 
-                : 'bg-white dark:bg-gray-800 text-amber-600 dark:text-amber-400 hover:bg-gradient-to-br hover:from-amber-50 hover:to-yellow-50 dark:hover:from-amber-950/30 dark:hover:to-yellow-950/30 hover:scale-110 hover:-translate-y-2 shadow-amber-200/50 hover:shadow-amber-300/60'
+                ? 'bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600 text-white scale-105 md:scale-110 shadow-amber-500/50' 
+                : 'bg-white dark:bg-gray-800 text-amber-600 dark:text-amber-400 hover:bg-gradient-to-br hover:from-amber-50 hover:to-yellow-50 dark:hover:from-amber-950/30 dark:hover:to-yellow-950/30 hover:scale-105 md:hover:scale-110 hover:-translate-y-1 md:hover:-translate-y-2 shadow-amber-200/50 hover:shadow-amber-300/60'
             }`}
           >
             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-            <span className="relative z-10 flex items-center gap-3">
-              <span className="text-3xl">😐</span>
-              <span>{t("ok")}</span>
+            <span className="relative z-10 flex items-center gap-2 md:gap-3">
+              <span className="text-xl md:text-3xl">😐</span>
+              <span className="hidden sm:inline">{t("ok")}</span>
             </span>
           </button>
           
@@ -136,16 +136,16 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
               console.log('🟢 GOOD clicked for card:', card.id);
               onRate(card.id, 'good');
             }}
-            className={`group relative px-10 py-6 rounded-3xl font-black text-xl transition-all duration-500 ease-out shadow-xl hover:shadow-2xl overflow-hidden ${
+            className={`group relative px-6 md:px-10 py-3 md:py-6 rounded-2xl md:rounded-3xl font-bold md:font-black text-sm md:text-xl transition-all duration-500 ease-out shadow-lg md:shadow-xl hover:shadow-xl md:hover:shadow-2xl overflow-hidden active:scale-95 ${
               currentRating === 'good' 
-                ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-emerald-600 text-white scale-110 shadow-emerald-500/50'
-                : 'bg-white dark:bg-gray-800 text-emerald-600 dark:text-emerald-400 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-green-50 dark:hover:from-emerald-950/30 dark:hover:to-green-950/30 hover:scale-110 hover:-translate-y-2 shadow-emerald-200/50 hover:shadow-emerald-300/60'
+                ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-emerald-600 text-white scale-105 md:scale-110 shadow-emerald-500/50'
+                : 'bg-white dark:bg-gray-800 text-emerald-600 dark:text-emerald-400 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-green-50 dark:hover:from-emerald-950/30 dark:hover:to-green-950/30 hover:scale-105 md:hover:scale-110 hover:-translate-y-1 md:hover:-translate-y-2 shadow-emerald-200/50 hover:shadow-emerald-300/60'
             }`}
           >
             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-            <span className="relative z-10 flex items-center gap-3">
-              <span className="text-3xl">😊</span>
-              <span>{t("good")}</span>
+            <span className="relative z-10 flex items-center gap-2 md:gap-3">
+              <span className="text-xl md:text-3xl">😊</span>
+              <span className="hidden sm:inline">{t("good")}</span>
             </span>
           </button>
         </div>

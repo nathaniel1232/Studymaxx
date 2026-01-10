@@ -278,14 +278,14 @@ export default function Home() {
           </div>
 
           {/* Top Navigation */}
-          <nav className="max-w-7xl mx-auto w-full flex justify-between items-center mb-12 relative" style={{ zIndex: 100 }}>
+          <nav className="max-w-7xl mx-auto w-full flex justify-between items-center mb-8 md:mb-12 relative px-4" style={{ zIndex: 100 }}>
             <div className="flex items-center gap-2" style={{ position: 'relative', zIndex: 1 }}>
-              <div className="text-3xl font-black text-teal-600 dark:text-teal-400">
+              <div className="text-2xl md:text-3xl font-black text-teal-600 dark:text-teal-400">
                 StudyMaxx
               </div>
             </div>
             
-            <div className="flex items-center gap-3" style={{ position: 'relative', zIndex: 1000 }}>
+            <div className="flex items-center gap-2 md:gap-3" style={{ position: 'relative', zIndex: 1000 }}>
               {user ? (
                 <UserProfileDropdown 
                   user={user} 
@@ -297,14 +297,14 @@ export default function Home() {
               ) : (
                 <button
                   onClick={() => setShowLoginModal(true)}
-                  className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all hover:scale-105 bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg"
+                  className="px-4 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl font-bold text-xs md:text-sm transition-all hover:scale-105 bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg"
                 >
                   Sign In
                 </button>
               )}
               <button
                 onClick={handleViewSettings}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all hover:scale-105"
+                className="hidden sm:flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl font-medium text-xs md:text-sm transition-all hover:scale-105"
                 style={{ 
                   background: 'var(--surface)',
                   border: '1px solid var(--border)',
@@ -316,45 +316,45 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <span>{t("settings")}</span>
+                <span className="hidden md:inline">{t("settings")}</span>
               </button>
             </div>
           </nav>
           
           {/* Hero Section - CLEAR & SIMPLE */}
           <div className="flex-1 flex items-center justify-center relative z-10">
-            <div className="max-w-3xl mx-auto px-4 py-8">
+            <div className="max-w-3xl mx-auto px-4 py-4 md:py-8">
               {/* Main Headline - Direct & Clear */}
-              <h1 className="text-5xl md:text-6xl font-black mb-6 leading-tight" style={{ color: 'var(--foreground)' }}>
+              <h1 className="text-4xl md:text-6xl font-black mb-4 md:mb-6 leading-tight" style={{ color: 'var(--foreground)' }}>
                 Turn notes into flashcards in seconds
               </h1>
               
               {/* Subheading - What it does */}
-              <p className="text-xl md:text-2xl mb-4 font-medium" style={{ color: 'var(--foreground-muted)' }}>
+              <p className="text-lg md:text-2xl mb-3 md:mb-4 font-medium" style={{ color: 'var(--foreground-muted)' }}>
                 Paste your notes, get flashcards instantly. Study smarter.
               </p>
               
               {/* Social proof line - different based on login */}
               {!user ? (
-                <p className="text-lg mb-12 font-semibold text-teal-600 dark:text-teal-400">
+                <p className="text-base md:text-lg mb-8 md:mb-12 font-semibold text-teal-600 dark:text-teal-400">
                   ⭐ Try it now with example content - no signup needed
                 </p>
               ) : null}
 
               {/* MAIN CTA - Different based on login status */}
-              <div className="mb-16 flex flex-col sm:flex-row items-center justify-center gap-5">
+              <div className="mb-12 md:mb-16 flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-5">
                 {user ? (
                   // Logged-in user: Primary action is "Create study set"
                   <button
                     onClick={handleCreateNew}
-                    className="group relative px-10 py-5 rounded-2xl text-xl font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                    className="group relative px-8 md:px-10 py-4 md:py-5 rounded-xl md:rounded-2xl text-lg md:text-xl font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95 w-full sm:w-auto"
                     style={{
                       background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)',
                       boxShadow: '0 10px 30px rgba(20, 184, 166, 0.3)'
                     }}
                   >
-                    <span className="flex items-center gap-3">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span className="flex items-center justify-center gap-2 md:gap-3">
+                      <svg className="w-5 md:w-6 h-5 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                       </svg>
                       Create study set
@@ -371,7 +371,7 @@ export default function Home() {
                       setViewMode('input');
                       window.dispatchEvent(new CustomEvent('prefillExample', { detail: exampleNotes }));
                     }}
-                    className="group relative px-10 py-5 rounded-2xl text-xl font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                    className="group relative px-8 md:px-10 py-4 md:py-5 rounded-xl md:rounded-2xl text-lg md:text-xl font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95 w-full sm:w-auto"
                     style={{
                       background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)',
                       boxShadow: '0 10px 30px rgba(20, 184, 166, 0.3)'
@@ -385,7 +385,7 @@ export default function Home() {
                 {user && savedSets.length > 0 && (
                   <button
                     onClick={handleViewSavedSets}
-                    className="px-10 py-5 rounded-2xl text-xl font-bold transition-all duration-300 hover:scale-105"
+                    className="px-8 md:px-10 py-4 md:py-5 rounded-xl md:rounded-2xl text-lg md:text-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95 w-full sm:w-auto"
                     style={{
                       background: 'var(--surface)',
                       border: '2.5px solid var(--border)',

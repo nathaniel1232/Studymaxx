@@ -236,12 +236,13 @@ async function generateWithAIFast(
   numberOfFlashcards: number,
   language: string = "English",
   targetGrade?: string,
-  subject?: string
+  subject?: string,
+  materialType?: string
 ): Promise<Flashcard[]> {
   console.log(`[generateWithAIFast] Target: ${numberOfFlashcards} flashcards (fast single-request mode)`);
   
   // Single request with streamlined generation - no batching for speed
-  return await generateWithAI(text, numberOfFlashcards, language, targetGrade, subject);
+  return await generateWithAI(text, numberOfFlashcards, language, targetGrade, subject, materialType);
 }
 
 /**
@@ -321,7 +322,8 @@ async function generateWithAI(
   numberOfFlashcards: number,
   language: string = "English",
   targetGrade?: string,
-  subject?: string
+  subject?: string,
+  materialType?: string
 ): Promise<Flashcard[]> {
   const targetCount = numberOfFlashcards; // Store original request
   
@@ -339,22 +341,62 @@ async function generateWithAI(
   // Fast mode: NO BUFFER - generate exact count only
   const bufferedCount = numberOfFlashcards; // Exact count for speed
 
+  // Build material-specific instructions
+  let materialInstructions = "";
+  if (materialType === "image") {
+    materialInstructions = `
+IMPORTANT - IMAGE CONTENT INSTRUCTIONS:
+- Extract EDUCATIONAL CONTENT ONLY from the image
+- IGNORE logistical/metadata details such as:
+  * Exam dates, times, or schedules
+  * Physical locations or platforms
+  * Week numbers or administrative dates
+  * Testing format information
+  * Where/when exams take place
+- FOCUS ON these types of content:
+  * Learning goals and objectives
+  * Curriculum topics and concepts
+  * Subject matter definitions
+  * Key principles and theories
+  * Processes and procedures
+  * Cause-and-effect relationships
+  * Comparisons and contrasts
+  * Facts and information students must learn
+- Generate flashcards about the SUBJECT MATTER, not about the exam itself
+- Create pedagogically sound cards that teach the concepts`;
+  } else if (materialType === "pdf") {
+    materialInstructions = `
+IMPORTANT - PDF CONTENT INSTRUCTIONS:
+- Extract the core educational concepts from the PDF
+- Focus on main ideas, definitions, and explanations
+- Ignore header/footer information, page numbers, and administrative text
+- Create comprehensive flashcards that cover the key learning points`;
+  } else if (materialType === "youtube") {
+    materialInstructions = `
+IMPORTANT - YOUTUBE TRANSCRIPT INSTRUCTIONS:
+- Extract the main educational concepts from the transcript
+- Ignore introductions, thanking viewers, and filler content
+- Focus on the core teaching content and explanations
+- Create flashcards that capture the key lessons from the video`;
+  }
+
   const systemPrompt = `You are an expert educational assistant creating flashcards${subject ? ` for ${subject}` : ""}.
 
-Generate EXACTLY ${bufferedCount} flashcards in ${language} from the provided text.
+Generate EXACTLY ${bufferedCount} flashcards in ${language} from the provided text.${materialInstructions}
 
 REQUIREMENTS:
-1. Questions: Clear and specific
+1. Questions: Clear, specific, and educational. Test understanding of key concepts.
 2. Answers: ${answerGuidance} Be concise and accurate.
 3. Distractors: Create 3 wrong options for each card that are SIMILAR LENGTH to the correct answer
 4. All 4 options (correct + 3 distractors) should have roughly the same word count
-5. Make distractors plausible but incorrect (subtle factual errors)
+5. Make distractors plausible but incorrect (subtle factual errors, common misconceptions)
 
 Quality rules:
 - Use only factually correct information
 - Keep language clear and educational
 - Cover the most important concepts from the text
 - If text is short, expand with standard curriculum knowledge on the same topic
+- Ensure flashcards are pedagogically sound and actually teach the topic
 
 JSON format:
 {
@@ -692,7 +734,8 @@ export async function POST(req: NextRequest) {
       numberOfFlashcards, 
       language || "English",
       targetGrade,
-      subject
+      subject,
+      materialType
     );
 
     // STEP 5: Increment usage counters (fire-and-forget - don't wait)
