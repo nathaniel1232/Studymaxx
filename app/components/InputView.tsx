@@ -39,6 +39,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
   // Multi-image upload (NEW - images only)
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imageProcessingProgress, setImageProcessingProgress] = useState<string>("");
+  const [isImageExtractionComplete, setIsImageExtractionComplete] = useState(true); // Track if extraction finished successfully
 
   // Check premium status on mount AND when session changes
   useEffect(() => {
@@ -202,6 +203,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
 
     setIsLoading(true);
     setError("");
+    setIsImageExtractionComplete(false); // Mark extraction as not yet complete
     setImageProcessingProgress(`Processing ${selectedImages.length} image(s)...`);
 
     try {
@@ -209,6 +211,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
       if (!supabase) {
         setError(messages.errors.connectionError);
         setIsLoading(false);
+        setIsImageExtractionComplete(false);
         return;
       }
 
@@ -216,6 +219,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
       if (!session) {
         setError(messages.errors.signInRequired);
         setIsLoading(false);
+        setIsImageExtractionComplete(false);
         return;
       }
 
@@ -259,6 +263,9 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
         `(${data.metadata.totalCharacters} characters total)`
       );
 
+      // Mark extraction as complete - NOW user can generate
+      setIsImageExtractionComplete(true);
+
       // Clear selected images after processing
       setSelectedImages([]);
 
@@ -269,6 +276,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
       const errorMsg = err instanceof Error ? err.message : "";
       setError(errorMsg || messages.errors.imageProcessingFailed);
       setImageProcessingProgress("");
+      setIsImageExtractionComplete(false);
     } finally {
       setIsLoading(false);
     }
@@ -303,6 +311,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
 
     setIsLoading(true);
     setError("");
+    setIsImageExtractionComplete(false); // Reset extraction state when new images are selected
 
     try {
       const newUploadedFiles = [...uploadedFiles];
@@ -879,25 +888,76 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                     <button
                       type="button"
                       onClick={handleProcessImages}
-                      disabled={isLoading}
-                      className="w-full mt-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl"
+                      disabled={isLoading || selectedImages.length === 0}
+                      className={`w-full mt-4 px-6 py-4 font-bold rounded-xl transition-all shadow-lg text-white flex items-center justify-center gap-2 ${
+                        isLoading 
+                          ? "bg-gradient-to-r from-blue-500 to-purple-500 cursor-wait"
+                          : isImageExtractionComplete
+                          ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 hover:shadow-xl"
+                          : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl"
+                      }`}
                     >
-                      {isLoading ? "Processing..." : `Process ${selectedImages.length} Image(s)`}
+                      {isLoading ? (
+                        <>
+                          <span className="animate-spin">⚙️</span>
+                          <span>Extracting text...</span>
+                        </>
+                      ) : isImageExtractionComplete ? (
+                        <>
+                          <span>✅</span>
+                          <span>Text ready to use</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>📄</span>
+                          <span>Extract text from {selectedImages.length} image{selectedImages.length !== 1 ? 's' : ''}</span>
+                        </>
+                      )}
                     </button>
                     
-                    {/* Progress indicator */}
-                    {imageProcessingProgress && (
-                      <p className="mt-2 text-sm text-blue-600 dark:text-blue-400 text-center">
-                        {imageProcessingProgress}
-                      </p>
-                    )}
+                    {/* Progress indicator - shows status and prevents confusion */}
+                    <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                      {isLoading && (
+                        <div className="space-y-2">
+                          <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                            ⏳ Reading your images...
+                          </p>
+                          <p className="text-xs text-blue-600 dark:text-blue-400">
+                            {imageProcessingProgress}
+                          </p>
+                          <div className="w-full h-2 bg-blue-200 dark:bg-blue-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 animate-pulse"></div>
+                          </div>
+                          <p className="text-xs text-blue-600 dark:text-blue-400 italic">
+                            This usually takes 10-30 seconds. Don't close the app.
+                          </p>
+                        </div>
+                      )}
+                      {!isLoading && isImageExtractionComplete && (
+                        <div className="space-y-2">
+                          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
+                            ✅ {imageProcessingProgress}
+                          </p>
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                            Ready to proceed! The extracted text has been added to your notes.
+                          </p>
+                        </div>
+                      )}
+                      {!isLoading && !isImageExtractionComplete && selectedImages.length > 0 && (
+                        <div>
+                          <p className="text-xs text-blue-600 dark:text-blue-400">
+                            Click the button above to extract text from your image{selectedImages.length !== 1 ? 's' : ''}.
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
                 {/* Show processing note */}
                 {selectedImages.length === 0 && !isLoading && (
                   <p className="mt-3 text-xs text-gray-500 dark:text-gray-400 text-center">
-                    Select images above, then click "Process" to extract text via OCR
+                    Select images above to get started
                   </p>
                 )}
               </div>
@@ -1026,9 +1086,22 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
               </div>
             )}
 
+            {/* Warning if extraction not complete for images */}
+            {selectedImages.length > 0 && !isImageExtractionComplete && !isLoading && (
+              <div className="mb-8 p-4 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-xl">
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                  <span>⏳</span>
+                  <span>Please extract text from your images first</span>
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                  Scroll up and click "Extract text" above, then you can create flashcards.
+                </p>
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={isLoading || !textInput.trim()}
+              disabled={isLoading || !textInput.trim() || (selectedImages.length > 0 && !isImageExtractionComplete)}
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-6 px-8 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl text-xl"
             >
               {isLoading ? (
