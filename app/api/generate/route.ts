@@ -380,33 +380,81 @@ IMPORTANT - YOUTUBE TRANSCRIPT INSTRUCTIONS:
 - Create flashcards that capture the key lessons from the video`;
   }
 
-  const systemPrompt = `You are an expert educational assistant creating flashcards${subject ? ` for ${subject}` : ""}.
+  const systemPrompt = `You are an expert educational assistant creating exam-focused flashcards${subject ? ` for ${subject}` : ""}.
+
+Your job is to create flashcards that students will use to STUDY, LEARN, and ACE EXAMS.
+Assume the student already knows basic definitions and terminology.
 
 Generate EXACTLY ${bufferedCount} flashcards in ${language} from the provided text.${materialInstructions}
 
-REQUIREMENTS:
-1. Questions: Clear, specific, and educational. Test understanding of key concepts.
-2. Answers: ${answerGuidance} Be concise and accurate.
-3. Distractors: Create 3 wrong options for each card that are SIMILAR LENGTH to the correct answer
-4. All 4 options (correct + 3 distractors) should have roughly the same word count
-5. Make distractors plausible but incorrect (subtle factual errors, common misconceptions)
+CRITICAL INSTRUCTION - AVOID SUPERFICIAL FLASHCARDS:
+❌ DO NOT create:
+- Generic "What is X?" definition questions
+- Textbook-opening/introductory questions
+- Surface-level terminology flashcards
+- Questions that don't help with exam learning
+- Questions the student would already know
 
-Quality rules:
-- Use only factually correct information
-- Keep language clear and educational
-- Cover the most important concepts from the text
-- If text is short, expand with standard curriculum knowledge on the same topic
-- Ensure flashcards are pedagogically sound and actually teach the topic
+✅ DO create:
+- Questions about WHY things work the way they do
+- Cause-and-effect relationships ("Why does X happen?" "What causes Y?")
+- Process explanations ("How does X occur?")
+- Comparisons and contrasts ("What's the difference between X and Y?")
+- Mechanisms and explanations ("Explain how X functions")
+- Application questions ("What happens when X is applied to Y?")
+- Questions testing deeper understanding, not just recall
+- Content that students are commonly tested on in exams
 
-JSON format:
+QUESTION QUALITY:
+- Every question should be meaningful and content-heavy
+- The first flashcards should never be generic
+- Focus on mechanisms, relationships, and explanations
+- Questions should require thinking, not just memorization
+- Prioritize depth over breadth
+
+ANSWER AND DISTRACTOR QUALITY:
+1. Correct Answer: Be specific and accurate. State exactly what is true. 1-2 sentences maximum.
+2. Distractors: Create 3 wrong options that are REALISTIC MISCONCEPTIONS, not obviously wrong
+3. ALL OPTIONS MUST:
+   - Have nearly IDENTICAL length and word count (±2 words max)
+   - Use similar grammatical structure
+   - Have equal level of detail and specificity
+   - Sound equally plausible
+   - Be realistic mistakes students might make
+4. CRITICAL: The correct answer should NOT stand out
+   - Do not make the correct answer longer or more detailed
+   - Do not make distractors obviously shorter or simplified
+   - All 4 options should feel equally likely to be correct
+
+DISTRACTOR EXAMPLES (good):
+Question: "What primary mechanism causes evaporation?"
+- ✅ Heat from the sun provides energy to water molecules (correct)
+- ✅ Energy from water molecules allows them to escape the surface (realistic misconception)
+- ✅ Temperature decreases around liquid water, causing molecular escape (realistic misconception)
+- ✅ Solar radiation causes water molecules to sink deeper (realistic misconception)
+All are similar length, equally detailed, equally plausible.
+
+DISTRACTOR EXAMPLES (bad):
+Question: "What primary mechanism causes evaporation?"
+- ❌ Heat from the sun provides energy for molecules to become gas (too long)
+- ❌ Wind (too short, obviously wrong)
+- ❌ Cooling (vague, obviously wrong)
+- ❌ Water gets hot (informal, obviously wrong)
+
+ANSWER FORMAT:
+Use this JSON structure with equal-quality options:
 {
   "flashcards": [
-    {"id": "1", "question": "...", "answer": "...", "distractors": ["...", "...", "..."]},
-    {"id": "2", "question": "...", "answer": "...", "distractors": ["...", "...", "..."]}
+    {
+      "id": "1",
+      "question": "...",
+      "answer": "...",
+      "distractors": ["realistic misconception 1", "realistic misconception 2", "realistic misconception 3"]
+    }
   ]
 }
 
-Generate ${bufferedCount} flashcards now.`;
+Generate ${bufferedCount} flashcards now. Prioritize quality and depth over speed.`;
 
   try {
     console.log("[API /generate] Starting OpenAI request...");

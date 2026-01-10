@@ -106,7 +106,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     return () => clearInterval(interval);
   }, [isGenerating, generationStartTime]);
 
-  // Message rotation effect - rotate every 5 seconds
+  // Message rotation effect - rotate every 8 seconds (longer for readability)
   useEffect(() => {
     if (!isGenerating) {
       setCurrentMessageIndex(0);
@@ -115,7 +115,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
     const interval = setInterval(() => {
       setCurrentMessageIndex((prev) => (prev + 1) % 3);
-    }, 5000);
+    }, 8000); // Increased from 5000ms to 8000ms so users can read the quick tip
     
     return () => clearInterval(interval);
   }, [isGenerating]);
