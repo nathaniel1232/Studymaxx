@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Check if environment variables are set
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  console.error('[Premium Check] NEXT_PUBLIC_SUPABASE_URL is not set');
+}
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('[Premium Check] SUPABASE_SERVICE_ROLE_KEY is not set - THIS WILL CAUSE 500 ERROR');
+}
+
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error("Supabase credentials not configured");
+  throw new Error("Supabase credentials not configured. Missing: " + 
+    (!process.env.NEXT_PUBLIC_SUPABASE_URL ? "SUPABASE_URL " : "") +
+    (!process.env.SUPABASE_SERVICE_ROLE_KEY ? "SERVICE_ROLE_KEY" : ""));
 }
 
 // CRITICAL: Use service role key to bypass RLS and read is_premium column
@@ -10,6 +20,8 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
+
+console.log('[Premium Check] Supabase client initialized with service role key');
 
 /**
  * Check if a user has premium access and their usage limits
