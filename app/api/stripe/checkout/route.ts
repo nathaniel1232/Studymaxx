@@ -53,6 +53,36 @@ export async function POST(req: NextRequest) {
     const userId = user.id;
     const email = user.email;
 
+    // Check if user already has an active subscription to prevent double billing
+    try {
+      const existingCustomers = await stripe.customers.list({
+        email: email,
+        limit: 10
+      });
+
+      for (const customer of existingCustomers.data) {
+        const subscriptions = await stripe.subscriptions.list({
+          customer: customer.id,
+          status: 'active',
+          limit: 10
+        });
+
+        if (subscriptions.data.length > 0) {
+          console.log(`[Checkout] User ${email} already has active subscription`);
+          return NextResponse.json(
+            { 
+              error: "You already have an active Premium subscription. Please visit the billing portal to manage your subscription.",
+              hasActiveSubscription: true
+            },
+            { status: 400 }
+          );
+        }
+      }
+    } catch (err: any) {
+      console.error('[Checkout] Failed to check existing subscriptions:', err);
+      // Continue anyway - better to allow potential duplicate than block legitimate purchase
+    }
+
     // Get the origin for redirect URLs
     const origin = req.headers.get("origin") || "http://localhost:3000";
 

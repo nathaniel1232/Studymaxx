@@ -178,6 +178,12 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     return () => window.removeEventListener('premiumStatusChanged', handlePremiumStatusChange);
   }, []);
 
+  // Debug: Log whenever isPremium changes
+  useEffect(() => {
+    console.log('[CreateFlowView] 🎯 isPremium STATE CHANGED TO:', isPremium);
+    console.log('[CreateFlowView] Stack trace:', new Error().stack);
+  }, [isPremium]);
+
   const checkPremiumStatus = async () => {
     console.log('[CreateFlowView] ===== STARTING PREMIUM CHECK =====');
     try {
@@ -977,9 +983,12 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   {/* DOCX Files - Premium */}
                   <button
                     onClick={() => {
+                      console.log('[CreateFlowView] DOCX clicked - isPremium:', isPremium);
                       if (!isPremium) {
+                        console.log('[CreateFlowView] ❌ Not premium - showing modal');
                         setShowPremiumModal(true);
                       } else {
+                        console.log('[CreateFlowView] ✅ Is premium - allowing DOCX');
                         setSelectedMaterial("docx");
                       }
                     }}
@@ -1004,9 +1013,12 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   {/* Image - Premium Only */}
                   <button
                     onClick={() => {
+                      console.log('[CreateFlowView] Image clicked - isPremium:', isPremium);
                       if (!isPremium) {
+                        console.log('[CreateFlowView] ❌ Not premium - showing modal');
                         setShowPremiumModal(true);
                       } else {
+                        console.log('[CreateFlowView] ✅ Is premium - allowing Image');
                         setSelectedMaterial("image");
                       }
                     }}
@@ -1322,13 +1334,20 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   const actualCardCount = getActualCardCount(grade);
                   const isLocked = !isPremium && actualCardCount > 20;
                   
+                  if (grade === 'A' || grade === 'B') {
+                    console.log(`[CreateFlowView] Grade ${grade}: isPremium=${isPremium}, actualCardCount=${actualCardCount}, isLocked=${isLocked}`);
+                  }
+                  
                   return (
                     <button
                       key={grade}
                       onClick={() => {
+                        console.log(`[CreateFlowView] Grade ${grade} clicked - isLocked: ${isLocked}, isPremium: ${isPremium}`);
                         if (isLocked) {
+                          console.log('[CreateFlowView] ❌ Grade locked - showing premium modal');
                           setShowPremiumModal(true);
                         } else {
+                          console.log('[CreateFlowView] ✅ Grade unlocked - setting target grade');
                           setTargetGrade(grade);
                         }
                       }}
