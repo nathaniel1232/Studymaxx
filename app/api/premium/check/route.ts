@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error("Supabase credentials not configured");
 }
 
+// CRITICAL: Use service role key to bypass RLS and read is_premium column
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 /**
  * Check if a user has premium access and their usage limits
- * NOW USES AUTHENTICATED USER ID
+ * NOW USES AUTHENTICATED USER ID AND SERVICE ROLE KEY TO BYPASS RLS
  */
 export async function GET(request: NextRequest) {
   try {
