@@ -210,11 +210,11 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
             <div className="text-center">
               <div className="text-6xl mb-4">📧</div>
               <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>
-                {t("magic_link_sent_title") || "Check Your Email!"}
+                {t("magic_link_sent_title") || "Check Your Email"}
               </h2>
               <p className="text-sm mb-6" style={{ color: 'var(--foreground-muted)' }}>
                 {t("magic_link_sent")?.replace("{email}", email) || 
-                 `We've sent a magic link to ${email}. Click it to log in instantly.`}
+                 `We sent a login link to ${email}. Click it to sign in.`}
               </p>
               <button
                 onClick={onClose}

@@ -20,6 +20,7 @@ interface FlashcardRequest {
   difficulty?: string;
   userId?: string;
   materialType?: string;
+  outputLanguage?: "auto" | "en";
 }
 
 /**
@@ -29,7 +30,7 @@ interface FlashcardRequest {
 export async function POST(req: NextRequest) {
   try {
     const body: FlashcardRequest = await req.json();
-    const { text, numberOfFlashcards, subject, targetGrade, difficulty, userId, materialType } = body;
+    const { text, numberOfFlashcards, subject, targetGrade, difficulty, userId, materialType, outputLanguage } = body;
 
     // Validate required fields
     if (!text || !numberOfFlashcards) {
@@ -67,6 +68,7 @@ export async function POST(req: NextRequest) {
           difficulty,
           language,
           materialType: materialType || "notes",
+          outputLanguage: outputLanguage || "auto",
         }),
         signal: controller.signal,
       });

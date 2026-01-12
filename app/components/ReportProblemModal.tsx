@@ -71,32 +71,29 @@ export default function ReportProblemModal({ isOpen, onClose }: ReportProblemMod
         className="bg-white dark:bg-gray-900 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header - Gradient Background */}
-        <div className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 p-8 rounded-t-3xl">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-3xl font-black text-white flex items-center gap-3">
-                <span className="text-4xl">🐛</span>
-                Report a Problem
-              </h2>
-              <p className="text-base text-orange-100 mt-2 font-medium">
-                Help us improve StudyMaxx by reporting issues and feedback
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-orange-100 text-3xl font-light hover:scale-110 transition-transform"
-            >
-              ×
-            </button>
+        {/* Header */}
+        <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-6 rounded-t-3xl flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Report a Problem
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Help us improve by sharing feedback
+            </p>
           </div>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl transition-colors"
+          >
+            ×
+          </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Email (optional) */}
           <div>
-            <label className="block text-base font-bold text-gray-900 dark:text-white mb-3">
+            <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
               Email (optional)
             </label>
             <input
@@ -104,79 +101,79 @@ export default function ReportProblemModal({ isOpen, onClose }: ReportProblemMod
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@example.com"
-              className="w-full px-5 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-3 focus:ring-orange-500 focus:border-orange-500 text-base font-medium transition-all"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all"
             />
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
               Leave blank to submit anonymously
             </p>
           </div>
 
           {/* Problem Type */}
           <div>
-            <label className="block text-base font-bold text-gray-900 dark:text-white mb-3">
+            <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
               Problem Type
             </label>
             <select
               value={problemType}
               onChange={(e) => setProblemType(e.target.value)}
-              className="w-full px-5 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-3 focus:ring-orange-500 focus:border-orange-500 text-base font-medium transition-all"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all"
             >
-              <option value="bug">🐛 Bug / Error</option>
-              <option value="feature">💡 Feature Request</option>
-              <option value="quality">📝 Content Quality Issue</option>
-              <option value="performance">⚡ Performance Issue</option>
-              <option value="other">💬 Other</option>
+              <option value="bug">Bug or Error</option>
+              <option value="feature">Feature Request</option>
+              <option value="quality">Content Quality</option>
+              <option value="performance">Performance Issue</option>
+              <option value="other">Other</option>
             </select>
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-base font-bold text-gray-900 dark:text-white mb-3">
+            <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
               Description *
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Please describe the problem in detail..."
-              rows={7}
+              rows={5}
               required
-              className="w-full px-5 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-3 focus:ring-orange-500 focus:border-orange-500 text-base font-medium resize-none transition-all"
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none transition-all"
             />
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
               Include steps to reproduce if reporting a bug
             </p>
           </div>
 
           {/* Status Messages */}
           {submitStatus === "success" && (
-            <div className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/40 dark:to-emerald-900/40 border-2 border-green-300 dark:border-green-700 rounded-2xl">
-              <p className="text-green-700 dark:text-green-300 text-base font-bold">
-                ✓ Report submitted successfully! Thank you for your feedback.
+            <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <p className="text-green-700 dark:text-green-300 text-sm">
+                Report submitted successfully. Thank you for your feedback.
               </p>
             </div>
           )}
 
           {submitStatus === "error" && (
-            <div className="p-6 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/40 dark:to-pink-900/40 border-2 border-red-300 dark:border-red-700 rounded-2xl">
-              <p className="text-red-700 dark:text-red-300 text-base font-bold">
-                ✗ Failed to submit report. Please try again or email us at studymaxxer@gmail.com
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-red-700 dark:text-red-300 text-sm">
+                Failed to submit report. Please try again or email studymaxxer@gmail.com
               </p>
             </div>
           )}
 
           {/* Actions */}
-          <div className="flex gap-4 pt-4">
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-4 border-2 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-2xl font-bold text-base hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors hover:scale-105 transform"
+              className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg font-medium text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !description.trim()}
-              className="flex-1 px-6 py-4 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 text-white rounded-2xl font-black text-base hover:shadow-2xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
+              className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? "Submitting..." : "Submit Report"}
             </button>

@@ -13,6 +13,7 @@ interface Flashcard {
  * @param targetGrade - Target grade (A-F) (optional)
  * @param userId - User ID for premium checks (optional, will be auto-generated if not provided)
  * @param materialType - Type of material (notes, pdf, youtube, image) - notes has no limits
+ * @param outputLanguage - Language for flashcard output: "auto" (detect from input) or "en" (English)
  */
 export async function generateFlashcards(
   text: string,
@@ -20,7 +21,8 @@ export async function generateFlashcards(
   subject?: string,
   targetGrade?: string,
   userId?: string,
-  materialType: string = "notes"
+  materialType: string = "notes",
+  outputLanguage: "auto" | "en" = "auto"
 ): Promise<Flashcard[]> {
   // Get or generate userId
   const effectiveUserId = userId || (typeof window !== 'undefined' 
@@ -38,6 +40,7 @@ export async function generateFlashcards(
       difficulty: "Medium", // Default difficulty
       userId: effectiveUserId,
       materialType: materialType,
+      outputLanguage: outputLanguage,
     }),
   });
 

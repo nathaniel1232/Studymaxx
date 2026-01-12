@@ -11,7 +11,7 @@ interface RateLimitInfo {
   reason?: string;
 }
 
-const FREE_DAILY_LIMIT = 1;
+const FREE_DAILY_LIMIT = 3;
 const RATE_LIMIT_KEY_PREFIX = 'ai_rate_limit_';
 const RATE_LIMIT_TIMESTAMP_PREFIX = 'ai_rate_limit_ts_';
 

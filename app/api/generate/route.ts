@@ -44,6 +44,7 @@ interface GenerateRequest {
   difficulty?: string;
   language?: string;
   materialType?: string;
+  outputLanguage?: "auto" | "en";
 }
 
 interface Flashcard {
@@ -415,16 +416,27 @@ QUESTION QUALITY:
 ANSWER AND DISTRACTOR QUALITY:
 1. Correct Answer: Be specific and accurate. State exactly what is true. 1-2 sentences maximum.
 2. Distractors: Create 3 wrong options that are REALISTIC MISCONCEPTIONS, not obviously wrong
-3. ALL OPTIONS MUST:
-   - Have nearly IDENTICAL length and word count (±2 words max)
-   - Use similar grammatical structure
-   - Have equal level of detail and specificity
-   - Sound equally plausible
-   - Be realistic mistakes students might make
-4. CRITICAL: The correct answer should NOT stand out
-   - Do not make the correct answer longer or more detailed
-   - Do not make distractors obviously shorter or simplified
-   - All 4 options should feel equally likely to be correct
+3. CRITICAL LENGTH RULE - ALL 4 OPTIONS MUST:
+   - Have between 8-15 words each (never shorter than 8 words)
+   - All options MUST be the same length (within ±2 words of each other)
+   - Start with the same type of word (if answer starts with "The", all distractors start with "The")
+   - Use identical grammatical patterns
+   - Be the same level of technical/simple language
+   - Sound equally confident and complete
+4. DISTRACTOR CONTENT RULES:
+   - Base distractors on real student misconceptions
+   - Use plausible but incorrect facts from the same topic
+   - Never use vague words like "sometimes", "maybe", "things"
+   - Each distractor should require actual knowledge to reject
+   - Make distractors sound equally detailed and professional as the correct answer
+5. THE CORRECT ANSWER SHOULD NEVER:
+   - Be longer or more detailed than distractors
+   - Use more specific terminology than distractors
+   - Sound more "academic" or polished than distractors
+6. IF THE CORRECT ANSWER IS SHORT, MAKE IT LONGER:
+   - Add context, explanation, or reasoning
+   - Include "because", "which means", "resulting in" phrases
+   - Ensure 8-15 words minimum
 
 DISTRACTOR EXAMPLES (good):
 Question: "What primary mechanism causes evaporation?"
@@ -695,7 +707,11 @@ Generate ${bufferedCount} flashcards now. Prioritize quality and depth over spee
 export async function POST(req: NextRequest) {
   try {
     const body: GenerateRequest = await req.json();
-    const { userId, text, numberOfFlashcards, subject, targetGrade, difficulty, language, materialType } = body;
+    const { userId, text, numberOfFlashcards, subject, targetGrade, difficulty, language: detectedLanguage, materialType, outputLanguage } = body;
+
+    // Determine the actual output language
+    // If outputLanguage is "en", always use English; otherwise use detected language or default to English
+    const language = outputLanguage === "en" ? "English" : (detectedLanguage || "English");
 
     // Validate input
     if (!userId || !text || !numberOfFlashcards) {

@@ -525,7 +525,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
         <div className="flex items-center justify-between mb-10">
           <button
             onClick={onBack}
-            className="px-6 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-bold transition-all duration-300 rounded-3xl hover:bg-white/80 dark:hover:bg-gray-800/80 hover:shadow-lg hover:scale-105 flex items-center gap-2"
+            className="btn btn-ghost px-4 py-2 font-medium rounded-full flex items-center gap-2"
           >
             <ArrowIcon direction="left" size={16} />
             <span>{t("back")}</span>
@@ -712,42 +712,34 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                 </div>
               </div>
 
-              {/* Streak Display - WITH FIRE EMOJI */}
-              <div className="bg-gradient-to-br from-orange-500 via-amber-600 to-yellow-600 dark:from-orange-600 dark:via-amber-700 dark:to-yellow-700 rounded-3xl p-6 shadow-2xl shadow-orange-500/50">
-                <p className="text-sm text-white font-black uppercase tracking-wide mb-4 drop-shadow-lg">
+              {/* Streak Display */}
+              <div className="bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl p-5 shadow-lg">
+                <p className="text-sm text-white/80 font-medium uppercase tracking-wide mb-2">
                   {t("streak")}
                 </p>
-                <div className="flex items-center justify-center gap-3">
-                  {currentStreak > 0 && (
-                    <span className="text-4xl animate-pulse">🔥</span>
-                  )}
-                  <p className="text-5xl font-black text-white drop-shadow-2xl">
-                    {currentStreak > 0 ? currentStreak : '0'}
-                  </p>
-                  {currentStreak > 0 && (
-                    <span className="text-4xl animate-pulse">🔥</span>
-                  )}
-                </div>
+                <p className="text-4xl font-bold text-white">
+                  {currentStreak > 0 ? currentStreak : '0'}
+                </p>
               </div>
             </>
           ) : (
             <>
-              {/* Progress Display (Review Mode) - NEW COLORS */}
-              <div className="bg-gradient-to-br from-teal-500 via-cyan-600 to-blue-600 dark:from-teal-600 dark:via-cyan-700 dark:to-blue-700 rounded-3xl p-6 shadow-2xl shadow-teal-500/50">
-                <p className="text-sm text-white font-black uppercase tracking-wide mb-4 drop-shadow-lg">
-                  📊 {t("progress")}
+              {/* Progress Display (Review Mode) */}
+              <div className="bg-gradient-to-br from-teal-500 to-cyan-500 rounded-2xl p-5 shadow-lg">
+                <p className="text-sm text-white/80 font-medium uppercase tracking-wide mb-2">
+                  {t("progress")}
                 </p>
-                <p className="text-4xl font-black text-white drop-shadow-2xl">
+                <p className="text-3xl font-bold text-white">
                   {currentIndex + 1} / {flashcards.length}
                 </p>
               </div>
 
-              {/* Mastered Display (Review Mode) - NEW COLORS */}
-              <div className="bg-gradient-to-br from-emerald-500 via-green-600 to-teal-600 dark:from-emerald-600 dark:via-green-700 dark:to-teal-700 rounded-3xl p-6 shadow-2xl shadow-emerald-500/50">
-                <p className="text-sm text-white font-black uppercase tracking-wide mb-4 drop-shadow-lg">
-                  ✨ {t("mastered")}
+              {/* Mastered Display (Review Mode) */}
+              <div className="bg-gradient-to-br from-emerald-500 to-green-500 rounded-2xl p-5 shadow-lg">
+                <p className="text-sm text-white/80 font-medium uppercase tracking-wide mb-2">
+                  {t("mastered")}
                 </p>
-                <p className="text-4xl font-black text-white drop-shadow-2xl">
+                <p className="text-3xl font-bold text-white">
                   {masteredCards.size} / {flashcards.length}
                 </p>
               </div>
@@ -887,10 +879,9 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                 
                 {/* Math indicator */}
                 {isMathQuestion(currentCard.question) && (
-                  <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
-                    <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
-                      <span>✏️</span>
-                      <span>{t("use_pen_paper")}</span>
+                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      {t("use_pen_paper")}
                     </p>
                   </div>
                 )}
@@ -903,32 +894,31 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               {/* Answer Options or Self-Assessment */}
               {quizOptions.length > 0 ? (
                 /* Multiple Choice Quiz */
-                <div className="space-y-4">
-                  <p className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-4 flex items-center gap-2">
-                    <span>👉</span>
-                    <span>Select the correct answer:</span>
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">
+                    Select the correct answer:
                   </p>
                   {quizOptions.map((option, index) => {
                     const isSelected = selectedAnswer === option;
                     const isCorrectOption = option === currentCard.answer;
                     const showFeedback = selectedAnswer !== null;
                     
-                    let buttonClass = "group relative w-full px-8 py-6 text-left font-black text-xl rounded-3xl transition-all duration-500 ease-out transform overflow-hidden ";
+                    let buttonClass = "w-full px-5 py-4 text-left font-medium text-base rounded-xl transition-all duration-200 border-2 ";
                     
                     if (showFeedback) {
                       if (isCorrectOption) {
                         // Always highlight the correct answer in green
-                        buttonClass += "bg-gradient-to-br from-green-500 via-emerald-500 to-green-600 text-white shadow-2xl shadow-green-500/60 scale-105 celebrate border-2 border-green-600";
+                        buttonClass += "bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-500";
                       } else if (isSelected && !isCorrectOption) {
                         // Highlight the incorrect selection in red
-                        buttonClass += "bg-gradient-to-br from-red-500 via-pink-500 to-red-600 text-white shadow-2xl shadow-red-500/60 scale-105 shake border-2 border-red-600";
+                        buttonClass += "bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-500";
                       } else {
                         // Other options are dimmed
-                        buttonClass += "bg-gray-300 dark:bg-gray-700 text-gray-600 dark:text-gray-400 opacity-50 border-2 border-gray-400 dark:border-gray-600";
+                        buttonClass += "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 opacity-50 border-gray-300 dark:border-gray-600";
                       }
                     } else {
-                      // Before selection - strong colorful interactive state
-                      buttonClass += "bg-gradient-to-br from-blue-600 to-blue-700 text-white hover:from-blue-500 hover:to-blue-600 hover:scale-105 hover:shadow-2xl cursor-pointer shadow-xl hover:shadow-blue-500/60 border-2 border-blue-800 dark:border-blue-600";
+                      // Before selection - clean interactive state
+                      buttonClass += "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer";
                     }
                     
                     return (
@@ -938,11 +928,10 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         disabled={selectedAnswer !== null}
                         className={buttonClass}
                       >
-                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-                        <div className="flex items-center justify-between relative z-10">
-                          <span className="text-xl">{option}</span>
-                          {showFeedback && isCorrectOption && <span className="text-3xl ml-4">✓</span>}
-                          {showFeedback && isSelected && !isCorrectOption && <span className="text-3xl ml-4">✗</span>}
+                        <div className="flex items-center justify-between">
+                          <span>{option}</span>
+                          {showFeedback && isCorrectOption && <span className="text-green-600 dark:text-green-400 text-lg">✓</span>}
+                          {showFeedback && isSelected && !isCorrectOption && <span className="text-red-600 dark:text-red-400 text-lg">✗</span>}
                         </div>
                       </button>
                     );
@@ -952,11 +941,11 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                 /* Self-Assessment for Math Problems */
                 <div className="space-y-6">
                   {/* Show answer */}
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-2xl p-6">
-                    <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-2 uppercase tracking-wide">
+                  <div className="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl p-5">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                       {t("answer")}:
                     </p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">
                       {currentCard.answer}
                     </p>
                   </div>
@@ -964,38 +953,35 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                   {/* Self-assessment buttons */}
                   {selectedAnswer === null ? (
                     <div>
-                      <p className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 text-center">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4 text-center">
                         {settings.language === 'no' ? 'Hvordan gikk det?' : 'How did you do?'}
                       </p>
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-3 gap-3">
                         <button
                           onClick={() => handleQuizAnswer('wrong')}
-                          className="group relative px-6 py-6 bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold rounded-3xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-110 hover:-translate-y-2 active:scale-95 border-2 border-red-700 overflow-hidden"
+                          className="px-4 py-4 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-700 dark:text-red-300 font-medium rounded-xl transition-all border border-red-200 dark:border-red-800"
                         >
-                          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-                          <span className="relative z-10 flex flex-col items-center gap-2">
-                            <div className="text-5xl">❌</div>
-                            <div className="text-base font-bold uppercase tracking-wide">{settings.language === 'no' ? 'Feil' : 'Wrong'}</div>
+                          <span className="flex flex-col items-center gap-1">
+                            <span className="text-xl">✗</span>
+                            <span className="text-sm">{settings.language === 'no' ? 'Feil' : 'Wrong'}</span>
                           </span>
                         </button>
                         <button
                           onClick={() => handleQuizAnswer('ok')}
-                          className="group relative px-6 py-6 bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold rounded-3xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-110 hover:-translate-y-2 active:scale-95 border-2 border-yellow-700 overflow-hidden"
+                          className="px-4 py-4 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 font-medium rounded-xl transition-all border border-yellow-200 dark:border-yellow-800"
                         >
-                          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-                          <span className="relative z-10 flex flex-col items-center gap-2">
-                            <div className="text-5xl">⚠️</div>
-                            <div className="text-base font-bold uppercase tracking-wide">OK</div>
+                          <span className="flex flex-col items-center gap-1">
+                            <span className="text-xl">~</span>
+                            <span className="text-sm">OK</span>
                           </span>
                         </button>
                         <button
                           onClick={() => handleQuizAnswer('correct')}
-                          className="group relative px-6 py-6 bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold rounded-3xl transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-110 hover:-translate-y-2 active:scale-95 border-2 border-green-700 overflow-hidden"
+                          className="px-4 py-4 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300 font-medium rounded-xl transition-all border border-green-200 dark:border-green-800"
                         >
-                          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-                          <span className="relative z-10 flex flex-col items-center gap-2">
-                            <div className="text-5xl">✅</div>
-                            <div className="text-base font-bold uppercase tracking-wide">{settings.language === 'no' ? 'Riktig' : 'Correct'}</div>
+                          <span className="flex flex-col items-center gap-1">
+                            <span className="text-xl">✓</span>
+                            <span className="text-sm">{settings.language === 'no' ? 'Riktig' : 'Correct'}</span>
                           </span>
                         </button>
                       </div>
@@ -1008,59 +994,31 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               {selectedAnswer !== null && (
                 <div className={`mt-6 p-6 rounded-3xl border-2 ${
                   isAnswerCorrect 
-                    ? 'bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 border-green-300 dark:border-green-700 celebrate' 
-                    : 'bg-gradient-to-br from-orange-100 to-red-100 dark:from-orange-900/40 dark:to-red-900/40 border-orange-300 dark:border-orange-700 shake'
+                    ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
+                    : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
                 }`}>
-                  <p className={`text-center font-black text-2xl flex items-center justify-center gap-3 ${
+                  <p className={`text-center font-semibold text-lg ${
                     isAnswerCorrect ? 'text-green-700 dark:text-green-300' : 'text-orange-700 dark:text-orange-300'
                   }`}>
                     {isAnswerCorrect ? (
                       <>
                         {currentStreak >= 5 ? (
-                          <>
-                            <span className="text-4xl animate-bounce">🎉</span>
-                            <span>ON FIRE! {currentStreak} in a row!</span>
-                            <span className="text-4xl fire-flicker">🔥</span>
-                          </>
+                          <span>{currentStreak} in a row!</span>
                         ) : currentStreak >= 3 ? (
-                          <>
-                            <span className="text-3xl">⚡</span>
-                            <span>Amazing! {currentStreak} streak!</span>
-                            <span className="text-3xl fire-flicker">🔥</span>
-                          </>
-                        ) : currentStreak === 1 ? (
-                          <>
-                            <span className="text-3xl">✅</span>
-                            <span>Perfect!</span>
-                            <span className="text-3xl">🌟</span>
-                          </>
+                          <span>{currentStreak} streak!</span>
                         ) : (
-                          <>
-                            <span className="text-3xl">✓</span>
-                            <span>Nice work!</span>
-                          </>
+                          <span>Correct!</span>
                         )}
                       </>
                     ) : lives > 0 ? (
-                      <>
-                        <span className="text-3xl">💪</span>
-                        <span>{t("keep_going_msg")}</span>
-                      </>
+                      <span>{t("keep_going_msg")}</span>
                     ) : (
-                      <>
-                        <span className="text-3xl">😬</span>
-                        <span>{t("practice_msg")}</span>
-                      </>
+                      <span>{t("practice_msg")}</span>
                     )}
                   </p>
                   {!isAnswerCorrect && (
                     <p className="text-center text-sm text-gray-700 dark:text-gray-300 mt-2">
-                      {t("correct_answer_prefix")} <span className="font-semibold text-blue-600 dark:text-blue-400">{currentCard.answer}</span>
-                    </p>
-                  )}
-                  {isAnswerCorrect && currentStreak > 0 && (
-                    <p className="text-center text-sm text-purple-600 dark:text-purple-400 mt-2">
-                      {currentStreak >= 5 ? t("on_fire_msg") + " 🌟" : t("keep_it_up_msg")}
+                      {t("correct_answer_prefix")} <span className="font-medium text-blue-600 dark:text-blue-400">{currentCard.answer}</span>
                     </p>
                   )}
                 </div>

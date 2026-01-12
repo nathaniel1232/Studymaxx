@@ -88,7 +88,7 @@ export default function Home() {
             
             // Show success toast
             setToast({ 
-              message: '🎉 Premium activated! All features are now unlocked. Enjoy unlimited AI generations, PDF, YouTube, and image uploads!',
+              message: 'Premium activated! All features are now unlocked.',
               type: 'success' 
             });
             
@@ -337,7 +337,7 @@ export default function Home() {
               {/* Social proof line - different based on login */}
               {!user ? (
                 <p className="text-base md:text-lg mb-8 md:mb-12 font-semibold text-teal-600 dark:text-teal-400">
-                  ⭐ Try it now with example content - no signup needed
+                  ⭐ Get started free - no signup needed
                 </p>
               ) : null}
 
@@ -364,12 +364,9 @@ export default function Home() {
                   // Not logged in: "Try it now" with example
                   <button
                     onClick={() => {
-                      const exampleNotes = `Chapter 1: The Water Cycle\n\nEvaporation: Process where water changes from liquid to gas. Happens when the sun heats water in oceans, lakes, and rivers. Temperature affects rate.\n\nCondensation: Water vapor cools and turns back into liquid water droplets. Happens when warm air rises and cools. Forms clouds.\n\nPrecipitation: Water falls to earth as rain, snow, or sleet. Occurs when water droplets in clouds become heavy enough.\n\nCollection: Water collects in oceans, lakes, rivers, and underground. Completes the cycle.\n\nKey Facts: The water cycle is continuous and essential for all life. Plants release water through transpiration. About 97% of Earth's water is salt water.`;
                       setFlashcards([]);
                       setCurrentSetId(null);
-                      handleGenerateFlashcards([], 'Water Cycle', 'Grade 6');
-                      setViewMode('input');
-                      window.dispatchEvent(new CustomEvent('prefillExample', { detail: exampleNotes }));
+                      setViewMode('createFlow');
                     }}
                     className="group relative px-8 md:px-10 py-4 md:py-5 rounded-xl md:rounded-2xl text-lg md:text-xl font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95 w-full sm:w-auto"
                     style={{
@@ -377,7 +374,7 @@ export default function Home() {
                       boxShadow: '0 10px 30px rgba(20, 184, 166, 0.3)'
                     }}
                   >
-                    ✨ Try it now (30 seconds)
+                    Try it free
                   </button>
                 )}
                 
@@ -393,7 +390,7 @@ export default function Home() {
                       boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
                     }}
                   >
-                    📚 My sets ({savedSets.length})
+                    My study sets ({savedSets.length})
                   </button>
                 )}
               </div>
@@ -402,23 +399,23 @@ export default function Home() {
               <div className="grid md:grid-cols-2 gap-8 mb-16">
                 {/* Before */}
                 <div className="p-6 rounded-2xl border-2" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-                  <div className="text-sm font-bold mb-3 text-red-600 dark:text-red-400">❌ Before:</div>
+                  <div className="text-sm font-bold mb-3 text-red-600 dark:text-red-400">Without StudyMaxx:</div>
                   <div className="space-y-2 text-sm" style={{ color: 'var(--foreground)' }}>
-                    <p>📄 Messy notes from class</p>
-                    <p>😩 Spend hours organizing</p>
-                    <p>😴 Boring study sessions</p>
-                    <p>❓ Forgot what to study</p>
+                    <p>Messy notes from class</p>
+                    <p>Hours spent organizing</p>
+                    <p>Boring study sessions</p>
+                    <p>Forgetting what to study</p>
                   </div>
                 </div>
                 
                 {/* After */}
                 <div className="p-6 rounded-2xl border-2" style={{ background: 'var(--surface)', borderColor: '#14b8a6' }}>
-                  <div className="text-sm font-bold mb-3 text-emerald-600 dark:text-emerald-400">✅ After:</div>
+                  <div className="text-sm font-bold mb-3 text-emerald-600 dark:text-emerald-400">With StudyMaxx:</div>
                   <div className="space-y-2 text-sm" style={{ color: 'var(--foreground)' }}>
-                    <p>⚡ Flashcards in seconds</p>
-                    <p>🎯 AI summarizes the key points</p>
-                    <p>📱 Quiz mode (test yourself)</p>
-                    <p>🧠 Actually remember things</p>
+                    <p>Flashcards in seconds</p>
+                    <p>AI extracts key points</p>
+                    <p>Quiz yourself anytime</p>
+                    <p>Actually remember things</p>
                   </div>
                 </div>
               </div>
@@ -433,7 +430,7 @@ export default function Home() {
                       1
                     </div>
                     <h3 className="font-bold mb-2" style={{ color: 'var(--foreground)' }}>Paste or upload</h3>
-                    <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Notes, PDFs, images, or YouTube links</p>
+                    <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Notes, documents, or images</p>
                   </div>
                   
                   {/* Step 2 */}
@@ -459,19 +456,43 @@ export default function Home() {
               {/* Quick stats */}
               <div className="mb-16 grid grid-cols-3 gap-4">
                 <div className="text-center p-4 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                  <div className="text-3xl font-black text-teal-600 dark:text-teal-400">⚡</div>
-                  <p className="text-sm font-bold mt-2">10 seconds</p>
-                  <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>to make flashcards</p>
+                  <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">Science-backed</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>study methods</p>
                 </div>
                 <div className="text-center p-4 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                  <div className="text-3xl font-black text-cyan-600 dark:text-cyan-400">🎯</div>
-                  <p className="text-sm font-bold mt-2">No setup</p>
-                  <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>just paste & go</p>
+                  <p className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">0</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>setup required</p>
                 </div>
                 <div className="text-center p-4 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                  <div className="text-3xl font-black text-indigo-600 dark:text-indigo-400">📱</div>
-                  <p className="text-sm font-bold mt-2">Works everywhere</p>
-                  <p className="text-xs" style={{ color: 'var(--foreground-muted)' }}>phone, tablet, desktop</p>
+                  <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">Any</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>device works</p>
+                </div>
+              </div>
+
+              {/* How to Study Effectively */}
+              <div className="mb-16 p-6 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--foreground)' }}>How to get the most out of StudyMaxx</h2>
+                <div className="space-y-4 text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                  <div className="flex gap-3">
+                    <span className="font-bold text-teal-600 dark:text-teal-400 shrink-0">1.</span>
+                    <p><strong style={{ color: 'var(--foreground)' }}>Create from your own notes.</strong> The best flashcards come from material you&apos;re actually studying. Paste your lecture notes, textbook summaries, or class materials.</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="font-bold text-teal-600 dark:text-teal-400 shrink-0">2.</span>
+                    <p><strong style={{ color: 'var(--foreground)' }}>Study in short sessions.</strong> 15-20 minutes at a time works better than hour-long cramming. Take breaks, then come back.</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="font-bold text-teal-600 dark:text-teal-400 shrink-0">3.</span>
+                    <p><strong style={{ color: 'var(--foreground)' }}>Use Test Yourself mode.</strong> Actively recalling answers (instead of just reading them) dramatically improves memory retention.</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="font-bold text-teal-600 dark:text-teal-400 shrink-0">4.</span>
+                    <p><strong style={{ color: 'var(--foreground)' }}>Review before bed.</strong> Research shows that sleep helps consolidate what you&apos;ve learned. A quick review session before sleep can help information stick.</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="font-bold text-teal-600 dark:text-teal-400 shrink-0">5.</span>
+                    <p><strong style={{ color: 'var(--foreground)' }}>Come back tomorrow.</strong> Spaced repetition—reviewing material over multiple days—is one of the most effective study techniques. Don&apos;t just study once.</p>
+                  </div>
                 </div>
               </div>
 
@@ -487,94 +508,88 @@ export default function Home() {
                 <div className="text-center mb-8">
                   {isPremium ? (
                     <>
-                      <div className="inline-block px-6 py-2 rounded-full bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40 border border-amber-300 dark:border-amber-700 mb-4">
-                        <span className="font-bold text-amber-800 dark:text-amber-300">✨ Premium Activated</span>
+                      <div className="inline-block px-4 py-1.5 rounded-full bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 mb-4">
+                        <span className="text-sm font-medium text-green-700 dark:text-green-300">Premium Active</span>
                       </div>
-                      <h3 className="text-2xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
-                        🎉 You Have Premium!
+                      <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>
+                        You have Premium
                       </h3>
-                      <p style={{ color: 'var(--foreground-muted)' }}>
-                        Enjoy unlimited study sets, all features, and priority processing
+                      <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                        Unlimited study sets and all features unlocked
                       </p>
                     </>
                   ) : (
                     <>
-                      <h3 className="text-2xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
-                        ✨ Unlock Premium
+                      <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>
+                        Upgrade to Premium
                       </h3>
-                      <p style={{ color: 'var(--foreground-muted)' }}>
-                        Study without limits - unlimited generations, all features, priority processing
+                      <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                        Unlimited study sets, all features, priority processing
                       </p>
                     </>
                   )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="p-8 rounded-2xl border-2" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-                    <h4 className="text-lg font-bold mb-4" style={{ color: 'var(--foreground)' }}>
-                      🎓 Free
+                  <div className="p-6 rounded-xl border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
+                    <h4 className="text-base font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
+                      Free
                     </h4>
-                    <ul className="space-y-3 text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                    <ul className="space-y-2 text-sm" style={{ color: 'var(--foreground-muted)' }}>
                       <li className="flex items-start gap-2">
-                        <span className="text-teal-600 dark:text-teal-400">✓</span>
-                        <span><strong>3 study sets per day</strong></span>
+                        <span className="text-gray-400">✓</span>
+                        <span>3 study sets per day</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-teal-600 dark:text-teal-400">✓</span>
-                        <span>Paste notes & basic uploads</span>
+                        <span className="text-gray-400">✓</span>
+                        <span>Paste notes</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-teal-600 dark:text-teal-400">✓</span>
+                        <span className="text-gray-400">✓</span>
                         <span>All study modes</span>
                       </li>
                     </ul>
                   </div>
 
-                  <div className="p-8 rounded-2xl border-3 relative overflow-hidden" style={{ 
+                  <div className="p-6 rounded-xl border-2 relative" style={{ 
                     background: isPremium 
-                      ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)'
-                      : 'linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%)',
+                      ? 'rgba(34, 197, 94, 0.05)'
+                      : 'rgba(20, 184, 166, 0.05)',
                     borderColor: isPremium ? '#22c55e' : '#14b8a6'
                   }}>
-                    <div className="absolute top-0 right-0 px-4 py-1 text-xs font-bold rounded-bl-lg" style={{ 
-                      background: isPremium 
-                        ? 'linear-gradient(135deg, #22c55e 0%, #10b981 100%)'
-                        : 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)',
+                    <div className="absolute top-0 right-0 px-3 py-1 text-xs font-medium rounded-bl-lg" style={{ 
+                      background: isPremium ? '#22c55e' : '#14b8a6',
                       color: 'white' 
                     }}>
-                      {isPremium ? '✓ ACTIVE' : 'RECOMMENDED'}
+                      {isPremium ? 'Active' : '$2.99/mo'}
                     </div>
-                    <h4 className="text-lg font-bold mb-4 mt-2" style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>
-                      👑 Premium
+                    <h4 className="text-base font-semibold mb-4" style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>
+                      Premium
                     </h4>
-                    <ul className="space-y-3 text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                    <ul className="space-y-2 text-sm" style={{ color: 'var(--foreground-muted)' }}>
                       <li className="flex items-start gap-2">
                         <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
                         <span><strong>Unlimited</strong> study sets</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
-                        <span>📄 PDF, 🖼️ images, 📺 YouTube transcripts</span>
+                        <span>Image uploads with OCR</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
-                        <span>Unlimited folders & organization</span>
+                        <span>Word document uploads</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
-                        <span>⚡ Priority AI processing</span>
+                        <span>Priority AI processing</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
-                        <span>🎯 Difficulty selection</span>
+                        <span>Multi-device sync</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
-                        <span>📱 Multi-device sync</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
-                        <span>Share study sets with friends</span>
+                        <span>Share study sets</span>
                       </li>
                     </ul>
                     {isPremium ? (
@@ -598,24 +613,18 @@ export default function Home() {
                             alert('Failed to open subscription management. Please contact support.');
                           }
                         }}
-                        className="mt-6 w-full py-3 px-4 rounded-xl font-bold text-white transition-all hover:scale-105 shadow-lg hover:shadow-xl"
-                        style={{ 
-                          background: 'linear-gradient(135deg, #22c55e 0%, #10b981 100%)',
-                          boxShadow: '0 4px 15px rgba(34, 197, 94, 0.3)'
-                        }}
+                        className="mt-4 w-full py-2.5 px-4 rounded-lg font-medium text-white transition-all hover:opacity-90"
+                        style={{ background: '#22c55e' }}
                       >
-                        ⚙️ Manage Subscription
+                        Manage Subscription
                       </button>
                     ) : (
                       <button
                         onClick={() => !user ? setShowLoginModal(true) : setShowPremiumModal(true)}
-                        className="mt-6 w-full py-3 px-4 rounded-xl font-bold text-white transition-all hover:scale-105 shadow-lg hover:shadow-xl"
-                        style={{ 
-                          background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)',
-                          boxShadow: '0 4px 15px rgba(20, 184, 166, 0.3)'
-                        }}
+                        className="mt-4 w-full py-2.5 px-4 rounded-lg font-medium text-white transition-all hover:opacity-90"
+                        style={{ background: '#14b8a6' }}
                       >
-                        🚀 Upgrade Now - $2.99/mo
+                        Upgrade — $2.99/mo
                       </button>
                     )}
                   </div>

@@ -154,29 +154,27 @@ export function canUseFeature(
 }
 
 /**
- * Get premium feature list - CONVERSION-FOCUSED COPY
- * Tone: Motivating, "maxxing" energy, not corporate
+ * Get premium feature list
  */
 export function getPremiumFeatures(): string[] {
   return [
-    '✨ Unlimited study sets — create without limits',
-    '🤖 Unlimited AI generations — never wait',
-    '�️ Image scanning — snap notes, get flashcards',
-    '📄 Word documents (DOCX) — study from uploaded files',
-    '🎯 Difficulty targeting — train for your goal grade',
-    '🔄 Regenerate endlessly — perfect every card',
-    '☁️ Cloud sync — study anywhere, anytime',
-    '🔗 Share your sets — help friends ascend too',
-    '⚡ Priority AI — faster, smarter flashcards',
+    'Unlimited study sets',
+    'Unlimited AI generations',
+    'Image scanning (OCR)',
+    'Word document uploads',
+    'Difficulty targeting',
+    'Regenerate flashcards',
+    'Cloud sync across devices',
+    'Share study sets',
+    'Priority AI processing',
   ];
 }
 
 /**
  * Get short premium pitch for modals
- * "Ascend your grades" branding
  */
 export function getPremiumPitch(): string {
-  return "StudyMaxx uses real AI to transform your notes into powerful flashcards. Premium unlocks the full study experience — no limits, no waiting.";
+  return "Premium unlocks unlimited flashcard generation, image uploads, and cloud sync.";
 }
 
 /**

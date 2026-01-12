@@ -12,12 +12,12 @@
 export const messages = {
   // ========== SUCCESS MESSAGES ==========
   success: {
-    cardsSaved: "✨ All set! Your flashcards are ready to study.",
-    setCreated: "🎉 Study set created! Ready to learn?",
-    textExtracted: "📖 Text extracted successfully. Let's create flashcards!",
-    premiumActivated: "🎉 Welcome to Premium! All features are now unlocked.",
-    dataSynced: "✅ Your study sets are synced across all devices.",
-    transcriptExtracted: "✅ Transcript extracted! Ready to create flashcards.",
+    cardsSaved: "Your flashcards have been saved.",
+    setCreated: "Study set created.",
+    textExtracted: "Text extracted successfully.",
+    premiumActivated: "Premium activated. All features are now unlocked.",
+    dataSynced: "Your study sets are synced across all devices.",
+    transcriptExtracted: "Transcript extracted.",
   },
 
   // ========== ERROR MESSAGES - Helpful, not scary ==========
@@ -78,10 +78,10 @@ export const messages = {
 
   // ========== LOADING/PROCESSING MESSAGES - Reassuring, not anxious ==========
   loading: {
-    generatingCards: "Creating your flashcards... This usually takes about 60 seconds.",
-    extractingText: "Reading your image... Just a moment.",
-    processingMultiple: "Processing your images... Almost there.",
-    syncing: "Saving your work...",
+    generatingCards: "Creating flashcards...",
+    extractingText: "Reading image...",
+    processingMultiple: "Processing images...",
+    syncing: "Saving...",
     loading: "Loading...",
   },
 
@@ -129,17 +129,17 @@ export const messages = {
 
   // ========== EMPTY STATES ==========
   empty: {
-    noSets: "No study sets yet. Create one to get started!",
+    noSets: "No study sets yet. Create one to get started.",
     noFlashcards: "No flashcards. Add some content and generate them.",
-    noHistory: "No study history yet. Start studying to see your progress.",
+    noHistory: "No study history yet.",
   },
 
   // ========== GUIDANCE TEXT (helpful hints) ==========
   guidance: {
-    startHere: "👋 Start by choosing how you want to create flashcards.",
-    bestResults: "✨ Tip: More detailed notes create better flashcards.",
-    unlimitedPremium: "💡 Premium members get unlimited flashcards, PDF upload, YouTube, and more.",
-    shareStudySets: "🔗 You can share study sets with friends.",
+    startHere: "Choose how you want to create flashcards.",
+    bestResults: "Tip: More detailed notes create better flashcards.",
+    unlimitedPremium: "Premium members get unlimited flashcards, PDF upload, YouTube, and more.",
+    shareStudySets: "You can share study sets with friends.",
   },
 };
 

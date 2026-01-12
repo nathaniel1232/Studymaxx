@@ -41,6 +41,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   // Math mode (only for math subjects)
   const [includeMathProblems, setIncludeMathProblems] = useState(false);
   
+  // Output language preference
+  const [outputLanguage, setOutputLanguage] = useState<"auto" | "en" | null>(null);
+  const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
+  
   // Step 3: Grade
   const [targetGrade, setTargetGrade] = useState<Grade | null>(null);
   
@@ -106,7 +110,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     return () => clearInterval(interval);
   }, [isGenerating, generationStartTime]);
 
-  // Message rotation effect - rotate every 8 seconds (longer for readability)
+  // Message rotation effect - rotate every 20 seconds (slow enough to read comfortably)
   useEffect(() => {
     if (!isGenerating) {
       setCurrentMessageIndex(0);
@@ -115,10 +119,47 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
     const interval = setInterval(() => {
       setCurrentMessageIndex((prev) => (prev + 1) % 3);
-    }, 8000); // Increased from 5000ms to 8000ms so users can read the quick tip
+    }, 20000); // Changed to 20 seconds for comfortable reading
     
     return () => clearInterval(interval);
   }, [isGenerating]);
+
+  // Detect language from text input
+  const detectLanguage = (text: string): string => {
+    if (!text || text.length < 20) return "unknown";
+    
+    // Common Norwegian words
+    const norwegianWords = ["og", "er", "det", "som", "en", "av", "på", "til", "med", "har", "kan", "for", "ikke", "den", "om", "var", "fra", "ved", "eller", "hva", "når", "vil", "skal", "også", "dette", "alle", "de", "han", "hun", "jeg", "du", "vi", "meg", "deg", "seg", "sin", "sitt", "sine", "våre", "deres"];
+    const textLower = text.toLowerCase();
+    const words = textLower.split(/\s+/);
+    
+    let norwegianCount = 0;
+    for (const word of words) {
+      if (norwegianWords.includes(word)) {
+        norwegianCount++;
+      }
+    }
+    
+    // Norwegian-specific characters
+    const hasNorwegianChars = /[æøåÆØÅ]/.test(text);
+    
+    // If we find Norwegian characters or significant Norwegian words, it's likely Norwegian
+    if (hasNorwegianChars || norwegianCount >= 3) {
+      return "Norsk (Norwegian)";
+    }
+    
+    return "English";
+  };
+
+  // Update detected language when text changes
+  useEffect(() => {
+    if (textInput && textInput.length >= 50) {
+      const lang = detectLanguage(textInput);
+      setDetectedLanguage(lang);
+    } else {
+      setDetectedLanguage(null);
+    }
+  }, [textInput]);
 
   const checkPremiumStatus = async () => {
     console.log('[CreateFlowView] ===== STARTING PREMIUM CHECK =====');
@@ -162,9 +203,13 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         setSetsCreated(data.setsCreated);
         setCanCreateMore(data.canCreateMore);
         
-        // Update remaining generations
-        const remaining = getRemainingGenerations(session?.user?.id || '', data.isPremium);
-        setRemainingGenerations(parseInt(remaining) || 3);
+        // Use the server-side daily count if available, otherwise fallback to client-side check
+        if (data.remainingDailyGenerations !== undefined) {
+          setRemainingGenerations(data.isPremium ? 3 : Math.max(0, 1 - data.dailyAiCount));
+        } else {
+          const remaining = getRemainingGenerations(session?.user?.id || '', data.isPremium);
+          setRemainingGenerations(parseInt(remaining) || 3);
+        }
         
         console.log('[CreateFlowView] ===== PREMIUM CHECK COMPLETE ===== isPremium:', data.isPremium);
       } else if (response.status === 401) {
@@ -692,7 +737,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         subject,
         targetGrade,
         userIdForGen,
-        selectedMaterial || "notes"
+        selectedMaterial || "notes",
+        outputLanguage || "auto"
       );
 
       // Increment rate limit counter AFTER successful generation
@@ -789,14 +835,19 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
           {/* STEP 1: Choose Subject */}
           {currentStep === 1 && (
             <div className="space-y-8">
-              {/* Show daily limit info for free users */}
-              {!isPremium && hasSession && (
-                <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-                  <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
-                    ⚡ You have <strong>{remainingGenerations} generation{remainingGenerations !== 1 ? 's' : ''} left today</strong>. Upgrade to premium for unlimited.
-                  </p>
-                </div>
-              )}
+              {/* Daily limit banner - reserve space even when hidden to prevent layout shift */}
+              <div className={`p-4 rounded-xl border transition-opacity ${
+                !premiumCheckLoading && !isPremium && hasSession && remainingGenerations < 3
+                  ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 opacity-100"
+                  : "opacity-0 pointer-events-none"
+              }`} style={{ height: !premiumCheckLoading && !isPremium && hasSession && remainingGenerations < 3 ? 'auto' : '54px' }}>
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  {!premiumCheckLoading && !isPremium && hasSession && remainingGenerations < 3
+                    ? `You have ${remainingGenerations} generation${remainingGenerations !== 1 ? 's' : ''} left today.`
+                    : '\u00A0'
+                  }
+                </p>
+              </div>
 
               <div>
                 <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>
@@ -876,9 +927,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                 </p>
               </div>
 
-              {/* Material type selection */}
+              {/* Material type selection - Hide until premium status is determined to prevent layout shift */}
               {!selectedMaterial ? (
-                <div className="grid grid-cols-1 gap-4">
+                <div className={`grid grid-cols-1 gap-4 transition-opacity duration-200 ${premiumCheckLoading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
                   {/* Notes - Recommended */}
                   <button
                     onClick={() => setSelectedMaterial("notes")}
@@ -917,11 +968,6 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     }}
                     className="card card-hover p-6 text-left relative"
                   >
-                    {!isPremium && (
-                      <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
-                        Premium
-                      </div>
-                    )}
                     <div className="flex items-center gap-4">
                       <div className="text-4xl">📄</div>
                       <div>
@@ -931,6 +977,11 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         </p>
                       </div>
                     </div>
+                    {!isPremium && (
+                      <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                        Premium
+                      </div>
+                    )}
                   </button>
 
                   {/* Image - Premium Only */}
@@ -944,11 +995,6 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     }}
                     className="card card-hover p-6 text-left relative"
                   >
-                    {!isPremium && (
-                      <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
-                        Premium
-                      </div>
-                    )}
                     <div className="flex items-center gap-4">
                       <div className="text-4xl">🖼️</div>
                       <div>
@@ -958,6 +1004,11 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         </p>
                       </div>
                     </div>
+                    {!isPremium && (
+                      <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                        Premium
+                      </div>
+                    )}
                   </button>
 
                 </div>
@@ -1138,12 +1189,76 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     )}
                   </div>
 
-                  {/* Continue button */}
+                  {/* Language selection - only show when we have text */}
+                  {textInput.length >= 50 && (
+                    <div className="mt-6 p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                      <div className="mb-5">
+                        <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
+                          {settings.language === "no" ? "Velg språk for flashcards" : "Choose flashcard language"}
+                        </h4>
+                        {detectedLanguage && detectedLanguage !== "unknown" && (
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {settings.language === "no" ? "Vi oppdaget" : "We detected"}: <span className="font-medium text-gray-700 dark:text-gray-300">{detectedLanguage}</span>
+                          </p>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setOutputLanguage("auto")}
+                          className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer group ${
+                            outputLanguage === "auto"
+                              ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-lg"
+                              : "border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-gray-700 hover:shadow-lg hover:scale-[1.02]"
+                          }`}
+                        >
+                          <div className={`font-semibold mb-1 pointer-events-none transition-colors ${outputLanguage === "auto" ? "text-blue-700 dark:text-blue-300" : "text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400"}`}>
+                            {detectedLanguage && detectedLanguage !== "unknown" 
+                              ? detectedLanguage.split(" ")[0]
+                              : (settings.language === "no" ? "Original språk" : "Original language")
+                            }
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 pointer-events-none group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
+                            {settings.language === "no" ? "Behold språket fra teksten" : "Keep the language from your text"}
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setOutputLanguage("en")}
+                          className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer group ${
+                            outputLanguage === "en"
+                              ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-lg"
+                              : "border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-gray-700 hover:shadow-lg hover:scale-[1.02]"
+                          }`}
+                        >
+                          <div className={`font-semibold mb-1 pointer-events-none transition-colors ${outputLanguage === "en" ? "text-blue-700 dark:text-blue-300" : "text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400"}`}>
+                            English
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 pointer-events-none group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
+                            {settings.language === "no" ? "Generer på engelsk" : "Generate in English"}
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Continue button - MUST select language first */}
                   <button
-                    onClick={handleContinueFromStep2}
-                    className="btn btn-primary w-full py-4 text-lg font-bold rounded-xl"
+                    onClick={(e) => {
+                      if (textInput.length >= 50 && !outputLanguage) {
+                        e.preventDefault();
+                        return;
+                      }
+                      handleContinueFromStep2();
+                    }}
+                    disabled={textInput.length >= 50 && !outputLanguage}
+                    className={`w-full py-4 text-lg font-bold rounded-xl transition-all ${
+                      textInput.length >= 50 && !outputLanguage
+                        ? "bg-gray-400 dark:bg-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed border-2 border-gray-400 dark:border-gray-600 opacity-60"
+                        : "btn btn-primary"
+                    }`}
                   >
-                    {t("continue")}
+                    {textInput.length >= 50 && !outputLanguage ? "Select language first" : t("continue")}
                   </button>
                 </>
               )}
@@ -1152,65 +1267,43 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
           {/* STEP 3: Choose Grade */}
           {currentStep === 3 && (
-            <div className="space-y-8">
+            <div className="space-y-6">
               {/* Math mode selection (only for math subjects) */}
               {isMathSubject() && (
-                <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl border-2 border-blue-200 dark:border-blue-800">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                    📐 {settings.language === "no" ? "Ekstra matematikkøvelse" : "Extra Math Practice"}
+                <div className="p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
+                    {settings.language === "no" ? "Ekstra matematikkøvelse" : "Extra Math Practice"}
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    {settings.language === "no" 
-                      ? "Vil du ha regneoppgaver i tillegg til kunnskapskort?" 
-                      : "Do you want calculation problems in addition to flashcards?"}
-                  </p>
-                  <label className="flex items-center gap-3 cursor-pointer group">
+                  <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={includeMathProblems}
                       onChange={(e) => setIncludeMathProblems(e.target.checked)}
-                      className="w-5 h-5 rounded border-2 border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                      className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-2 focus:ring-blue-500"
                     />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
                       {settings.language === "no" 
-                        ? "Ja, inkluder regneoppgaver (anbefalt for matte)" 
-                        : "Yes, include calculation problems (recommended for math)"}
+                        ? "Inkluder regneoppgaver i tillegg til teori" 
+                        : "Include calculation problems alongside theory"}
                     </span>
                   </label>
-                  {includeMathProblems && (
-                    <p className="mt-3 text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
-                      <span>💡</span>
-                      <span>
-                        {settings.language === "no"
-                          ? "Flashcards vil fortsatt være inkludert for å hjelpe deg med teori og konsepter."
-                          : "Flashcards will still be included to help you with theory and concepts."}
-                      </span>
-                    </p>
-                  )}
                 </div>
               )}
 
               <div className="text-center">
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
                   {t("what_grade_aiming")}
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400 text-lg">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {t("create_right_amount")}
                 </p>
               </div>
 
-              {/* Grade options */}
-              <div className="grid gap-4">
+              {/* Grade options - Hide until premium status is determined to prevent layout shift */}
+              <div className={`space-y-3 transition-opacity duration-200 ${premiumCheckLoading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
                 {getGradeOptions().map(({ grade, label, description }) => {
                   const actualCardCount = getActualCardCount(grade);
                   const isLocked = !isPremium && actualCardCount > 20;
-                  const gradeEmojis: Record<Grade, string> = {
-                    'A': '🏆',
-                    'B': '🎯', 
-                    'C': '✅',
-                    'D': '📚',
-                    'E': '📖'
-                  };
                   
                   return (
                     <button
@@ -1222,59 +1315,45 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           setTargetGrade(grade);
                         }
                       }}
-                      className={`w-full p-6 border-2 rounded-2xl text-left transition-all hover:scale-[1.01] hover:shadow-lg relative overflow-hidden group ${
+                      className={`w-full p-4 border-2 rounded-xl text-left transition-all group ${
                         targetGrade === grade
-                          ? "border-blue-500 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-900/30 dark:via-purple-900/30 dark:to-pink-900/30 shadow-xl ring-4 ring-blue-200 dark:ring-blue-800"
-                          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-300 dark:hover:border-blue-700"
-                      } ${isLocked ? 'opacity-75' : ''}`}
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-lg"
+                          : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-gray-700 hover:shadow-lg hover:scale-[1.02]"
+                      } ${isLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
-                      {/* Background gradient effect */}
-                      {targetGrade === grade && (
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 via-purple-400/10 to-pink-400/10 dark:from-blue-600/20 dark:via-purple-600/20 dark:to-pink-600/20 animate-pulse"></div>
-                      )}
-                      
-                      {isLocked && (
-                        <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg flex items-center gap-1">
-                          <span>⭐</span>
-                          <span>Premium</span>
-                        </div>
-                      )}
-                      
-                      <div className="relative flex items-start gap-4">
-                        {/* Grade emoji/icon */}
-                        <div className={`text-4xl transition-transform group-hover:scale-110 ${
-                          targetGrade === grade ? 'animate-bounce' : ''
-                        }`}>
-                          {gradeEmojis[grade]}
-                        </div>
-                        
-                        {/* Content */}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className={`text-2xl font-bold ${
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-semibold ${
+                            targetGrade === grade 
+                              ? 'bg-blue-500 text-white' 
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          }`}>
+                            {grade}
+                          </div>
+                          
+                          <div>
+                            <div className={`font-medium ${
                               targetGrade === grade
                                 ? "text-blue-600 dark:text-blue-400"
                                 : "text-gray-900 dark:text-white"
                             }`}>
                               {label}
                             </div>
-                            {targetGrade === grade && !isLocked && (
-                              <div className="text-2xl text-green-500 animate-bounce">✓</div>
-                            )}
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {actualCardCount} cards
+                            </div>
                           </div>
-                          
-                          <div className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
-                            {description}
-                          </div>
-                          
-                          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
-                            targetGrade === grade
-                              ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
-                              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                          }`}>
-                            <span>📚</span>
-                            <span>{actualCardCount} {t("flashcards") || "flashcards"}</span>
-                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          {isLocked && (
+                            <span className="text-xs px-2 py-1 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
+                              Premium
+                            </span>
+                          )}
+                          {targetGrade === grade && !isLocked && (
+                            <span className="text-blue-500">✓</span>
+                          )}
                         </div>
                       </div>
                     </button>
@@ -1286,7 +1365,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
               <button
                 onClick={handleContinueFromStep3}
                 disabled={!targetGrade}
-                className="btn btn-primary w-full py-4 text-lg font-bold rounded-xl"
+                className="btn btn-primary w-full py-3 text-base font-medium rounded-xl"
               >
                 {t("generate_study_set")}
               </button>
@@ -1295,81 +1374,109 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
           {/* STEP 4: Generating */}
           {currentStep === 4 && (
-            <div className="py-12 text-center space-y-8">
-              {/* Smooth animated spinner */}
-              <div className="w-24 h-24 mx-auto relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full animate-pulse"></div>
-                <div className="w-full h-full border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin" style={{ animationDuration: '2.5s' }}></div>
-                <div className="absolute inset-0 flex items-center justify-center text-3xl animate-bounce" style={{ animationDuration: '2s' }}>
-                  ✨
-                </div>
+            <div className="py-8 text-center space-y-6 max-w-2xl mx-auto">
+              {/* Spinner */}
+              <div className="w-16 h-16 mx-auto">
+                <div className="w-full h-full border-4 border-gray-200 dark:border-gray-700 border-t-blue-500 dark:border-t-blue-400 rounded-full animate-spin"></div>
               </div>
               
-              <div className="space-y-4">
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  {t("creating_study_set")}
+              {/* Title and Progress Bar */}
+              <div className="space-y-3">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  ✨ {t("creating_study_set")}
                 </h2>
                 
-                {/* Friendly reassurance message */}
-                <div className="space-y-2">
-                  <p className="text-lg text-gray-700 dark:text-gray-300 font-medium">
-                    {settings.language === "no" ? "Vi lager dine læringskort nå" : "We're creating your study cards"}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {settings.language === "no" ? "Dette tar vanligvis 60-90 sekunder. Hang tight!" : "This usually takes 60-90 seconds. Hang tight!"}
-                  </p>
+                {/* Light blue progress bar */}
+                <div className="space-y-2 px-4">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                    <div 
+                      className="h-full bg-sky-400 dark:bg-sky-500 rounded-full transition-all duration-1000 ease-out"
+                      style={{ 
+                        width: `${Math.min((elapsedSeconds / 75) * 100, 95)}%`
+                      }}
+                    ></div>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-500 dark:text-gray-400">
+                      {settings.language === "no" ? "Vennligst vent..." : "Please wait..."}
+                    </span>
+                    <span className="font-mono text-gray-500 dark:text-gray-400">
+                      {Math.floor(elapsedSeconds / 60)}:{(elapsedSeconds % 60).toString().padStart(2, '0')}
+                    </span>
+                  </div>
                 </div>
-                
-                {/* Real-time timer */}
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/20 rounded-full">
-                  <span className="text-lg">⏱️</span>
-                  <span className="text-lg font-mono font-bold text-blue-600 dark:text-blue-400">
-                    {Math.floor(elapsedSeconds / 60)}:{(elapsedSeconds % 60).toString().padStart(2, '0')}
+              </div>
+
+              {/* Progress steps with emojis */}
+              <div className="space-y-3 mt-8">
+                <div className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-700 ${
+                  elapsedSeconds < 25
+                    ? "bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 shadow-sm"
+                    : "bg-gray-50 dark:bg-gray-800/30 border border-gray-200 dark:border-gray-700 opacity-50"
+                }`}>
+                  <span className="text-lg">📖</span>
+                  <span className={`text-sm font-medium transition-colors duration-500 ${
+                    elapsedSeconds < 25
+                      ? "text-blue-900 dark:text-blue-200"
+                      : "text-gray-600 dark:text-gray-400"
+                  }`}>
+                    {settings.language === "no" ? "Leser materiale..." : "Reading material..."}
                   </span>
+                  {elapsedSeconds < 25 && <span className="ml-auto text-blue-500 animate-pulse">●</span>}
+                  {elapsedSeconds >= 25 && <span className="ml-auto text-green-500">✓</span>}
+                </div>
+                
+                <div className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-700 ${
+                  elapsedSeconds >= 25 && elapsedSeconds < 50
+                    ? "bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 shadow-sm"
+                    : "bg-gray-50 dark:bg-gray-800/30 border border-gray-200 dark:border-gray-700 opacity-50"
+                }`}>
+                  <span className="text-lg">🧠</span>
+                  <span className={`text-sm font-medium transition-colors duration-500 ${
+                    elapsedSeconds >= 25 && elapsedSeconds < 50
+                      ? "text-blue-900 dark:text-blue-200"
+                      : "text-gray-600 dark:text-gray-400"
+                  }`}>
+                    {settings.language === "no" ? "Lager flashcards..." : "Creating flashcards..."}
+                  </span>
+                  {elapsedSeconds >= 25 && elapsedSeconds < 50 && <span className="ml-auto text-blue-500 animate-pulse">●</span>}
+                  {elapsedSeconds >= 50 && <span className="ml-auto text-green-500">✓</span>}
+                </div>
+                
+                <div className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-700 ${
+                  elapsedSeconds >= 50
+                    ? "bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 shadow-sm"
+                    : "bg-gray-50 dark:bg-gray-800/30 border border-gray-200 dark:border-gray-700 opacity-50"
+                }`}>
+                  <span className="text-lg">📝</span>
+                  <span className={`text-sm font-medium transition-colors duration-500 ${
+                    elapsedSeconds >= 50
+                      ? "text-blue-900 dark:text-blue-200"
+                      : "text-gray-600 dark:text-gray-400"
+                  }`}>
+                    {settings.language === "no" ? "Setter opp spørsmål..." : "Setting up questions..."}
+                  </span>
+                  {elapsedSeconds >= 50 && <span className="ml-auto text-blue-500 animate-pulse">●</span>}
                 </div>
               </div>
 
-              {/* Progress messages */}
-              <div className="max-w-md mx-auto space-y-3">
-                {/* Message 1: Reading material */}
-                <div className={`flex items-center gap-3 p-4 rounded-xl border transition-all duration-500 ${
-                  currentMessageIndex === 0
-                    ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 scale-105 shadow-md"
-                    : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-700 opacity-40 scale-95"
-                }`}>
-                  <span className="text-2xl">📖</span>
-                  <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{settings.language === "no" ? "Analyserer ditt material..." : "Reading your material..."}</span>
-                </div>
-                
-                {/* Message 2: Creating cards */}
-                <div className={`flex items-center gap-3 p-4 rounded-xl border transition-all duration-500 ${
-                  currentMessageIndex === 1
-                    ? "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700 scale-105 shadow-md"
-                    : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-700 opacity-40 scale-95"
-                }`}>
-                  <span className="text-2xl">✍️</span>
-                  <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{settings.language === "no" ? "Lager flashcards..." : "Creating flashcards..."}</span>
-                </div>
-                
-                {/* Message 3: Setting up questions */}
-                <div className={`flex items-center gap-3 p-4 rounded-xl border transition-all duration-500 ${
-                  currentMessageIndex === 2
-                    ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700 scale-105 shadow-md"
-                    : "bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-700 opacity-40 scale-95"
-                }`}>
-                  <span className="text-2xl">🎯</span>
-                  <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{settings.language === "no" ? "Setter opp spørsmål..." : "Setting up questions..."}</span>
-                </div>
-              </div>
-
-              {/* Helpful study fact - subtle and encouraging */}
-              <div className="max-w-lg mx-auto mt-8 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-800">
-                <p className="text-xs text-amber-700 dark:text-amber-300 mb-2 font-medium flex items-center justify-center gap-1">
-                  <span>💡</span>
-                  <span>{settings.language === "no" ? "Mens du venter" : "Quick tip"}</span>
+              {/* Study tip - FIXED: Uses elapsedSeconds for stable rotation */}
+              <div className="mt-8 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800/50 dark:to-gray-800/30 rounded-xl border border-blue-100 dark:border-gray-700 max-w-lg mx-auto">
+                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-2 flex items-center justify-center gap-1">
+                  <span>💡</span> {settings.language === "no" ? "Visste du?" : "Did you know?"}
                 </p>
-                <p className="text-sm text-amber-700 dark:text-amber-200">
-                  {getStudyFact("flashcards", settings.language).text}
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {[
+                    settings.language === "no" 
+                      ? "Å prøve å huske informasjon styrker hukommelsen mer enn å bare lese notater. Dette kalles aktiv gjenkalling." 
+                      : "Trying to recall information strengthens memory more than simply re-reading notes. This is called retrieval practice.",
+                    settings.language === "no"
+                      ? "Korte, spredte økter over tid er mer effektive enn lange økter. Dette kalles distribuert øving."
+                      : "Short, spaced study sessions over time are more effective than cramming. This is called spaced repetition.",
+                    settings.language === "no"
+                      ? "Å forklare konsepter med egne ord hjelper deg å forstå dem bedre. Prøv å lære det til noen andre!"
+                      : "Explaining concepts in your own words helps you understand them better. Try teaching it to someone else!"
+                  ][Math.floor(elapsedSeconds / 25) % 3]}
                 </p>
               </div>
             </div>

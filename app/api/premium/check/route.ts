@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     // Check if user exists in database - use minimal query first
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('id, is_premium, email')
+      .select('id, is_premium, email, daily_ai_count, last_ai_reset')
       .eq('id', userId)
       .single();
 
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
           maxSets: 1,
           canCreateMore: true,
           dailyAiCount: 0,
-          maxDailyAi: 1,
+          maxDailyAi: 3,
           needsSetup: true
         });
       }
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     // User doesn't exist - create them with minimal fields
     if (!userData) {
       const { data: newUser, error: createError } = await supabase
-        .from('users')
+        .from("users")
         .insert([{
           id: userId,
           email: user.email,
@@ -110,18 +110,54 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Helper function to check if daily counter needs reset
+    function shouldResetDailyCounter(lastAiReset: string | null): boolean {
+      if (!lastAiReset) return false;
+      
+      const now = new Date();
+      const lastReset = new Date(lastAiReset);
+      
+      return (
+        now.getFullYear() !== lastReset.getFullYear() ||
+        now.getMonth() !== lastReset.getMonth() ||
+        now.getDate() !== lastReset.getDate()
+      );
+    }
+
+    // Check if we need to reset the daily counter
+    let dailyAiCount = userData?.daily_ai_count || 0;
+    if (shouldResetDailyCounter(userData?.last_ai_reset || null)) {
+      // Reset the counter if it's a new day
+      dailyAiCount = 0;
+      
+      // Update database with reset
+      const { error: resetError } = await supabase
+        .from('users')
+        .update({
+          daily_ai_count: 0,
+          last_ai_reset: new Date().toISOString()
+        })
+        .eq('id', userId);
+      
+      if (resetError) {
+        console.error('[/api/premium/check] Failed to reset counter:', resetError);
+      }
+    }
+
     // Return user's premium status and limits
     const isPremium = userData.is_premium || false;
     const maxSets = isPremium ? -1 : 1; // -1 means unlimited
     const canCreateMore = isPremium || true; // Always allow at least one set
+    const remainingDailyGenerations = isPremium ? -1 : Math.max(0, 3 - dailyAiCount);
 
     return NextResponse.json({
       isPremium,
       setsCreated: 0, // Will be tracked when we have the column
       maxSets,
       canCreateMore,
-      dailyAiCount: 0,
-      maxDailyAi: isPremium ? -1 : 1
+      dailyAiCount,
+      maxDailyAi: isPremium ? -1 : 3,
+      remainingDailyGenerations
     });
 
   } catch (error) {
