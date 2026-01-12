@@ -435,136 +435,59 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   const handleProcessImages = async () => {
     if (selectedImages.length === 0) return;
     
-    console.log('[CreateFlow] Starting image processing...');
+    console.log('[CreateFlow] Starting GPT-4 Vision image processing...');
     setGenerationStartTime(Date.now());
     setElapsedSeconds(0);
     setIsGenerating(true);
     setError("");
     
     try {
-      const Tesseract = await import("tesseract.js");
-      const extractedTexts: string[] = [];
+      // Convert images to base64
+      console.log(`[CreateFlow] Converting ${selectedImages.length} images to base64...`);
+      const base64Images: string[] = [];
       
-      console.log(`[CreateFlow] Processing ${selectedImages.length} images sequentially...`);
-      
-      // Process images one by one
       for (let i = 0; i < selectedImages.length; i++) {
         const imageFile = selectedImages[i];
-        console.log(`[CreateFlow] Processing image ${i + 1}/${selectedImages.length}: ${imageFile.name}`);
+        console.log(`[CreateFlow] Converting image ${i + 1}/${selectedImages.length}: ${imageFile.name}`);
         
-        try {
-          // Load image
-          const imageUrl = URL.createObjectURL(imageFile);
-          const img = new Image();
-          
-          await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = reject;
-            img.src = imageUrl;
-          });
-          
-          console.log(`  [Image ${i + 1}] Original: ${img.width}x${img.height}px`);
-          
-          // ===== PREPROCESSING FOR BETTER OCR =====
-          // 1. Upscale 2x - Tesseract works better with larger text (~300 DPI)
-          const scale = 2;
-          const scaledWidth = img.width * scale;
-          const scaledHeight = img.height * scale;
-          
-          const canvas = document.createElement('canvas');
-          canvas.width = scaledWidth;
-          canvas.height = scaledHeight;
-          const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
-          
-          // 2. Draw upscaled with smoothing
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-          ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
-          
-          // 3. Get image data for pixel manipulation
-          const imageData = ctx.getImageData(0, 0, scaledWidth, scaledHeight);
-          const data = imageData.data;
-          
-          // 4. Convert to grayscale + enhance contrast
-          // Grayscale: Removes color noise, Tesseract processes faster
-          // Contrast: Makes text/background more distinct
-          for (let j = 0; j < data.length; j += 4) {
-            // Grayscale conversion (luminosity method)
-            const gray = 0.299 * data[j] + 0.587 * data[j + 1] + 0.114 * data[j + 2];
-            
-            // Contrast enhancement (simple method: stretch values)
-            // This makes darks darker and lights lighter
-            const contrast = 1.5; // Increase contrast
-            const enhanced = ((gray - 128) * contrast) + 128;
-            const clamped = Math.max(0, Math.min(255, enhanced));
-            
-            data[j] = data[j + 1] = data[j + 2] = clamped;
-          }
-          
-          // 5. Put processed image back
-          ctx.putImageData(imageData, 0, 0);
-          
-          console.log(`  [Image ${i + 1}] Preprocessed: ${scaledWidth}x${scaledHeight}px (2x upscale, grayscale, contrast)`);
-          
-          URL.revokeObjectURL(imageUrl);
-          
-          // ===== RUN OCR ON PREPROCESSED CANVAS =====
-          console.log(`  [Image ${i + 1}] Starting OCR...`);
-          const result = await Tesseract.recognize(canvas, 'nor+eng', {
-            logger: (m) => {
-              if (m.status === 'recognizing text') {
-                console.log(`  [Image ${i + 1}] ${m.status}: ${(m.progress * 100).toFixed(0)}%`);
-              }
-            }
-          });
-          
-          const text = result.data.text.trim();
-          const confidence = result.data.confidence;
-          
-          console.log(`[CreateFlow] ✅ Image ${i + 1} OCR completed:`);
-          console.log(`  - Characters extracted: ${text.length}`);
-          console.log(`  - Confidence: ${confidence.toFixed(1)}%`);
-          
-          // ===== CONFIDENCE WARNING =====
-          if (confidence < 50) {
-            console.warn(`  ⚠️ LOW CONFIDENCE (${confidence.toFixed(1)}%) - Text may be inaccurate`);
-          }
-          
-          console.log(`  - Extracted text preview (first 300 chars):`);
-          console.log(text.substring(0, 300));
-          
-          if (text.length > 10) {
-            extractedTexts.push(`--- Image ${i + 1}: ${imageFile.name} ---\n${text}`);
-          } else {
-            console.warn(`[CreateFlow] ⚠️ Very little text found in image ${i + 1} (only ${text.length} chars)`);
-            if (text.length > 0) {
-              extractedTexts.push(`--- Image ${i + 1}: ${imageFile.name} ---\n${text}`);
-            }
-          }
-        } catch (imgError) {
-          console.error(`[CreateFlow] ❌ Failed to process image ${i + 1}:`, imgError);
-        }
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(imageFile);
+        });
+        
+        base64Images.push(base64);
       }
       
-      if (extractedTexts.length === 0) {
-        throw new Error(messages.errors.imageProcessingFailed);
+      console.log(`[CreateFlow] ✅ All images converted. Sending to GPT-4 Vision API...`);
+      
+      // Send to our backend API
+      const response = await fetch('/api/extract-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ images: base64Images }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to extract text from images');
       }
       
-      const combinedText = extractedTexts.join('\n\n');
+      const data = await response.json();
       
-      // Calculate average confidence
-      const avgConfidence = extractedTexts.length > 0 ? 60 : 0; // Placeholder since we logged individual
+      console.log(`[CreateFlow] ✅ GPT-4 Vision extraction complete!`);
+      console.log(`  - Processed: ${data.imagesProcessed}/${data.totalImages} images`);
+      console.log(`  - Total characters: ${data.text.length}`);
+      console.log(`  - Preview: ${data.text.substring(0, 150)}...`);
       
-      console.log(`[CreateFlow] ✅ All done!`);
-      console.log(`  - Processed ${extractedTexts.length}/${selectedImages.length} images successfully`);
-      console.log(`  - Total characters: ${combinedText.length}`);
-      
-      // Warn if overall quality seems poor
-      if (combinedText.length < 100 && selectedImages.length > 1) {
-        console.warn(`  ⚠️ Very little text extracted. Check if images contain readable text.`);
+      if (!data.text || data.text.length < 50) {
+        throw new Error('Could not extract enough educational content from the images. Please make sure the images contain readable text.');
       }
       
-      setTextInput(combinedText);
+      setTextInput(data.text);
       setError("");
     } catch (err: any) {
       console.error('[CreateFlow] Error processing images:', err);
@@ -621,23 +544,45 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         setError(messages.errors.pdfProcessingFailed);
       }
     } else if (file.type.startsWith("image/")) {
-      // Handle image with OCR (simple single-image version)
+      // Handle image with GPT-4 Vision API (better than OCR)
       try {
-        const Tesseract = await import("tesseract.js");
-        const result = await Tesseract.recognize(file, "eng", {
-          logger: (m) => console.log(m),
+        console.log('[CreateFlowView] Processing single image with GPT-4 Vision...');
+        
+        // Convert to base64
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
         });
         
-        const extractedText = result.data.text;
+        // Send to vision API
+        const response = await fetch('/api/extract-image', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ images: [base64] }),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to extract text from image');
+        }
+        
+        const data = await response.json();
+        const extractedText = data.text;
         
         if (!extractedText || extractedText.trim().length === 0) {
           setError(t("no_text_image"));
           return;
         }
         
+        console.log('[CreateFlowView] ✅ GPT-4 Vision extracted:', extractedText.length, 'characters');
         setTextInput(extractedText);
-      } catch (err) {
-        setError("Failed to extract text from image. Please try another image.");
+      } catch (err: any) {
+        console.error('[CreateFlowView] Image extraction error:', err);
+        setError(err.message || "Failed to extract text from image. Please try another image.");
       }
     } else {
       // For DOCX, use the API
