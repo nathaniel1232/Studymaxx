@@ -30,14 +30,16 @@ export async function POST(req: Request) {
       .single();
 
     if (!existingUser) {
-      // Create user record
+      // Create user record using upsert to handle race conditions
       const { error: insertError } = await supabase
         .from('users')
-        .insert({
+        .upsert({
           id: userId,
           email: email,
           is_premium: false,
           created_at: new Date().toISOString(),
+        }, {
+          onConflict: 'id' // If user exists, do nothing (conflict on id)
         });
 
       if (insertError) {
