@@ -161,6 +161,23 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     }
   }, [textInput]);
 
+  // Listen for premium status changes (e.g., after successful purchase)
+  useEffect(() => {
+    const handlePremiumStatusChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log('[CreateFlowView] 📢 Received premiumStatusChanged event:', customEvent.detail);
+      
+      // Re-check premium status immediately
+      setTimeout(() => {
+        console.log('[CreateFlowView] 🔄 Re-checking premium status after purchase...');
+        checkPremiumStatus();
+      }, 100);
+    };
+
+    window.addEventListener('premiumStatusChanged', handlePremiumStatusChange);
+    return () => window.removeEventListener('premiumStatusChanged', handlePremiumStatusChange);
+  }, []);
+
   const checkPremiumStatus = async () => {
     console.log('[CreateFlowView] ===== STARTING PREMIUM CHECK =====');
     try {

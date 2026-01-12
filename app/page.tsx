@@ -86,6 +86,11 @@ export default function Home() {
             // Remove the URL parameter
             window.history.replaceState({}, '', '/');
             
+            // CRITICAL: Notify CreateFlowView to re-check premium status immediately
+            const event = new CustomEvent('premiumStatusChanged', { detail: { isPremium: true } });
+            window.dispatchEvent(event);
+            console.log('[Premium] 📢 Dispatched premiumStatusChanged event');
+            
             // Show success toast
             setToast({ 
               message: 'Premium activated! All features are now unlocked.',
