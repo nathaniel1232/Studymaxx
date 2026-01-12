@@ -67,20 +67,27 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
   // Check premium status on mount AND when session changes
   useEffect(() => {
+    console.log('[CreateFlowView] 🚀 MOUNT useEffect running');
     // Add a small delay to ensure session is fully initialized
     const timer = setTimeout(() => {
+      console.log('[CreateFlowView] ⏰ Timer fired - calling checkPremiumStatus');
       checkPremiumStatus();
     }, 50);
     
     // Listen for auth state changes
     if (supabase) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        console.log('[CreateFlowView] Auth state changed:', event, 'Has session:', !!session);
+        console.log('[CreateFlowView] 🔄 Auth state changed:', event, 'Has session:', !!session);
         setHasSession(!!session);
         if (session) {
           // Add delay before checking premium to allow session to fully sync
-          setTimeout(() => checkPremiumStatus(), 100);
+          console.log('[CreateFlowView] ⏰ Session detected - scheduling premium check in 100ms');
+          setTimeout(() => {
+            console.log('[CreateFlowView] ⏰ Session timer fired - calling checkPremiumStatus');
+            checkPremiumStatus();
+          }, 100);
         } else {
+          console.log('[CreateFlowView] ❌ No session - setting isPremium to FALSE');
           setIsPremium(false);
           setPremiumCheckLoading(false);
         }
@@ -222,7 +229,14 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         const data = await response.json();
         console.log('[CreateFlowView] ✅ Premium status received:', data);
         console.log('[CreateFlowView] 🎯 Setting isPremium to:', data.isPremium);
+        console.log('[CreateFlowView] 🔍 API Response full data:', JSON.stringify(data, null, 2));
+        console.log('[CreateFlowView] 🔍 data.isPremium type:', typeof data.isPremium);
+        console.log('[CreateFlowView] 🔍 data.isPremium === true:', data.isPremium === true);
+        console.log('[CreateFlowView] 🔍 data.isPremium === false:', data.isPremium === false);
+        
         setIsPremium(data.isPremium);
+        console.log('[CreateFlowView] ✅ setIsPremium CALLED with:', data.isPremium);
+        
         setSetsCreated(data.setsCreated);
         setCanCreateMore(data.canCreateMore);
         
