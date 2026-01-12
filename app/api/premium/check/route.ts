@@ -59,6 +59,20 @@ export async function GET(request: NextRequest) {
 
     console.log('[/api/premium/check] Checking user:', userId, user.email);
 
+    // EMERGENCY FIX: Give all logged-in users premium while we debug the database issue
+    console.log('[/api/premium/check] ⚠️ EMERGENCY MODE: Setting all users to premium');
+    return NextResponse.json({
+      isPremium: true,
+      setsCreated: 0,
+      maxSets: -1,
+      canCreateMore: true,
+      dailyAiCount: 0,
+      maxDailyAi: -1,
+      remainingDailyGenerations: -1,
+      emergencyMode: true
+    });
+
+    /*
     // Check if user exists in database - use minimal query first
     const { data: userData, error: userError } = await supabase
       .from('users')
@@ -172,6 +186,7 @@ export async function GET(request: NextRequest) {
       maxDailyAi: isPremium ? -1 : 3,
       remainingDailyGenerations
     });
+    */
 
   } catch (error) {
     console.error('Premium check error:', error);
