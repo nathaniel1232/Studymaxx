@@ -710,7 +710,7 @@ export async function POST(req: NextRequest) {
     const { userId, text, numberOfFlashcards, subject, targetGrade, difficulty, language: detectedLanguage, materialType, outputLanguage } = body;
 
     // Determine the actual output language
-    // If outputLanguage is "en", always use English; otherwise use detected language or default to English
+    // If outputLanguage is "en", force English; if "auto", use the detected language from input text
     const language = outputLanguage === "en" ? "English" : (detectedLanguage || "English");
 
     // Validate input

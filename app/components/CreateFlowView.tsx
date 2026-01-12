@@ -135,8 +135,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   const detectLanguage = (text: string): string => {
     if (!text || text.length < 20) return "unknown";
     
-    // Common Norwegian words
-    const norwegianWords = ["og", "er", "det", "som", "en", "av", "på", "til", "med", "har", "kan", "for", "ikke", "den", "om", "var", "fra", "ved", "eller", "hva", "når", "vil", "skal", "også", "dette", "alle", "de", "han", "hun", "jeg", "du", "vi", "meg", "deg", "seg", "sin", "sitt", "sine", "våre", "deres"];
+    // Common Norwegian words (expanded list)
+    const norwegianWords = ["og", "er", "det", "som", "en", "av", "på", "til", "med", "har", "kan", "for", "ikke", "den", "om", "var", "fra", "ved", "eller", "hva", "når", "vil", "skal", "også", "dette", "alle", "de", "han", "hun", "jeg", "du", "vi", "meg", "deg", "seg", "sin", "sitt", "sine", "våre", "deres", "hvor", "hvordan", "hvorfor", "men", "fordi", "etter", "før", "under", "over", "mellom", "gjennom", "inne", "ute", "opp", "ned", "her", "der", "nå", "da", "så", "altså", "derfor"];
     const textLower = text.toLowerCase();
     const words = textLower.split(/\s+/);
     
@@ -147,14 +147,22 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       }
     }
     
-    // Norwegian-specific characters
-    const hasNorwegianChars = /[æøåÆØÅ]/.test(text);
+    // Norwegian-specific characters (æ, ø, å)
+    const norwegianChars = text.match(/[æøåÆØÅ]/g);
+    const hasNorwegianChars = norwegianChars && norwegianChars.length > 0;
     
-    // If we find Norwegian characters or significant Norwegian words, it's likely Norwegian
-    if (hasNorwegianChars || norwegianCount >= 3) {
+    console.log('[Language Detection] Norwegian words found:', norwegianCount);
+    console.log('[Language Detection] Norwegian chars (æøå):', norwegianChars ? norwegianChars.length : 0);
+    console.log('[Language Detection] Total words:', words.length);
+    console.log('[Language Detection] Text sample:', text.substring(0, 200));
+    
+    // If we find Norwegian characters OR at least 2 Norwegian words, it's Norwegian
+    if (hasNorwegianChars || norwegianCount >= 2) {
+      console.log('[Language Detection] ✅ Detected: Norwegian');
       return "Norsk (Norwegian)";
     }
     
+    console.log('[Language Detection] ✅ Detected: English');
     return "English";
   };
 
@@ -544,7 +552,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         setError(messages.errors.pdfProcessingFailed);
       }
     } else if (file.type.startsWith("image/")) {
-      // Handle image with GPT-4 Vision API (better than OCR)
+      // Handle image with GPT-4 Vision API
       try {
         console.log('[CreateFlowView] Processing single image with GPT-4 Vision...');
         
@@ -1178,7 +1186,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   </div>
 
                   {/* Language selection - only show when we have text */}
-                  {textInput.length >= 50 && (
+                  {/* Language selection - only show when we have text AND not from images */}
+                  {textInput.length >= 50 && selectedMaterial !== "image" && (
                     <div className="mt-6 p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                       <div className="mb-5">
                         <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
@@ -1203,11 +1212,11 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           <div className={`font-semibold mb-1 pointer-events-none transition-colors ${outputLanguage === "auto" ? "text-blue-700 dark:text-blue-300" : "text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400"}`}>
                             {detectedLanguage && detectedLanguage !== "unknown" 
                               ? detectedLanguage.split(" ")[0]
-                              : (settings.language === "no" ? "Original språk" : "Original language")
+                              : (settings.language === "no" ? "Oppdaget" : "Detected")
                             }
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400 pointer-events-none group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
-                            {settings.language === "no" ? "Behold språket fra teksten" : "Keep the language from your text"}
+                            {settings.language === "no" ? "Samme språk som teksten" : "Same language as text"}
                           </div>
                         </button>
                         <button
@@ -1223,30 +1232,36 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                             English
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400 pointer-events-none group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
-                            {settings.language === "no" ? "Generer på engelsk" : "Generate in English"}
+                            {settings.language === "no" ? "Oversett til engelsk" : "Translate to English"}
                           </div>
                         </button>
                       </div>
                     </div>
                   )}
 
-                  {/* Continue button - MUST select language first */}
+                  {/* Continue button - language selection required ONLY for non-image materials */}
                   <button
                     onClick={(e) => {
+                      // For images, no language selection needed
+                      if (selectedMaterial === "image") {
+                        handleContinueFromStep2();
+                        return;
+                      }
+                      // For other materials, require language selection if text is long enough
                       if (textInput.length >= 50 && !outputLanguage) {
                         e.preventDefault();
                         return;
                       }
                       handleContinueFromStep2();
                     }}
-                    disabled={textInput.length >= 50 && !outputLanguage}
+                    disabled={selectedMaterial !== "image" && textInput.length >= 50 && !outputLanguage}
                     className={`w-full py-4 text-lg font-bold rounded-xl transition-all ${
-                      textInput.length >= 50 && !outputLanguage
+                      selectedMaterial !== "image" && textInput.length >= 50 && !outputLanguage
                         ? "bg-gray-400 dark:bg-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed border-2 border-gray-400 dark:border-gray-600 opacity-60"
                         : "btn btn-primary"
                     }`}
                   >
-                    {textInput.length >= 50 && !outputLanguage ? "Select language first" : t("continue")}
+                    {selectedMaterial !== "image" && textInput.length >= 50 && !outputLanguage ? "Select language first" : t("continue")}
                   </button>
                 </>
               )}

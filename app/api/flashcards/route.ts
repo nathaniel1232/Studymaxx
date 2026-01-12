@@ -110,13 +110,13 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * Detect language from text (basic detection)
+ * Detect language from text (improved detection)
  */
 function detectLanguage(text: string): string {
   const sample = text.slice(0, 500).toLowerCase();
 
-  // Norwegian indicators
-  const norwegianWords = ["og", "er", "det", "på", "til", "med", "som", "å", "ikke", "har"];
+  // Norwegian indicators (expanded)
+  const norwegianWords = ["og", "er", "det", "på", "til", "med", "som", "å", "ikke", "har", "kan", "for", "den", "om", "var", "fra", "ved", "eller", "hva", "når", "vil", "skal", "også", "dette", "alle"];
   const norwegianChars = ["æ", "ø", "å"];
 
   // Spanish indicators
@@ -127,23 +127,40 @@ function detectLanguage(text: string): string {
   let norwegianScore = 0;
   let spanishScore = 0;
 
+  // Check for Norwegian words (more liberal matching)
   norwegianWords.forEach((word) => {
-    if (sample.includes(` ${word} `)) norwegianScore += 2;
+    const regex = new RegExp(`\\b${word}\\b`, 'gi');
+    const matches = sample.match(regex);
+    if (matches) norwegianScore += matches.length * 2;
   });
+  
+  // Norwegian characters are strong indicators
   norwegianChars.forEach((char) => {
-    norwegianScore += (sample.split(char).length - 1) * 3;
+    norwegianScore += (sample.split(char).length - 1) * 5;
   });
 
   spanishWords.forEach((word) => {
-    if (sample.includes(` ${word} `)) spanishScore += 2;
+    const regex = new RegExp(`\\b${word}\\b`, 'gi');
+    const matches = sample.match(regex);
+    if (matches) spanishScore += matches.length * 2;
   });
+  
   spanishChars.forEach((char) => {
-    spanishScore += (sample.split(char).length - 1) * 3;
+    spanishScore += (sample.split(char).length - 1) * 5;
   });
 
-  // Determine language
-  if (norwegianScore > 5) return "Norwegian";
-  if (spanishScore > 5) return "Spanish";
+  console.log('[detectLanguage] Norwegian score:', norwegianScore, 'Spanish score:', spanishScore);
 
+  // Determine language (lowered threshold for Norwegian)
+  if (norwegianScore > 3) {
+    console.log('[detectLanguage] ✅ Detected: Norwegian');
+    return "Norwegian";
+  }
+  if (spanishScore > 5) {
+    console.log('[detectLanguage] ✅ Detected: Spanish');
+    return "Spanish";
+  }
+
+  console.log('[detectLanguage] ✅ Detected: English (default)');
   return "English"; // Default
 }

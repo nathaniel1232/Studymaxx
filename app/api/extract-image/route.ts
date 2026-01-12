@@ -35,29 +35,7 @@ export async function POST(request: NextRequest) {
               content: [
                 {
                   type: 'text',
-                  text: `Extract ALL educational content from this image. Focus ONLY on the subject matter that students need to learn.
-
-EXTRACT:
-✅ Learning objectives and goals
-✅ Definitions and concepts
-✅ Theories and principles
-✅ Processes and procedures
-✅ Facts and information
-✅ Examples and explanations
-✅ Formulas and equations
-✅ Diagrams explanations
-✅ Key terms and vocabulary
-
-IGNORE:
-❌ Exam dates, times, or schedules
-❌ Physical locations or platforms
-❌ Week numbers or administrative dates
-❌ Testing format information
-❌ Page numbers, headers, footers
-❌ Where/when exams take place
-❌ Any logistical/metadata details
-
-Return ONLY the educational content as clean, well-formatted text. If the image contains a table or diagram, describe it clearly. If there are multiple sections, separate them with line breaks.`,
+                  text: 'Transcribe all text from this image in the original language. Do not translate. Extract educational content only, ignore dates and page numbers.',
                 },
                 {
                   type: 'image_url',
@@ -70,7 +48,7 @@ Return ONLY the educational content as clean, well-formatted text. If the image 
             },
           ],
           max_tokens: 2000,
-          temperature: 0.3,
+          temperature: 0,
         });
 
         const extractedText = response.choices[0]?.message?.content?.trim() || '';
@@ -78,7 +56,7 @@ Return ONLY the educational content as clean, well-formatted text. If the image 
         if (extractedText.length > 10) {
           console.log(`[Extract Image] ✅ Image ${i + 1}: Extracted ${extractedText.length} characters`);
           console.log(`[Extract Image] Preview: ${extractedText.substring(0, 150)}...`);
-          extractedTexts.push(`--- Image ${i + 1} ---\n${extractedText}`);
+          extractedTexts.push(extractedText);
         } else {
           console.warn(`[Extract Image] ⚠️ Image ${i + 1}: Very little text found`);
         }
