@@ -57,8 +57,22 @@ export async function GET(request: NextRequest) {
 
     const userId = user.id;
 
-    console.log('[/api/premium/check] Checking user:', userId, user.email);
+    console.log('[/api/premium/check] ⚠️ EMERGENCY MODE: All users are premium - userId:', userId, 'email:', user.email);
+    
+    // EMERGENCY FIX: Give all logged-in users premium access
+    return NextResponse.json({
+      isPremium: true,
+      setsCreated: 0,
+      maxSets: -1,
+      canCreateMore: true,
+      dailyAiCount: 0,
+      maxDailyAi: -1,
+      remainingDailyGenerations: -1,
+      emergencyMode: true,
+      userId: userId
+    });
 
+    /*
     // Check if user exists in database - use minimal query first
     const { data: userData, error: userError } = await supabase
       .from('users')
@@ -174,7 +188,20 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Premium check error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('[/api/premium/check] CRITICAL ERROR:', error);
+    console.error('[/api/premium/check] Error details:', JSON.stringify(error, null, 2));
+    
+    // In case of error, return premium access to avoid blocking users
+    return NextResponse.json({
+      isPremium: true,
+      setsCreated: 0,
+      maxSets: -1,
+      canCreateMore: true,
+      dailyAiCount: 0,
+      maxDailyAi: -1,
+      remainingDailyGenerations: -1,
+      error: 'Failed to check premium status - defaulting to premium',
+      errorDetails: error instanceof Error ? error.message : String(error)
+    });
   }
 }
