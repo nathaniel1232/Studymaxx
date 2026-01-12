@@ -72,8 +72,27 @@ export async function GET(request: NextRequest) {
       userId: userId
     });
 
+  } catch (error) {
+    console.error('[/api/premium/check] CRITICAL ERROR:', error);
+    console.error('[/api/premium/check] Error details:', JSON.stringify(error, null, 2));
+    
+    // In case of error, return premium access to avoid blocking users
+    return NextResponse.json({
+      isPremium: true,
+      setsCreated: 0,
+      maxSets: -1,
+      canCreateMore: true,
+      dailyAiCount: 0,
+      maxDailyAi: -1,
+      remainingDailyGenerations: -1,
+      error: 'Failed to check premium status - defaulting to premium',
+      errorDetails: error instanceof Error ? error.message : String(error)
+    });
+  }
+}
+
     /*
-    // Check if user exists in database - use minimal query first
+    // COMMENTED OUT - Check if user exists in database - use minimal query first
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('id, is_premium, email, daily_ai_count, last_ai_reset')
@@ -186,6 +205,7 @@ export async function GET(request: NextRequest) {
       maxDailyAi: isPremium ? -1 : 3,
       remainingDailyGenerations
     });
+    */
 
   } catch (error) {
     console.error('[/api/premium/check] CRITICAL ERROR:', error);
