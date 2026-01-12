@@ -211,7 +211,7 @@ export default function PremiumModal({
             <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-2xl p-6 mb-8 border border-red-200">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-black text-red-600 uppercase tracking-wider">Your Limit</span>
-                <span className="text-2xl font-black text-red-600">{setsCreated} / 1</span>
+                <span className="text-2xl font-black text-red-600">{setsCreated} / 3</span>
               </div>
               <div className="w-full bg-red-200 rounded-full h-3 overflow-hidden">
                 <div 
@@ -229,7 +229,7 @@ export default function PremiumModal({
             <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-6 mb-8 border border-amber-200">
               <h3 className="font-bold text-gray-900 mb-2 text-lg">⏰ Daily Generation Limit</h3>
               <p className="text-gray-700 leading-relaxed mb-3">
-                Free users get 1 AI generation per day. Your limit resets at midnight.
+                Free users get 3 AI generations per day. Your limit resets at midnight.
               </p>
               <p className="text-base font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600">
                 Premium users get unlimited generations — start now!
