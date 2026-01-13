@@ -8,6 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { detectLanguage } from "../../utils/textExtraction";
 
 // Allow up to 5 minutes for batched generation (Vercel free tier limit)
 export const maxDuration = 300;
@@ -109,58 +110,4 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/**
- * Detect language from text (improved detection)
- */
-function detectLanguage(text: string): string {
-  const sample = text.slice(0, 500).toLowerCase();
 
-  // Norwegian indicators (expanded)
-  const norwegianWords = ["og", "er", "det", "på", "til", "med", "som", "å", "ikke", "har", "kan", "for", "den", "om", "var", "fra", "ved", "eller", "hva", "når", "vil", "skal", "også", "dette", "alle"];
-  const norwegianChars = ["æ", "ø", "å"];
-
-  // Spanish indicators
-  const spanishWords = ["el", "la", "de", "que", "es", "en", "un", "una", "por", "para"];
-  const spanishChars = ["ñ", "á", "é", "í", "ó", "ú"];
-
-  // Count occurrences
-  let norwegianScore = 0;
-  let spanishScore = 0;
-
-  // Check for Norwegian words (more liberal matching)
-  norwegianWords.forEach((word) => {
-    const regex = new RegExp(`\\b${word}\\b`, 'gi');
-    const matches = sample.match(regex);
-    if (matches) norwegianScore += matches.length * 2;
-  });
-  
-  // Norwegian characters are strong indicators
-  norwegianChars.forEach((char) => {
-    norwegianScore += (sample.split(char).length - 1) * 5;
-  });
-
-  spanishWords.forEach((word) => {
-    const regex = new RegExp(`\\b${word}\\b`, 'gi');
-    const matches = sample.match(regex);
-    if (matches) spanishScore += matches.length * 2;
-  });
-  
-  spanishChars.forEach((char) => {
-    spanishScore += (sample.split(char).length - 1) * 5;
-  });
-
-  console.log('[detectLanguage] Norwegian score:', norwegianScore, 'Spanish score:', spanishScore);
-
-  // Determine language (lowered threshold for Norwegian)
-  if (norwegianScore > 3) {
-    console.log('[detectLanguage] ✅ Detected: Norwegian');
-    return "Norwegian";
-  }
-  if (spanishScore > 5) {
-    console.log('[detectLanguage] ✅ Detected: Spanish');
-    return "Spanish";
-  }
-
-  console.log('[detectLanguage] ✅ Detected: English (default)');
-  return "English"; // Default
-}

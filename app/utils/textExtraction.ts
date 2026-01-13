@@ -162,13 +162,45 @@ export function detectLanguage(text: string): string {
   // English indicators
   const englishWords = ['the', 'is', 'are', 'was', 'were', 'this', 'that', 'what', 'which', 'have'];
   
+  // Icelandic indicators
+  const icelandicWords = ['og', 'er', 'að', 'ekki', 'við', 'það', 'fyrir', 'með', 'sem', 'eru', 'var', 'hann', 'hún'];
+  const icelandicChars = ['ð', 'þ', 'ö', 'á', 'í', 'ú', 'ý'];
+
+  // Indonesian indicators (Bahasa)
+  const indonesianWords = ['yang', 'dan', 'di', 'ke', 'dari', 'ini', 'itu', 'untuk', 'saya', 'mereka', 'adalah', 'dengan', 'tidak', 'akan', 'pada', 'bisa'];
+
+  // Check for Script-based languages first (Arabic, Cyrillic, CJK, etc) because they are definitive
+  
+  // Arabic Script Range
+  const arabicMatch = sample.match(/[\u0600-\u06FF]/g);
+  if (arabicMatch && arabicMatch.length > 5) return 'Arabic';
+
+  // Cyrillic Script Range (Russian, Ukrainian, etc)
+  const cyrillicMatch = sample.match(/[\u0400-\u04FF]/g);
+  if (cyrillicMatch && cyrillicMatch.length > 5) return 'Russian'; // Default to Russian for Cyrillic for now
+
+  // CJK (Chinese, Japanese, Korean)
+  const cjkMatch = sample.match(/[\u4e00-\u9fa5]/g);
+  if (cjkMatch && cjkMatch.length > 5) return 'Chinese';
+
   let scores: { [key: string]: number } = {
     Norwegian: 0,
     Spanish: 0,
     French: 0,
     German: 0,
-    English: 0
+    English: 0,
+    Icelandic: 0,
+    Indonesian: 0,
+    Italian: 0,
+    Portuguese: 0
   };
+
+  // Italian indicators
+  const italianWords = ['il', 'la', 'i', 'gli', 'le', 'di', 'da', 'in', 'con', 'su', 'per', 'tra', 'fra'];
+  
+  // Portuguese indicators
+  const portugueseWords = ['o', 'a', 'os', 'as', 'de', 'do', 'da', 'em', 'um', 'uma', 'para', 'com', 'não', 'é'];
+  const portugueseChars = ['ã', 'õ', 'ç'];
   
   // Score by words
   norwegianWords.forEach(word => {
@@ -186,14 +218,35 @@ export function detectLanguage(text: string): string {
   englishWords.forEach(word => {
     scores.English += (sample.match(new RegExp(`\\b${word}\\b`, 'g')) || []).length;
   });
+  icelandicWords.forEach(word => {
+    scores.Icelandic += (sample.match(new RegExp(`\\b${word}\\b`, 'g')) || []).length;
+  });
+  indonesianWords.forEach(word => {
+    scores.Indonesian += (sample.match(new RegExp(`\\b${word}\\b`, 'g')) || []).length;
+  });
+  italianWords.forEach(word => {
+    scores.Italian += (sample.match(new RegExp(`\\b${word}\\b`, 'g')) || []).length;
+  });
+  portugueseWords.forEach(word => {
+    scores.Portuguese += (sample.match(new RegExp(`\\b${word}\\b`, 'g')) || []).length;
+  });
   
   // Score by special characters (weighted higher)
   norwegianChars.forEach(char => scores.Norwegian += (sample.split(char).length - 1) * 3);
   spanishChars.forEach(char => scores.Spanish += (sample.split(char).length - 1) * 3);
   germanChars.forEach(char => scores.German += (sample.split(char).length - 1) * 3);
+  icelandicChars.forEach(char => scores.Icelandic += (sample.split(char).length - 1) * 5);
+  portugueseChars.forEach(char => scores.Portuguese += (sample.split(char).length - 1) * 5);
+
+  // SPECIAL RULE: If 'ð' or 'þ' are present, it is HIGHLY likely Icelandic, not Norwegian
+  if (sample.includes('ð') || sample.includes('þ')) {
+    scores.Icelandic += 50;
+    scores.Norwegian -= 20; // Penalize Norwegian if these chars exist
+  }
   
   // Find highest score
   const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
   
+  // If no clear winner, fallback to English
   return sorted[0][1] > 2 ? sorted[0][0] : 'English';
 }
