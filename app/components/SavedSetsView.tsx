@@ -32,6 +32,20 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
   const [isLoadingFolders, setIsLoadingFolders] = useState(false);
   const [deletingFolderId, setDeletingFolderId] = useState<string | null>(null);
 
+  const loadData = async () => {
+    try {
+      const sets = await getSavedFlashcardSets();
+      setSavedSets(sets);
+      
+      const userFolders = await getFolders();
+      setFolders(userFolders);
+    } catch (error) {
+      console.error('[SavedSetsView] ❌ Failed to load data:', error);
+      // Show error to user - they need to know sync is broken
+      alert('Failed to load your study sets. Please check your internet connection and try again.');
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, []);
@@ -50,20 +64,6 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
       return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [movingSetId]);
-
-  const loadData = async () => {
-    try {
-      const sets = await getSavedFlashcardSets();
-      setSavedSets(sets);
-      
-      const userFolders = await getFolders();
-      setFolders(userFolders);
-    } catch (error) {
-      console.error('[SavedSetsView] ❌ Failed to load data:', error);
-      // Show error to user - they need to know sync is broken
-      alert('Failed to load your study sets. Please check your internet connection and try again.');
-    }
-  };
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;

@@ -414,44 +414,40 @@ QUESTION QUALITY:
 - Prioritize depth over breadth
 
 ANSWER AND DISTRACTOR QUALITY:
-1. Correct Answer: Be specific and accurate. State exactly what is true. 1-2 sentences maximum.
-2. Distractors: Create 3 wrong options that are REALISTIC MISCONCEPTIONS, not obviously wrong
-3. CRITICAL LENGTH RULE - ALL 4 OPTIONS MUST:
-   - Have between 8-15 words each (never shorter than 8 words)
-   - All options MUST be the same length (within ±2 words of each other)
-   - Start with the same type of word (if answer starts with "The", all distractors start with "The")
-   - Use identical grammatical patterns
-   - Be the same level of technical/simple language
-   - Sound equally confident and complete
-4. DISTRACTOR CONTENT RULES:
-   - Base distractors on real student misconceptions
-   - Use plausible but incorrect facts from the same topic
-   - Never use vague words like "sometimes", "maybe", "things"
-   - Each distractor should require actual knowledge to reject
-   - Make distractors sound equally detailed and professional as the correct answer
-5. THE CORRECT ANSWER SHOULD NEVER:
-   - Be longer or more detailed than distractors
-   - Use more specific terminology than distractors
-   - Sound more "academic" or polished than distractors
-6. IF THE CORRECT ANSWER IS SHORT, MAKE IT LONGER:
-   - Add context, explanation, or reasoning
-   - Include "because", "which means", "resulting in" phrases
-   - Ensure 8-15 words minimum
+1. Correct Answer: Be specific and accurate. State exactly what is true.
+2. Distractors: Create 3 wrong options that are REALISTIC MISCONCEPTIONS, not obviously wrong.
+3. CRITICAL LENGTH RULE - ALL 4 OPTIONS MUST HAVE SIMILAR LENGTH:
+   - The correct answer MUST NOT be the longest option (this is a common giveaway).
+   - All options MUST be within ±2 words of each other.
+   - If the correct answer is 12 words, distractors MUST be 10-14 words.
+   - If the correct answer is long, make distractors equally long and detailed.
+   - If distractors are short, shorten the correct answer to match.
+   - NEVER make the correct answer significantly more detailed than distractors.
+4. DISTRACTOR STYLE:
+   - Start with the same type of word (if answer starts with "The", all distractors start with "The").
+   - Use identical grammatical patterns.
+   - Be the same level of technical/simple language.
+   - Sound equally confident and complete.
+5. DISTRACTOR CONTENT:
+   - Base distractors on real student misconceptions.
+   - Use plausible but incorrect facts from the same topic.
+   - Never use vague words like "sometimes", "maybe", "things".
+   - Each distractor should require actual knowledge to reject.
 
 DISTRACTOR EXAMPLES (good):
 Question: "What primary mechanism causes evaporation?"
-- ✅ Heat from the sun provides energy to water molecules (correct)
-- ✅ Energy from water molecules allows them to escape the surface (realistic misconception)
-- ✅ Temperature decreases around liquid water, causing molecular escape (realistic misconception)
-- ✅ Solar radiation causes water molecules to sink deeper (realistic misconception)
-All are similar length, equally detailed, equally plausible.
+- ✅ Heat from the sun provides energy to water molecules (correct - 9 words)
+- ✅ Energy from water molecules allows them to escape the surface (wrong - 10 words)
+- ✅ Temperature decreases around liquid water, causing molecular escape (wrong - 8 words)
+- ✅ Solar radiation causes water molecules to sink deeper (wrong - 8 words)
+All are similar length (8-10 words), equally detailed, equally plausible.
 
 DISTRACTOR EXAMPLES (bad):
 Question: "What primary mechanism causes evaporation?"
-- ❌ Heat from the sun provides energy for molecules to become gas (too long)
-- ❌ Wind (too short, obviously wrong)
-- ❌ Cooling (vague, obviously wrong)
-- ❌ Water gets hot (informal, obviously wrong)
+- ❌ Heat from the sun provides energy for molecules to become gas (11 words - too long/detailed compared to others)
+- ❌ Wind (1 word - obviously wrong)
+- ❌ Cooling (1 word - obviously wrong)
+- ❌ Water gets hot (3 words - obviously wrong)
 
 ANSWER FORMAT:
 Use this JSON structure with equal-quality options:

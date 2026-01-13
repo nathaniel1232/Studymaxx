@@ -100,46 +100,17 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
     (masteredCards.size / flashcards.length) * 100
   );
 
-  // Generate multiple-choice options for the current question in test mode
-  const generateQuizOptions = (correctAnswer: string, allCards: Flashcard[]): string[] => {
-    // If the current card has pre-generated distractors, use them
-    if (currentCard.distractors && currentCard.distractors.length > 0) {
-      const allOptions = [correctAnswer, ...currentCard.distractors];
-      return shuffleArray(allOptions);
-    }
-    
-    // Detect if this is a grammar question (language subject context)
-    const isGrammarQuestion = detectGrammarQuestion(currentCard.question, correctAnswer);
-    
-    if (isGrammarQuestion) {
-      // Generate intelligent grammar-based distractors
-      const grammarDistractors = generateGrammarDistractors(currentCard.question, correctAnswer);
-      if (grammarDistractors.length >= 2) {
-        const allOptions = [correctAnswer, ...grammarDistractors];
-        return shuffleArray(allOptions);
-      }
-    }
-    
-    // SMART FALLBACK: Select semantically similar answers
-    const similarAnswers = findSimilarAnswers(correctAnswer, allCards);
-    
-    if (similarAnswers.length >= 2) {
-      const selectedDistractors = similarAnswers.slice(0, 3);
-      const allOptions = [correctAnswer, ...selectedDistractors];
-      return shuffleArray(allOptions);
-    }
-    
-    // Last resort: random selection (but this should rarely happen)
-    const incorrectAnswers = allCards
-      .filter((card) => card.id !== currentCard.id && card.answer !== correctAnswer)
-      .map((card) => card.answer);
-    
-    const numIncorrect = Math.min(incorrectAnswers.length, 3);
-    const shuffledIncorrect = shuffleArray(incorrectAnswers);
-    const selectedIncorrect = shuffledIncorrect.slice(0, numIncorrect);
-    
-    const allOptions = [correctAnswer, ...selectedIncorrect];
-    return shuffleArray(allOptions);
+  // Detect if question is math-related
+  const isMathQuestion = (question: string): boolean => {
+    const mathPatterns = [
+      /solve|calculate|løs|regn/i,
+      /\d+\s*[+\-*/×÷]\s*\d+/,
+      /=\s*\?/,
+      /[xyz]\s*[=+\-*/]/i,
+      /\d+x/i,
+      /equation|likning/i
+    ];
+    return mathPatterns.some(pattern => pattern.test(question));
   };
 
   // Find semantically similar answers from the flashcard set
@@ -156,13 +127,18 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
         let score = 0;
         
         // Same length (similar format)
-        if (Math.abs(correctAnswer.length - card.answer.length) < 10) {
+        if (Math.abs(correctAnswer.length - card.answer.length) < 5) {
+          score += 5;
+        } else if (Math.abs(correctAnswer.length - card.answer.length) < 15) {
           score += 2;
         }
         
         // Same word count
-        if (answerWords.length === otherWords.length) {
-          score += 3;
+        const wordDiff = Math.abs(answerWords.length - otherWords.length);
+        if (wordDiff === 0) {
+          score += 5;
+        } else if (wordDiff <= 2) {
+          score += 2;
         }
         
         // Shared words
@@ -195,7 +171,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
         
         // Penalize very different lengths
         const lengthDiff = Math.abs(correctAnswer.length - card.answer.length);
-        if (lengthDiff > 20) score -= 5;
+        if (lengthDiff > 15) score -= 10; // Stricter penalty
         
         return { answer: card.answer, score };
       })
@@ -321,6 +297,48 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
     return [];
   };
 
+  // Generate multiple-choice options for the current question in test mode
+  const generateQuizOptions = (correctAnswer: string, allCards: Flashcard[]): string[] => {
+    // If the current card has pre-generated distractors, use them
+    if (currentCard.distractors && currentCard.distractors.length > 0) {
+      const allOptions = [correctAnswer, ...currentCard.distractors];
+      return shuffleArray(allOptions);
+    }
+    
+    // Detect if this is a grammar question (language subject context)
+    const isGrammarQuestion = detectGrammarQuestion(currentCard.question, correctAnswer);
+    
+    if (isGrammarQuestion) {
+      // Generate intelligent grammar-based distractors
+      const grammarDistractors = generateGrammarDistractors(currentCard.question, correctAnswer);
+      if (grammarDistractors.length >= 2) {
+        const allOptions = [correctAnswer, ...grammarDistractors];
+        return shuffleArray(allOptions);
+      }
+    }
+    
+    // SMART FALLBACK: Select semantically similar answers
+    const similarAnswers = findSimilarAnswers(correctAnswer, allCards);
+    
+    if (similarAnswers.length >= 2) {
+      const selectedDistractors = similarAnswers.slice(0, 3);
+      const allOptions = [correctAnswer, ...selectedDistractors];
+      return shuffleArray(allOptions);
+    }
+    
+    // Last resort: random selection (but this should rarely happen)
+    const incorrectAnswers = allCards
+      .filter((card) => card.id !== currentCard.id && card.answer !== correctAnswer)
+      .map((card) => card.answer);
+    
+    const numIncorrect = Math.min(incorrectAnswers.length, 3);
+    const shuffledIncorrect = shuffleArray(incorrectAnswers);
+    const selectedIncorrect = shuffledIncorrect.slice(0, numIncorrect);
+    
+    const allOptions = [correctAnswer, ...selectedIncorrect];
+    return shuffleArray(allOptions);
+  };
+
   // Generate quiz options when current question changes in test mode
   useEffect(() => {
     if (studyMode === "test" && currentCard && !testResults.has(currentCard.id)) {
@@ -335,18 +353,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
       setIsAnswerCorrect(null);
     }
   }, [currentIndex, studyMode, currentCard, flashcards, testResults]);
-  // Detect if question is math-related
-  const isMathQuestion = (question: string): boolean => {
-    const mathPatterns = [
-      /solve|calculate|løs|regn/i,
-      /\d+\s*[+\-*/×÷]\s*\d+/,
-      /=\s*\?/,
-      /[xyz]\s*[=+\-*/]/i,
-      /\d+x/i,
-      /equation|likning/i
-    ];
-    return mathPatterns.some(pattern => pattern.test(question));
-  };
+
   const handleNext = () => {
     if (currentIndex < flashcards.length - 1) {
       setCurrentIndex(currentIndex + 1);
@@ -865,60 +872,70 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
         ) : (
           <>
             {/* Test Mode - Quiz View (No Flashcard) */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-8">
-              {/* Question Display - Plain Text, Non-Interactive */}
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
+            <div className="w-full max-w-4xl mx-auto mb-8">
+              {/* Question Display - Styled Like Flashcard */}
+              <div 
+                className="relative w-full aspect-[16/9] min-h-[300px] mb-8 rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center justify-center p-8 md:p-12 text-center"
+                style={{
+                  background: 'linear-gradient(135deg, #60a5fa 0%, #22d3ee 50%, #3b82f6 100%)',
+                  boxShadow: '0 25px 50px -12px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.5)'
+                }}
+              >
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400"></div>
+                
+                <div className="absolute top-6 left-6 flex items-center gap-3">
+                  <span className="inline-block px-3 py-1 rounded-full bg-white/20 text-white font-bold tracking-widest uppercase text-xs backdrop-blur-md border border-white/20">
                     Question {currentIndex + 1}
                   </span>
-                  <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+                  <span className="text-xs font-medium text-white/80">
                     {testResults.size} / {flashcards.length} answered
                   </span>
                 </div>
                 
                 {/* Math indicator */}
                 {isMathQuestion(currentCard.question) && (
-                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                      {t("use_pen_paper")}
+                  <div className="mb-4 inline-block px-4 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-xl">
+                    <p className="text-sm font-bold text-white flex items-center gap-2">
+                       <span>✏️</span> {t("use_pen_paper")}
                     </p>
                   </div>
                 )}
                 
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white leading-relaxed">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white leading-relaxed drop-shadow-md max-w-3xl">
                   {currentCard.question}
                 </h2>
+                
+                <div className="absolute bottom-6 right-6 text-white/20">
+                   <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </div>
               </div>
 
               {/* Answer Options or Self-Assessment */}
               {quizOptions.length > 0 ? (
                 /* Multiple Choice Quiz */
-                <div className="space-y-3">
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3">
-                    Select the correct answer:
-                  </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {quizOptions.map((option, index) => {
                     const isSelected = selectedAnswer === option;
                     const isCorrectOption = option === currentCard.answer;
                     const showFeedback = selectedAnswer !== null;
                     
-                    let buttonClass = "w-full px-5 py-4 text-left font-medium text-base rounded-xl transition-all duration-200 border-2 ";
+                    let buttonClass = "w-full p-6 text-left font-medium text-lg rounded-2xl transition-all duration-300 relative overflow-hidden group border-2 ";
+                    let bgStyle = {};
                     
                     if (showFeedback) {
                       if (isCorrectOption) {
                         // Always highlight the correct answer in green
-                        buttonClass += "bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-500";
+                        buttonClass += "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 border-emerald-500 shadow-lg shadow-emerald-500/20 transform scale-[1.02] z-10";
                       } else if (isSelected && !isCorrectOption) {
                         // Highlight the incorrect selection in red
-                        buttonClass += "bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-500";
+                        buttonClass += "bg-rose-50 dark:bg-rose-900/30 text-rose-800 dark:text-rose-200 border-rose-500 opacity-90";
                       } else {
                         // Other options are dimmed
-                        buttonClass += "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 opacity-50 border-gray-300 dark:border-gray-600";
+                        buttonClass += "bg-gray-50 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 opacity-40 border-gray-200 dark:border-gray-700 blur-[1px]";
                       }
                     } else {
                       // Before selection - clean interactive state
-                      buttonClass += "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer";
+                      buttonClass += "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] cursor-pointer";
                     }
                     
                     return (
@@ -928,10 +945,13 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         disabled={selectedAnswer !== null}
                         className={buttonClass}
                       >
-                        <div className="flex items-center justify-between">
-                          <span>{option}</span>
-                          {showFeedback && isCorrectOption && <span className="text-green-600 dark:text-green-400 text-lg">✓</span>}
-                          {showFeedback && isSelected && !isCorrectOption && <span className="text-red-600 dark:text-red-400 text-lg">✗</span>}
+                         {!showFeedback && (
+                           <span className="absolute inset-0 bg-gradient-to-r from-blue-50/0 via-blue-50/50 to-blue-50/0 dark:from-blue-900/0 dark:via-blue-900/10 dark:to-blue-900/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                         )}
+                        <div className="flex items-center justify-between relative z-10">
+                          <span className="leading-snug pr-8">{option}</span>
+                          {showFeedback && isCorrectOption && <span className="text-emerald-600 dark:text-emerald-400 text-2xl animate-in zoom-in spin-in-180 duration-300">✅</span>}
+                          {showFeedback && isSelected && !isCorrectOption && <span className="text-rose-600 dark:text-rose-400 text-2xl animate-in zoom-in duration-300">❌</span>}
                         </div>
                       </button>
                     );
@@ -939,49 +959,50 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                 </div>
               ) : (
                 /* Self-Assessment for Math Problems */
-                <div className="space-y-6">
+                <div className="space-y-6 max-w-2xl mx-auto">
                   {/* Show answer */}
-                  <div className="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl p-5">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                      {t("answer")}:
+                  <div className="bg-slate-900 text-white rounded-3xl p-8 shadow-xl text-center relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                    <p className="text-sm font-bold text-white/60 mb-4 uppercase tracking-widest">
+                      {t("answer")}
                     </p>
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                    <p className="text-3xl font-bold text-white">
                       {currentCard.answer}
                     </p>
                   </div>
 
                   {/* Self-assessment buttons */}
                   {selectedAnswer === null ? (
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4 text-center">
+                    <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-lg border border-gray-100 dark:border-gray-700">
+                      <p className="text-lg font-bold text-gray-900 dark:text-white mb-6 text-center">
                         {settings.language === 'no' ? 'Hvordan gikk det?' : 'How did you do?'}
                       </p>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="flex justify-center gap-4">
                         <button
                           onClick={() => handleQuizAnswer('wrong')}
-                          className="px-4 py-4 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-700 dark:text-red-300 font-medium rounded-xl transition-all border border-red-200 dark:border-red-800"
+                          className="flex-1 py-6 bg-white border-2 border-rose-100 dark:border-rose-900/30 hover:border-rose-300 dark:hover:border-rose-700 text-rose-600 dark:text-rose-400 font-bold rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl shadow-rose-100 dark:shadow-rose-900/10 group"
                         >
-                          <span className="flex flex-col items-center gap-1">
-                            <span className="text-xl">✗</span>
-                            <span className="text-sm">{settings.language === 'no' ? 'Feil' : 'Wrong'}</span>
+                          <span className="flex flex-col items-center gap-2">
+                            <span className="text-4xl group-hover:scale-110 transition-transform">😫</span>
+                            <span>{settings.language === 'no' ? 'Feil' : 'Wrong'}</span>
                           </span>
                         </button>
                         <button
                           onClick={() => handleQuizAnswer('ok')}
-                          className="px-4 py-4 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 font-medium rounded-xl transition-all border border-yellow-200 dark:border-yellow-800"
+                          className="flex-1 py-6 bg-white border-2 border-amber-100 dark:border-amber-900/30 hover:border-amber-300 dark:hover:border-amber-700 text-amber-600 dark:text-amber-400 font-bold rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl shadow-amber-100 dark:shadow-amber-900/10 group"
                         >
-                          <span className="flex flex-col items-center gap-1">
-                            <span className="text-xl">~</span>
-                            <span className="text-sm">OK</span>
+                          <span className="flex flex-col items-center gap-2">
+                            <span className="text-4xl group-hover:scale-110 transition-transform">😐</span>
+                            <span>OK</span>
                           </span>
                         </button>
                         <button
                           onClick={() => handleQuizAnswer('correct')}
-                          className="px-4 py-4 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-700 dark:text-green-300 font-medium rounded-xl transition-all border border-green-200 dark:border-green-800"
+                          className="flex-1 py-6 bg-white border-2 border-emerald-100 dark:border-emerald-900/30 hover:border-emerald-300 dark:hover:border-emerald-700 text-emerald-600 dark:text-emerald-400 font-bold rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl shadow-emerald-100 dark:shadow-emerald-900/10 group"
                         >
-                          <span className="flex flex-col items-center gap-1">
-                            <span className="text-xl">✓</span>
-                            <span className="text-sm">{settings.language === 'no' ? 'Riktig' : 'Correct'}</span>
+                          <span className="flex flex-col items-center gap-2">
+                            <span className="text-4xl group-hover:scale-110 transition-transform">🤩</span>
+                            <span>{settings.language === 'no' ? 'Riktig' : 'Correct'}</span>
                           </span>
                         </button>
                       </div>
@@ -992,35 +1013,42 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
 
               {/* Feedback Message */}
               {selectedAnswer !== null && (
-                <div className={`mt-6 p-6 rounded-3xl border-2 ${
+                <div className={`mt-8 p-8 rounded-3xl border-0 shadow-2xl transform transition-all animate-in slide-in-from-bottom-4 duration-500 ${
                   isAnswerCorrect 
-                    ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
-                    : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
+                    ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-500/30' 
+                    : 'bg-white dark:bg-gray-800 border-2 border-rose-200 dark:border-rose-800 text-gray-900 dark:text-white shadow-xl'
                 }`}>
-                  <p className={`text-center font-semibold text-lg ${
-                    isAnswerCorrect ? 'text-green-700 dark:text-green-300' : 'text-orange-700 dark:text-orange-300'
-                  }`}>
-                    {isAnswerCorrect ? (
-                      <>
-                        {currentStreak >= 5 ? (
-                          <span>{currentStreak} in a row!</span>
-                        ) : currentStreak >= 3 ? (
-                          <span>{currentStreak} streak!</span>
-                        ) : (
-                          <span>Correct!</span>
-                        )}
-                      </>
-                    ) : lives > 0 ? (
-                      <span>{t("keep_going_msg")}</span>
-                    ) : (
-                      <span>{t("practice_msg")}</span>
-                    )}
-                  </p>
-                  {!isAnswerCorrect && (
-                    <p className="text-center text-sm text-gray-700 dark:text-gray-300 mt-2">
-                      {t("correct_answer_prefix")} <span className="font-medium text-blue-600 dark:text-blue-400">{currentCard.answer}</span>
+                  <div className="flex flex-col items-center text-center">
+                    <div className="text-5xl mb-4">
+                      {isAnswerCorrect ? '🎉' : '💪'}
+                    </div>
+                    <p className="font-black text-2xl md:text-3xl mb-2">
+                      {isAnswerCorrect ? (
+                        <>
+                          {currentStreak >= 5 ? (
+                            <span>{currentStreak} {t("streak")}! 🔥</span>
+                          ) : currentStreak >= 3 ? (
+                            <span>{currentStreak} {t("streak")}!</span>
+                          ) : (
+                            <span>{t("correct")}!</span>
+                          )}
+                        </>
+                      ) : (
+                         <span>{lives > 0 ? t("keep_going_msg") : t("practice_msg")}</span>
+                      )}
                     </p>
-                  )}
+                    
+                    {!isAnswerCorrect && currentCard.answer && (
+                      <div className="mt-4 p-4 bg-rose-50 dark:bg-rose-900/20 rounded-xl border border-rose-100 dark:border-rose-800 w-full max-w-lg">
+                        <p className="text-sm font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wide mb-1">
+                          {t("correct_answer_prefix")}
+                        </p>
+                        <p className="text-xl font-bold text-gray-900 dark:text-white">
+                          {currentCard.answer}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
