@@ -14,10 +14,22 @@ This document summarizes all critical fixes implemented to resolve language cons
 - **No Hardcoded Strings**: Removed all hardcoded English text throughout the app
 - **Complete Norwegian Support**: Every visible element now respects the selected language
 
-### Added Translations:
-- Flashcard grading: `bad`, `ok`, `good`, `weak`, `medium`, `mastered`
-- Test flow: `shuffle`, `retake_test`, `resume`, `review_mistakes`, `try_again`
-- Progress indicators: `progress`, `streak`, `lives`, `answered`, `correct`
+
+---
+
+## ✅ PART 4 — CRITICAL BUG FIXES & UI POLISH (JAN 13, 2026)
+
+### Critical Logic Fixes:
+- **Fixed "Longest Answer Wins" Exploit**: Updated AI prompts to prevent the correct answer from always being the longest. Now enforces explicit length matching for distractors.
+- **Fixed `outputLanguage` Crash**: Added missing parameter checks in API routes that were causing 500 errors during generation.
+- **Optimized Generation Speed**: Rewrote system prompts to demand "brief, precise, high-impact" answers (15-20 words max), significantly reducing token generation time and cost.
+
+### UI/UX Improvements:
+- **Modernized Selection UI**: Replaced generic blue borders in Language/Grade selection with a high-contrast, modern Black & White aesthetic.
+- **Sticky Quiz Feedback**: Moved quiz feedback (Correct/Incorrect) to a fixed bottom bar to ensure visibility without scrolling.
+- **Disabled Auto-Advance**: Stopped the quiz from automatically skipping the feedback screen, allowing users time to read the correct answer.
+- **Removed Negative Feedback**: Removed the "Reviewing mistakes only" toast message to reduce visual clutter and negative sentiment.
+
 - UI elements: `question`, `answer`, `previous`, `next`, `select_correct_answer`
 - Summary screen: `review_summary`, `weak_cards`, `medium_cards`, `mastered_cards`
 - Messages: `perfect`, `nice_work`, `lets_review`, `all_done`, `study_again`

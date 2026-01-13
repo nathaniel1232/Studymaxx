@@ -1199,41 +1199,52 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           </p>
                         )}
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-4">
                         <button
                           type="button"
                           onClick={() => setOutputLanguage("auto")}
-                          className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer group ${
+                          className={`relative p-4 rounded-2xl text-left transition-all duration-200 border ${
                             outputLanguage === "auto"
-                              ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-lg"
-                              : "border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-gray-700 hover:shadow-lg hover:scale-[1.02]"
+                              ? "bg-gray-900 text-white border-gray-900 dark:bg-white dark:text-gray-900 dark:border-white shadow-lg transform scale-[1.01]"
+                              : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-md hover:-translate-y-1"
                           }`}
                         >
-                          <div className={`font-semibold mb-1 pointer-events-none transition-colors ${outputLanguage === "auto" ? "text-blue-700 dark:text-blue-300" : "text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400"}`}>
+                          <div className="font-semibold text-sm mb-1">
                             {detectedLanguage && detectedLanguage !== "unknown" 
                               ? detectedLanguage.split(" ")[0]
                               : (settings.language === "no" ? "Oppdaget" : "Detected")
                             }
                           </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 pointer-events-none group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
-                            {settings.language === "no" ? "Samme språk som teksten" : "Same language as text"}
+                          <div className={`text-xs ${outputLanguage === "auto" ? "text-gray-300 dark:text-gray-500" : "text-gray-400"}`}>
+                            {settings.language === "no" ? "Behold originalspråket" : "Keep original language"}
                           </div>
+                          {outputLanguage === "auto" && (
+                            <div className="absolute top-4 right-4 text-emerald-400">
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                            </div>
+                          )}
                         </button>
+
                         <button
                           type="button"
                           onClick={() => setOutputLanguage("en")}
-                          className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer group ${
+                          className={`relative p-4 rounded-2xl text-left transition-all duration-200 border ${
                             outputLanguage === "en"
-                              ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-lg"
-                              : "border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-gray-700 hover:shadow-lg hover:scale-[1.02]"
+                              ? "bg-gray-900 text-white border-gray-900 dark:bg-white dark:text-gray-900 dark:border-white shadow-lg transform scale-[1.01]"
+                              : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-md hover:-translate-y-1"
                           }`}
                         >
-                          <div className={`font-semibold mb-1 pointer-events-none transition-colors ${outputLanguage === "en" ? "text-blue-700 dark:text-blue-300" : "text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400"}`}>
+                          <div className="font-semibold text-sm mb-1">
                             English
                           </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 pointer-events-none group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
-                            {settings.language === "no" ? "Oversett til engelsk" : "Translate to English"}
+                          <div className={`text-xs ${outputLanguage === "en" ? "text-gray-300 dark:text-gray-500" : "text-gray-400"}`}>
+                            {settings.language === "no" ? "Oversett alt til engelsk" : "Translate everything to English"}
                           </div>
+                          {outputLanguage === "en" && (
+                            <div className="absolute top-4 right-4 text-emerald-400">
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                            </div>
+                          )}
                         </button>
                       </div>
                     </div>
@@ -1325,44 +1336,48 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           setTargetGrade(grade);
                         }
                       }}
-                      className={`w-full p-4 border-2 rounded-xl text-left transition-all group ${
+                      className={`w-full p-4 rounded-2xl text-left transition-all duration-200 border ${
                         targetGrade === grade
-                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-lg"
-                          : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-gray-700 hover:shadow-lg hover:scale-[1.02]"
-                      } ${isLocked ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                          ? "bg-gray-900 text-white border-gray-900 dark:bg-white dark:text-gray-900 dark:border-white shadow-lg transform scale-[1.01]"
+                          : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-md hover:-translate-y-1"
+                      } ${isLocked ? 'opacity-50 cursor-not-allowed grayscale' : 'cursor-pointer'}`}
                     >
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-semibold ${
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold shadow-sm ${
                             targetGrade === grade 
-                              ? 'bg-blue-500 text-white' 
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                              ? 'bg-white/20 text-white dark:bg-gray-200 dark:text-gray-900' 
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                           }`}>
                             {grade}
                           </div>
                           
                           <div>
-                            <div className={`font-medium ${
+                            <div className={`font-bold text-lg ${
                               targetGrade === grade
-                                ? "text-blue-600 dark:text-blue-400"
+                                ? "text-white dark:text-gray-900"
                                 : "text-gray-900 dark:text-white"
                             }`}>
                               {label}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className={`text-sm ${
+                              targetGrade === grade ? "text-gray-300 dark:text-gray-500" : "text-gray-500 dark:text-gray-400"
+                            }`}>
                               {actualCardCount} cards
                             </div>
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                           {isLocked && (
-                            <span className="text-xs px-2 py-1 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
-                              Premium
+                            <span className="text-xs font-bold px-2 py-1 rounded bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-100">
+                              PREMIUM
                             </span>
                           )}
                           {targetGrade === grade && !isLocked && (
-                            <span className="text-blue-500">✓</span>
+                            <div className="text-emerald-400">
+                              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                            </div>
                           )}
                         </div>
                       </div>

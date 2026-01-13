@@ -215,7 +215,11 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                   <button
                     key={theme}
                     onClick={() => handleUpdateSetting(() => updateTheme(theme))}
-                    className={`option-card ${settings.theme === theme ? 'selected' : ''}`}
+                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      settings.theme === theme 
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold' 
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                    }`}
                   >
                     <div className="text-sm capitalize">{theme}</div>
                   </button>
@@ -233,7 +237,11 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                   <button
                     key={scale}
                     onClick={() => handleUpdateSetting(() => updateUIScale(scale))}
-                    className={`option-card ${settings.uiScale === scale ? 'selected' : ''}`}
+                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      settings.uiScale === scale 
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold' 
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                    }`}
                   >
                     <div className="text-sm capitalize">{scale}</div>
                   </button>
@@ -258,9 +266,13 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                   <button
                     key={lang}
                     onClick={() => handleUpdateSetting(() => updateLanguage(lang))}
-                    className={`option-card ${settings.language === lang ? 'selected' : ''}`}
+                    className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center ${
+                      settings.language === lang 
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold' 
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                    }`}
                   >
-                    <div className="text-lg mb-0.5">
+                    <div className="text-2xl mb-1">
                       {lang === "en" && "🇬🇧"}
                       {lang === "no" && "🇳🇴"}
                     </div>
@@ -282,7 +294,11 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                   <button
                     key={system}
                     onClick={() => handleUpdateSetting(() => updateGradeSystem(system))}
-                    className={`option-card ${settings.gradeSystem === system ? 'selected' : ''}`}
+                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      settings.gradeSystem === system 
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold' 
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                    }`}
                   >
                     <div className="text-sm">{system}</div>
                   </button>

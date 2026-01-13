@@ -172,6 +172,12 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
         // Penalize very different lengths
         const lengthDiff = Math.abs(correctAnswer.length - card.answer.length);
         if (lengthDiff > 15) score -= 10; // Stricter penalty
+
+        // CRITICAL: The "Jonathan Rule" - Prevent obvious length guessing
+        // If correct answer is substantial (>30 chars), reject answers that are significantly shorter
+        if (correctAnswer.length > 30 && card.answer.length < correctAnswer.length * 0.7) {
+           score -= 50; 
+        }
         
         return { answer: card.answer, score };
       })
@@ -487,12 +493,12 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
       }
     }
     
-    // Auto-advance to next question after a short delay
-    setTimeout(() => {
-      if (currentIndex < flashcards.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-      }
-    }, 1500);
+    // Auto-advance to next question removed to allow user to see feedback
+    // setTimeout(() => {
+    //   if (currentIndex < flashcards.length - 1) {
+    //     setCurrentIndex(currentIndex + 1);
+    //   }
+    // }, 1500);
   };
 
   const handleRateCard = (cardId: string, rating: 'bad' | 'ok' | 'good') => {
@@ -516,7 +522,6 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
     
     // Important: DO NOT save the set when reviewing mistakes
     // Only review the failed cards, don't overwrite the original set
-    showToast(t("reviewing_mistakes_only"), "info");
   };
 
   const isTestComplete = studyMode === "test" && testResults.size === flashcards.length;
@@ -796,14 +801,14 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               {maxStreak > 1 && ` · ${t("best_streak")}: ${maxStreak}`}
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
-              {incorrectCount > 0 && (
+              {incorrectCount > 0 ? (
                 <button
                   onClick={handleRetakeFailedCards}
                   className="px-8 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-2xl transition-all border-2 border-gray-300 dark:border-gray-700 hover:shadow-lg hover:scale-105"
                 >
                   {t("study_mistakes")}
                 </button>
-              )}
+              ) : null}
               <button
                 onClick={() => {
                   setTestResults(new Map());
@@ -1011,43 +1016,60 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                 </div>
               )}
 
-              {/* Feedback Message */}
+              {/* Feedback Message - Clean Modern Floating Bar */}
               {selectedAnswer !== null && (
-                <div className={`mt-8 p-8 rounded-3xl border-0 shadow-2xl transform transition-all animate-in slide-in-from-bottom-4 duration-500 ${
-                  isAnswerCorrect 
-                    ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-emerald-500/30' 
-                    : 'bg-white dark:bg-gray-800 border-2 border-rose-200 dark:border-rose-800 text-gray-900 dark:text-white shadow-xl'
-                }`}>
-                  <div className="flex flex-col items-center text-center">
-                    <div className="text-5xl mb-4">
-                      {isAnswerCorrect ? '🎉' : '💪'}
-                    </div>
-                    <p className="font-black text-2xl md:text-3xl mb-2">
-                      {isAnswerCorrect ? (
-                        <>
-                          {currentStreak >= 5 ? (
-                            <span>{currentStreak} {t("streak")}! 🔥</span>
-                          ) : currentStreak >= 3 ? (
-                            <span>{currentStreak} {t("streak")}!</span>
-                          ) : (
-                            <span>{t("correct")}!</span>
+                <div className="fixed bottom-6 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-full md:max-w-3xl z-50">
+                  <div className={`p-4 rounded-3xl shadow-2xl backdrop-blur-xl border-2 transform transition-all animate-in slide-in-from-bottom duration-300 ${
+                    isAnswerCorrect 
+                      ? 'bg-white/95 dark:bg-gray-900/95 border-emerald-500 text-gray-900 dark:text-white' 
+                      : 'bg-white/95 dark:bg-gray-900/95 border-rose-500 text-gray-900 dark:text-white'
+                  }`}>
+                    <div className="flex items-center justify-between gap-4">
+                      
+                      {/* Icon & Message */}
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0 ${
+                          isAnswerCorrect ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
+                        }`}>
+                          {isAnswerCorrect ? '✓' : '✕'}
+                        </div>
+                        
+                        <div className="min-w-0">
+                          <p className={`font-black text-lg leading-none mb-1 ${
+                            isAnswerCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
+                          }`}>
+                            {isAnswerCorrect ? t("correct") + "!" : t("incorrect")}
+                          </p>
+                          
+                          {/* Show answer if incorrect */}
+                          {!isAnswerCorrect && currentCard.answer && (
+                            <p className="text-sm font-medium opacity-90 truncate max-w-[200px] md:max-w-md">
+                              <span className="opacity-60 mr-1">{t("correct_answer_prefix")}:</span>
+                              {currentCard.answer}
+                            </p>
                           )}
-                        </>
-                      ) : (
-                         <span>{lives > 0 ? t("keep_going_msg") : t("practice_msg")}</span>
-                      )}
-                    </p>
-                    
-                    {!isAnswerCorrect && currentCard.answer && (
-                      <div className="mt-4 p-4 bg-rose-50 dark:bg-rose-900/20 rounded-xl border border-rose-100 dark:border-rose-800 w-full max-w-lg">
-                        <p className="text-sm font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wide mb-1">
-                          {t("correct_answer_prefix")}
-                        </p>
-                        <p className="text-xl font-bold text-gray-900 dark:text-white">
-                          {currentCard.answer}
-                        </p>
+                          
+                           {/* Show streak if correct */}
+                           {isAnswerCorrect && currentStreak > 1 && (
+                            <p className="text-sm font-bold text-orange-500">
+                              🔥 {currentStreak} {t("streak")}
+                            </p>
+                           )}
+                        </div>
                       </div>
-                    )}
+                      
+                      {/* Next Button */}
+                      <button 
+                        onClick={handleNext} 
+                        className={`px-6 py-3 rounded-xl font-bold text-white shadow-lg transition-transform active:scale-95 flex-shrink-0 ${
+                          isAnswerCorrect 
+                            ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200' 
+                            : 'bg-rose-500 hover:bg-rose-600 shadow-rose-200'
+                        }`}
+                      >
+                        {currentIndex < flashcards.length - 1 ? t("next") : t("finish")}
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

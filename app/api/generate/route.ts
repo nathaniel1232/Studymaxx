@@ -238,12 +238,13 @@ async function generateWithAIFast(
   language: string = "English",
   targetGrade?: string,
   subject?: string,
-  materialType?: string
+  materialType?: string,
+  outputLanguage: "auto" | "en" = "auto"
 ): Promise<Flashcard[]> {
   console.log(`[generateWithAIFast] Target: ${numberOfFlashcards} flashcards (fast single-request mode)`);
   
   // Single request with streamlined generation - no batching for speed
-  return await generateWithAI(text, numberOfFlashcards, language, targetGrade, subject, materialType);
+  return await generateWithAI(text, numberOfFlashcards, language, targetGrade, subject, materialType, outputLanguage);
 }
 
 /**
@@ -324,7 +325,8 @@ async function generateWithAI(
   language: string = "English",
   targetGrade?: string,
   subject?: string,
-  materialType?: string
+  materialType?: string,
+  outputLanguage: "auto" | "en" = "auto"
 ): Promise<Flashcard[]> {
   const targetCount = numberOfFlashcards; // Store original request
   
@@ -334,7 +336,7 @@ async function generateWithAI(
   let exampleAnswer = "";
   
   // Simplified answer guidance for speed
-  answerGuidance = "Keep answers concise: 1-3 sentences with key information only. No filler.";
+  answerGuidance = "Keep answers VERY concise: Max 15-20 words. Core facts only. No filler.";
   vocabularyLevel = "Use clear, direct language appropriate for the subject.";
   exampleAnswer = "";
 
@@ -381,73 +383,40 @@ IMPORTANT - YOUTUBE TRANSCRIPT INSTRUCTIONS:
 - Create flashcards that capture the key lessons from the video`;
   }
 
-  const systemPrompt = `You are an expert educational assistant creating exam-focused flashcards${subject ? ` for ${subject}` : ""}.
+  const systemPrompt = `You are an expert academic tutor${subject ? ` in ${subject}` : ""} creating high-level exam flashcards.
 
-Your job is to create flashcards that students will use to STUDY, LEARN, and ACE EXAMS.
-Assume the student already knows basic definitions and terminology.
+Your job is to create "learning-rich" content that forces students to think.
+You must solve a critical issue where students can guess the answer just by picking the longest option.
 
-Generate EXACTLY ${bufferedCount} flashcards in ${language} from the provided text.${materialInstructions}
+CORE RULES:
+1. OUTPUT: Valid JSON only. No markdown.
+2. QUANTITY: Generate exactly ${bufferedCount} flashcards.
+3. LANGUAGE: ${outputLanguage === 'auto' ? 'Same language as the input text' : 'English'}.
 
-CRITICAL INSTRUCTION - AVOID SUPERFICIAL FLASHCARDS:
-❌ DO NOT create:
-- Generic "What is X?" definition questions
-- Textbook-opening/introductory questions
-- Surface-level terminology flashcards
-- Questions that don't help with exam learning
-- Questions the student would already know
+LEARNING QUALITY (High Priority):
+- QUESTIONS should be challenging ("Why", "How", "Analyze") but direct.
+- ANSWERS must be BRIEF, PRECISE, and HIGH-IMPACT. Max 15-20 words preferred.
+- CUT ALL FLUFF. No "The answer is...", no "Because...", no repetition.
+- If the input is simple notes, ensure the question tests understanding, not just recall.
 
-✅ DO create:
-- Questions about WHY things work the way they do
-- Cause-and-effect relationships ("Why does X happen?" "What causes Y?")
-- Process explanations ("How does X occur?")
-- Comparisons and contrasts ("What's the difference between X and Y?")
-- Mechanisms and explanations ("Explain how X functions")
-- Application questions ("What happens when X is applied to Y?")
-- Questions testing deeper understanding, not just recall
-- Content that students are commonly tested on in exams
+CRITICAL: SPEED & FORMATTING
+- KEEP IT SHORT. Shorter answers = Faster generation.
+- The correct answer MUST NOT be the longest choice.
+- All 4 options (answer + 3 distractors) MUST have approximately the same length.
+- The BEST way to ensure equal length is to keep ALL options SHORT (1-2 lines max).
 
-QUESTION QUALITY:
-- Every question should be meaningful and content-heavy
-- The first flashcards should never be generic
-- Focus on mechanisms, relationships, and explanations
-- Questions should require thinking, not just memorization
-- Prioritize depth over breadth
+DISTRACTOR QUALITY:
+- Distractors must be PLAUSIBLE and highly SIMILAR to the correct answer.
+- If the answer is a specific date, all distractors must be specific dates.
+- If the answer is a definition, all distractors must be definitions of RELATED concepts.
+- Distractors must represent "close calls" that a student might actually confuse.
 
-ANSWER AND DISTRACTOR QUALITY:
-1. Correct Answer: Be specific and accurate. State exactly what is true.
-2. Distractors: Create 3 wrong options that are REALISTIC MISCONCEPTIONS, not obviously wrong.
-3. CRITICAL LENGTH RULE - ALL 4 OPTIONS MUST HAVE SIMILAR LENGTH:
-   - The correct answer MUST NOT be the longest option (this is a common giveaway).
-   - All options MUST be within ±2 words of each other.
-   - If the correct answer is 12 words, distractors MUST be 10-14 words.
-   - If the correct answer is long, make distractors equally long and detailed.
-   - If distractors are short, shorten the correct answer to match.
-   - NEVER make the correct answer significantly more detailed than distractors.
-4. DISTRACTOR STYLE:
-   - Start with the same type of word (if answer starts with "The", all distractors start with "The").
-   - Use identical grammatical patterns.
-   - Be the same level of technical/simple language.
-   - Sound equally confident and complete.
-5. DISTRACTOR CONTENT:
-   - Base distractors on real student misconceptions.
-   - Use plausible but incorrect facts from the same topic.
-   - Never use vague words like "sometimes", "maybe", "things".
-   - Each distractor should require actual knowledge to reject.
-
-DISTRACTOR EXAMPLES (good):
-Question: "What primary mechanism causes evaporation?"
-- ✅ Heat from the sun provides energy to water molecules (correct - 9 words)
-- ✅ Energy from water molecules allows them to escape the surface (wrong - 10 words)
-- ✅ Temperature decreases around liquid water, causing molecular escape (wrong - 8 words)
-- ✅ Solar radiation causes water molecules to sink deeper (wrong - 8 words)
-All are similar length (8-10 words), equally detailed, equally plausible.
-
-DISTRACTOR EXAMPLES (bad):
-Question: "What primary mechanism causes evaporation?"
-- ❌ Heat from the sun provides energy for molecules to become gas (11 words - too long/detailed compared to others)
-- ❌ Wind (1 word - obviously wrong)
-- ❌ Cooling (1 word - obviously wrong)
-- ❌ Water gets hot (3 words - obviously wrong)
+DISTRACTOR EXAMPLES (Optimized):
+Question: "What is the primary function of mitochondria?"
+- ✅ "Generates ATP energy for the cell" (Correct, Short)
+- ✅ "Synthesizes proteins for structure" (Similar length/style)
+- ✅ "Regulates DNA replication cycles" (Similar length/style)
+- ✅ "Breaks down cellular waste" (Similar length/style)
 
 ANSWER FORMAT:
 Use this JSON structure with equal-quality options:
@@ -462,18 +431,18 @@ Use this JSON structure with equal-quality options:
   ]
 }
 
-Generate ${bufferedCount} flashcards now. Prioritize quality and depth over speed.`;
+Generate ${bufferedCount} flashcards now. Make them difficult, fair, and educational.`;
 
   try {
     console.log("[API /generate] Starting OpenAI request...");
     const startTime = Date.now();
     
-    // Fast timeout - single request optimized for speed
-    const timeoutMs = 90000; // 90 seconds max
+    // Extended timeout - allow full duration for processing
+    const timeoutMs = 300000; // 5 minutes max (matching Vercel maxDuration)
     console.log(`[API /generate] Timeout set to ${timeoutMs}ms for ${numberOfFlashcards} cards`);
     
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("Generation timeout - please try again")), timeoutMs);
+      setTimeout(() => reject(new Error("Generation timeout - please try again with fewer cards or shorter text")), timeoutMs);
     });
 
     const completionPromise = openai.chat.completions.create({
@@ -795,7 +764,8 @@ export async function POST(req: NextRequest) {
       language || "English",
       targetGrade,
       subject,
-      materialType
+      materialType,
+      outputLanguage
     );
 
     // STEP 5: Increment usage counters (fire-and-forget - don't wait)
