@@ -26,17 +26,5 @@ export default function ThemeWrapper({ children }: { children: React.ReactNode }
     }
   }, [settings.theme]);
 
-  useEffect(() => {
-    // Apply UI scale to html element
-    const root = document.documentElement;
-    root.classList.remove("ui-small", "ui-large");
-    
-    if (settings.uiScale === "small") {
-      root.classList.add("ui-small");
-    } else if (settings.uiScale === "large") {
-      root.classList.add("ui-large");
-    }
-  }, [settings.uiScale]);
-
   return <>{children}</>;
 }

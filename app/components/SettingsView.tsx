@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSettings, useTranslation, Theme, Language, UIScale, GradeSystem } from "../contexts/SettingsContext";
+import { useSettings, useTranslation, Theme, Language, GradeSystem } from "../contexts/SettingsContext";
 import { studyFacts } from "../utils/studyFacts";
 import ArrowIcon from "./icons/ArrowIcon";
 import { getCurrentUser, signOut, supabase } from "../utils/supabase";
@@ -14,7 +14,7 @@ interface SettingsViewProps {
 
 export default function SettingsView({ onBack }: SettingsViewProps) {
   const t = useTranslation();
-  const { settings, updateTheme, updateLanguage, updateUIScale, updateGradeSystem } = useSettings();
+  const { settings, updateTheme, updateLanguage, updateGradeSystem } = useSettings();
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isPremium, setIsPremium] = useState(false);
@@ -222,28 +222,6 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                     }`}
                   >
                     <div className="text-sm capitalize">{theme}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* UI Scale */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                UI Size
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {(["small", "default", "large"] as UIScale[]).map((scale) => (
-                  <button
-                    key={scale}
-                    onClick={() => handleUpdateSetting(() => updateUIScale(scale))}
-                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
-                      settings.uiScale === scale 
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold' 
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-                    }`}
-                  >
-                    <div className="text-sm capitalize">{scale}</div>
                   </button>
                 ))}
               </div>

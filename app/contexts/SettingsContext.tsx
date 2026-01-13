@@ -4,13 +4,11 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 export type Theme = "light" | "dark" | "system";
 export type Language = "en" | "no";
-export type UIScale = "small" | "default" | "large";
 export type GradeSystem = "A-F" | "1-6" | "percentage";
 
 export interface AppSettings {
   theme: Theme;
   language: Language;
-  uiScale: UIScale;
   gradeSystem: GradeSystem;
 }
 
@@ -18,14 +16,12 @@ interface SettingsContextType {
   settings: AppSettings;
   updateTheme: (theme: Theme) => void;
   updateLanguage: (language: Language) => void;
-  updateUIScale: (scale: UIScale) => void;
   updateGradeSystem: (system: GradeSystem) => void;
 }
 
 const defaultSettings: AppSettings = {
   theme: "dark",
   language: "en",
-  uiScale: "default",
   gradeSystem: "A-F"
 };
 
@@ -80,25 +76,6 @@ function applyTheme(theme: Theme): void {
   }
 }
 
-/**
- * Apply UI scale to document
- */
-function applyUIScale(scale: UIScale): void {
-  if (typeof window === "undefined") return;
-  
-  const root = document.documentElement;
-  
-  // Remove existing scale classes
-  root.classList.remove("ui-small", "ui-large");
-  
-  // Add new scale class
-  if (scale === "small") {
-    root.classList.add("ui-small");
-  } else if (scale === "large") {
-    root.classList.add("ui-large");
-  }
-}
-
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -108,7 +85,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     const loaded = loadSettings();
     setSettings(loaded);
     applyTheme(loaded.theme);
-    applyUIScale(loaded.uiScale);
     setIsInitialized(true);
 
     // Listen for system theme changes
@@ -144,13 +120,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     saveSettings(newSettings);
   };
 
-  const updateUIScale = (uiScale: UIScale) => {
-    const newSettings = { ...settings, uiScale };
-    setSettings(newSettings);
-    saveSettings(newSettings);
-    applyUIScale(uiScale);
-  };
-
   const updateGradeSystem = (gradeSystem: GradeSystem) => {
     const newSettings = { ...settings, gradeSystem };
     setSettings(newSettings);
@@ -168,7 +137,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         settings,
         updateTheme,
         updateLanguage,
-        updateUIScale,
         updateGradeSystem
       }}
     >
