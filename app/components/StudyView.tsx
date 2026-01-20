@@ -537,7 +537,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
         <div className="flex items-center justify-between mb-10">
           <button
             onClick={onBack}
-            className="btn btn-ghost px-4 py-2 font-medium rounded-full flex items-center gap-2"
+            className="px-4 py-2 font-medium rounded-lg flex items-center gap-2 bg-slate-100 text-slate-700 shadow-sm hover:bg-slate-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-150 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
           >
             <ArrowIcon direction="left" size={16} />
             <span>{t("back")}</span>
@@ -924,23 +924,23 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                     const isCorrectOption = option === currentCard.answer;
                     const showFeedback = selectedAnswer !== null;
                     
-                    let buttonClass = "w-full p-6 text-left font-medium text-lg rounded-2xl transition-all duration-300 relative overflow-hidden group border-2 ";
+                    let buttonClass = "w-full p-6 text-left font-bold text-lg rounded-2xl transition-all duration-300 relative overflow-hidden group ";
                     let bgStyle = {};
                     
                     if (showFeedback) {
                       if (isCorrectOption) {
                         // Always highlight the correct answer in green
-                        buttonClass += "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200 border-emerald-500 shadow-lg shadow-emerald-500/20 transform scale-[1.02] z-10";
+                        buttonClass += "bg-emerald-600 text-white shadow-lg shadow-emerald-500/40 transform scale-[1.02] z-10";
                       } else if (isSelected && !isCorrectOption) {
                         // Highlight the incorrect selection in red
-                        buttonClass += "bg-rose-50 dark:bg-rose-900/30 text-rose-800 dark:text-rose-200 border-rose-500 opacity-90";
+                        buttonClass += "bg-red-600 text-white opacity-90";
                       } else {
                         // Other options are dimmed
-                        buttonClass += "bg-gray-50 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 opacity-40 border-gray-200 dark:border-gray-700 blur-[1px]";
+                        buttonClass += "bg-slate-800 text-slate-500 opacity-40 blur-[1px]";
                       }
                     } else {
                       // Before selection - clean interactive state
-                      buttonClass += "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] cursor-pointer";
+                      buttonClass += "bg-slate-800 text-white hover:bg-slate-700 hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] cursor-pointer shadow-md";
                     }
                     
                     return (
@@ -985,7 +985,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                       <div className="flex justify-center gap-4">
                         <button
                           onClick={() => handleQuizAnswer('wrong')}
-                          className="flex-1 py-6 bg-white border-2 border-rose-100 dark:border-rose-900/30 hover:border-rose-300 dark:hover:border-rose-700 text-rose-600 dark:text-rose-400 font-bold rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl shadow-rose-100 dark:shadow-rose-900/10 group"
+                          className="flex-1 py-6 bg-slate-100 dark:bg-slate-900 hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl shadow-rose-100 dark:shadow-rose-900/10 group"
                         >
                           <span className="flex flex-col items-center gap-2">
                             <span className="text-4xl group-hover:scale-110 transition-transform">😫</span>
@@ -994,7 +994,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         </button>
                         <button
                           onClick={() => handleQuizAnswer('ok')}
-                          className="flex-1 py-6 bg-white border-2 border-amber-100 dark:border-amber-900/30 hover:border-amber-300 dark:hover:border-amber-700 text-amber-600 dark:text-amber-400 font-bold rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl shadow-amber-100 dark:shadow-amber-900/10 group"
+                          className="flex-1 py-6 bg-slate-100 dark:bg-slate-900 hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl shadow-amber-100 dark:shadow-amber-900/10 group"
                         >
                           <span className="flex flex-col items-center gap-2">
                             <span className="text-4xl group-hover:scale-110 transition-transform">😐</span>
@@ -1003,7 +1003,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         </button>
                         <button
                           onClick={() => handleQuizAnswer('correct')}
-                          className="flex-1 py-6 bg-white border-2 border-emerald-100 dark:border-emerald-900/30 hover:border-emerald-300 dark:hover:border-emerald-700 text-emerald-600 dark:text-emerald-400 font-bold rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl shadow-emerald-100 dark:shadow-emerald-900/10 group"
+                          className="flex-1 py-6 bg-slate-100 dark:bg-slate-900 hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl shadow-emerald-100 dark:shadow-emerald-900/10 group"
                         >
                           <span className="flex flex-col items-center gap-2">
                             <span className="text-4xl group-hover:scale-110 transition-transform">🤩</span>

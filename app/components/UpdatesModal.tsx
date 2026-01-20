@@ -15,6 +15,22 @@ interface UpdateEntry {
 
 const updates: UpdateEntry[] = [
   {
+    version: "1.4.0",
+    date: "January 20, 2026",
+    changes: [
+      "🎨 Complete UI refresh - all buttons and cards now have subtle cyan gradients",
+      "🔘 Subject selection buttons redesigned with hover effects and color",
+      "📦 Material cards are now more rounded and bubbly (rounded-2xl)",
+      "⚡ Difficulty and card count buttons have improved visual states",
+      "🌍 Language selection cards match new design system",
+      "🧮 Math problems feature now premium-only (Beta)",
+      "📊 Improved difficulty levels - Easy/Medium/Hard now create distinct content",
+      "🔢 Math problem generator improved - generates actual calculation problems",
+      "🐛 Fixed navigation bug when hitting free limit",
+      "⬅️ Back button now has hover effect with cyan border"
+    ]
+  },
+  {
     version: "1.3.1",
     date: "January 12, 2026",
     changes: [

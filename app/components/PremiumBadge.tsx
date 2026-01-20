@@ -30,7 +30,7 @@ export function PremiumBadge({
   if (variant === "overlay") {
     return (
       <div className={`absolute top-2 right-2 ${className}`}>
-        <div className={`${sizeClasses[size]} bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-full shadow-lg flex items-center gap-1`}>
+        <div className={`${sizeClasses[size]} bg-violet-700 text-white font-bold rounded-full shadow-md flex items-center gap-1`}>
           {showIcon && <span className="text-sm">⭐</span>}
           <span>Premium</span>
         </div>
@@ -41,7 +41,7 @@ export function PremiumBadge({
   if (variant === "tooltip") {
     return (
       <div className={`group relative inline-block ${className}`}>
-        <div className={`${sizeClasses[size]} bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-full cursor-help flex items-center gap-1`}>
+        <div className={`${sizeClasses[size]} bg-violet-700 text-white font-bold rounded-full cursor-help flex items-center gap-1 shadow-md`}>
           {showIcon && <span>🔒</span>}
           <span>Premium</span>
         </div>
@@ -55,7 +55,7 @@ export function PremiumBadge({
 
   // Default inline variant
   return (
-    <span className={`${sizeClasses[size]} inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-full ${className}`}>
+    <span className={`${sizeClasses[size]} inline-flex items-center gap-1 bg-violet-700 text-white font-bold rounded-full shadow-md ${className}`}>
       {showIcon && <span>⭐</span>}
       <span>Premium</span>
     </span>
@@ -174,7 +174,7 @@ export function FeatureComparison({ onUpgrade }: FeatureComparisonProps) {
             MOST POPULAR
           </span>
         </div>
-        <h3 className="text-lg font-bold mb-3 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+        <h3 className="text-lg font-bold mb-3 text-amber-600 dark:text-amber-400">
           Premium
         </h3>
         <ul className="space-y-2 text-sm mb-4">

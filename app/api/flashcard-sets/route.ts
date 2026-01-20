@@ -246,22 +246,31 @@ export async function PUT(request: NextRequest) {
     if (folder_id !== undefined) updates.folder_id = folder_id;
 
     // Update flashcard set
-    const { data: updatedSet, error } = await supabase
+    const { data: updatedData, error } = await supabase
       .from('flashcard_sets')
       .update(updates)
       .eq('id', id)
       .eq('user_id', user.id)
-      .select()
-      .single();
+      .select();
 
     if (error) {
       console.error('Error updating flashcard set:', error);
-      return NextResponse.json({ error: 'Failed to update flashcard set' }, { status: 500 });
+      return NextResponse.json({ 
+        error: 'Failed to update flashcard set', 
+        details: error.message 
+      }, { status: 500 });
     }
 
-    return NextResponse.json({ set: updatedSet });
+    if (!updatedData || updatedData.length === 0) {
+      return NextResponse.json({ error: 'Set not found or access denied' }, { status: 404 });
+    }
+
+    return NextResponse.json({ set: updatedData[0] });
   } catch (error) {
     console.error('Flashcard sets PUT error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Internal server error', 
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }

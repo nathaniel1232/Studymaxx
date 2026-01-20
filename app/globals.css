@@ -12,59 +12,59 @@
 
 :root {
   /* Background & Base - Fresh modern palette */
-  --background: #f8f9fa;
+  --background: #fafaf9; /* stone-50 */
   --background-elevated: #ffffff;
-  --foreground: #1a1a1a;
-  --foreground-muted: #6b7280;
+  --foreground: #18181b; /* zinc-900 */
+  --foreground-muted: #71717a; /* zinc-500 */
   
   /* Surface (Cards, Panels) - Clean elevation */
   --surface: #ffffff;
-  --surface-hover: #fafbfc;
+  --surface-hover: #f8fafc; /* slate-50 */
   --surface-elevated: #ffffff;
   
   /* Borders & Dividers - Subtle but visible */
-  --border: #e5e7eb;
-  --border-hover: #d1d5db;
-  --divider: #f3f4f6;
+  --border: #e4e4e7; /* zinc-200 */
+  --border-hover: #d4d4d8; /* zinc-300 */
+  --divider: #f4f4f5; /* zinc-100 */
   
-  /* Primary Accent - Modern teal/cyan */
-  --primary: #14b8a6;
-  --primary-hover: #0d9488;
-  --primary-light: #ccfbf1;
+  /* Primary Accent - Emerald for actions */
+  --primary: #059669; /* emerald-600 */
+  --primary-hover: #047857; /* emerald-700 */
+  --primary-light: #d1fae5; /* emerald-100 */
   --primary-foreground: #ffffff;
   
-  /* Secondary Accent - Modern indigo */
-  --secondary: #6366f1;
-  --secondary-hover: #4f46e5;
-  --secondary-light: #e0e7ff;
+  /* Secondary Accent - Blue for links/info */
+  --secondary: #2563eb; /* blue-600 */
+  --secondary-hover: #1d4ed8; /* blue-700 */
+  --secondary-light: #dbeafe; /* blue-100 */
   
   /* LEARNING COLOR SYSTEM - Always visible, context-driven */
-  /* Flashcards & Study - Teal (trust, focus, learning) */
-  --learning-blue: #14b8a6;
-  --learning-blue-hover: #0d9488;
-  --learning-blue-light: #ccfbf1;
-  --learning-blue-dark: #0f766e;
-  
-  /* Success & Mastered - Green (growth, achievement) */
-  --learning-green: #10b981;
-  --learning-green-hover: #059669;
+  /* Flashcards & Study - Emerald (growth, learning) */
+  --learning-green: #059669;
+  --learning-green-hover: #047857;
   --learning-green-light: #d1fae5;
-  --learning-green-dark: #047857;
+  --learning-green-dark: #065f46;
   
-  /* Warning & Unsure - Yellow/Orange (attention, caution) */
+  /* Success & Mastered - Emerald */
+  --learning-blue: #2563eb;
+  --learning-blue-hover: #1d4ed8;
+  --learning-blue-light: #dbeafe;
+  --learning-blue-dark: #1e40af;
+  
+  /* Warning & Unsure - Amber */
   --learning-yellow: #f59e0b;
   --learning-yellow-hover: #d97706;
   --learning-yellow-light: #fef3c7;
   --learning-yellow-dark: #b45309;
   
-  /* Mistakes & Bad - Red (errors, needs work) */
+  /* Mistakes & Bad - Rose */
   --learning-red: #ef4444;
   --learning-red-hover: #dc2626;
   --learning-red-light: #fee2e2;
   --learning-red-dark: #b91c1c;
   
   /* Legacy status colors for backwards compatibility */
-  --success: #10b981;
+  --success: #059669;
   --success-light: #d1fae5;
   --warning: #f59e0b;
   --warning-light: #fef3c7;
@@ -88,42 +88,42 @@
 /* Dark mode color overrides - High contrast, modern */
 html.dark {
   /* Background & Base - Deep with excellent contrast */
-  --background: #111827;
-  --background-elevated: #1f2937;
-  --foreground: #f9fafb;
-  --foreground-muted: #9ca3af;
+  --background: #0f172a; /* slate-900 */
+  --background-elevated: #1e293b; /* slate-800 */
+  --foreground: #f8fafc; /* slate-50 */
+  --foreground-muted: #94a3b8; /* slate-400 */
   
   /* Surface (Cards, Panels) - Clear elevation */
-  --surface: #1f2937;
-  --surface-hover: #374151;
-  --surface-elevated: #374151;
+  --surface: #1e293b; /* slate-800 */
+  --surface-hover: #334155; /* slate-700 */
+  --surface-elevated: #334155; /* slate-700 */
   
   /* Borders & Dividers - Clearly visible */
-  --border: #374151;
-  --border-hover: #4b5563;
-  --divider: #1f2937;
+  --border: #334155; /* slate-700 */
+  --border-hover: #475569; /* slate-600 */
+  --divider: #1e293b; /* slate-800 */
   
-  /* Primary Accent - Bright and clear */
-  --primary: #2dd4bf;
-  --primary-hover: #14b8a6;
-  --primary-light: #134e4a;
+  /* Primary Accent - Bright emerald */
+  --primary: #10b981; /* emerald-500 */
+  --primary-hover: #059669; /* emerald-600 */
+  --primary-light: #064e3b; /* emerald-900 */
   --primary-foreground: #ffffff;
   
-  /* Secondary Accent - Vibrant indigo */
-  --secondary: #818cf8;
-  --secondary-hover: #6366f1;
-  --secondary-light: #312e81;
+  /* Secondary Accent - Bright blue */
+  --secondary: #3b82f6; /* blue-500 */
+  --secondary-hover: #2563eb; /* blue-600 */
+  --secondary-light: #1e3a8a; /* blue-900 */
   
   /* LEARNING COLORS - High contrast in dark mode */
-  --learning-blue: #2dd4bf;
-  --learning-blue-hover: #14b8a6;
-  --learning-blue-light: #134e4a;
-  --learning-blue-dark: #5eead4;
-  
-  --learning-green: #34d399;
-  --learning-green-hover: #10b981;
+  --learning-green: #10b981;
+  --learning-green-hover: #059669;
   --learning-green-light: #064e3b;
   --learning-green-dark: #6ee7b7;
+  
+  --learning-blue: #3b82f6;
+  --learning-blue-hover: #2563eb;
+  --learning-blue-light: #1e3a8a;
+  --learning-blue-dark: #60a5fa;
   
   --learning-yellow: #fbbf24;
   --learning-yellow-hover: #f59e0b;
@@ -926,4 +926,29 @@ input[type="range"].slider:disabled::-moz-range-thumb {
   50% { 
     box-shadow: 0 0 40px rgba(239, 68, 68, 0.8), 0 0 80px rgba(239, 68, 68, 0.6);
   }
+}
+
+/* Floating blob animations for background */
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
 }

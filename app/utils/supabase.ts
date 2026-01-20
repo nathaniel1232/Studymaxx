@@ -17,6 +17,42 @@ export const isSupabaseConfigured = () => {
 };
 
 /**
+ * Validate email to prevent bounces (reusable logic)
+ */
+export const validateEmailForAuth = (email: string): { valid: boolean; error?: string } => {
+    // 1. Basic format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return { valid: false, error: "Invalid email format" };
+    }
+
+    // 2. Block default/test domains that cause bounces
+    const riskyDomains = [
+        'test.com', 'example.com', 'email.com', 'sample.com', 
+        'tempmail.com', 'mailinator.com', '10minutemail.com',
+        'yopmail.com', 'testing.com', 'noreply.com'
+    ];
+    
+    // 3. Block specific test patterns
+    if (email.endsWith('.test') || email.endsWith('.example') || email.endsWith('.invalid')) {
+        return { valid: false, error: "Test domains are not allowed" };
+    }
+
+    const domain = email.split('@')[1].toLowerCase();
+    if (riskyDomains.includes(domain)) {
+        return { valid: false, error: "Please use a real email provider" };
+    }
+
+    // 4. Block "test" user patterns that are obviously fake
+    const params = email.split('@')[0].toLowerCase();
+    if (params === 'test' || params === 'user' || params === 'admin' || params === 'example') {
+         return { valid: false, error: "Generic test emails are not allowed" };
+    }
+
+    return { valid: true };
+}
+
+/**
  * Sign in with email and password
  */
 export const signInWithEmail = async (email: string, password: string) => {
@@ -37,6 +73,12 @@ export const signInWithEmail = async (email: string, password: string) => {
 export const signUpWithEmail = async (email: string, password: string) => {
   if (!supabase) throw new Error('Supabase not configured');
   
+  // Validate before hitting Supabase API to save bounce quota
+  const validation = validateEmailForAuth(email);
+  if (!validation.valid) {
+      throw new Error(validation.error);
+  }
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -50,12 +92,18 @@ export const signUpWithEmail = async (email: string, password: string) => {
 };
 
 /**
- * Sign in with magic link
+ * Sign in with Magic Link
  */
 export const signInWithMagicLink = async (email: string) => {
   if (!supabase) throw new Error('Supabase not configured');
+
+  // Validate before hitting Supabase API
+  const validation = validateEmailForAuth(email);
+  if (!validation.valid) {
+      throw new Error(validation.error);
+  }
   
-  const { error } = await supabase.auth.signInWithOtp({
+  const { data, error } = await supabase.auth.signInWithOtp({
     email,
     options: {
       emailRedirectTo: `${window.location.origin}/auth/callback`,
@@ -63,7 +111,10 @@ export const signInWithMagicLink = async (email: string) => {
   });
   
   if (error) throw error;
+  return data;
 };
+
+
 
 /**
  * Sign in with Google OAuth

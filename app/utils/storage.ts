@@ -346,9 +346,23 @@ export const updateLastStudied = async (id: string): Promise<void> => {
         
         return;
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('[Storage] ❌ Supabase update failed:', response.status, errorData);
-        throw new Error(`Failed to update in database: ${errorData.error || 'Unknown error'}`);
+        let errorMsg = 'Unknown error';
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.error || errorData.details || JSON.stringify(errorData);
+        } catch (e) {
+          const text = await response.text();
+          errorMsg = text || `Status ${response.status}`;
+        }
+        console.error('[Storage] ❌ Supabase update failed:', response.status, errorMsg);
+        
+        // If 404, it might have been deleted elsewhere, don't throw to avoid UI disruption
+        if (response.status === 404) {
+          console.warn('[Storage] Set not found in database (404), skipping update');
+          return;
+        }
+        
+        throw new Error(`Failed to update in database: ${errorMsg}`);
       }
     } catch (error) {
       console.error('[Storage] ❌ Error updating Supabase:', error);

@@ -57,18 +57,49 @@ export async function GET(request: NextRequest) {
 
     const userId = user.id;
 
-    console.log('[/api/premium/check] ⚠️ EMERGENCY MODE: All users are premium - userId:', userId, 'email:', user.email);
+    // 1. Get user data (premium status)
+    // Note: older schema might not have daily_generation_count, handle gracefully
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('is_premium, stripe_subscription_id')
+      .eq('id', userId)
+      .single();
+
+    if (userError) {
+      console.error('[/api/premium/check] Error fetching user data:', userError);
+    }
+
+    // 2. Count actual flashcard sets
+    const { count: setsCount, error: countError } = await supabase
+      .from('flashcard_sets')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    if (countError) {
+      console.error('[/api/premium/check] Error counting sets:', countError);
+    }
+
+    const isPremium = userData?.is_premium || false;
+    const setsCreated = setsCount || 0;
     
-    // EMERGENCY FIX: Give all logged-in users premium access
+    // Limits
+    const MAX_FREE_SETS = 3;
+    const MAX_FREE_DAILY = 5;
+    
+    // Determine if user can create more sets
+    const canCreateMore = isPremium ? true : (setsCreated < MAX_FREE_SETS);
+
+    console.log(`[/api/premium/check] User ${userId} | Premium: ${isPremium} | Sets: ${setsCreated}/${isPremium ? '∞' : MAX_FREE_SETS}`);
+
     return NextResponse.json({
-      isPremium: true,
-      setsCreated: 0,
-      maxSets: -1,
-      canCreateMore: true,
-      dailyAiCount: 0,
-      maxDailyAi: -1,
-      remainingDailyGenerations: -1,
-      emergencyMode: true,
+      isPremium: isPremium,
+      setsCreated: setsCreated,
+      maxSets: isPremium ? -1 : MAX_FREE_SETS,
+      canCreateMore: canCreateMore,
+      // Pass stored daily usage if we had it, or 0 for now as it's client-tracked mostly
+      dailyAiCount: 0, 
+      maxDailyAi: isPremium ? -1 : MAX_FREE_DAILY,
+      remainingDailyGenerations: isPremium ? -1 : MAX_FREE_DAILY,
       userId: userId
     });
 

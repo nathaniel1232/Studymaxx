@@ -39,9 +39,10 @@ export const messages = {
     textTooShort: "Please provide at least 100 characters of text.",
     
     // Upload/OCR
+    youtubeExtraction: "Couldn't get the video transcript. Check the URL or try another video.",
+    youtubeNeedsCaptions: "This video doesn't have captions we can read. Try a video with subtitles.",
     imageProcessingFailed: "Couldn't read the image text. Try a clearer image and try again.",
-    pdfProcessingFailed: "Couldn't read the PDF. The file might be corrupted or protected.",
-    youtubeProcessingFailed: "Couldn't get the video transcript. Please try another video.",
+    docxProcessingFailed: "Couldn't read the document. The file might be corrupted.",
     uploadFailed: "File upload failed. Please try a different file.",
     fileTooLarge: "File is too large. Try a smaller file.",
     
@@ -55,12 +56,11 @@ export const messages = {
     subjectRequired: "What subject are you studying? This helps us create better flashcards.",
     materialTypeRequired: "Choose a way to add your content.",
     notesRequired: "Add some notes to create flashcards.",
-    youtubeUrlRequired: "Paste a YouTube link to extract the transcript.",
     fileRequired: "Upload a file to extract text from.",
     gradeRequired: "Choose your target grade level.",
     
     // File/Upload errors
-    invalidFileType: "Please upload an image, PDF, or document file.",
+    invalidFileType: "Please upload an image or document (DOCX) file.",
     tooManyImages: "That's more images than allowed. Please select fewer files.",
     premiumMultiImage: "Free users can upload 1 image at a time. Upgrade to Premium for multi-image uploads.",
     noImages: "No images selected. Please choose at least one.",
@@ -70,10 +70,6 @@ export const messages = {
     // Content validation
     noContent: "Add some content to create flashcards.",
     notEnoughContent: "Please add more content. We need at least 20 characters to work with.",
-    
-    // YouTube errors
-    youtubeExtraction: "Couldn't extract the transcript. Try a different video.",
-    youtubeNeedsCaptions: "This video doesn't have captions. Try another video or use notes instead.",
   },
 
   // ========== LOADING/PROCESSING MESSAGES - Reassuring, not anxious ==========

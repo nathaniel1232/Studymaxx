@@ -272,390 +272,263 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen relative overflow-hidden" style={{ background: 'var(--background)' }}>
+    <main className="min-h-screen relative overflow-hidden bg-stone-50 dark:bg-slate-900">
       <Analytics />
       {viewMode === "home" && (
-        <div className="min-h-screen px-4 py-6 flex flex-col relative">
-          {/* Subtle gradient background */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-cyan-300/10 via-teal-300/10 to-transparent rounded-full blur-3xl" style={{ animationDuration: '8s' }}></div>
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-indigo-300/10 via-purple-300/10 to-transparent rounded-full blur-3xl" style={{ animationDuration: '10s' }}></div>
-          </div>
+        <div className="min-h-screen flex flex-col">
 
           {/* Top Navigation */}
-          <nav className="max-w-7xl mx-auto w-full flex justify-between items-center mb-8 md:mb-12 relative px-4" style={{ zIndex: 100 }}>
-            <div className="flex items-center gap-2" style={{ position: 'relative', zIndex: 1 }}>
-              <div className="text-2xl md:text-3xl font-black text-teal-600 dark:text-teal-400">
+          <nav className="px-4 py-4 flex justify-between items-center border-b border-slate-700 bg-slate-900/95 backdrop-blur-md sticky top-0 z-50 shadow-lg">
+            <div className="flex items-center gap-2">
+              <div className="text-3xl font-black text-white">
                 StudyMaxx
               </div>
             </div>
             
-            <div className="flex items-center gap-2 md:gap-3" style={{ position: 'relative', zIndex: 1000 }}>
+            <div className="flex items-center gap-3">
               {user ? (
-                <UserProfileDropdown 
-                  user={user} 
-                  isPremium={isPremium}
-                  isOwner={isOwner}
-                  onNavigateSettings={handleViewSettings}
-                  onUpgradePremium={() => setShowPremiumModal(true)}
-                />
+                <>
+                  <button
+                    onClick={handleViewSettings}
+                    className="px-4 py-2 rounded-xl font-bold text-sm bg-slate-800 text-white hover:bg-slate-700 transition-all flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Settings
+                  </button>
+                  <UserProfileDropdown 
+                    user={user} 
+                    isPremium={isPremium}
+                    isOwner={isOwner}
+                    onNavigateSettings={handleViewSettings}
+                    onUpgradePremium={() => setShowPremiumModal(true)}
+                  />
+                </>
               ) : (
                 <button
                   onClick={() => setShowLoginModal(true)}
-                  className="px-4 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl font-bold text-xs md:text-sm transition-all hover:scale-105 bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg"
+                  className="px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-lg shadow-purple-500/30 border-2 border-purple-400/50 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 hover:shadow-xl hover:-translate-y-0.5 transition-all"
                 >
                   Sign In
                 </button>
               )}
-              <button
-                onClick={handleViewSettings}
-                className="hidden sm:flex items-center gap-2 px-4 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl font-medium text-xs md:text-sm transition-all hover:scale-105"
-                style={{ 
-                  background: 'var(--surface)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--foreground-muted)',
-                  boxShadow: 'var(--shadow-sm)'
-                }}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span className="hidden md:inline">{t("settings")}</span>
-              </button>
             </div>
           </nav>
           
-          {/* Hero Section - CLEAR & SIMPLE */}
-          <div className="flex-1 flex items-center justify-center relative z-10">
-            <div className="max-w-3xl mx-auto px-4 py-4 md:py-8">
-              {/* Main Headline - Direct & Clear */}
-              <h1 className="text-4xl md:text-6xl font-black mb-4 md:mb-6 leading-tight" style={{ color: 'var(--foreground)' }}>
-                Turn notes into flashcards in seconds
+          {/* Hero Section */}
+          <div className="flex-1 flex flex-col px-4 py-8 max-w-3xl mx-auto w-full">
+            
+            {/* Main Hero - Punchy & Direct */}
+            <div className="text-center mb-8">
+              {/* Micro social proof */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 mb-6 shadow-lg shadow-emerald-500/20">
+                <span className="flex -space-x-2">
+                  <span className="w-8 h-8 rounded-full ring-2 ring-slate-800 flex items-center justify-center text-xs font-bold" style={{backgroundColor: '#3b82f6', color: 'white'}}>J</span>
+                  <span className="w-8 h-8 rounded-full ring-2 ring-slate-800 flex items-center justify-center text-xs font-bold" style={{backgroundColor: '#a855f7', color: 'white'}}>A</span>
+                  <span className="w-8 h-8 rounded-full ring-2 ring-slate-800 flex items-center justify-center text-xs font-bold" style={{backgroundColor: '#ec4899', color: 'white'}}>M</span>
+                  <span className="w-8 h-8 rounded-full ring-2 ring-slate-800 flex items-center justify-center text-xs font-bold" style={{backgroundColor: '#f97316', color: 'white'}}>S</span>
+                </span>
+                <span className="text-sm font-black text-emerald-400">500+ students acing exams</span>
+              </div>
+              
+              <h1 className="text-5xl md:text-6xl font-black mb-6 leading-[1.1]">
+                <span className="text-white">Turn Your Notes Into</span>
+                <br/>
+                <span className="inline-block mt-2 text-white">
+                  Perfect Flashcards
+                </span>
               </h1>
               
-              {/* Subheading - What it does */}
-              <p className="text-lg md:text-2xl mb-3 md:mb-4 font-medium" style={{ color: 'var(--foreground-muted)' }}>
-                Paste your notes, get flashcards instantly. Study smarter.
+              <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto font-semibold leading-relaxed drop-shadow-md">
+                Paste your notes. Get smart flashcards with quiz mode. <span className="font-black text-emerald-400">Instant results.</span>
               </p>
-              
-              {/* Social proof line - different based on login */}
-              {!user ? (
-                <p className="text-base md:text-lg mb-8 md:mb-12 font-semibold text-teal-600 dark:text-teal-400">
-                  ⭐ Get started free - no signup needed
-                </p>
-              ) : null}
 
-              {/* MAIN CTA - Different based on login status */}
-              <div className="mb-12 md:mb-16 flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-5">
-                {user ? (
-                  // Logged-in user: Primary action is "Create study set"
-                  <button
-                    onClick={handleCreateNew}
-                    className="group relative px-8 md:px-10 py-4 md:py-5 rounded-xl md:rounded-2xl text-lg md:text-xl font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95 w-full sm:w-auto"
-                    style={{
-                      background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)',
-                      boxShadow: '0 10px 30px rgba(20, 184, 166, 0.3)'
-                    }}
-                  >
-                    <span className="flex items-center justify-center gap-2 md:gap-3">
-                      <svg className="w-5 md:w-6 h-5 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Create study set
-                    </span>
-                  </button>
-                ) : (
-                  // Not logged in: "Try it now" with example
-                  <button
-                    onClick={() => {
-                      setFlashcards([]);
-                      setCurrentSetId(null);
-                      setViewMode('createFlow');
-                    }}
-                    className="group relative px-8 md:px-10 py-4 md:py-5 rounded-xl md:rounded-2xl text-lg md:text-xl font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-95 w-full sm:w-auto"
-                    style={{
-                      background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)',
-                      boxShadow: '0 10px 30px rgba(20, 184, 166, 0.3)'
-                    }}
-                  >
-                    Try it free
-                  </button>
-                )}
-                
-                {/* Secondary action: My Sets (if user exists and has sets) */}
+              {/* CTAs - Side by side, no overlap */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+                {/* Primary CTA */}
+                <button
+                  onClick={handleCreateNew}
+                  className="group relative inline-flex items-center justify-center gap-3 px-12 py-6 rounded-2xl text-xl font-black text-white hover:-translate-y-2 hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto"
+                  style={{
+                    background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                    boxShadow: '0 0 50px rgba(6, 182, 212, 0.8)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%)';
+                    e.currentTarget.style.boxShadow = '0 0 70px rgba(6, 182, 212, 1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)';
+                    e.currentTarget.style.boxShadow = '0 0 50px rgba(6, 182, 212, 0.8)';
+                  }}
+                >
+                  <span>{user ? "Create study set" : "Create study set"}</span>
+                  {/* Shine effect */}
+                  <div className="absolute inset-0 rounded-2xl overflow-hidden">
+                    <div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+                  </div>
+                </button>
+
+                {/* My Sets button for logged in users */}
                 {user && savedSets.length > 0 && (
                   <button
                     onClick={handleViewSavedSets}
-                    className="px-8 md:px-10 py-4 md:py-5 rounded-xl md:rounded-2xl text-lg md:text-xl font-bold transition-all duration-300 hover:scale-105 active:scale-95 w-full sm:w-auto"
-                    style={{
-                      background: 'var(--surface)',
-                      border: '2.5px solid var(--border)',
-                      color: 'var(--foreground)',
-                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
-                    }}
+                    className="px-8 py-6 rounded-2xl text-lg font-bold bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 hover:shadow-xl hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all duration-200 w-full sm:w-auto"
                   >
                     My study sets ({savedSets.length})
                   </button>
                 )}
               </div>
-
-              {/* Before/After comparison */}
-              <div className="grid md:grid-cols-2 gap-8 mb-16">
-                {/* Before */}
-                <div className="p-6 rounded-2xl border-2" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-                  <div className="text-sm font-bold mb-3 text-red-600 dark:text-red-400">Without StudyMaxx:</div>
-                  <div className="space-y-2 text-sm" style={{ color: 'var(--foreground)' }}>
-                    <p>Messy notes from class</p>
-                    <p>Hours spent organizing</p>
-                    <p>Boring study sessions</p>
-                    <p>Forgetting what to study</p>
-                  </div>
-                </div>
-                
-                {/* After */}
-                <div className="p-6 rounded-2xl border-2" style={{ background: 'var(--surface)', borderColor: '#14b8a6' }}>
-                  <div className="text-sm font-bold mb-3 text-emerald-600 dark:text-emerald-400">With StudyMaxx:</div>
-                  <div className="space-y-2 text-sm" style={{ color: 'var(--foreground)' }}>
-                    <p>Flashcards in seconds</p>
-                    <p>AI extracts key points</p>
-                    <p>Quiz yourself anytime</p>
-                    <p>Actually remember things</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* How it works - 3 simple steps */}
-              <div className="mb-16">
-                <h2 className="text-2xl font-bold mb-8 text-center" style={{ color: 'var(--foreground)' }}>3 simple steps</h2>
-                <div className="grid md:grid-cols-3 gap-6">
-                  {/* Step 1 */}
-                  <div className="text-center">
-                    <div className="w-14 h-14 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-teal-600 dark:text-teal-400">
-                      1
-                    </div>
-                    <h3 className="font-bold mb-2" style={{ color: 'var(--foreground)' }}>Paste or upload</h3>
-                    <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Notes, documents, or images</p>
-                  </div>
-                  
-                  {/* Step 2 */}
-                  <div className="text-center">
-                    <div className="w-14 h-14 rounded-full bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-cyan-600 dark:text-cyan-400">
-                      2
-                    </div>
-                    <h3 className="font-bold mb-2" style={{ color: 'var(--foreground)' }}>AI generates</h3>
-                    <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Smart summaries in just a few seconds</p>
-                  </div>
-                  
-                  {/* Step 3 */}
-                  <div className="text-center">
-                    <div className="w-14 h-14 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                      3
-                    </div>
-                    <h3 className="font-bold mb-2" style={{ color: 'var(--foreground)' }}>Study & improve</h3>
-                    <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>Quiz mode, track progress, ace your exams</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick stats */}
-              <div className="mb-16 grid grid-cols-3 gap-4">
-                <div className="text-center p-4 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                  <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">Science-backed</p>
-                  <p className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>study methods</p>
-                </div>
-                <div className="text-center p-4 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                  <p className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">0</p>
-                  <p className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>setup required</p>
-                </div>
-                <div className="text-center p-4 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                  <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">Any</p>
-                  <p className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>device works</p>
-                </div>
-              </div>
-
-              {/* How to Study Effectively */}
-              <div className="mb-16 p-6 rounded-xl" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--foreground)' }}>How to get the most out of StudyMaxx</h2>
-                <div className="space-y-4 text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                  <div className="flex gap-3">
-                    <span className="font-bold text-teal-600 dark:text-teal-400 shrink-0">1.</span>
-                    <p><strong style={{ color: 'var(--foreground)' }}>Create from your own notes.</strong> The best flashcards come from material you&apos;re actually studying. Paste your lecture notes, textbook summaries, or class materials.</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="font-bold text-teal-600 dark:text-teal-400 shrink-0">2.</span>
-                    <p><strong style={{ color: 'var(--foreground)' }}>Study in short sessions.</strong> 15-20 minutes at a time works better than hour-long cramming. Take breaks, then come back.</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="font-bold text-teal-600 dark:text-teal-400 shrink-0">3.</span>
-                    <p><strong style={{ color: 'var(--foreground)' }}>Use Test Yourself mode.</strong> Actively recalling answers (instead of just reading them) dramatically improves memory retention.</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="font-bold text-teal-600 dark:text-teal-400 shrink-0">4.</span>
-                    <p><strong style={{ color: 'var(--foreground)' }}>Review before bed.</strong> Research shows that sleep helps consolidate what you&apos;ve learned. A quick review session before sleep can help information stick.</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="font-bold text-teal-600 dark:text-teal-400 shrink-0">5.</span>
-                    <p><strong style={{ color: 'var(--foreground)' }}>Come back tomorrow.</strong> Spaced repetition—reviewing material over multiple days—is one of the most effective study techniques. Don&apos;t just study once.</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Sign in note - SUBTLE for logged-out users */}
+              
               {!user && (
-                <p className="text-center text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                  Want to save your sets? <button onClick={() => setShowLoginModal(true)} className="font-bold text-teal-600 dark:text-teal-400 hover:underline">Sign in free</button>
+                <p className="text-base text-emerald-400 font-bold flex items-center justify-center gap-2 drop-shadow-md">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                  3 free study sets · No credit card · No signup required
                 </p>
               )}
+            </div>
 
-              {/* Premium Features Section - Show for all users (upgrade CTA for free, status for premium) */}
-              <div className="mt-16 max-w-4xl mx-auto">
-                <div className="text-center mb-8">
-                  {isPremium ? (
-                    <>
-                      <div className="inline-block px-4 py-1.5 rounded-full bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 mb-4">
-                        <span className="text-sm font-medium text-green-700 dark:text-green-300">Premium Active</span>
-                      </div>
-                      <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>
-                        You have Premium
-                      </h3>
-                      <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                        Unlimited study sets and all features unlocked
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>
-                        Upgrade to Premium
-                      </h3>
-                      <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                        Unlimited study sets, all features, priority processing
-                      </p>
-                    </>
-                  )}
+            {/* Powerful Benefits - What users get */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="p-6 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl shadow-lg hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all hover:-translate-y-1">
+                <h3 className="text-xl font-black text-white mb-2">Lightning Fast</h3>
+                <p className="text-emerald-100 text-sm font-semibold">Perfect flashcards from your notes automatically generated</p>
+              </div>
+              
+              <div className="p-6 bg-gradient-to-br from-violet-600 to-purple-600 rounded-2xl shadow-lg hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all hover:-translate-y-1">
+                <h3 className="text-xl font-black text-white mb-2">Quiz Mode</h3>
+                <p className="text-violet-100 text-sm font-semibold">Test yourself with smart quiz questions. Track your progress instantly</p>
+              </div>
+              
+              <div className="p-6 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-lg hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] transition-all hover:-translate-y-1">
+                <h3 className="text-xl font-black text-white mb-2">Any Subject</h3>
+                <p className="text-blue-100 text-sm font-semibold">Math, Biology, History, Languages - works for everything you study</p>
+              </div>
+            </div>
+
+            {/* Social Proof & Trust */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+              <div className="text-center p-4 bg-slate-800/50 rounded-xl hover:bg-emerald-500/10 transition-all hover:shadow-lg hover:shadow-emerald-500/20">
+                <div className="text-2xl font-black text-white mb-1">500+</div>
+                <span className="text-xs font-bold text-slate-400">Active Students</span>
+              </div>
+              <div className="text-center p-4 bg-slate-800/50 rounded-xl hover:bg-violet-500/10 transition-all hover:shadow-lg hover:shadow-violet-500/20">
+                <div className="text-2xl font-black text-white mb-1">10k+</div>
+                <span className="text-xs font-bold text-slate-400">Flashcards Made</span>
+              </div>
+              <div className="text-center p-4 bg-slate-800/50 rounded-xl hover:bg-blue-500/10 transition-all hover:shadow-lg hover:shadow-blue-500/20">
+                <div className="text-2xl font-black text-white mb-1">4.9/5</div>
+                <span className="text-xs font-bold text-slate-400">Student Rating</span>
+              </div>
+              <div className="text-center p-4 bg-slate-800/50 rounded-xl hover:bg-pink-500/10 transition-all hover:shadow-lg hover:shadow-pink-500/20">
+                <div className="text-2xl font-black text-white mb-1">AI</div>
+                <span className="text-xs font-bold text-slate-400">Powered Learning</span>
+              </div>
+            </div>
+
+            {/* Premium Pricing Cards */}
+            <div className="mt-16 mb-8">
+              <div className="text-center mb-8">
+                <div className="inline-block px-4 py-2 rounded-full border border-slate-700 bg-slate-800/50 mb-4">
+                  <span className="text-sm font-bold text-white">Premium Active</span>
+                </div>
+                <h2 className="text-3xl font-black text-white mb-2">You have Premium</h2>
+                <p className="text-slate-400">Unlimited study sets and all features unlocked</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                {/* Free Plan */}
+                <div className="p-8 bg-slate-800/30 rounded-2xl border border-slate-700/50">
+                  <h3 className="text-2xl font-bold text-white mb-6">Free</h3>
+                  <ul className="space-y-4">
+                    <li className="flex items-start gap-3 text-slate-400">
+                      <svg className="w-5 h-5 text-slate-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                      <span>3 study sets per day</span>
+                    </li>
+                    <li className="flex items-start gap-3 text-slate-400">
+                      <svg className="w-5 h-5 text-slate-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                      <span>Paste notes</span>
+                    </li>
+                    <li className="flex items-start gap-3 text-slate-400">
+                      <svg className="w-5 h-5 text-slate-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                      <span>All study modes</span>
+                    </li>
+                  </ul>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="p-6 rounded-xl border" style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
-                    <h4 className="text-base font-semibold mb-4" style={{ color: 'var(--foreground)' }}>
-                      Free
-                    </h4>
-                    <ul className="space-y-2 text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                      <li className="flex items-start gap-2">
-                        <span className="text-gray-400">✓</span>
-                        <span>3 study sets per day</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-gray-400">✓</span>
-                        <span>Paste notes</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-gray-400">✓</span>
-                        <span>All study modes</span>
-                      </li>
-                    </ul>
+                {/* Premium Plan */}
+                <div className="p-8 rounded-2xl border-2 border-emerald-500 relative" style={{background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(19, 78, 74, 0.4) 100%)', boxShadow: '0 25px 50px -12px rgba(16, 185, 129, 0.2)'}}>
+                  <div className="absolute top-6 right-6">
+                    <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-md">Active</span>
                   </div>
-
-                  <div className="p-6 rounded-xl border-2 relative" style={{ 
-                    background: isPremium 
-                      ? 'rgba(34, 197, 94, 0.05)'
-                      : 'rgba(20, 184, 166, 0.05)',
-                    borderColor: isPremium ? '#22c55e' : '#14b8a6'
-                  }}>
-                    <div className="absolute top-0 right-0 px-3 py-1 text-xs font-medium rounded-bl-lg" style={{ 
-                      background: isPremium ? '#22c55e' : '#14b8a6',
-                      color: 'white' 
-                    }}>
-                      {isPremium ? 'Active' : '$2.99/mo'}
-                    </div>
-                    <h4 className="text-base font-semibold mb-4" style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>
-                      Premium
-                    </h4>
-                    <ul className="space-y-2 text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                      <li className="flex items-start gap-2">
-                        <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
-                        <span><strong>Unlimited</strong> study sets</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
-                        <span>Image uploads with OCR</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
-                        <span>Word document uploads</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
-                        <span>Priority AI processing</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
-                        <span>Multi-device sync</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span style={{ color: isPremium ? '#22c55e' : '#14b8a6' }}>✓</span>
-                        <span>Share study sets</span>
-                      </li>
-                    </ul>
-                    {isPremium ? (
-                      <button
-                        onClick={async () => {
-                          if (!user?.id) return;
-                          try {
-                            const response = await fetch('/api/stripe/portal', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ userId: user.id })
-                            });
-                            const data = await response.json();
-                            if (data.url) {
-                              window.location.href = data.url;
-                            } else {
-                              alert(`Error: ${data.error || 'Failed to open portal. Please contact support.'}`);
-                            }
-                          } catch (error) {
-                            console.error('Failed to open portal:', error);
-                            alert('Failed to open subscription management. Please contact support.');
-                          }
-                        }}
-                        className="mt-4 w-full py-2.5 px-4 rounded-lg font-medium text-white transition-all hover:opacity-90"
-                        style={{ background: '#22c55e' }}
-                      >
-                        Manage Subscription
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => !user ? setShowLoginModal(true) : setShowPremiumModal(true)}
-                        className="mt-4 w-full py-2.5 px-4 rounded-lg font-medium text-white transition-all hover:opacity-90"
-                        style={{ background: '#14b8a6' }}
-                      >
-                        Upgrade — $2.99/mo
-                      </button>
-                    )}
-                  </div>
+                  <h3 className="text-2xl font-bold text-emerald-300 mb-6">Premium</h3>
+                  <ul className="space-y-4 mb-8">
+                    <li className="flex items-start gap-3 text-slate-300">
+                      <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                      <span><span className="font-bold text-white">Unlimited</span> study sets</span>
+                    </li>
+                    <li className="flex items-start gap-3 text-slate-300">
+                      <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                      <span>Image uploads with OCR</span>
+                    </li>
+                    <li className="flex items-start gap-3 text-slate-300">
+                      <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                      <span>Word document uploads</span>
+                    </li>
+                    <li className="flex items-start gap-3 text-slate-300">
+                      <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                      <span>Priority AI processing</span>
+                    </li>
+                    <li className="flex items-start gap-3 text-slate-300">
+                      <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                      <span>Multi-device sync</span>
+                    </li>
+                    <li className="flex items-start gap-3 text-slate-300">
+                      <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                      <span>Share study sets</span>
+                    </li>
+                  </ul>
+                  <button
+                    onClick={() => !user ? setShowLoginModal(true) : setShowPremiumModal(true)}
+                    className="w-full py-4 px-6 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl transition-all hover:scale-[1.02] active:scale-95"
+                  >
+                    Manage Subscription
+                  </button>
                 </div>
               </div>
+            </div>
 
-              {/* Footer Links */}
-              <footer className="max-w-7xl mx-auto w-full py-8 relative z-10 mt-8">
-                <div className="flex flex-wrap items-center justify-center gap-4 text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                  <a href="mailto:studymaxxer@gmail.com" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                    Contact
-                  </a>
-                  <span>·</span>
-                  <a href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                    Privacy
-                  </a>
-                  <span>·</span>
-                  <a href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                    Terms
-                  </a>
-                  <span>·</span>
-                  <span>© 2025 StudyMaxx</span>
-                </div>
-              </footer>
+            {/* Trust badges */}
+            <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-slate-700 dark:text-slate-300 border-t border-slate-200 dark:border-slate-800 pt-4">
+              <span className="flex items-center gap-1.5">
+                <svg className="w-4 h-4 text-teal-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                Works instantly
+              </span>
+              <span className="flex items-center gap-1.5">
+                <svg className="w-4 h-4 text-teal-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                Secure & private
+              </span>
+              <span className="flex items-center gap-1.5">
+                <svg className="w-4 h-4 text-teal-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                Loved by students
+              </span>
             </div>
           </div>
+
+          {/* Footer - Minimal */}
+          <footer className="mt-16 pt-8 border-t border-slate-700/50 pb-8">
+            <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-slate-400">
+              <a href="mailto:studymaxxer@gmail.com" className="hover:text-emerald-400 transition-colors">Contact</a>
+              <span className="text-slate-600">·</span>
+              <a href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy</a>
+              <span className="text-slate-600">·</span>
+              <a href="/terms" className="hover:text-emerald-400 transition-colors">Terms</a>
+              <span className="text-slate-600">·</span>
+              <span>© 2026 StudyMaxx</span>
+            </div>
+          </footer>
         </div>
       )}
       

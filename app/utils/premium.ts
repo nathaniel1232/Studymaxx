@@ -223,17 +223,17 @@ export function getLocalizedPricing() {
     userCurrency = currencyMap[country] || 'EUR';
   }
   
-  // Price mapping (based on ~29 NOK)
-  const prices: { [key: string]: { amount: number; symbol: string; display: string } } = {
-    'NOK': { amount: 29, symbol: 'kr', display: '29 kr' },
-    'SEK': { amount: 35, symbol: 'kr', display: '35 kr' },
-    'DKK': { amount: 26, symbol: 'kr', display: '26 kr' },
-    'EUR': { amount: 2.99, symbol: '€', display: '€2.99' },
-    'USD': { amount: 2.99, symbol: '$', display: '$2.99' },
-    'GBP': { amount: 2.59, symbol: '£', display: '£2.59' },
-    'CAD': { amount: 4.19, symbol: '$', display: '$4.19 CAD' },
-    'AUD': { amount: 4.99, symbol: '$', display: '$4.99 AUD' },
-    'NZD': { amount: 5.49, symbol: '$', display: '$5.49 NZD' },
+  // Price mapping
+  const prices: { [key: string]: { amount: number; symbol: string; display: string; yearlyAmount: number; yearlyDisplay: string } } = {
+    'NOK': { amount: 29, symbol: 'kr', display: '29 kr', yearlyAmount: 250, yearlyDisplay: '250 kr' },
+    'SEK': { amount: 35, symbol: 'kr', display: '35 kr', yearlyAmount: 300, yearlyDisplay: '300 kr' },
+    'DKK': { amount: 26, symbol: 'kr', display: '26 kr', yearlyAmount: 220, yearlyDisplay: '220 kr' },
+    'EUR': { amount: 2.99, symbol: '€', display: '€2.99', yearlyAmount: 25, yearlyDisplay: '€25.00' },
+    'USD': { amount: 2.99, symbol: '$', display: '$2.99', yearlyAmount: 25, yearlyDisplay: '$25.00' },
+    'GBP': { amount: 2.59, symbol: '£', display: '£2.59', yearlyAmount: 22, yearlyDisplay: '£22.00' },
+    'CAD': { amount: 4.19, symbol: '$', display: '$4.19 CAD', yearlyAmount: 35, yearlyDisplay: '$35.00' },
+    'AUD': { amount: 4.99, symbol: '$', display: '$4.99 AUD', yearlyAmount: 42, yearlyDisplay: '$42.00' },
+    'NZD': { amount: 5.49, symbol: '$', display: '$5.49 NZD', yearlyAmount: 46, yearlyDisplay: '$46.00' },
   };
   
   const pricing = prices[userCurrency] || prices['EUR'];
@@ -244,6 +244,10 @@ export function getLocalizedPricing() {
     symbol: pricing.symbol,
     display: pricing.display,
     interval: 'month',
+    // Helpers for yearly calculation
+    yearlyAmount: pricing.yearlyAmount,
+    yearlyDisplay: pricing.yearlyDisplay,
+    yearMonthEquiv: `${pricing.symbol}${Math.round(pricing.yearlyAmount / 12)}`,
   };
 }
 
@@ -251,14 +255,7 @@ export function getLocalizedPricing() {
  * Pricing info - DYNAMIC based on location
  */
 export const PRICING = {
-  monthly: getLocalizedPricing(),
-  yearly: {
-    // Yearly pricing TBD
-    price: 0,
-    currency: 'NOK',
-    interval: 'year',
-    displayPrice: 'Coming soon',
-  },
+  get: getLocalizedPricing
 };
 
 // Legacy exports for backward compatibility

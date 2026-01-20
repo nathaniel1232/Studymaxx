@@ -92,43 +92,64 @@ export async function POST(req: NextRequest) {
                     req.headers.get("x-vercel-ip-country") ||
                     "NO"; // Default to Norway
 
+    // Parse request body for interval preference
+    let interval = 'month';
+    try {
+      const body = await req.json();
+      if (body.interval === 'year') {
+        interval = 'year';
+      }
+    } catch (e) {
+      // Body might be empty, default to month
+    }
+
     // Map country to currency and price
-    const currencyMap: { [key: string]: { currency: string; amount: number } } = {
-      // Nordic countries - NOK (base 29 kr)
-      "NO": { currency: "nok", amount: 2900 }, // 29 NOK
-      "SE": { currency: "sek", amount: 3500 }, // ~29 NOK
-      "DK": { currency: "dkk", amount: 2600 }, // ~29 NOK
+    // Yearly prices: ~8.3 months of monthly price (Save ~30%)
+    const currencyMap: { [key: string]: { currency: string; amount: number; yearlyAmount: number } } = {
+      // Nordic countries
+      "NO": { currency: "nok", amount: 2900, yearlyAmount: 25000 }, // 250 NOK
+      "SE": { currency: "sek", amount: 3500, yearlyAmount: 30000 },
+      "DK": { currency: "dkk", amount: 2600, yearlyAmount: 22000 },
       
       // Eurozone
-      "AT": { currency: "eur", amount: 299 }, // 2.99 EUR
-      "BE": { currency: "eur", amount: 299 },
-      "DE": { currency: "eur", amount: 299 },
-      "ES": { currency: "eur", amount: 299 },
-      "FI": { currency: "eur", amount: 299 },
-      "FR": { currency: "eur", amount: 299 },
-      "IE": { currency: "eur", amount: 299 },
-      "IT": { currency: "eur", amount: 299 },
-      "NL": { currency: "eur", amount: 299 },
-      "PT": { currency: "eur", amount: 299 },
+      "AT": { currency: "eur", amount: 299, yearlyAmount: 2500 }, // 25 EUR
+      "BE": { currency: "eur", amount: 299, yearlyAmount: 2500 },
+      "DE": { currency: "eur", amount: 299, yearlyAmount: 2500 },
+      "ES": { currency: "eur", amount: 299, yearlyAmount: 2500 },
+      "FI": { currency: "eur", amount: 299, yearlyAmount: 2500 },
+      "FR": { currency: "eur", amount: 299, yearlyAmount: 2500 },
+      "IE": { currency: "eur", amount: 299, yearlyAmount: 2500 },
+      "IT": { currency: "eur", amount: 299, yearlyAmount: 2500 },
+      "NL": { currency: "eur", amount: 299, yearlyAmount: 2500 },
+      "PT": { currency: "eur", amount: 299, yearlyAmount: 2500 },
       
       // UK
-      "GB": { currency: "gbp", amount: 259 }, // ~29 NOK
+      "GB": { currency: "gbp", amount: 259, yearlyAmount: 2200 },
       
       // USA & Americas
-      "US": { currency: "usd", amount: 299 }, // $2.99
-      "CA": { currency: "cad", amount: 419 }, // $4.19 CAD
+      "US": { currency: "usd", amount: 299, yearlyAmount: 2500 }, // $25
+      "CA": { currency: "cad", amount: 419, yearlyAmount: 3500 },
       
       // Other
-      "AU": { currency: "aud", amount: 499 }, // $4.99 AUD
-      "NZ": { currency: "nzd", amount: 549 }, // $5.49 NZD
+      "AU": { currency: "aud", amount: 499, yearlyAmount: 4200 },
+      "NZ": { currency: "nzd", amount: 549, yearlyAmount: 4600 },
       
       // Default fallback
-      "DEFAULT": { currency: "eur", amount: 299 }
+      "DEFAULT": { currency: "eur", amount: 299, yearlyAmount: 2500 }
     };
 
     const pricing = currencyMap[country] || currencyMap["DEFAULT"];
+    
+    // Calculate final amount based on interval
+    let finalAmount = pricing.amount;
+    let description = "Unlimited AI flashcards, PDF/YouTube support, and more";
+    
+    if (interval === 'year') {
+      finalAmount = pricing.yearlyAmount;
+      description = "Yearly Plan - Best Value!";
+    }
 
-    console.log(`[Checkout] Country: ${country}, Currency: ${pricing.currency.toUpperCase()}, Amount: ${pricing.amount / 100}`);
+    console.log(`[Checkout] Country: ${country}, Currency: ${pricing.currency.toUpperCase()}, Interval: ${interval}, Amount: ${finalAmount / 100}`);
 
     // Create Stripe Checkout Session with dynamic pricing
     const session = await stripe.checkout.sessions.create({
@@ -139,13 +160,13 @@ export async function POST(req: NextRequest) {
           price_data: {
             currency: pricing.currency,
             product_data: {
-              name: "StudyMaxx Premium",
-              description: "Unlimited AI flashcards, PDF/YouTube support, and more",
+              name: `StudyMaxx Premium (${interval === 'year' ? 'Yearly' : 'Monthly'})`,
+              description: description,
             },
             recurring: {
-              interval: "month",
+              interval: interval as 'month' | 'year',
             },
-            unit_amount: pricing.amount, // Amount in cents/øre
+            unit_amount: finalAmount, // Amount in cents/øre
           },
           quantity: 1,
         },

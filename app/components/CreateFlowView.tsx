@@ -10,6 +10,11 @@ import { getCurrentUser, supabase } from "../utils/supabase";
 import ArrowIcon from "./icons/ArrowIcon";
 import PremiumModal from "./PremiumModal";
 import { messages } from "../utils/messages";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 interface CreateFlowViewProps {
   onGenerateFlashcards: (cards: Flashcard[], subject: string, grade: string) => void;
@@ -18,7 +23,7 @@ interface CreateFlowViewProps {
 }
 
 type Step = 1 | 2 | 3 | 4;
-type MaterialType = "notes" | "pdf" | "youtube" | "image" | "docx" | null;
+type MaterialType = "notes" | "image" | "docx" | null;
 type Grade = "A" | "B" | "C" | "D" | "E";
 
 export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequestLogin }: CreateFlowViewProps) {
@@ -34,16 +39,25 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   // Step 2: Material
   const [selectedMaterial, setSelectedMaterial] = useState<MaterialType>(null);
   const [textInput, setTextInput] = useState("");
-  const [youtubeUrl, setYoutubeUrl] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   
-  // Math mode (only for math subjects)
+  // Output language preference
+  const [outputLanguage, setOutputLanguage] = useState<"auto" | "en">("auto");
+  const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
+
+  // Difficulty
+  const [difficulty, setDifficulty] = useState<string>("Medium");
+  
+  // Math problems toggle
   const [includeMathProblems, setIncludeMathProblems] = useState(false);
   
-  // Output language preference
-  const [outputLanguage, setOutputLanguage] = useState<"auto" | "en" | null>(null);
-  const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
+  // Check if subject is math-related
+  const isMathSubject = subject.toLowerCase().includes("math") || 
+                        subject.toLowerCase().includes("matte") ||
+                        subject.toLowerCase().includes("matematikk") ||
+                        subject.toLowerCase().includes("algebra") ||
+                        subject.toLowerCase().includes("calculus");
   
   // Step 3: Grade
   const [targetGrade, setTargetGrade] = useState<Grade | null>(null);
@@ -133,37 +147,76 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
   // Detect language from text input
   const detectLanguage = (text: string): string => {
-    if (!text || text.length < 20) return "unknown";
+    if (!text || text.length < 15) return "unknown";
     
-    // Common Norwegian words (expanded list)
-    const norwegianWords = ["og", "er", "det", "som", "en", "av", "på", "til", "med", "har", "kan", "for", "ikke", "den", "om", "var", "fra", "ved", "eller", "hva", "når", "vil", "skal", "også", "dette", "alle", "de", "han", "hun", "jeg", "du", "vi", "meg", "deg", "seg", "sin", "sitt", "sine", "våre", "deres", "hvor", "hvordan", "hvorfor", "men", "fordi", "etter", "før", "under", "over", "mellom", "gjennom", "inne", "ute", "opp", "ned", "her", "der", "nå", "da", "så", "altså", "derfor"];
+    // 1. Script Detection (Unicode Ranges) - accurate for non-Latin
+    if (/[а-яА-Я]/.test(text)) return "Cyrillic (Russian/Ukrainian)";
+    if (/[\u0600-\u06FF]/.test(text)) return "Arabic";
+    if (/[\u4E00-\u9FFF]/.test(text)) return "Chinese";
+    if (/[\u3040-\u309F\u30A0-\u30FF]/.test(text)) return "Japanese";
+    if (/[\uAC00-\uD7AF]/.test(text)) return "Korean";
+    if (/[\u0370-\u03FF]/.test(text)) return "Greek";
+    if (/[\u0590-\u05FF]/.test(text)) return "Hebrew";
+
+    // 2. Stop Word Analysis for Latin Script
     const textLower = text.toLowerCase();
-    const words = textLower.split(/\s+/);
+    const words = textLower.split(/[\s,.;:!?()"\-]+/).filter(w => w.length > 0);
     
-    let norwegianCount = 0;
-    for (const word of words) {
-      if (norwegianWords.includes(word)) {
-        norwegianCount++;
+    const languageProfiles: Record<string, string[]> = {
+      "English": ["the", "and", "is", "of", "to", "in", "that", "it", "with", "as", "you", "are", "have", "not"],
+      "Norsk (Norwegian)": ["og", "er", "det", "som", "en", "av", "på", "til", "med", "har", "ikke", "jeg", "vi", "å"],
+      "Español (Spanish)": ["de", "la", "que", "el", "en", "y", "a", "los", "se", "del", "las", "por", "un", "una"],
+      "Français (French)": ["de", "la", "le", "et", "les", "des", "en", "un", "du", "une", "est", "pour", "que", "qui"],
+      "Deutsch (German)": ["der", "die", "und", "in", "den", "von", "zu", "das", "mit", "sich", "auf", "für", "ist", "nicht"],
+      "Italiano (Italian)": ["di", "e", "il", "la", "che", "in", "a", "per", "un", "del", "non", "sono", "le", "con"],
+      "Português (Portuguese)": ["de", "a", "o", "que", "e", "do", "da", "em", "um", "para", "com", "nao", "os", "sua"],
+      "Nederlands (Dutch)": ["de", "en", "van", "ik", "te", "dat", "die", "in", "een", "hij", "het", "niet", "is", "op"],
+      "Svenska (Swedish)": ["och", "i", "är", "det", "som", "till", "en", "av", "för", "att", "med", "inte", "på", "jag"],
+      "Dansk (Danish)": ["og", "i", "er", "det", "som", "til", "en", "af", "for", "at", "med", "ikke", "jeg", "vi"],
+    };
+
+    let maxScore = 0;
+    let detected = "English"; // Default fallback
+    
+    // Check Norwegian characters explicitly
+    const hasNorwegianChars = /[æøåÆØÅ]/.test(text);
+
+    Object.entries(languageProfiles).forEach(([lang, stopWords]) => {
+      let score = 0;
+      words.forEach(word => {
+        if (stopWords.includes(word)) score++;
+      });
+      
+      // Bonus weighting for specific characters
+      if (lang === "Norsk (Norwegian)" && hasNorwegianChars) score += 5;
+      if (lang === "Dansk (Danish)" && hasNorwegianChars) score += 5;
+      if (lang === "Svenska (Swedish)" && /[äöå]/.test(textLower)) score += 5;
+      if (lang === "Deutsch (German)" && /[üöäß]/.test(textLower)) score += 5;
+      if (lang === "Español (Spanish)" && /[ñ¿¡]/.test(textLower)) score += 5;
+      if (lang === "Français (French)" && /[àèéêç]/.test(textLower)) score += 2;
+
+      if (score > maxScore) {
+        maxScore = score;
+        detected = lang;
       }
+    });
+
+    console.log(`[Language Detection] Winner: ${detected} (Score: ${maxScore})`);
+
+    // Disambiguation for deeply similar languages (Scanning specific exclusive words)
+    if (detected.includes("Norwegian") || detected.includes("Danish") || detected.includes("Swedish")) {
+        // "ikke" = NO/DK, "inte" = SE
+        if (words.includes("inte")) return "Svenska (Swedish)";
+        
+        // "av" = NO/SE, "af" = DK
+        if (words.includes("af")) return "Dansk (Danish)";
+        if (words.includes("av") && detected.includes("Danish")) return "Norsk (Norwegian)"; 
     }
-    
-    // Norwegian-specific characters (æ, ø, å)
-    const norwegianChars = text.match(/[æøåÆØÅ]/g);
-    const hasNorwegianChars = norwegianChars && norwegianChars.length > 0;
-    
-    console.log('[Language Detection] Norwegian words found:', norwegianCount);
-    console.log('[Language Detection] Norwegian chars (æøå):', norwegianChars ? norwegianChars.length : 0);
-    console.log('[Language Detection] Total words:', words.length);
-    console.log('[Language Detection] Text sample:', text.substring(0, 200));
-    
-    // If we find Norwegian characters OR at least 2 Norwegian words, it's Norwegian
-    if (hasNorwegianChars || norwegianCount >= 2) {
-      console.log('[Language Detection] ✅ Detected: Norwegian');
-      return "Norsk (Norwegian)";
-    }
-    
-    console.log('[Language Detection] ✅ Detected: English');
-    return "English";
+
+    // Require a minimum confidence for non-Latin matches if short text, but here we handled length < 15 check
+    if (maxScore === 0 && text.length > 50) return "unknown"; 
+
+    return detected;
   };
 
   // Update detected language when text changes
@@ -250,10 +303,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         
         // Use the server-side daily count if available, otherwise fallback to client-side check
         if (data.remainingDailyGenerations !== undefined) {
-          setRemainingGenerations(data.isPremium ? 3 : Math.max(0, 1 - data.dailyAiCount));
+          setRemainingGenerations(data.isPremium ? 3 : Math.max(0, 3 - data.dailyAiCount));
         } else {
           const remaining = getRemainingGenerations(session?.user?.id || '', data.isPremium);
-          setRemainingGenerations(parseInt(remaining) || 3);
+          setRemainingGenerations(remaining);
         }
         
         console.log('[CreateFlowView] ===== PREMIUM CHECK COMPLETE ===== isPremium:', data.isPremium);
@@ -261,7 +314,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         console.log('[CreateFlowView] ❌ User not authenticated - treating as free user');
         setIsPremium(false);
         const remaining = getRemainingGenerations('', false);
-        setRemainingGenerations(parseInt(remaining) || 3);
+        setRemainingGenerations(remaining);
       } else {
         console.log('[CreateFlowView] ❌ Premium check API failed:', response.status);
         // Fallback to localStorage count
@@ -270,7 +323,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         const userSets = savedSets.filter(set => set.userId === userId);
         setSetsCreated(userSets.length);
         const remaining = getRemainingGenerations(userId, false);
-        setRemainingGenerations(parseInt(remaining) || 3);
+        setRemainingGenerations(remaining);
         setCanCreateMore(userSets.length < 3);
         setIsPremium(false);
       }
@@ -290,12 +343,12 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
   // Subject examples
   const getSubjectExamples = () => [
-    { name: settings.language === "no" ? "Engelsk" : "English", emoji: "🇬🇧" },
-    { name: settings.language === "no" ? "Matte" : "Math", emoji: "📐" },
-    { name: settings.language === "no" ? "Biologi" : "Biology", emoji: "🧬" },
-    { name: settings.language === "no" ? "Historie" : "History", emoji: "📜" },
-    { name: settings.language === "no" ? "Naturfag" : "Chemistry", emoji: "⚗️" },
-    { name: settings.language === "no" ? "Fysikk" : "Physics", emoji: "⚛️" }
+    { name: settings.language === "no" ? "Engelsk" : "English" },
+    { name: settings.language === "no" ? "Matte" : "Math" },
+    { name: settings.language === "no" ? "Biologi" : "Biology" },
+    { name: settings.language === "no" ? "Historie" : "History" },
+    { name: settings.language === "no" ? "Naturfag" : "Chemistry" },
+    { name: settings.language === "no" ? "Fysikk" : "Physics" }
   ];
 
   // Grade options with descriptions - adapts to selected grade system
@@ -326,12 +379,6 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         { grade: "E", label: `E — ${t("passing")}`, description: t("essential_knowledge") }
       ];
     }
-  };
-
-  // Check if subject is math-related
-  const isMathSubject = () => {
-    const mathKeywords = ['math', 'maths', 'mathematics', 'matte', 'matematikk', 'algebra', 'calculus', 'geometry', 'statistics'];
-    return mathKeywords.some(keyword => subject.toLowerCase().includes(keyword));
   };
 
   // Map grade to difficulty settings
@@ -382,12 +429,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       return;
     }
     
-    if (selectedMaterial === "youtube" && !youtubeUrl.trim()) {
-      setError(messages.errors.youtubeUrlRequired);
-      return;
-    }
-    
-    if ((selectedMaterial === "pdf" || selectedMaterial === "docx" || selectedMaterial === "image") && !uploadedFile) {
+    // Check for file uploads
+    if ((selectedMaterial === "docx" || selectedMaterial === "image") && !uploadedFile) {
       setError(messages.errors.fileRequired);
       return;
     }
@@ -401,9 +444,6 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       setError(messages.errors.gradeRequired);
       return;
     }
-    
-    // TEMPORARY: Skip Premium check - always allow
-    console.log('[CreateFlowView] Continuing to generation (Premium check bypassed)');
     
     setError("");
     setCurrentStep(4);
@@ -541,7 +581,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         console.log("📑 First 200 chars:", trimmedText.substring(0, 200));
         
         if (trimmedText.length < 20) {
-          setError(messages.errors.pdfProcessingFailed);
+          setError(messages.errors.textTooShort); 
           return;
         }
         
@@ -549,7 +589,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         console.log("✅ PDF extraction successful");
       } catch (err: any) {
         console.error("❌ PDF extraction failed:", err);
-        setError(messages.errors.pdfProcessingFailed);
+        setError(messages.errors.uploadFailed); // FIX: Use uploadFailed
       }
     } else if (file.type.startsWith("image/")) {
       // Handle image with GPT-4 Vision API
@@ -607,6 +647,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
         const data = await response.json();
         setTextInput(data.text || "");
+        if (data.metadata?.language) {
+          setDetectedLanguage(data.metadata.language);
+          console.log("[CreateFlowView] Detected language:", data.metadata.language);
+        }
       } catch (err) {
         setError("Failed to extract text from file. Please try another format.");
       }
@@ -626,6 +670,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       if (userSets.length >= 3) {
         setError("You've reached your limit of 3 free study sets. Upgrade to Premium for unlimited study sets!");
         setShowPremiumModal(true);
+        setCurrentStep(1); // Go back to step 1
         return;
       }
     }
@@ -656,8 +701,11 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     console.log('[CreateFlowView] Rate limit result:', rateLimit);
     
     if (!rateLimit.allowed) {
-      // TEMPORARY: Bypass rate limit for Premium
-      console.log('[CreateFlowView] ⚠️ Rate limit would block, but bypassing for Premium test');
+      setError(rateLimit.reason || messages.errors.generationTooShort);
+      setShowPremiumModal(true);
+      // Don't continue to generation if rate limited
+      setCurrentStep(1);
+      return;
     }
     
     setGenerationStartTime(Date.now());
@@ -679,20 +727,6 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       if (selectedMaterial === "notes" || selectedMaterial === "image") {
         textToProcess = textInput;
         console.log('[CreateFlowView] Using textInput directly');
-      } else if (selectedMaterial === "youtube") {
-        // Extract from YouTube client-side (YouTube blocks server requests)
-        try {
-          const { fetchYouTubeTranscript } = await import('../utils/youtubeTranscript');
-          textToProcess = await fetchYouTubeTranscript(youtubeUrl);
-          
-          if (!textToProcess || textToProcess.trim().length < 20) {
-            throw new Error("Could not extract transcript or transcript is too short");
-          }
-        } catch (err: any) {
-          throw new Error(err.message || "Failed to extract YouTube transcript. Make sure the video has captions enabled.");
-        }
-      } else if (selectedMaterial === "pdf" && textInput) {
-        textToProcess = textInput;
       } else if (selectedMaterial === "docx" && textInput) {
         textToProcess = textInput;
       }
@@ -728,7 +762,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         targetGrade,
         userIdForGen,
         selectedMaterial || "notes",
-        outputLanguage || "auto"
+        outputLanguage || "auto",
+        difficulty,
+        includeMathProblems && isMathSubject
       );
 
       // Increment rate limit counter AFTER successful generation
@@ -743,17 +779,19 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       // Refresh premium status after successful generation
       await checkPremiumStatus();
     } catch (err: any) {
+      console.error('[CreateFlowView] Generation error:', err.message);
+      
       // Handle premium-related errors
       if (err.message === "PREMIUM_REQUIRED" || err.message.includes("Upgrade to Premium")) {
         setIsDailyLimit(false);
         setShowPremiumModal(true);
         setIsGenerating(false);
-        setCurrentStep(2); // Go back to material step
+        setCurrentStep(2);
         return;
       }
       
       if (err.message === "DAILY_LIMIT_REACHED" || err.message.includes("daily")) {
-        setError("You've reached your daily AI generation limit. Upgrade to Premium for unlimited generations!");
+        setError("You've reached your daily limit. Upgrade to Premium for unlimited generations!");
         setIsGenerating(false);
         setCurrentStep(2);
         setIsDailyLimit(true);
@@ -761,59 +799,131 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         return;
       }
 
-      setError(err.message || "Failed to generate flashcards");
+      // Map error codes to user-friendly messages
+      const errorMessages: Record<string, { title: string; suggestion: string }> = {
+        "AI_GENERATION_FAILED": {
+          title: "Couldn't generate flashcards this time",
+          suggestion: "Try again with different notes, or use shorter text."
+        },
+        "AI_EMPTY_RESPONSE": {
+          title: "The AI couldn't find enough content",
+          suggestion: "Make sure your notes contain clear facts and concepts to study."
+        },
+        "AI_TIMEOUT": {
+          title: "Generation took too long",
+          suggestion: "Try with shorter notes or fewer flashcards."
+        },
+        "AI_CONNECTION_ERROR": {
+          title: "Connection issue",
+          suggestion: "Check your internet and try again."
+        },
+        "AI_RATE_LIMITED": {
+          title: "Too many requests",
+          suggestion: "Please wait a moment and try again."
+        },
+        "AI_SERVICE_UNAVAILABLE": {
+          title: "AI service is busy",
+          suggestion: "Try again in a few seconds."
+        },
+        "AI_PARSE_ERROR": {
+          title: "Something went wrong with the AI",
+          suggestion: "Try again — this usually works on retry."
+        },
+        "AI_AUTH_ERROR": {
+          title: "Service error",
+          suggestion: "Please contact support if this continues."
+        }
+      };
+
+      // Find matching error or use default
+      let errorInfo = errorMessages["AI_GENERATION_FAILED"];
+      for (const [code, info] of Object.entries(errorMessages)) {
+        if (err.message?.includes(code)) {
+          errorInfo = info;
+          break;
+        }
+      }
+
+      setError(`${errorInfo.title}. ${errorInfo.suggestion}`);
       setIsGenerating(false);
-      setCurrentStep(2); // Go back to material step
+      setCurrentStep(2);
     }
   };
 
   return (
     <>
-      <div className="min-h-screen px-4 py-8" style={{ background: 'var(--background)' }}>
-        <div className="max-w-2xl mx-auto">
+      <div className="min-h-screen relative" style={{ background: 'var(--background)' }}>
+        {/* Top bar med logo */}
+        <div className="sticky top-0 z-50 px-4 py-3 border-b border-slate-700 bg-slate-900/80 backdrop-blur-sm">
+          <div className="max-w-2xl mx-auto flex items-center justify-between">
+            <div className="text-2xl font-black text-white">
+              StudyMaxx
+            </div>
+            {hasSession && (
+              <div className="text-sm text-slate-400 font-semibold">
+                {isPremium ? "⭐ Premium" : `${remainingGenerations}/3 free`}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="px-4 py-6 max-w-2xl mx-auto">
           {/* Header with progress */}
-          <div className="mb-12">
+          <div className="mb-4">
           <button
             onClick={handleBack}
-            className="btn btn-ghost mb-6 px-4 py-2 font-medium rounded-full flex items-center gap-2"
+            className="mb-2 px-4 py-2 text-sm font-bold rounded-xl transition-all flex items-center gap-2 shadow-md hover:scale-105 hover:shadow-lg"
+            style={{
+              background: 'var(--card)',
+              color: 'var(--foreground)',
+              border: '2px solid var(--border)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#06b6d4';
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(6, 182, 212, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'var(--border)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+            }}
           >
             <ArrowIcon direction="left" size={16} />
             <span>{t("back")}</span>
           </button>
 
           {/* Progress indicator */}
-          <div className="flex items-center justify-center gap-2 mb-8">
+          <div className="flex items-center justify-center gap-2 mb-2">
             {[1, 2, 3, 4].map((step) => (
               <div
                 key={step}
-                className="h-2 rounded-full transition-all duration-300"
+                className={cn(
+                  "h-2.5 rounded-full transition-all duration-500 ease-out",
+                  step === currentStep && "animate-pulse"
+                )}
                 style={{
-                  width: step === currentStep ? '3rem' : '2rem',
+                  width: step === currentStep ? '4rem' : '2rem',
                   background: step === currentStep 
-                    ? 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)'
+                    ? 'linear-gradient(90deg, #06b6d4 0%, #14b8a6 50%, #10b981 100%)'
                     : step < currentStep
-                    ? 'var(--success)'
-                    : 'var(--border)'
+                    ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)'
+                    : 'var(--border)',
+                  boxShadow: step === currentStep ? '0 0 20px rgba(6, 182, 212, 0.5)' : 'none'
                 }}
               />
             ))}
           </div>
 
-          <h1 className="text-page-title text-center" style={{ 
-            background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
-          }}>
+          <h1 className="text-2xl md:text-3xl font-bold text-center mb-1" style={{ color: 'var(--foreground)' }}>
             {t("create_study_set")}
           </h1>
+          <p className="text-center text-sm text-muted-foreground">Transform your notes into study tools</p>
         </div>
 
         {/* Main content card */}
-        <div className="card-elevated p-12">
+        <div className="card-elevated p-4">
           {/* Error message */}
           {error && (
-            <div className="mb-8 p-5 rounded-xl" style={{ 
+            <div className="mb-3 p-3 rounded-lg" style={{ 
               background: 'var(--error-light)',
               border: '1px solid var(--error)',
               color: 'var(--error)'
@@ -824,73 +934,108 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
           {/* STEP 1: Choose Subject */}
           {currentStep === 1 && (
-            <div className="space-y-8">
-              {/* Daily limit banner - reserve space even when hidden to prevent layout shift */}
-              <div className={`p-4 rounded-xl border transition-opacity ${
-                !premiumCheckLoading && !isPremium && hasSession && remainingGenerations < 3
-                  ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 opacity-100"
-                  : "opacity-0 pointer-events-none"
-              }`} style={{ height: !premiumCheckLoading && !isPremium && hasSession && remainingGenerations < 3 ? 'auto' : '54px' }}>
-                <p className="text-sm text-amber-800 dark:text-amber-200">
-                  {!premiumCheckLoading && !isPremium && hasSession && remainingGenerations < 3
-                    ? `You have ${remainingGenerations} generation${remainingGenerations !== 1 ? 's' : ''} left today.`
-                    : '\u00A0'
-                  }
-                </p>
-              </div>
+            <div className="space-y-3">
+              {/* Daily limit banner - only show when needed */}
+              {!premiumCheckLoading && !isPremium && hasSession && remainingGenerations < 3 && remainingGenerations >= 0 && (
+                <div className="p-2 rounded-lg border bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
+                  <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
+                    {remainingGenerations} of 3 free generations left today
+                  </p>
+                </div>
+              )}
 
               <div>
-                <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>
+                <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--foreground)' }}>
                   {t("what_subject")}
                 </h2>
-                <p style={{ color: 'var(--foreground-muted)' }}>
+                <p className="text-sm text-muted-foreground">
                   {t("helps_create")}
                 </p>
               </div>
 
               {/* Subject selection buttons */}
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
                   {t("choose_common")}
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                   {getSubjectExamples().map((example) => (
-                    <button
+                    <Card
                       key={example.name}
-                      onClick={() => {
-                        setSubject(example.name);
+                      onClick={() => setSubject(example.name)}
+                      className="cursor-pointer transition-all duration-200 border-2 rounded-2xl overflow-hidden"
+                      style={{
+                        background: subject === example.name 
+                          ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+                          : 'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(8, 145, 178, 0.05) 100%)',
+                        borderColor: subject === example.name ? '#0891b2' : 'rgba(6, 182, 212, 0.3)',
+                        boxShadow: subject === example.name
+                          ? '0 4px 20px rgba(6, 182, 212, 0.4)'
+                          : '0 2px 10px rgba(6, 182, 212, 0.1)'
                       }}
-                      className={`group relative p-5 border-3 rounded-2xl font-bold transition-all duration-300 transform ${
-                        subject === example.name
-                          ? "border-blue-600 bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-2xl shadow-blue-500/50 scale-105 hover:scale-110"
-                          : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-blue-400 hover:shadow-lg hover:scale-105"
-                      }`}
+                      onMouseEnter={(e) => {
+                        if (subject !== example.name) {
+                          e.currentTarget.style.borderColor = '#06b6d4';
+                          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(8, 145, 178, 0.1) 100%)';
+                          e.currentTarget.style.boxShadow = '0 4px 20px rgba(6, 182, 212, 0.25)';
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (subject !== example.name) {
+                          e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.3)';
+                          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(8, 145, 178, 0.05) 100%)';
+                          e.currentTarget.style.boxShadow = '0 2px 10px rgba(6, 182, 212, 0.1)';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                        }
+                      }}
                     >
-                      <div className={`text-4xl mb-2 transition-all ${subject === example.name ? 'scale-110' : 'scale-100'}`}>{example.emoji}</div>
-                      <div className={`text-sm font-bold tracking-wide ${subject === example.name ? 'text-white' : ''}`}>{example.name}</div>
-                      {subject === example.name && (
-                        <div className="absolute top-1 right-2 text-2xl animate-pulse">✓</div>
-                      )}
-                    </button>
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <span className="font-semibold text-base" style={{ color: subject === example.name ? 'white' : 'var(--foreground)' }}>{example.name}</span>
+                        {subject === example.name && (
+                          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                        )}
+                      </CardContent>
+                    </Card>
                   ))}
                   
                   {/* Other button */}
-                  <button
-                    onClick={() => {
-                      setSubject("Other");
+                  <Card
+                    onClick={() => setSubject("Other")}
+                    className="cursor-pointer transition-all duration-200 md:col-span-3 lg:col-span-3 border-2 rounded-2xl overflow-hidden"
+                    style={{
+                      background: subject === "Other"
+                        ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+                        : 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.08) 100%)',
+                      borderColor: subject === "Other" ? '#0891b2' : 'rgba(6, 182, 212, 0.4)',
+                      boxShadow: subject === "Other"
+                        ? '0 4px 20px rgba(6, 182, 212, 0.4)'
+                        : '0 2px 10px rgba(6, 182, 212, 0.15)'
                     }}
-                    className={`group relative p-5 border-3 rounded-2xl font-bold transition-all duration-300 transform md:col-span-3 ${
-                      subject === "Other"
-                        ? "border-blue-600 bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-2xl shadow-blue-500/50 scale-105 hover:scale-110"
-                        : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-blue-400 hover:shadow-lg hover:scale-105"
-                    }`}
+                    onMouseEnter={(e) => {
+                      if (subject !== "Other") {
+                        e.currentTarget.style.borderColor = '#06b6d4';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(8, 145, 178, 0.15) 100%)';
+                        e.currentTarget.style.boxShadow = '0 4px 20px rgba(6, 182, 212, 0.3)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (subject !== "Other") {
+                        e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.4)';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.08) 100%)';
+                        e.currentTarget.style.boxShadow = '0 2px 10px rgba(6, 182, 212, 0.15)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }
+                    }}
                   >
-                    <div className={`text-4xl mb-2 transition-all ${subject === "Other" ? 'scale-110' : 'scale-100'}`}>➕</div>
-                    <div className={`text-sm font-bold tracking-wide ${subject === "Other" ? 'text-white' : ''}`}>Other</div>
-                    {subject === "Other" && (
-                      <div className="absolute top-1 right-2 text-2xl animate-pulse">✓</div>
-                    )}
-                  </button>
+                    <CardContent className="p-4 flex items-center justify-center gap-2">
+                      <span className="font-semibold text-base" style={{ color: subject === "Other" ? 'white' : 'var(--foreground)' }}>✨ Other Subject</span>
+                      {subject === "Other" && (
+                        <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
 
@@ -898,197 +1043,229 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
               <button
                 onClick={handleContinueFromStep1}
                 disabled={!subject.trim()}
-                className="btn btn-primary w-full py-4 text-lg font-bold rounded-xl"
+                className="w-full py-4 rounded-xl text-lg font-black bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-[0_0_30px_rgba(20,184,166,0.6)] hover:from-emerald-400 hover:via-teal-400 hover:to-cyan-400 hover:shadow-[0_0_40px_rgba(20,184,166,0.8)] hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {t("continue")}
+                <span>Continue</span>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
               </button>
             </div>
           )}
 
           {/* STEP 2: Add Learning Material */}
           {currentStep === 2 && (
-            <div className="space-y-8">
+            <div className="space-y-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--foreground)' }}>
                   {t("what_studying_from")}
                 </h2>
-                <p className="text-gray-500 dark:text-gray-400">
-                  {t("add_material_for")} <span className="font-semibold text-gray-700 dark:text-gray-300">{subject}</span>
+                <p className="text-sm text-muted-foreground">
+                  {t("add_material_for")} <Badge className="bg-slate-800 text-white dark:bg-white dark:text-slate-900 border-0">{subject}</Badge>
                 </p>
               </div>
 
-              {/* Material type selection - Hide until premium status is determined to prevent layout shift */}
+              {/* Material type selection */}
               {!selectedMaterial ? (
-                <div className={`grid grid-cols-1 gap-4 transition-opacity duration-200 ${premiumCheckLoading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-                  {/* Notes - Recommended */}
-                  <button
+                <div className="grid grid-cols-1 gap-3">
+                  {/* Notes (Free) */}
+                  <Card
                     onClick={() => setSelectedMaterial("notes")}
-                    className="card card-hover relative p-6 text-left"
-                    style={{ 
-                      background: 'linear-gradient(135deg, var(--primary-light) 0%, var(--secondary-light) 100%)',
-                      border: '1px solid var(--primary)'
+                    className="cursor-pointer transition-all duration-200 shadow-lg hover:scale-[1.01] border-2 rounded-2xl overflow-hidden"
+                    style={{
+                      background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+                      borderColor: '#06b6d4',
+                      boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.boxShadow = '0 8px 30px rgba(6, 182, 212, 0.5)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.boxShadow = '0 4px 20px rgba(6, 182, 212, 0.3)';
                     }}
                   >
-                    <div className="absolute -top-3 right-4 text-xs font-bold px-4 py-1.5 rounded-full" style={{
-                      background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
-                      color: 'var(--primary-foreground)',
-                      boxShadow: 'var(--shadow-md)'
-                    }}>
-                      {t("recommended")}
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-4xl">📝</div>
-                      <div>
-                        <h3 className="text-lg font-bold" style={{ color: 'var(--foreground)' }}>{t("notes")}</h3>
-                        <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                          {t("paste_notes")}
-                        </p>
+                    <CardContent className="flex items-center justify-between p-5">
+                      <div className="flex items-center gap-4">
+                        <div className="w-11 h-11 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl">
+                          📝
+                        </div>
+                        <div>
+                          <span className="font-bold text-lg text-white">
+                            {t("notes")}
+                          </span>
+                          <span className="text-sm text-white/90 block font-normal mt-0.5">
+                            {t("paste_or_type_text")}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                      <span className="px-3 py-1.5 bg-white text-cyan-700 text-xs font-bold rounded-lg shadow-md">
+                        ✓ Free
+                      </span>
+                    </CardContent>
+                  </Card>
 
-                  {/* DOCX Files - Premium */}
-                  <button
+                  {/* Word Document (Premium) */}
+                  <Card
                     onClick={() => {
-                      console.log('[CreateFlowView] DOCX clicked - isPremium:', isPremium);
+                        if (!isPremium) setShowPremiumModal(true);
+                        else setSelectedMaterial("docx");
+                    }}
+                    className="cursor-pointer transition-all duration-200 shadow-lg hover:scale-[1.01] border-2 rounded-2xl overflow-hidden"
+                    style={{
+                      background: isPremium 
+                        ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+                        : 'var(--card)',
+                      borderColor: isPremium ? '#06b6d4' : 'var(--border)',
+                      boxShadow: isPremium 
+                        ? '0 4px 20px rgba(6, 182, 212, 0.3)'
+                        : '0 2px 10px rgba(0, 0, 0, 0.1)'
+                    }}
+                    onMouseEnter={(e) => {
                       if (!isPremium) {
-                        console.log('[CreateFlowView] ❌ Not premium - showing modal');
-                        setShowPremiumModal(true);
+                        e.currentTarget.style.borderColor = '#f59e0b';
+                        e.currentTarget.style.boxShadow = '0 4px 20px rgba(245, 158, 11, 0.2)';
                       } else {
-                        console.log('[CreateFlowView] ✅ Is premium - allowing DOCX');
-                        setSelectedMaterial("docx");
+                        e.currentTarget.style.boxShadow = '0 8px 30px rgba(6, 182, 212, 0.5)';
                       }
                     }}
-                    className="card card-hover p-6 text-left relative"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="text-4xl">📄</div>
-                      <div>
-                        <h3 className="text-lg font-bold" style={{ color: 'var(--foreground)' }}>{t("docx_document")}</h3>
-                        <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                          Upload Word documents
-                        </p>
-                      </div>
-                    </div>
-                    {!isPremium && (
-                      <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
-                        Premium
-                      </div>
-                    )}
-                  </button>
-
-                  {/* Image - Premium Only */}
-                  <button
-                    onClick={() => {
-                      console.log('[CreateFlowView] Image clicked - isPremium:', isPremium);
+                    onMouseLeave={(e) => {
                       if (!isPremium) {
-                        console.log('[CreateFlowView] ❌ Not premium - showing modal');
-                        setShowPremiumModal(true);
+                        e.currentTarget.style.borderColor = 'var(--border)';
+                        e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
                       } else {
-                        console.log('[CreateFlowView] ✅ Is premium - allowing Image');
-                        setSelectedMaterial("image");
+                        e.currentTarget.style.boxShadow = '0 4px 20px rgba(6, 182, 212, 0.3)';
                       }
                     }}
-                    className="card card-hover p-6 text-left relative"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="text-4xl">🖼️</div>
-                      <div>
-                        <h3 className="text-lg font-bold" style={{ color: 'var(--foreground)' }}>{t("image")}</h3>
-                        <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                          {t("upload_image_ocr")}
-                        </p>
+                    <CardContent className="flex items-center justify-between p-5">
+                      <div className="flex items-center gap-4">
+                        <div className="w-11 h-11 rounded-lg flex items-center justify-center text-xl" style={{ background: isPremium ? 'rgba(255,255,255,0.2)' : 'var(--muted)' }}>
+                          📄
+                        </div>
+                        <div>
+                          <span className="font-bold text-lg" style={{ color: isPremium ? 'white' : 'var(--foreground)' }}>
+                            Word Document
+                          </span>
+                          <span className="text-sm block font-normal mt-0.5" style={{ color: isPremium ? 'rgba(255,255,255,0.9)' : 'var(--muted-foreground)' }}>
+                            {t("upload_docx_file")}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    {!isPremium && (
-                      <div className="absolute top-4 right-4 text-xs font-bold px-3 py-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white">
-                        Premium
-                      </div>
-                    )}
-                  </button>
+                      {isPremium ? (
+                        <span className="px-3 py-1.5 bg-white text-cyan-700 text-xs font-bold rounded-lg shadow-md">
+                          ✓ Active
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-lg border border-amber-300">
+                          🔒 Premium
+                        </span>
+                      )}
+                    </CardContent>
+                  </Card>
 
+                  {/* Image (Premium) */}
+                  <Card
+                    onClick={() => {
+                        if (!isPremium) setShowPremiumModal(true);
+                        else setSelectedMaterial("image");
+                    }}
+                    className="cursor-pointer transition-all duration-200 shadow-lg hover:scale-[1.01] border-2 rounded-2xl overflow-hidden"
+                    style={{
+                      background: isPremium 
+                        ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+                        : 'var(--card)',
+                      borderColor: isPremium ? '#06b6d4' : 'var(--border)',
+                      boxShadow: isPremium 
+                        ? '0 4px 20px rgba(6, 182, 212, 0.3)'
+                        : '0 2px 10px rgba(0, 0, 0, 0.1)'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isPremium) {
+                        e.currentTarget.style.borderColor = '#f59e0b';
+                        e.currentTarget.style.boxShadow = '0 4px 20px rgba(245, 158, 11, 0.2)';
+                      } else {
+                        e.currentTarget.style.boxShadow = '0 8px 30px rgba(6, 182, 212, 0.5)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isPremium) {
+                        e.currentTarget.style.borderColor = 'var(--border)';
+                        e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+                      } else {
+                        e.currentTarget.style.boxShadow = '0 4px 20px rgba(6, 182, 212, 0.3)';
+                      }
+                    }}
+                  >
+                    <CardContent className="flex items-center justify-between p-5">
+                      <div className="flex items-center gap-4">
+                        <div className="w-11 h-11 rounded-lg flex items-center justify-center text-xl" style={{ background: isPremium ? 'rgba(255,255,255,0.2)' : 'var(--muted)' }}>
+                          🖼️
+                        </div>
+                        <div>
+                          <span className="font-bold text-lg" style={{ color: isPremium ? 'white' : 'var(--foreground)' }}>
+                            Image
+                          </span>
+                          <span className="text-sm block font-normal mt-0.5" style={{ color: isPremium ? 'rgba(255,255,255,0.9)' : 'var(--muted-foreground)' }}>
+                            Upload photo or screenshot
+                          </span>
+                        </div>
+                      </div>
+                      {isPremium ? (
+                        <span className="px-3 py-1.5 bg-white text-cyan-700 text-xs font-bold rounded-lg shadow-md">
+                          ✓ Active
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-lg border border-amber-300">
+                          🔒 Premium
+                        </span>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
               ) : (
                 <>
                   {/* Material input area */}
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {/* Show selected type */}
-                    <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl border border-blue-200 dark:border-blue-800">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">
-                          {selectedMaterial === "notes" && "📝"}
-                          {selectedMaterial === "pdf" && "📄"}
-                          {selectedMaterial === "youtube" && "📺"}
-                          {selectedMaterial === "image" && "🖼️"}
-                        </span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {selectedMaterial === "notes" && t("notes")}
-                          {selectedMaterial === "pdf" && t("pdf_document")}
-                          {selectedMaterial === "youtube" && t("youtube_video")}
-                          {selectedMaterial === "image" && t("image")}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setSelectedMaterial(null);
-                          setTextInput("");
-                          setYoutubeUrl("");
-                          setUploadedFile(null);
-                        }}
-                        className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                      >
-                        {t("change")}
-                      </button>
-                    </div>
+                    <Card className="border bg-slate-50 dark:bg-slate-800/50">
+                      <CardContent className="flex items-center justify-between p-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                              <span className="text-lg">
+                              {selectedMaterial === "notes" && "📝"}
+                              {selectedMaterial === "docx" && "📄"}
+                              {selectedMaterial === "image" && "🖼️"}
+                              </span>
+                          </div>
+                          <span className="font-medium text-sm">
+                            {selectedMaterial === "notes" && t("notes")}
+                            {selectedMaterial === "docx" && "Word Document"}
+                            {selectedMaterial === "image" && t("image")}
+                          </span>
+                        </div>
+                        <Button
+                          onClick={() => {
+                            setSelectedMaterial(null);
+                            setTextInput("");
+                            setUploadedFile(null);
+                          }}
+                          size="sm"
+                          className="text-xs"
+                        >
+                          Change
+                        </Button>
+                      </CardContent>
+                    </Card>
 
                     {/* Notes input */}
                     {selectedMaterial === "notes" && (
-                      <textarea
+                      <Textarea
                         value={textInput}
                         onChange={(e) => setTextInput(e.target.value)}
                         placeholder={t("paste_notes_here")}
-                        className="w-full h-64 px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 resize-none"
+                        className="min-h-40 text-sm"
                         autoFocus
                       />
-                    )}
-
-                    {/* PDF upload */}
-                    {selectedMaterial === "pdf" && (
-                      <div>
-                        <input
-                          type="file"
-                          id="file-upload"
-                          accept=".pdf,.docx"
-                          onChange={handleFileUpload}
-                          className="hidden"
-                        />
-                        <label
-                          htmlFor="file-upload"
-                          className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl hover:border-blue-400 dark:hover:border-blue-600 cursor-pointer transition-all bg-gray-50 dark:bg-gray-900/50"
-                        >
-                          {uploadedFile ? (
-                            <div className="text-center">
-                              <div className="text-4xl mb-2">✅</div>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                {uploadedFile.name}
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {t("click_to_change")}
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="text-center">
-                              <div className="text-4xl mb-2">📤</div>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                {t("click_to_upload")}
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {t("pdf_or_docx")}
-                              </p>
-                            </div>
-                          )}
-                        </label>
-                      </div>
                     )}
 
                     {/* DOCX upload */}
@@ -1103,26 +1280,30 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         />
                         <label
                           htmlFor="docx-upload"
-                          className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl hover:border-blue-400 dark:hover:border-blue-600 cursor-pointer transition-all bg-gray-50 dark:bg-gray-900/50"
+                          className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 group ${
+                            uploadedFile 
+                              ? "bg-green-50/50 dark:bg-green-900/10 border-green-400/50 dark:border-green-800" 
+                              : "bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-600"
+                          }`}
                         >
                           {uploadedFile ? (
-                            <div className="text-center">
-                              <div className="text-4xl mb-2">✅</div>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            <div className="text-center p-4">
+                              <div className="w-12 h-12 mx-auto bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-2xl mb-2 text-green-600 dark:text-green-400">✅</div>
+                              <p className="text-sm font-bold text-slate-900 dark:text-white">
                                 {uploadedFile.name}
                               </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {t("click_to_change")}
+                              <p className="text-xs font-medium text-green-600 dark:text-green-400 mt-1">
+                                Ready to process
                               </p>
                             </div>
                           ) : (
-                            <div className="text-center">
-                              <div className="text-4xl mb-2">📄</div>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                {t("click_to_upload")}
+                            <div className="text-center p-3">
+                              <div className="w-10 h-10 mx-auto bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-xl mb-2 shadow-sm border border-slate-100 dark:border-slate-700">📄</div>
+                              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                                Upload Word Document
                               </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Word documents (.docx)
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                Supports .docx files
                               </p>
                             </div>
                           )}
@@ -1130,21 +1311,12 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       </div>
                     )}
 
-                    {/* YouTube input */}
-                    {selectedMaterial === "youtube" && (
-                      <input
-                        type="url"
-                        value={youtubeUrl}
-                        onChange={(e) => setYoutubeUrl(e.target.value)}
-                        placeholder="https://youtube.com/watch?v=..."
-                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400"
-                        autoFocus
-                      />
-                    )}
+                   {/* YouTube input REMOVED */}
 
                     {/* Image upload */}
                     {selectedMaterial === "image" && (
                       <div>
+                        {/* Premium check is done before selection, but checking here as secondary safeguard */}
                         <input
                           type="file"
                           id="image-upload"
@@ -1152,30 +1324,31 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           onChange={handleFileUpload}
                           className="hidden"
                         />
-                        <label
+                         <label
                           htmlFor="image-upload"
-                          className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl hover:border-blue-400 dark:hover:border-blue-600 cursor-pointer transition-all bg-gray-50 dark:bg-gray-900/50"
+                          className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 group ${
+                            uploadedFile 
+                              ? "bg-green-50/50 dark:bg-green-900/10 border-green-400/50 dark:border-green-800" 
+                              : "bg-slate-50/50 dark:bg-slate-900/50 border-slate-300 dark:border-slate-700 hover:border-purple-400 dark:hover:border-purple-600"
+                          }`}
                         >
                           {uploadedFile ? (
-                            <div className="text-center">
-                              <div className="text-4xl mb-2">✅</div>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            <div className="text-center p-4">
+                              <div className="w-12 h-12 mx-auto bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-2xl mb-2 text-green-600 dark:text-green-400">✅</div>
+                              <p className="text-sm font-bold text-slate-900 dark:text-white">
                                 {uploadedFile.name}
                               </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {textInput.length > 0 ? `${textInput.length} ${t("characters_extracted")}` : t("processing")}
-                              </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {t("click_to_change")}
+                              <p className="text-xs font-medium text-green-600 dark:text-green-400 mt-1">
+                                {textInput.length > 0 ? `${textInput.length} chars extracted` : t("processing")}
                               </p>
                             </div>
                           ) : (
-                            <div className="text-center">
-                              <div className="text-4xl mb-2">📷</div>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                {t("click_to_upload_image")}
+                            <div className="text-center p-3">
+                               <div className="w-10 h-10 mx-auto bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-xl mb-2 shadow-sm border border-slate-100 dark:border-slate-700">📷</div>
+                              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                                Upload Image
                               </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                 {t("jpg_png_formats")}
                               </p>
                             </div>
@@ -1186,79 +1359,99 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   </div>
 
                   {/* Language selection - only show when we have text */}
-                  {/* Language selection - only show when we have text AND not from images */}
-                  {textInput.length >= 50 && selectedMaterial !== "image" && (
-                    <div className="mt-6 p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                      <div className="mb-5">
-                        <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
-                          {settings.language === "no" ? "Velg språk for flashcards" : "Choose flashcard language"}
+                  {textInput.length >= 50 && (
+                    <div className="mt-4 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700">
+                      <div className="mb-3 flex items-baseline justify-between">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                          Output Language
                         </h4>
                         {detectedLanguage && detectedLanguage !== "unknown" && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {settings.language === "no" ? "Vi oppdaget" : "We detected"}: <span className="font-medium text-gray-700 dark:text-gray-300">{detectedLanguage}</span>
-                          </p>
+                          <div className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-full text-gray-500 dark:text-gray-400">
+                            Detected: {detectedLanguage}
+                          </div>
                         )}
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <button
-                          type="button"
+                      <div className="grid grid-cols-2 gap-2">
+                        <Card
                           onClick={() => setOutputLanguage("auto")}
-                          className={`relative p-4 rounded-2xl text-left transition-all duration-200 border ${
-                            outputLanguage === "auto"
-                              ? "bg-gray-900 text-white border-gray-900 dark:bg-white dark:text-gray-900 dark:border-white shadow-lg transform scale-[1.01]"
-                              : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-md hover:-translate-y-1"
-                          }`}
-                        >
-                          <div className="font-semibold text-sm mb-1">
-                            {detectedLanguage && detectedLanguage !== "unknown" 
-                              ? detectedLanguage.split(" ")[0]
-                              : (settings.language === "no" ? "Oppdaget" : "Detected")
+                          className="cursor-pointer border-2 transition-all duration-200 rounded-xl overflow-hidden"
+                          style={{
+                            background: outputLanguage === "auto"
+                              ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+                              : 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(8, 145, 178, 0.04) 100%)',
+                            borderColor: outputLanguage === "auto" ? '#0891b2' : 'rgba(6, 182, 212, 0.3)',
+                            boxShadow: outputLanguage === "auto" ? '0 4px 15px rgba(6, 182, 212, 0.4)' : '0 2px 8px rgba(0, 0, 0, 0.05)'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (outputLanguage !== "auto") {
+                              e.currentTarget.style.borderColor = '#06b6d4';
+                              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.1) 100%)';
                             }
-                          </div>
-                          <div className={`text-xs ${outputLanguage === "auto" ? "text-gray-300 dark:text-gray-500" : "text-gray-400"}`}>
-                            {settings.language === "no" ? "Behold originalspråket" : "Keep original language"}
-                          </div>
-                          {outputLanguage === "auto" && (
-                            <div className="absolute top-4 right-4 text-emerald-400">
-                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                            </div>
-                          )}
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setOutputLanguage("en")}
-                          className={`relative p-4 rounded-2xl text-left transition-all duration-200 border ${
-                            outputLanguage === "en"
-                              ? "bg-gray-900 text-white border-gray-900 dark:bg-white dark:text-gray-900 dark:border-white shadow-lg transform scale-[1.01]"
-                              : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-md hover:-translate-y-1"
-                          }`}
+                          }}
+                          onMouseLeave={(e) => {
+                            if (outputLanguage !== "auto") {
+                              e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.3)';
+                              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(8, 145, 178, 0.04) 100%)';
+                            }
+                          }}
                         >
-                          <div className="font-semibold text-sm mb-1">
-                            English
-                          </div>
-                          <div className={`text-xs ${outputLanguage === "en" ? "text-gray-300 dark:text-gray-500" : "text-gray-400"}`}>
-                            {settings.language === "no" ? "Oversett alt til engelsk" : "Translate everything to English"}
-                          </div>
-                          {outputLanguage === "en" && (
-                            <div className="absolute top-4 right-4 text-emerald-400">
-                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                            </div>
-                          )}
-                        </button>
+                          <CardContent className="flex items-center justify-between p-3">
+                           <div className="flex items-center gap-2">
+                              <span className="text-lg">🌍</span>
+                              <div className="text-left">
+                                  <div className="font-medium text-sm" style={{ color: outputLanguage === "auto" ? 'white' : 'var(--foreground)' }}>
+                                    {detectedLanguage && detectedLanguage !== "unknown" ? detectedLanguage.split(" ")[0] : "Auto"}
+                                  </div>
+                              </div>
+                           </div>
+                           {outputLanguage === "auto" && <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                          </CardContent>
+                        </Card>
+
+                        <Card
+                          onClick={() => setOutputLanguage("en")}
+                          className="cursor-pointer border-2 transition-all duration-200 rounded-xl overflow-hidden"
+                          style={{
+                            background: outputLanguage === "en"
+                              ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+                              : 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(8, 145, 178, 0.04) 100%)',
+                            borderColor: outputLanguage === "en" ? '#0891b2' : 'rgba(6, 182, 212, 0.3)',
+                            boxShadow: outputLanguage === "en" ? '0 4px 15px rgba(6, 182, 212, 0.4)' : '0 2px 8px rgba(0, 0, 0, 0.05)'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (outputLanguage !== "en") {
+                              e.currentTarget.style.borderColor = '#06b6d4';
+                              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.1) 100%)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (outputLanguage !== "en") {
+                              e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.3)';
+                              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(8, 145, 178, 0.04) 100%)';
+                            }
+                          }}
+                        >
+                          <CardContent className="flex items-center justify-between p-3">
+                           <div className="flex items-center gap-2">
+                              <span className="text-lg">🇺🇸</span>
+                              <div className="text-left">
+                                  <div className="font-medium text-sm" style={{ color: outputLanguage === "en" ? 'white' : 'var(--foreground)' }}>English</div>
+                              </div>
+                           </div>
+                           {outputLanguage === "en" && <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                          </CardContent>
+                        </Card>
                       </div>
                     </div>
                   )}
 
-                  {/* Continue button - language selection required ONLY for non-image materials */}
-                  <button
+                  {/* Continue button */}
+                  <Button
                     onClick={(e) => {
-                      // For images, no language selection needed
                       if (selectedMaterial === "image") {
                         handleContinueFromStep2();
                         return;
                       }
-                      // For other materials, require language selection if text is long enough
                       if (textInput.length >= 50 && !outputLanguage) {
                         e.preventDefault();
                         return;
@@ -1266,242 +1459,352 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       handleContinueFromStep2();
                     }}
                     disabled={selectedMaterial !== "image" && textInput.length >= 50 && !outputLanguage}
-                    className={`w-full py-4 text-lg font-bold rounded-xl transition-all ${
-                      selectedMaterial !== "image" && textInput.length >= 50 && !outputLanguage
-                        ? "bg-gray-400 dark:bg-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed border-2 border-gray-400 dark:border-gray-600 opacity-60"
-                        : "btn btn-primary"
-                    }`}
+                    variant="primary"
+                    size="lg"
+                    className="w-full"
                   >
-                    {selectedMaterial !== "image" && textInput.length >= 50 && !outputLanguage ? "Select language first" : t("continue")}
-                  </button>
+                    {selectedMaterial !== "image" && textInput.length >= 50 && !outputLanguage ? "Select language" : t("continue")}
+                    {!(selectedMaterial !== "image" && textInput.length >= 50 && !outputLanguage) && (
+                      <svg className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    )}
+                  </Button>
                 </>
               )}
             </div>
           )}
 
-          {/* STEP 3: Choose Grade */}
+          {/* STEP 3: Choose Difficulty & Flashcard Count */}
           {currentStep === 3 && (
-            <div className="space-y-6">
-              {/* Math mode selection (only for math subjects) */}
-              {isMathSubject() && (
-                <div className="p-5 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
-                  <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-2">
-                    {settings.language === "no" ? "Ekstra matematikkøvelse" : "Extra Math Practice"}
-                  </h3>
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={includeMathProblems}
-                      onChange={(e) => setIncludeMathProblems(e.target.checked)}
-                      className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-2 focus:ring-blue-500"
-                    />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {settings.language === "no" 
-                        ? "Inkluder regneoppgaver i tillegg til teori" 
-                        : "Include calculation problems alongside theory"}
-                    </span>
-                  </label>
-                </div>
-              )}
-
-              <div className="text-center">
-                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
-                  {t("what_grade_aiming")}
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--foreground)' }}>
+                  Customize Your Study Set
                 </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {t("create_right_amount")}
+                <p className="text-xs text-muted-foreground">
+                  Higher counts with harder difficulty = better exam performance
                 </p>
               </div>
 
-              {/* Grade options - Hide until premium status is determined to prevent layout shift */}
-              <div className={`space-y-3 transition-opacity duration-200 ${premiumCheckLoading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-                {getGradeOptions().map(({ grade, label, description }) => {
-                  const actualCardCount = getActualCardCount(grade);
-                  const isLocked = !isPremium && actualCardCount > 20;
-                  
-                  if (grade === 'A' || grade === 'B') {
-                    console.log(`[CreateFlowView] Grade ${grade}: isPremium=${isPremium}, actualCardCount=${actualCardCount}, isLocked=${isLocked}`);
-                  }
-                  
-                  return (
+              {/* Difficulty Selection */}
+              <div>
+                 <label className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
+                   {t("difficulty_level")}
+                 </label>
+                
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  {[
+                    { level: "Easy", locked: !isPremium },
+                    { level: "Medium", locked: false },
+                    { level: "Hard", locked: !isPremium }
+                  ].map(({ level, locked }) => (
                     <button
-                      key={grade}
+                      key={level}
+                      type="button"
                       onClick={() => {
-                        console.log(`[CreateFlowView] Grade ${grade} clicked - isLocked: ${isLocked}, isPremium: ${isPremium}`);
-                        if (isLocked) {
-                          console.log('[CreateFlowView] ❌ Grade locked - showing premium modal');
-                          setShowPremiumModal(true);
-                        } else {
-                          console.log('[CreateFlowView] ✅ Grade unlocked - setting target grade');
-                          setTargetGrade(grade);
+                        if (locked) {
+                           setShowPremiumModal(true);
+                           return;
+                        }
+                        setDifficulty(level);
+                      }}
+                      className="p-3 rounded-xl border-2 transition-all duration-200 font-medium text-sm"
+                      style={{
+                        background: difficulty === level 
+                          ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+                          : locked 
+                            ? 'linear-gradient(135deg, #334155 0%, #475569 100%)' 
+                            : 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(8, 145, 178, 0.04) 100%)',
+                        borderColor: difficulty === level ? '#0891b2' : locked ? '#475569' : 'rgba(6, 182, 212, 0.3)',
+                        color: difficulty === level || locked ? 'white' : 'var(--foreground)',
+                        boxShadow: difficulty === level ? '0 4px 15px rgba(6, 182, 212, 0.4)' : '0 2px 8px rgba(0, 0, 0, 0.05)'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (difficulty !== level && !locked) {
+                          e.currentTarget.style.borderColor = '#06b6d4';
+                          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.1) 100%)';
+                          e.currentTarget.style.transform = 'translateY(-1px)';
                         }
                       }}
-                      className={`w-full p-4 rounded-2xl text-left transition-all duration-200 border ${
-                        targetGrade === grade
-                          ? "bg-gray-900 text-white border-gray-900 dark:bg-white dark:text-gray-900 dark:border-white shadow-lg transform scale-[1.01]"
-                          : "bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:shadow-md hover:-translate-y-1"
-                      } ${isLocked ? 'opacity-50 cursor-not-allowed grayscale' : 'cursor-pointer'}`}
+                      onMouseLeave={(e) => {
+                        if (difficulty !== level && !locked) {
+                          e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.3)';
+                          e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(8, 145, 178, 0.04) 100%)';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                        }
+                      }}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold shadow-sm ${
-                            targetGrade === grade 
-                              ? 'bg-white/20 text-white dark:bg-gray-200 dark:text-gray-900' 
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-                          }`}>
-                            {grade}
-                          </div>
-                          
-                          <div>
-                            <div className={`font-bold text-lg ${
-                              targetGrade === grade
-                                ? "text-white dark:text-gray-900"
-                                : "text-gray-900 dark:text-white"
-                            }`}>
-                              {label}
-                            </div>
-                            <div className={`text-sm ${
-                              targetGrade === grade ? "text-gray-300 dark:text-gray-500" : "text-gray-500 dark:text-gray-400"
-                            }`}>
-                              {actualCardCount} cards
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-3">
-                          {isLocked && (
-                            <span className="text-xs font-bold px-2 py-1 rounded bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-100">
-                              PREMIUM
-                            </span>
-                          )}
-                          {targetGrade === grade && !isLocked && (
-                            <div className="text-emerald-400">
-                              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                            </div>
-                          )}
-                        </div>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span>{level}</span>
+                        {locked && (
+                          <svg className="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
+                        )}
+                        {difficulty === level && !locked && (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                        )}
                       </div>
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
 
+              {/* Flashcard Count Selection */}
+              <div>
+                 <label className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
+                   {t("number_of_flashcards")}
+                 </label>
+
+                <div className="grid grid-cols-1 gap-2 mt-2">
+                  {[
+                    { count: 10, label: "10 cards", grade: "Pass", locked: false, desc: null },
+                    { count: 15, label: "15 cards", grade: "Good", locked: false, desc: null },
+                    { count: 20, label: "20 cards", grade: "Very Good", locked: false, desc: null },
+                    { count: 25, label: "25 cards", grade: "Excellent", locked: !isPremium, desc: "More likely to achieve better grades" },
+                    { count: 30, label: "30 cards", grade: "Top Grade", locked: !isPremium, desc: "Comprehensive coverage for top results" }
+                  ].map(({ count, label, grade: gradeText, locked, desc }) => {
+                    // Map count to grade letter for backend
+                    const gradeMap: Record<number, Grade> = { 10: "E", 15: "D", 20: "C", 25: "B", 30: "A" };
+                    const gradeValue = gradeMap[count];
+                    const isSelected = targetGrade === gradeValue;
+                    
+                    return (
+                      <button
+                        key={count}
+                        type="button"
+                        onClick={() => {
+                          if (locked) {
+                            setShowPremiumModal(true);
+                          } else {
+                            setTargetGrade(gradeValue);
+                          }
+                        }}
+                        className="rounded-xl border-2 transition-all duration-200"
+                        style={{
+                          background: isSelected 
+                            ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+                            : locked 
+                              ? 'linear-gradient(135deg, #334155 0%, #475569 100%)' 
+                              : 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(8, 145, 178, 0.04) 100%)',
+                          borderColor: isSelected ? '#0891b2' : locked ? '#475569' : 'rgba(6, 182, 212, 0.3)',
+                          color: isSelected || locked ? 'white' : 'var(--foreground)',
+                          boxShadow: isSelected ? '0 4px 15px rgba(6, 182, 212, 0.4)' : '0 2px 8px rgba(0, 0, 0, 0.05)',
+                          padding: desc ? '0.75rem' : '0.75rem'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isSelected && !locked) {
+                            e.currentTarget.style.borderColor = '#06b6d4';
+                            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.1) 100%)';
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isSelected && !locked) {
+                            e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.3)';
+                            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(8, 145, 178, 0.04) 100%)';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                          }
+                        }}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-sm">{label}</span>
+                            {locked && (
+                              <span className="text-base">🔒</span>
+                            )}
+                            {isSelected && !locked && (
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                            )}
+                          </div>
+                          <span className={`text-xs font-medium ${isSelected ? 'opacity-90' : 'opacity-60'}`}>
+                            → {gradeText}
+                          </span>
+                        </div>
+                        {desc && (
+                          <div className={`mt-2 text-xs ${locked ? 'text-amber-400' : 'text-cyan-200'} font-medium`}>
+                            {desc}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Math Problems Toggle - Only show for math subjects (Premium Feature) */}
+              {isMathSubject && (
+                <div 
+                  onClick={() => {
+                    if (!isPremium) {
+                      setShowPremiumModal(true);
+                    } else {
+                      setIncludeMathProblems(!includeMathProblems);
+                    }
+                  }}
+                  className="p-4 rounded-2xl border-2 cursor-pointer transition-all hover:scale-[1.01]" 
+                  style={{ 
+                    background: includeMathProblems && isPremium 
+                      ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' 
+                      : isPremium 
+                        ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(8, 145, 178, 0.04) 100%)'
+                        : 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%)',
+                    borderColor: includeMathProblems && isPremium ? '#06b6d4' : isPremium ? 'rgba(6, 182, 212, 0.3)' : 'rgba(245, 158, 11, 0.5)',
+                    boxShadow: includeMathProblems && isPremium ? '0 4px 15px rgba(6, 182, 212, 0.4)' : '0 2px 8px rgba(0, 0, 0, 0.05)'
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">🧮</span>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm" style={{ color: includeMathProblems && isPremium ? 'white' : 'var(--foreground)' }}>
+                            Include Practice Problems
+                          </span>
+                          {!isPremium && <span className="text-base">🔒</span>}
+                        </div>
+                        <p className="text-xs mt-0.5" style={{ color: includeMathProblems && isPremium ? 'rgba(255,255,255,0.8)' : 'var(--muted-foreground)' }}>
+                          Add solvable math problems to practice {!isPremium && '(Premium)'}
+                        </p>
+                        <p className="text-[10px] mt-1 italic" style={{ color: includeMathProblems && isPremium ? 'rgba(255,255,255,0.7)' : '#f59e0b' }}>
+                          ⚠️ Beta feature - Still being improved
+                        </p>
+                      </div>
+                    </div>
+                    {isPremium && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIncludeMathProblems(!includeMathProblems);
+                        }}
+                        className="relative w-12 h-6 rounded-full transition-all duration-200"
+                        style={{
+                          background: includeMathProblems ? 'white' : 'var(--muted)'
+                        }}
+                      >
+                        <div 
+                          className="absolute w-5 h-5 rounded-full top-0.5 transition-all duration-200"
+                          style={{
+                            left: includeMathProblems ? '26px' : '2px',
+                            background: includeMathProblems ? '#06b6d4' : 'var(--muted-foreground)'
+                          }}
+                        />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Continue button */}
-              <button
+              <Button
                 onClick={handleContinueFromStep3}
                 disabled={!targetGrade}
-                className="btn btn-primary w-full py-3 text-base font-medium rounded-xl"
+                variant="primary"
+                size="lg"
+                className="w-full"
               >
-                {t("generate_study_set")}
-              </button>
+                {t("generate_study_set")} 
+                <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </Button>
             </div>
           )}
 
           {/* STEP 4: Generating */}
           {currentStep === 4 && (
-            <div className="py-8 text-center space-y-6 max-w-2xl mx-auto">
-              {/* Spinner */}
-              <div className="w-16 h-16 mx-auto">
-                <div className="w-full h-full border-4 border-gray-200 dark:border-gray-700 border-t-blue-500 dark:border-t-blue-400 rounded-full animate-spin"></div>
+            <div className="py-8 text-center space-y-6 max-w-md mx-auto">
+              {/* Central Animation */}
+              <div className="relative w-20 h-20 mx-auto">
+                <div className="absolute inset-0 rounded-full border-4 border-gray-100 dark:border-gray-800"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+                <div className="absolute inset-3 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+                  <span className="text-2xl">✨</span>
+                </div>
               </div>
               
-              {/* Title and Progress Bar */}
-              <div className="space-y-3">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  ✨ {t("creating_study_set")}
-                </h2>
-                
-                {/* Light blue progress bar */}
-                <div className="space-y-2 px-4">
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-                    <div 
-                      className="h-full bg-sky-400 dark:bg-sky-500 rounded-full transition-all duration-1000 ease-out"
-                      style={{ 
-                        width: `${Math.min((elapsedSeconds / 75) * 100, 95)}%`
-                      }}
-                    ></div>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-500 dark:text-gray-400">
-                      {settings.language === "no" ? "Vennligst vent..." : "Please wait..."}
-                    </span>
-                    <span className="font-mono text-gray-500 dark:text-gray-400">
-                      {Math.floor(elapsedSeconds / 60)}:{(elapsedSeconds % 60).toString().padStart(2, '0')}
-                    </span>
-                  </div>
+              <div className="space-y-2">
+                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                    {t("creating_study_set")}
+                 </h2>
+                 <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Please wait...
+                 </p>
+              </div>
+              
+              {/* Premium Progress Bar */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <span>Start</span>
+                  <span>{Math.round((elapsedSeconds / 75) * 100)}%</span>
+                </div>
+                <div className="h-3 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner">
+                  <div 
+                    className="h-full transition-all duration-300 ease-out"
+                    style={{ 
+                      width: `${Math.min((elapsedSeconds / 75) * 100, 95)}%`,
+                      background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+                    }}
+                  ></div>
                 </div>
               </div>
 
-              {/* Progress steps with emojis */}
-              <div className="space-y-3 mt-8">
-                <div className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-700 ${
-                  elapsedSeconds < 25
-                    ? "bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 shadow-sm"
-                    : "bg-gray-50 dark:bg-gray-800/30 border border-gray-200 dark:border-gray-700 opacity-50"
-                }`}>
-                  <span className="text-lg">📖</span>
-                  <span className={`text-sm font-medium transition-colors duration-500 ${
-                    elapsedSeconds < 25
-                      ? "text-blue-900 dark:text-blue-200"
-                      : "text-gray-600 dark:text-gray-400"
-                  }`}>
-                    {settings.language === "no" ? "Leser materiale..." : "Reading material..."}
-                  </span>
-                  {elapsedSeconds < 25 && <span className="ml-auto text-blue-500 animate-pulse">●</span>}
-                  {elapsedSeconds >= 25 && <span className="ml-auto text-green-500">✓</span>}
-                </div>
-                
-                <div className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-700 ${
-                  elapsedSeconds >= 25 && elapsedSeconds < 50
-                    ? "bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 shadow-sm"
-                    : "bg-gray-50 dark:bg-gray-800/30 border border-gray-200 dark:border-gray-700 opacity-50"
-                }`}>
-                  <span className="text-lg">🧠</span>
-                  <span className={`text-sm font-medium transition-colors duration-500 ${
-                    elapsedSeconds >= 25 && elapsedSeconds < 50
-                      ? "text-blue-900 dark:text-blue-200"
-                      : "text-gray-600 dark:text-gray-400"
-                  }`}>
-                    {settings.language === "no" ? "Lager flashcards..." : "Creating flashcards..."}
-                  </span>
-                  {elapsedSeconds >= 25 && elapsedSeconds < 50 && <span className="ml-auto text-blue-500 animate-pulse">●</span>}
-                  {elapsedSeconds >= 50 && <span className="ml-auto text-green-500">✓</span>}
-                </div>
-                
-                <div className={`flex items-center gap-3 p-4 rounded-xl transition-all duration-700 ${
-                  elapsedSeconds >= 50
-                    ? "bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-700 shadow-sm"
-                    : "bg-gray-50 dark:bg-gray-800/30 border border-gray-200 dark:border-gray-700 opacity-50"
-                }`}>
-                  <span className="text-lg">📝</span>
-                  <span className={`text-sm font-medium transition-colors duration-500 ${
-                    elapsedSeconds >= 50
-                      ? "text-blue-900 dark:text-blue-200"
-                      : "text-gray-600 dark:text-gray-400"
-                  }`}>
-                    {settings.language === "no" ? "Setter opp spørsmål..." : "Setting up questions..."}
-                  </span>
-                  {elapsedSeconds >= 50 && <span className="ml-auto text-blue-500 animate-pulse">●</span>}
-                </div>
+              {/* Dynamic Steps */}
+              <div className="grid gap-3 text-left">
+                {[
+                   { label: settings.language === "no" ? "Analyserer innhold..." : "Analyzing content...", icon: "🔍", time: 0 },
+                   { label: settings.language === "no" ? "Strukturerer flashcards..." : "Structuring flashcards...", icon: "📑", time: 25 },
+                   { label: settings.language === "no" ? "Ferdigstiller settet..." : "Finalizing study set...", icon: "🚀", time: 50 },
+                ].map((step, idx) => {
+                   const isActive = elapsedSeconds >= step.time && (idx === 2 || elapsedSeconds < [25, 50, 999][idx]);
+                   const isDone = elapsedSeconds >= [25, 50, 999][idx];
+                   
+                   return (
+                      <div 
+                        key={idx} 
+                        className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-500 ${
+                            isDone 
+                               ? "bg-green-50/50 border-green-100 dark:bg-green-900/10 dark:border-green-800"
+                               : isActive
+                               ? "bg-white border-indigo-200 shadow-md scale-[1.02] dark:bg-slate-800 dark:border-indigo-900"
+                               : "bg-transparent border-transparent opacity-50"
+                        }`}
+                      >
+                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors ${
+                            isDone 
+                               ? "bg-green-500 text-white" 
+                               : isActive
+                               ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300 animate-pulse"
+                               : "bg-gray-100 text-gray-400 dark:bg-gray-800"
+                         }`}>
+                            {isDone ? "✓" : step.icon}
+                         </div>
+                         <span className={`font-medium ${
+                            isDone ? "text-green-700 dark:text-green-400 line-through decoration-green-300/50" : "text-gray-900 dark:text-white"
+                         }`}>
+                            {step.label}
+                         </span>
+                      </div>
+                   );
+                })}
               </div>
 
-              {/* Study tip - FIXED: Uses elapsedSeconds for stable rotation */}
-              <div className="mt-8 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800/50 dark:to-gray-800/30 rounded-xl border border-blue-100 dark:border-gray-700 max-w-lg mx-auto">
-                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-2 flex items-center justify-center gap-1">
-                  <span>💡</span> {settings.language === "no" ? "Visste du?" : "Did you know?"}
+              {/* Fun Fact Card */}
+              <div className="mt-8 p-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-amber-100/50 dark:border-slate-700 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                   <svg className="w-16 h-16 text-amber-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+                </div>
+                <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mb-2 uppercase tracking-wider flex items-center gap-2">
+                   <span>💡</span> {settings.language === "no" ? "Visste du?" : "Did you know?"}
                 </p>
-                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 leading-relaxed">
                   {[
                     settings.language === "no" 
-                      ? "Å prøve å huske informasjon styrker hukommelsen mer enn å bare lese notater. Dette kalles aktiv gjenkalling." 
-                      : "Trying to recall information strengthens memory more than simply re-reading notes. This is called retrieval practice.",
+                      ? "Å prøve å huske informasjon styrker hukommelsen mer enn å bare lese notater." 
+                      : "Active recall recruits more neural networks than passive review.",
                     settings.language === "no"
-                      ? "Korte, spredte økter over tid er mer effektive enn lange økter. Dette kalles distribuert øving."
-                      : "Short, spaced study sessions over time are more effective than cramming. This is called spaced repetition.",
-                    settings.language === "no"
-                      ? "Å forklare konsepter med egne ord hjelper deg å forstå dem bedre. Prøv å lære det til noen andre!"
-                      : "Explaining concepts in your own words helps you understand them better. Try teaching it to someone else!"
-                  ][Math.floor(elapsedSeconds / 25) % 3]}
+                      ? "Korte, spredte økter over tid er mer effektive enn lange økter."
+                      : "Spaced repetition can increase learning efficiency by up to 200%.",
+                  ][Math.floor(elapsedSeconds / 25) % 2]}
                 </p>
               </div>
             </div>

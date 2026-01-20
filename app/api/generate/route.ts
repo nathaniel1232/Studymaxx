@@ -45,6 +45,7 @@ interface GenerateRequest {
   language?: string;
   materialType?: string;
   outputLanguage?: "auto" | "en";
+  includeMath?: boolean;
 }
 
 interface Flashcard {
@@ -239,12 +240,14 @@ async function generateWithAIFast(
   targetGrade?: string,
   subject?: string,
   materialType?: string,
-  outputLanguage: "auto" | "en" = "auto"
+  outputLanguage: "auto" | "en" = "auto",
+  difficulty?: string,
+  includeMath?: boolean
 ): Promise<Flashcard[]> {
   console.log(`[generateWithAIFast] Target: ${numberOfFlashcards} flashcards (fast single-request mode)`);
   
   // Single request with streamlined generation - no batching for speed
-  return await generateWithAI(text, numberOfFlashcards, language, targetGrade, subject, materialType, outputLanguage);
+  return await generateWithAI(text, numberOfFlashcards, language, targetGrade, subject, materialType, outputLanguage, difficulty, includeMath);
 }
 
 /**
@@ -326,7 +329,9 @@ async function generateWithAI(
   targetGrade?: string,
   subject?: string,
   materialType?: string,
-  outputLanguage: "auto" | "en" = "auto"
+  outputLanguage: "auto" | "en" = "auto",
+  difficulty?: string,
+  includeMath?: boolean
 ): Promise<Flashcard[]> {
   const targetCount = numberOfFlashcards; // Store original request
   
@@ -383,15 +388,100 @@ IMPORTANT - YOUTUBE TRANSCRIPT INSTRUCTIONS:
 - Create flashcards that capture the key lessons from the video`;
   }
 
-  const systemPrompt = `You are an expert academic tutor${subject ? ` in ${subject}` : ""} creating high-level exam flashcards.
+  // Build Difficulty instructions
+  let difficultyInstructions = "";
+  if (difficulty === "Easy") {
+    difficultyInstructions = `⚠️ DIFFICULTY LEVEL: EASY (STRICTLY FOUNDATIONAL - NO EXCEPTIONS)
+CRITICAL REQUIREMENTS FOR EASY MODE:
+- Questions: ONLY "What is...", "Define...", "Identify...", "Name..."
+- Content: Basic definitions, simple facts, straightforward recall
+- Math: Single-step calculations only (e.g., "2 + 2 = ?", "What is 5 x 3?")
+- NO analysis, NO synthesis, NO complex reasoning
+- Example Easy Questions:
+  * "What is photosynthesis?"
+  * "Name the capital of France"
+  * "What is 15 + 7?"
+- Distractors: Obviously wrong but topically related (e.g., for "Paris", use "London", "Berlin")`;
+  } else if (difficulty === "Hard") {
+    difficultyInstructions = `⚠️ DIFFICULTY LEVEL: HARD (STRICTLY ADVANCED - NO EXCEPTIONS)
+CRITICAL REQUIREMENTS FOR HARD MODE:
+- Questions: MUST use "Analyze", "Evaluate", "Compare", "Synthesize", "Why does...", "How would..."
+- Content: Deep understanding, application to new scenarios, connecting multiple concepts
+- Math: Multi-step problems requiring 3+ operations, word problems with complex setup
+- Require critical thinking and inference from multiple pieces of information
+- Example Hard Questions:
+  * "Analyze how photosynthesis and cellular respiration create a metabolic cycle"
+  * "Evaluate why the French Revolution occurred when it did rather than earlier"
+  * "If a car accelerates from 0 to 60 mph in 5 seconds with varying acceleration, calculate average force"
+- Distractors: Extremely plausible misconceptions that experts might debate`;
+  } else {
+    // Medium
+    difficultyInstructions = `⚠️ DIFFICULTY LEVEL: MEDIUM (STRICTLY STANDARD APPLICATION)
+CRITICAL REQUIREMENTS FOR MEDIUM MODE:
+- Questions: Use "How", "Explain", "Apply", "Calculate" (but NOT "Analyze" or "Evaluate")
+- Content: Understanding and application of concepts (not just recall, not deep analysis)
+- Math: 2-step problems with clear procedures (e.g., "Find area of rectangle with length 5 and width 3")
+- Require understanding HOW things work, not just WHAT they are
+- Example Medium Questions:
+  * "How does photosynthesis produce oxygen?"
+  * "Explain the main causes of the French Revolution"
+  * "Calculate the speed of an object that travels 100 meters in 20 seconds"
+- Distractors: Common student misconceptions from the same topic`;
+  }
 
-Your job is to create "learning-rich" content that forces students to think.
-You must solve a critical issue where students can guess the answer just by picking the longest option.
+  // Build Math Mode instructions
+  let mathInstructions = "";
+  if (includeMath || subject?.toLowerCase().includes("math") || subject?.toLowerCase().includes("matte")) {
+    mathInstructions = `🔥🔥🔥 MATH PROBLEM MODE - CRITICAL REQUIREMENTS 🔥🔥🔥
+
+ABSOLUTE RULES (NO EXCEPTIONS):
+1. EVERY question MUST be a SOLVABLE CALCULATION PROBLEM with a SPECIFIC NUMERICAL ANSWER
+2. FORBIDDEN WORDS: "Analyze", "Evaluate", "Explain", "Describe", "Discuss", "Why", "How does"
+3. REQUIRED FORMAT: "Calculate...", "Solve...", "Find...", "What is the value of..."
+
+EXAMPLES OF CORRECT MATH PROBLEMS:
+✅ "Calculate: (-3/4) + (2/5)"
+✅ "Solve for x: 2x + 5 = 13"
+✅ "What is 15% of 80?"
+✅ "Find the area of a triangle with base 8 cm and height 5 cm"
+✅ "Simplify: (3x² - 2x + 1) + (x² + 4x - 3)"
+
+EXAMPLES OF FORBIDDEN (NOT MATH PROBLEMS):
+❌ "Analyze how negative numbers affect fraction calculations" (This is analysis, not a problem!)
+❌ "Explain the process of multiplying fractions" (This is explanation, not a problem!)
+❌ "Why do negative numbers work differently in multiplication?" (This is theory, not a problem!)
+❌ "How does the Pythagorean theorem apply?" (This is conceptual, not a problem!)
+
+YOUR QUESTIONS MUST:
+- Have specific numbers to calculate
+- Require step-by-step computation
+- Produce a single, definite numerical or algebraic answer
+- Be solvable with pen and paper in 1-3 minutes
+
+DISTRACTORS:
+- Must be WRONG ANSWERS from common calculation mistakes
+- Example: If correct answer is "5/12", distractors could be "7/12" (addition error), "5/9" (wrong denominator), "1/12" (subtraction instead)
+- All options must be in the SAME FORMAT as the correct answer
+
+REMEMBER: If you write a question starting with "Analyze", "Evaluate", "Explain", or "Why", you have FAILED this task.`;
+  }
+
+  const systemPrompt = `You are an expert academic tutor${subject ? ` in ${subject}` : ""} creating educational flashcards.
+
+CRITICAL: You are creating STUDY FLASHCARDS, not code. Do NOT generate programming code, HTML, or any file modifications.
+
+Your job is to create "learning-rich" flashcard content that helps students study effectively.
 
 CORE RULES:
-1. OUTPUT: Valid JSON only. No markdown.
+1. OUTPUT: Valid JSON only with flashcards. No markdown. No code.
 2. QUANTITY: Generate exactly ${bufferedCount} flashcards.
-3. LANGUAGE: ${outputLanguage === 'auto' ? 'Same language as the input text' : 'English'}.
+3. LANGUAGE: ${outputLanguage === 'auto' ? (language && language !== 'Unknown' ? `Strictly output in ${language}` : 'Same language as the input text') : 'Strictly output in English'}.
+
+${difficultyInstructions}
+
+${mathInstructions}
+
+${materialInstructions}
 
 LEARNING QUALITY (High Priority):
 - QUESTIONS should be challenging ("Why", "How", "Analyze") but direct.
@@ -399,17 +489,21 @@ LEARNING QUALITY (High Priority):
 - CUT ALL FLUFF. No "The answer is...", no "Because...", no repetition.
 - If the input is simple notes, ensure the question tests understanding, not just recall.
 
-CRITICAL: SPEED & FORMATTING
-- KEEP IT SHORT. Shorter answers = Faster generation.
-- The correct answer MUST NOT be the longest choice.
-- All 4 options (answer + 3 distractors) MUST have approximately the same length.
-- The BEST way to ensure equal length is to keep ALL options SHORT (1-2 lines max).
+CRITICAL: ANSWER LENGTH MATCHING (HIGHEST PRIORITY)
+- ALL 4 OPTIONS MUST BE THE EXACT SAME LENGTH (within 3-5 words of each other).
+- Count the words in your correct answer. Each distractor MUST have the same word count ±2.
+- If the correct answer is 8 words, ALL distractors must be 6-10 words.
+- NEVER make the correct answer longer than distractors - students will guess it.
+- Target: 5-12 words per answer. If you need more detail, split into two flashcards.
 
-DISTRACTOR QUALITY:
-- Distractors must be PLAUSIBLE and highly SIMILAR to the correct answer.
-- If the answer is a specific date, all distractors must be specific dates.
-- If the answer is a definition, all distractors must be definitions of RELATED concepts.
+DISTRACTOR QUALITY (CRITICAL):
+- Distractors must be PLAUSIBLE and could genuinely confuse someone who hasn't studied.
+- Use REAL concepts from the same topic that sound correct but aren't the right answer.
+- If the answer is a date, ALL distractors must be dates from the same era.
+- If the answer is a name, ALL distractors must be similar names from the same field.
+- If the answer is a definition, ALL distractors must be definitions of RELATED concepts.
 - Distractors must represent "close calls" that a student might actually confuse.
+- AVOID obviously wrong answers that no student would ever pick.
 
 DISTRACTOR EXAMPLES (Optimized):
 Question: "What is the primary function of mitochondria?"
@@ -418,20 +512,19 @@ Question: "What is the primary function of mitochondria?"
 - ✅ "Regulates DNA replication cycles" (Similar length/style)
 - ✅ "Breaks down cellular waste" (Similar length/style)
 
-ANSWER FORMAT:
-Use this JSON structure with equal-quality options:
+REQUIRED JSON OUTPUT FORMAT:
 {
   "flashcards": [
     {
       "id": "1",
-      "question": "...",
-      "answer": "...",
-      "distractors": ["realistic misconception 1", "realistic misconception 2", "realistic misconception 3"]
+      "question": "Study question here",
+      "answer": "Correct answer here",
+      "distractors": ["wrong answer 1", "wrong answer 2", "wrong answer 3"]
     }
   ]
 }
 
-Generate ${bufferedCount} flashcards now. Make them difficult, fair, and educational.`;
+Generate ${bufferedCount} educational flashcards now. Output ONLY the JSON above.`;
 
   try {
     console.log("[API /generate] Starting OpenAI request...");
@@ -570,13 +663,35 @@ Generate ${bufferedCount} flashcards now. Make them difficult, fair, and educati
     }
 
     // Handle different response formats
-    const flashcards = Array.isArray(parsed) 
+    let flashcards = Array.isArray(parsed) 
       ? parsed 
       : parsed.flashcards || parsed.cards || parsed.items || [];
 
-    if (!Array.isArray(flashcards) || flashcards.length === 0) {
-      console.error("[API /generate] No valid flashcards found. Parsed:", parsed);
-      throw new Error("AI did not return valid flashcards array");
+    // CRITICAL: Detect when AI returned wrong content type (e.g., code instead of flashcards)
+    // Check for common "wrong output" patterns
+    if (parsed.modified_file_path || parsed.updated_code || parsed.code || parsed.file_path) {
+      console.error("[API /generate] ❌ AI returned code/file content instead of flashcards. Retrying is recommended.");
+      throw new Error("AI_GENERATION_FAILED");
+    }
+    
+    // If we got an array, verify the first item looks like a flashcard
+    if (Array.isArray(flashcards) && flashcards.length > 0) {
+      const firstItem = flashcards[0];
+      const hasFlashcardStructure = firstItem.question || firstItem.front || firstItem.answer || firstItem.back;
+      if (!hasFlashcardStructure) {
+        console.error("[API /generate] ❌ Array items don't look like flashcards:", Object.keys(firstItem));
+        throw new Error("AI_GENERATION_FAILED");
+      }
+    }
+
+    if (!Array.isArray(flashcards)) {
+      console.error("[API /generate] Response is not an array. Parsed:", JSON.stringify(parsed).slice(0, 200));
+      throw new Error("AI_GENERATION_FAILED");
+    }
+    
+    if (flashcards.length === 0) {
+      console.error("[API /generate] Empty flashcards array. Keys in response:", Object.keys(parsed));
+      throw new Error("AI_EMPTY_RESPONSE");
     }
     
     console.log("[API /generate] Successfully extracted", flashcards.length, "flashcards");
@@ -643,31 +758,36 @@ Generate ${bufferedCount} flashcards now. Make them difficult, fair, and educati
     console.error("[API /generate] Error code:", error.code);
     console.error("[API /generate] Error message:", error.message);
     
-    // Provide more helpful error messages based on error type
+    // Provide user-friendly error messages
+    if (error.message === "AI_GENERATION_FAILED" || error.message === "AI_EMPTY_RESPONSE") {
+      throw new Error("AI_GENERATION_FAILED");
+    }
     if (error.message?.includes("timeout") || error.message?.includes("Request timeout") || error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
-      throw new Error("Connection timeout - AI service took too long. Try again with shorter text or fewer flashcards.");
+      throw new Error("AI_TIMEOUT");
     }
     if (error.message?.includes("ECONNREFUSED") || error.message?.includes("ENOTFOUND") || error.message?.includes("Connection error")) {
-      throw new Error("Cannot connect to AI service. Check your internet connection and try again.");
+      throw new Error("AI_CONNECTION_ERROR");
     }
     if (error.message?.includes("429") || error.status === 429) {
-      throw new Error("Too many requests to AI service. Please wait a moment and try again.");
+      throw new Error("AI_RATE_LIMITED");
     }
     if (error.message?.includes("401") || error.status === 401) {
-      throw new Error("AI service authentication failed. Please contact support.");
+      throw new Error("AI_AUTH_ERROR");
     }
     if (error.message?.includes("500") || error.message?.includes("503") || error.status === 500 || error.status === 503) {
-      throw new Error("AI service is temporarily unavailable. Please try again in a moment.");
+      throw new Error("AI_SERVICE_UNAVAILABLE");
+    }
+    if (error.message?.includes("parse") || error.message?.includes("JSON")) {
+      throw new Error("AI_PARSE_ERROR");
     }
     
-    // Generic fallback with original error message
-    throw new Error(`AI generation failed: ${error.message || "Unknown error occurred. Please try again."}`);
+    // Generic fallback
+    throw new Error("AI_GENERATION_FAILED");
   }
 }
 
 /**
- * POST /api/generate
- * Central AI gateway with premium enforcement
+ * POST Handler - Central AI Gateway
  */
 export async function POST(req: NextRequest) {
   try {
@@ -765,7 +885,9 @@ export async function POST(req: NextRequest) {
       targetGrade,
       subject,
       materialType,
-      outputLanguage
+      outputLanguage,
+      difficulty,
+      body.includeMath
     );
 
     // STEP 5: Increment usage counters (fire-and-forget - don't wait)

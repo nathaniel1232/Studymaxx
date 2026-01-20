@@ -22,7 +22,9 @@ export async function generateFlashcards(
   targetGrade?: string,
   userId?: string,
   materialType: string = "notes",
-  outputLanguage: "auto" | "en" = "auto"
+  outputLanguage: "auto" | "en" = "auto",
+  difficulty: string = "Medium",
+  includeMath: boolean = false
 ): Promise<Flashcard[]> {
   // Get or generate userId
   const effectiveUserId = userId || (typeof window !== 'undefined' 
@@ -37,7 +39,8 @@ export async function generateFlashcards(
       numberOfFlashcards,
       subject,
       targetGrade,
-      difficulty: "Medium", // Default difficulty
+      difficulty,
+      includeMath,
       userId: effectiveUserId,
       materialType: materialType,
       outputLanguage: outputLanguage,

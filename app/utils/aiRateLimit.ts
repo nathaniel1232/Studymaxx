@@ -96,19 +96,19 @@ export function incrementAIUsage(userId: string | null): void {
 
 /**
  * Get remaining generations for display
+ * @returns number for programmatic use, or display string
  */
-export function getRemainingGenerations(userId: string | null, isPremium: boolean): string {
-  const info = checkAIRateLimit(userId, isPremium);
-  
+export function getRemainingGenerations(userId: string | null, isPremium: boolean): number {
   if (isPremium) {
-    return 'Unlimited';
+    return 999; // Unlimited represented as high number
   }
   
   if (!userId) {
-    return 'Sign in required';
+    return 0; // Not signed in = no generations
   }
   
-  return `${info.remaining} left today`;
+  const info = checkAIRateLimit(userId, isPremium);
+  return info.remaining;
 }
 
 /**

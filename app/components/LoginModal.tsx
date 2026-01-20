@@ -38,6 +38,15 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
       setError("Please enter a valid email address");
       return;
     }
+
+    // BLOCK RISKY/TEST EMAILS to prevent bounces
+    const riskyDomains = ['test.com', 'example.com', 'email.com', 'sample.com', 'tempmail.com', 'mailinator.com', '10minutemail.com'];
+    const domain = email.split('@')[1].toLowerCase();
+    
+    if (riskyDomains.includes(domain) || email.includes('test') || email.length < 6) {
+      setError("Please use a valid, permanent email address to ensure you receive your verification link.");
+      return;
+    }
     
     // Magic link mode only needs email
     if (isMagicLink) {
@@ -229,7 +238,7 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
             {/* Header */}
             <div className="text-center mb-8">
               <div className="text-6xl mb-4 pulse-glow">✨</div>
-              <h2 className="text-3xl font-black mb-3 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+              <h2 className="text-3xl font-black mb-3 text-blue-600 dark:text-blue-400">
                 {isMagicLink ? "Magic Link" : (isSignUp ? "Create Account" : "Welcome Back")}
               </h2>
               <p className="text-base font-medium" style={{ color: 'var(--foreground-muted)' }}>
@@ -348,7 +357,7 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
             {/* Skip Button */}
             <button
               onClick={onSkip}
-              className="btn btn-ghost w-full py-2"
+              className="w-full py-2 px-4 rounded-lg font-medium bg-slate-100 text-slate-700 shadow-sm hover:bg-slate-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-150 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
             >
               Skip for now
             </button>
