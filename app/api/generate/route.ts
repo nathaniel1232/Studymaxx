@@ -403,17 +403,38 @@ CRITICAL REQUIREMENTS FOR EASY MODE:
   * "What is 15 + 7?"
 - Distractors: Obviously wrong but topically related (e.g., for "Paris", use "London", "Berlin")`;
   } else if (difficulty === "Hard") {
-    difficultyInstructions = `⚠️ DIFFICULTY LEVEL: HARD (STRICTLY ADVANCED - NO EXCEPTIONS)
-CRITICAL REQUIREMENTS FOR HARD MODE:
-- Questions: MUST use "Analyze", "Evaluate", "Compare", "Synthesize", "Why does...", "How would..."
-- Content: Deep understanding, application to new scenarios, connecting multiple concepts
-- Math: Multi-step problems requiring 3+ operations, word problems with complex setup
-- Require critical thinking and inference from multiple pieces of information
-- Example Hard Questions:
-  * "Analyze how photosynthesis and cellular respiration create a metabolic cycle"
-  * "Evaluate why the French Revolution occurred when it did rather than earlier"
-  * "If a car accelerates from 0 to 60 mph in 5 seconds with varying acceleration, calculate average force"
-- Distractors: Extremely plausible misconceptions that experts might debate`;
+    difficultyInstructions = `⚠️ DIFFICULTY LEVEL: HARD (CHALLENGING BUT ANSWERABLE - NO EXCEPTIONS)
+
+🚫 FORBIDDEN IN HARD MODE (These don't work for flashcards!):
+- "Analyze...", "Evaluate...", "Discuss...", "Compare and contrast..."
+- Open-ended questions without a single correct answer
+- Questions requiring essay-style responses
+
+✅ WHAT HARD MODE ACTUALLY MEANS:
+- Questions that test DEEP KNOWLEDGE with SPECIFIC ANSWERS
+- Tricky details that only someone who studied well would know
+- Questions about exceptions, edge cases, and nuances
+- Multi-part facts combined into one question
+- Questions where all 4 options look very similar/plausible
+
+HARD MODE QUESTION TYPES:
+1. TRICKY SPECIFICS: "What is the EXACT percentage of oxygen in Earth's atmosphere?" (Answer: 20.95%, not just "about 21%")
+2. EXCEPTIONS TO RULES: "Which of these is an exception to [common rule]?"
+3. COMBINED KNOWLEDGE: "In what year did [Event A] occur, which directly led to [Event B]?"
+4. NUANCED DIFFERENCES: "What distinguishes [Concept A] from [Concept B]?" (with a specific distinguishing factor as answer)
+5. LESSER-KNOWN FACTS: Test obscure but important details from the material
+6. PRECISE TERMINOLOGY: "What is the scientific term for [common description]?"
+
+Example GOOD Hard Questions:
+* "What specific enzyme initiates the first step of glycolysis?" (not "Explain glycolysis")
+* "In what exact year did Norway gain independence from Sweden?" (not "Analyze Norwegian independence")
+* "What is the precise formula for calculating gravitational potential energy?" (not "Evaluate gravity")
+* "Which element has the highest electronegativity?" (specific answer: Fluorine)
+
+DISTRACTORS FOR HARD MODE:
+- Must be EXTREMELY plausible - things students commonly confuse
+- Should include common wrong answers students actually give
+- All options should be the same format and similar length`;
   } else {
     // Medium
     difficultyInstructions = `⚠️ DIFFICULTY LEVEL: MEDIUM (STRICTLY STANDARD APPLICATION)
