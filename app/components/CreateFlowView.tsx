@@ -872,7 +872,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
           <div className="mb-4">
           <button
             onClick={handleBack}
-            className="mb-2 px-4 py-2 text-sm font-bold rounded-xl transition-all flex items-center gap-2 shadow-md hover:scale-105 hover:shadow-lg"
+            className="mb-2 px-4 py-2 text-sm font-bold rounded-md transition-all flex items-center gap-2 shadow-md hover:scale-105 hover:shadow-lg"
             style={{
               background: 'var(--card)',
               color: 'var(--foreground)',
@@ -944,26 +944,20 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                 </div>
               )}
 
-              <div>
-                <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--foreground)' }}>
-                  {t("what_subject")}
+              <div className="mb-3">
+                <h2 className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>
+                  Choose subject
                 </h2>
-                <p className="text-sm text-muted-foreground">
-                  {t("helps_create")}
-                </p>
               </div>
 
               {/* Subject selection buttons */}
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
-                  {t("choose_common")}
-                </p>
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                   {getSubjectExamples().map((example) => (
                     <Card
                       key={example.name}
                       onClick={() => setSubject(example.name)}
-                      className="cursor-pointer transition-all duration-200 border-2 rounded-2xl overflow-hidden"
+                      className="cursor-pointer transition-all duration-200 border-2 rounded-md overflow-hidden"
                       style={{
                         background: subject === example.name 
                           ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
@@ -990,7 +984,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         }
                       }}
                     >
-                      <CardContent className="p-4 flex items-center justify-between">
+                      <CardContent className="p-3 flex items-center justify-between">
                         <span className="font-semibold text-base" style={{ color: subject === example.name ? 'white' : 'var(--foreground)' }}>{example.name}</span>
                         {subject === example.name && (
                           <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
@@ -1002,7 +996,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   {/* Other button */}
                   <Card
                     onClick={() => setSubject("Other")}
-                    className="cursor-pointer transition-all duration-200 md:col-span-3 lg:col-span-3 border-2 rounded-2xl overflow-hidden"
+                    className="cursor-pointer transition-all duration-200 md:col-span-3 lg:col-span-3 border-2 rounded-md overflow-hidden"
                     style={{
                       background: subject === "Other"
                         ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
@@ -1043,7 +1037,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
               <button
                 onClick={handleContinueFromStep1}
                 disabled={!subject.trim()}
-                className="w-full py-4 rounded-xl text-lg font-black bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-[0_0_30px_rgba(20,184,166,0.6)] hover:from-emerald-400 hover:via-teal-400 hover:to-cyan-400 hover:shadow-[0_0_40px_rgba(20,184,166,0.8)] hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-md text-lg font-black bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-[0_0_30px_rgba(20,184,166,0.6)] hover:from-emerald-400 hover:via-teal-400 hover:to-cyan-400 hover:shadow-[0_0_40px_rgba(20,184,166,0.8)] hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <span>Continue</span>
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1055,14 +1049,11 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
           {/* STEP 2: Add Learning Material */}
           {currentStep === 2 && (
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--foreground)' }}>
-                  {t("what_studying_from")}
+            <div className="space-y-3">
+              <div className="mb-3">
+                <h2 className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>
+                  Add material
                 </h2>
-                <p className="text-sm text-muted-foreground">
-                  {t("add_material_for")} <Badge className="bg-slate-800 text-white dark:bg-white dark:text-slate-900 border-0">{subject}</Badge>
-                </p>
               </div>
 
               {/* Material type selection */}
@@ -1071,7 +1062,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   {/* Notes (Free) */}
                   <Card
                     onClick={() => setSelectedMaterial("notes")}
-                    className="cursor-pointer transition-all duration-300 border-2 rounded-3xl overflow-hidden"
+                    className="cursor-pointer transition-all duration-300 border-2 rounded-md overflow-hidden"
                     style={{
                       background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.12) 100%)',
                       borderColor: 'rgba(6, 182, 212, 0.4)',
@@ -1093,19 +1084,19 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   >
                     <CardContent className="flex items-center justify-between p-5">
                       <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400/20 to-cyan-500/15 flex items-center justify-center text-3xl">
+                        <div className="w-14 h-14 rounded-md bg-gradient-to-br from-cyan-400/20 to-cyan-500/15 flex items-center justify-center text-3xl">
                           📝
                         </div>
                         <div>
                           <span className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
-                            {t("notes")}
+                            Notes
                           </span>
-                          <span className="text-sm block font-normal mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
-                            {t("paste_or_type_text")}
+                          <span className="text-xs block mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                            Paste text
                           </span>
                         </div>
                       </div>
-                      <span className="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-xl border border-emerald-200 dark:border-emerald-800">
+                      <span className="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-md border border-emerald-200 dark:border-emerald-800">
                         ✓ Free
                       </span>
                     </CardContent>
@@ -1117,7 +1108,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         if (!isPremium) setShowPremiumModal(true);
                         else setSelectedMaterial("docx");
                     }}
-                    className="cursor-pointer transition-all duration-300 border-2 rounded-3xl overflow-hidden"
+                    className="cursor-pointer transition-all duration-300 border-2 rounded-md overflow-hidden"
                     style={{
                       background: isPremium 
                         ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.12) 100%)'
@@ -1158,7 +1149,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   >
                     <CardContent className="flex items-center justify-between p-5">
                       <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style={{ 
+                        <div className="w-14 h-14 rounded-md flex items-center justify-center text-3xl" style={{ 
                           background: isPremium ? 'linear-gradient(to-br, rgba(6, 182, 212, 0.2), rgba(8, 145, 178, 0.15))' : 'var(--muted)'
                         }}>
                           📄
@@ -1167,17 +1158,17 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           <span className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
                             Word Document
                           </span>
-                          <span className="text-sm block font-normal mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
-                            {t("upload_docx_file")}
+                          <span className="text-xs block mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                            Upload .docx
                           </span>
                         </div>
                       </div>
                       {isPremium ? (
-                        <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 text-xs font-bold rounded-xl border border-cyan-200 dark:border-cyan-800">
+                        <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 text-xs font-bold rounded-md border border-cyan-200 dark:border-cyan-800">
                           ✓ Active
                         </span>
                       ) : (
-                        <span className="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold rounded-xl border border-amber-200 dark:border-amber-800">
+                        <span className="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold rounded-md border border-amber-200 dark:border-amber-800">
                           🔒 Premium
                         </span>
                       )}
@@ -1190,7 +1181,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         if (!isPremium) setShowPremiumModal(true);
                         else setSelectedMaterial("image");
                     }}
-                    className="cursor-pointer transition-all duration-300 border-2 rounded-3xl overflow-hidden"
+                    className="cursor-pointer transition-all duration-300 border-2 rounded-md overflow-hidden"
                     style={{
                       background: isPremium 
                         ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.12) 100%)'
@@ -1231,7 +1222,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   >
                     <CardContent className="flex items-center justify-between p-5">
                       <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style={{ 
+                        <div className="w-14 h-14 rounded-md flex items-center justify-center text-3xl" style={{ 
                           background: isPremium ? 'linear-gradient(to-br, rgba(6, 182, 212, 0.2), rgba(8, 145, 178, 0.15))' : 'var(--muted)'
                         }}>
                           🖼️
@@ -1240,17 +1231,17 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           <span className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
                             Image
                           </span>
-                          <span className="text-sm block font-normal mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
-                            Upload photo or screenshot
+                          <span className="text-xs block mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                            Upload image
                           </span>
                         </div>
                       </div>
                       {isPremium ? (
-                        <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 text-xs font-bold rounded-xl border border-cyan-200 dark:border-cyan-800">
+                        <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 text-xs font-bold rounded-md border border-cyan-200 dark:border-cyan-800">
                           ✓ Active
                         </span>
                       ) : (
-                        <span className="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold rounded-xl border border-amber-200 dark:border-amber-800">
+                        <span className="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold rounded-md border border-amber-200 dark:border-amber-800">
                           🔒 Premium
                         </span>
                       )}
@@ -1315,7 +1306,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         />
                         <label
                           htmlFor="docx-upload"
-                          className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 group ${
+                          className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer transition-all duration-200 group ${
                             uploadedFile 
                               ? "bg-green-50/50 dark:bg-green-900/10 border-green-400/50 dark:border-green-800" 
                               : "bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-600"
@@ -1361,7 +1352,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         />
                          <label
                           htmlFor="image-upload"
-                          className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 group ${
+                          className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer transition-all duration-200 group ${
                             uploadedFile 
                               ? "bg-green-50/50 dark:bg-green-900/10 border-green-400/50 dark:border-green-800" 
                               : "bg-slate-50/50 dark:bg-slate-900/50 border-slate-300 dark:border-slate-700 hover:border-purple-400 dark:hover:border-purple-600"
@@ -1395,8 +1386,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
                   {/* Language selection - only show when we have text */}
                   {textInput.length >= 50 && (
-                    <div className="mt-4 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700">
-                      <div className="mb-3 flex items-baseline justify-between">
+                    <div className="mt-3 p-3 bg-white dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-700">
+                      <div className="mb-2 flex items-baseline justify-between">
                         <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
                           Output Language
                         </h4>
@@ -1409,7 +1400,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       <div className="grid grid-cols-2 gap-2">
                         <Card
                           onClick={() => setOutputLanguage("auto")}
-                          className="cursor-pointer border-2 transition-all duration-200 rounded-xl overflow-hidden"
+                          className="cursor-pointer border-2 transition-all duration-200 rounded-md overflow-hidden"
                           style={{
                             background: outputLanguage === "auto"
                               ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
@@ -1445,7 +1436,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
                         <Card
                           onClick={() => setOutputLanguage("en")}
-                          className="cursor-pointer border-2 transition-all duration-200 rounded-xl overflow-hidden"
+                          className="cursor-pointer border-2 transition-all duration-200 rounded-md overflow-hidden"
                           style={{
                             background: outputLanguage === "en"
                               ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
@@ -1512,20 +1503,17 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
           {/* STEP 3: Choose Difficulty & Flashcard Count */}
           {currentStep === 3 && (
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--foreground)' }}>
-                  Customize Your Study Set
+            <div className="space-y-3">
+              <div className="mb-3">
+                <h2 className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>
+                  Set difficulty & card count
                 </h2>
-                <p className="text-xs text-muted-foreground">
-                  Higher counts with harder difficulty = better exam performance
-                </p>
               </div>
 
               {/* Difficulty Selection */}
               <div>
                  <label className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
-                   {t("difficulty_level")}
+                   Difficulty
                  </label>
                 
                 <div className="grid grid-cols-3 gap-2 mt-2">
@@ -1544,7 +1532,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         }
                         setDifficulty(level);
                       }}
-                      className="p-3 rounded-xl border-2 transition-all duration-200 font-medium text-sm"
+                      className="p-2.5 rounded-md border-2 transition-all duration-200 font-medium text-sm"
                       style={{
                         background: difficulty === level 
                           ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
@@ -1595,8 +1583,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     { count: 10, label: "10 cards", grade: "Pass", locked: false, desc: null },
                     { count: 15, label: "15 cards", grade: "Good", locked: false, desc: null },
                     { count: 20, label: "20 cards", grade: "Very Good", locked: false, desc: null },
-                    { count: 25, label: "25 cards", grade: "Excellent", locked: !isPremium, desc: "More likely to achieve better grades" },
-                    { count: 30, label: "30 cards", grade: "Top Grade", locked: !isPremium, desc: "Comprehensive coverage for top results" }
+                    { count: 25, label: "25 cards", grade: "Excellent", locked: !isPremium, desc: "Better grades" },
+                    { count: 30, label: "30 cards", grade: "Top Grade", locked: !isPremium, desc: "Top results" }
                   ].map(({ count, label, grade: gradeText, locked, desc }) => {
                     // Map count to grade letter for backend
                     const gradeMap: Record<number, Grade> = { 10: "E", 15: "D", 20: "C", 25: "B", 30: "A" };
@@ -1614,7 +1602,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                             setTargetGrade(gradeValue);
                           }
                         }}
-                        className="rounded-xl border-2 transition-all duration-200"
+                        className="rounded-md border-2 transition-all duration-200"
                         style={{
                           background: isSelected 
                             ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
@@ -1624,7 +1612,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           borderColor: isSelected ? '#0891b2' : locked ? '#475569' : 'rgba(6, 182, 212, 0.3)',
                           color: isSelected || locked ? 'white' : 'var(--foreground)',
                           boxShadow: isSelected ? '0 4px 15px rgba(6, 182, 212, 0.4)' : '0 2px 8px rgba(0, 0, 0, 0.05)',
-                          padding: desc ? '0.75rem' : '0.75rem'
+                          padding: desc ? '0.65rem' : '0.65rem'
                         }}
                         onMouseEnter={(e) => {
                           if (!isSelected && !locked) {
@@ -1676,7 +1664,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       setIncludeMathProblems(!includeMathProblems);
                     }
                   }}
-                  className="p-4 rounded-2xl border-2 cursor-pointer transition-all hover:scale-[1.01]" 
+                  className="p-4 rounded-md border-2 cursor-pointer transition-all hover:scale-[1.01]" 
                   style={{ 
                     background: includeMathProblems && isPremium 
                       ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' 
@@ -1796,7 +1784,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                    return (
                       <div 
                         key={idx} 
-                        className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-500 ${
+                        className={`flex items-center gap-4 p-4 rounded-md border transition-all duration-500 ${
                             isDone 
                                ? "bg-green-50/50 border-green-100 dark:bg-green-900/10 dark:border-green-800"
                                : isActive
@@ -1824,7 +1812,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
               </div>
 
               {/* Fun Fact Card */}
-              <div className="mt-8 p-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-800 dark:to-slate-800/50 rounded-2xl border border-amber-100/50 dark:border-slate-700 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+              <div className="mt-8 p-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-800 dark:to-slate-800/50 rounded-md border border-amber-100/50 dark:border-slate-700 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
                 <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                    <svg className="w-16 h-16 text-amber-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
                 </div>

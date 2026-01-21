@@ -142,27 +142,24 @@ export default function PremiumModal({
       onClick={onClose}
     >
       <div 
-        className="relative w-full max-w-sm md:max-w-md animate-scale-in rounded-2xl shadow-2xl bg-white dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-700 overflow-hidden ring-1 ring-white/10"
+        className="relative w-full max-w-sm md:max-w-md animate-scale-in rounded-md shadow-2xl bg-white dark:bg-[#09090b] border border-zinc-200 dark:border-zinc-700 overflow-hidden ring-1 ring-white/10"
         onClick={(e) => e.stopPropagation()}
         style={{
           boxShadow: '0 0 0 100vmax rgba(0, 0, 0, 0.8)' // Fallback to ensure everything behind is dark
         }}
       >
         {/* Header - Solid & Clean */}
-        <div className="bg-violet-50 dark:bg-violet-950 border-b border-violet-200 dark:border-violet-900 p-3 flex items-start justify-between">
+        <div className="bg-violet-50 dark:bg-violet-950 border-b border-violet-200 dark:border-violet-900 p-2.5 flex items-start justify-between">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-               <div className="w-7 h-7 rounded-lg bg-violet-700 flex items-center justify-center text-white text-sm">
+            <div className="flex items-center gap-2 mb-0.5">
+               <div className="w-6 h-6 rounded-lg bg-violet-700 flex items-center justify-center text-white text-sm">
                   🎓
                </div>
                <span className="text-xs font-bold tracking-wider text-violet-700 dark:text-violet-400 uppercase">Premium</span>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
               Unlimited Study Access
             </h2>
-            <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">
-              Unlimited AI generation & tools.
-            </p>
           </div>
 
           <button
@@ -177,7 +174,7 @@ export default function PremiumModal({
         </div>
 
         {/* Content */}
-        <div className="p-3 bg-white dark:bg-slate-900 flex flex-col gap-2">
+        <div className="p-2.5 bg-white dark:bg-slate-900 flex flex-col gap-2">
           
           {/* Billing Switch - Yearly temporarily hidden */}
           <div className="flex justify-center mb-1">
@@ -217,7 +214,7 @@ export default function PremiumModal({
                 <span className="text-violet-700 dark:text-violet-400 text-xs font-bold">✓</span>
               </div>
               <p className="text-xs text-gray-600 dark:text-gray-300">
-                <span className="font-semibold text-gray-900 dark:text-white">Unlimited Generation</span> – Create flashcards from any note.
+                <span className="font-semibold text-gray-900 dark:text-white">Unlimited</span> – Create any amount
               </p>
             </div>
             <div className="flex items-start gap-2">
@@ -225,13 +222,13 @@ export default function PremiumModal({
                 <span className="text-violet-700 dark:text-violet-400 text-xs font-bold">✓</span>
               </div>
               <p className="text-xs text-gray-600 dark:text-gray-300">
-                <span className="font-semibold text-gray-900 dark:text-white">Smart Processing</span> – DOCX and images to quizzes.
+                <span className="font-semibold text-gray-900 dark:text-white">Smart</span> – DOCX & images
               </p>
             </div>
           </div>
 
           {/* Pricing Box */}
-          <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 mx-1 border border-slate-200 dark:border-slate-700 flex flex-col items-center">
+          <div className="bg-slate-50 dark:bg-slate-800 rounded-md p-3 mx-1 border border-slate-200 dark:border-slate-700 flex flex-col items-center">
              <div className="flex items-baseline gap-1">
                 <span className="text-3xl font-extrabold text-gray-900 dark:text-white">
                   {billingInterval === 'year' ? pricing.yearlyDisplay : pricing.display}
@@ -252,9 +249,9 @@ export default function PremiumModal({
           </div>
 
           {/* Student Value Message */}
-          <div className="mx-1 p-3 bg-gradient-to-r from-cyan-500/10 to-teal-500/10 rounded-xl border border-cyan-500/20">
+          <div className="mx-1 p-2.5 bg-gradient-to-r from-cyan-500/10 to-teal-500/10 rounded-md border border-cyan-500/20">
             <p className="text-xs text-center font-medium text-cyan-700 dark:text-cyan-400">
-              💡 Students who use flashcards get <span className="font-bold">2x better exam scores</span>
+              💡 <span className="font-bold">2x better exam scores</span>
             </p>
           </div>
 
@@ -265,7 +262,7 @@ export default function PremiumModal({
           )}
 
           {isPremium ? (
-            <div className="w-full py-3 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-bold rounded-xl text-center text-sm shadow-lg">
+            <div className="w-full py-3 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-bold rounded-md text-center text-sm shadow-lg">
               ✅ Active Premium Member
             </div>
           ) : (
@@ -282,7 +279,7 @@ export default function PremiumModal({
                   }
                 }}
                 disabled={isLoading}
-                className="w-full py-4 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 text-white font-bold rounded-xl shadow-xl shadow-purple-500/40 border-2 border-purple-400/50 hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-base"
+                className="w-full py-3.5 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 text-white font-bold rounded-md shadow-xl shadow-purple-500/40 border-2 border-purple-400/50 hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-base"
               >
                 {isLoading ? (
                   <>

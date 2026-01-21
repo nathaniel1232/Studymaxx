@@ -56,7 +56,7 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
     <div className="relative" ref={dropdownRef} style={{ zIndex: 1001 }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 px-4 py-2 rounded-xl transition-all hover:scale-105 hover:shadow-lg"
+        className="flex items-center gap-3 px-4 py-2 rounded-md transition-all hover:scale-105 hover:shadow-lg"
         style={{ 
           background: 'var(--surface)', 
           border: '2px solid var(--border)',
@@ -104,7 +104,7 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
       {/* Dropdown menu */}
       {isOpen && (
         <div 
-          className="absolute right-0 mt-2 w-64 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in slide-in-from-top-2"
+          className="absolute right-0 mt-2 w-64 rounded-md overflow-hidden shadow-2xl animate-in fade-in slide-in-from-top-2"
           style={{ 
             background: 'var(--surface-elevated)', 
             border: '2px solid var(--border)',
@@ -155,7 +155,7 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
                   onNavigateSettings();
                 }
               }}
-              className="w-full px-4 py-3 rounded-xl text-left text-sm font-medium flex items-center gap-3 transition-colors"
+              className="w-full px-4 py-3 rounded-md text-left text-sm font-medium flex items-center gap-3 transition-colors"
               style={{ color: 'var(--foreground)' }}
               onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface)'}
               onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
@@ -175,7 +175,7 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
                     onUpgradePremium();
                   }
                 }}
-                className="w-full px-4 py-3 rounded-xl text-left text-sm font-bold flex items-center gap-3 transition-colors text-yellow-600 dark:text-yellow-400"
+                className="w-full px-4 py-3 rounded-md text-left text-sm font-bold flex items-center gap-3 transition-colors text-yellow-600 dark:text-yellow-400"
                 onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface)'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
@@ -190,7 +190,7 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
 
             <button
               onClick={handleSignOut}
-              className="w-full px-4 py-3 rounded-xl text-left text-sm font-medium flex items-center gap-3 transition-colors text-red-600 dark:text-red-400"
+              className="w-full px-4 py-3 rounded-md text-left text-sm font-medium flex items-center gap-3 transition-colors text-red-600 dark:text-red-400"
               onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface)'}
               onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >

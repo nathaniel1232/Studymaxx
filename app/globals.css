@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
-/* Tailwind v4 dark mode configuration */
+/* Tailwind v4 configuration */
 @theme {
   --color-*: initial;
-  --radius-*: initial;
+  --radius-md: 0.375rem;
 }
 
 /* ========================================
@@ -178,7 +178,7 @@ body {
 .card {
   background: var(--surface);
   border: 2px solid var(--border);
-  border-radius: 1.5rem;
+  border-radius: 0.375rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   padding: 3rem;
@@ -187,7 +187,7 @@ body {
 .card-hover {
   background: var(--surface);
   border: 2px solid var(--border);
-  border-radius: 1.5rem;
+  border-radius: 0.375rem;
   padding: 3rem;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -203,7 +203,7 @@ body {
 
 .card-elevated {
   background: var(--surface-elevated);
-  border-radius: 2rem;
+  border-radius: 0.375rem;
   border: 2px solid var(--divider);
   padding: 4rem;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
@@ -223,7 +223,7 @@ body {
   padding: 1.25rem 3rem;
   font-weight: 700;
   font-size: 1.1rem;
-  border-radius: 1rem;
+  border-radius: 0.375rem;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   cursor: pointer;
   border: none;
@@ -318,7 +318,7 @@ body {
   padding: 1rem 1.5rem;
   font-weight: 700;
   font-size: 1rem;
-  border-radius: var(--radius-xl);
+  border-radius: 0.375rem;
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   cursor: pointer;
   border: none;
@@ -382,7 +382,7 @@ body {
 .option-card {
   background: var(--surface);
   border: 2px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: 0.375rem;
   padding: 1rem;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -420,7 +420,7 @@ body {
   padding: 1.5rem 1.75rem;
   background: var(--surface);
   border: 2px solid var(--border);
-  border-radius: 1.25rem;
+  border-radius: 0.375rem;
   color: var(--foreground);
   transition: all 0.2s ease;
   outline: none;
@@ -473,7 +473,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-lg);
+  border-radius: 0.375rem;
   box-shadow: var(--shadow-sm);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;

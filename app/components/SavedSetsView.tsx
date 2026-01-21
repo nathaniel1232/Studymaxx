@@ -146,7 +146,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
           <div className="flex items-center justify-between mb-10">
             <button
               onClick={onBack}
-              className="px-5 py-2.5 bg-gradient-to-r from-slate-700 to-slate-600 text-white font-bold rounded-xl hover:from-slate-600 hover:to-slate-500 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+              className="px-5 py-2.5 bg-gradient-to-r from-slate-700 to-slate-600 text-white font-bold rounded-md hover:from-slate-600 hover:to-slate-500 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
             >
               <ArrowIcon direction="left" size={16} />
               <span>{t("back")}</span>
@@ -196,7 +196,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
             {filteredSets.map((set) => (
               <div
                 key={set.id}
-                className="group relative p-6 bg-slate-800 dark:bg-slate-800/50 hover:bg-slate-700/80 rounded-xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
+                className="group relative p-6 bg-slate-800 dark:bg-slate-800/50 hover:bg-slate-700/80 rounded-md transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -219,14 +219,14 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                   <div className="flex gap-3 ml-4 items-center">
                     <button
                       onClick={() => onLoadSet(set.flashcards, set.id)}
-                      className="px-6 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                      className="px-6 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-bold rounded-md transition-all shadow-md hover:shadow-lg flex items-center gap-2"
                     >
                       <span className="text-xl">🎓</span>
                       {t("study")}
                     </button>
                     <button
                       onClick={() => handleDelete(set.id)}
-                      className="p-3 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
+                      className="p-3 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-all"
                       title={t("delete")}
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -245,7 +245,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
       {/* Delete Folder Confirmation Modal */}
       {deletingFolderId && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 px-4" onClick={() => setDeletingFolderId(null)}>
-          <div className="bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full p-8 border border-slate-700" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-slate-900 rounded-md shadow-2xl max-w-md w-full p-8 border border-slate-700" onClick={(e) => e.stopPropagation()}>
             <div className="text-center mb-6">
               <div className="text-5xl mb-4">⚠️</div>
               <h3 className="text-2xl font-black text-white mb-2">
@@ -260,13 +260,13 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
             <div className="flex gap-3">
               <button
                 onClick={() => setDeletingFolderId(null)}
-                className="flex-1 px-6 py-4 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl transition-all"
+                className="flex-1 px-6 py-4 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-md transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDeleteFolder}
-                className="flex-1 px-6 py-4 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-bold rounded-2xl transition-all shadow-lg shadow-red-500/20"
+                className="flex-1 px-6 py-4 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-bold rounded-md transition-all shadow-lg shadow-red-500/20"
               >
                 Delete Folder
               </button>

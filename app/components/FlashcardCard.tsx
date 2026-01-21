@@ -60,11 +60,11 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
     >
       <div
         style={getCardStyle()}
-        className="relative w-full min-h-[280px] md:min-h-[320px] rounded-3xl md:rounded-4xl p-8 md:p-12 flex flex-col items-center justify-center transition-all duration-500"
+        className="relative w-full min-h-[280px] md:min-h-[320px] rounded-md md:rounded-4xl p-8 md:p-12 flex flex-col items-center justify-center transition-all duration-500"
       >
         {/* Rating Badge */}
         {currentRating && (
-          <div className={`absolute top-4 md:top-6 right-4 md:right-6 px-4 md:px-5 py-2 rounded-xl md:rounded-2xl text-xs md:text-sm font-black shadow-2xl ${
+          <div className={`absolute top-4 md:top-6 right-4 md:right-6 px-4 md:px-5 py-2 rounded-md md:rounded-md text-xs md:text-sm font-black shadow-2xl ${
             currentRating === 'good' ? 'bg-white/95 text-emerald-700 ring-2 ring-emerald-400' :
             currentRating === 'ok' ? 'bg-white/95 text-amber-700 ring-2 ring-amber-400' :
             'bg-white/95 text-rose-700 ring-2 ring-rose-400'
@@ -98,7 +98,7 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
               console.log('🔴 BAD clicked for card:', card.id);
               onRate(card.id, 'bad');
             }}
-            className={`group relative px-6 md:px-10 py-3 md:py-6 rounded-2xl md:rounded-3xl font-bold md:font-black text-sm md:text-xl transition-all duration-500 ease-out shadow-lg md:shadow-xl hover:shadow-xl md:hover:shadow-2xl overflow-hidden active:scale-95 ${
+            className={`group relative px-6 md:px-10 py-3 md:py-6 rounded-md md:rounded-md font-bold md:font-black text-sm md:text-xl transition-all duration-500 ease-out shadow-lg md:shadow-xl hover:shadow-xl md:hover:shadow-2xl overflow-hidden active:scale-95 ${
               currentRating === 'bad' 
                 ? 'bg-gradient-to-br from-rose-500 via-red-500 to-rose-600 text-white scale-105 md:scale-110 shadow-rose-500/50' 
                 : 'bg-white dark:bg-gray-800 text-rose-600 dark:text-rose-400 hover:bg-gradient-to-br hover:from-rose-50 hover:to-red-50 dark:hover:from-rose-950/30 dark:hover:to-red-950/30 hover:scale-105 md:hover:scale-110 hover:-translate-y-1 md:hover:-translate-y-2 shadow-rose-200/50 hover:shadow-rose-300/60'
@@ -117,7 +117,7 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
               console.log('🟡 OK clicked for card:', card.id);
               onRate(card.id, 'ok');
             }}
-            className={`group relative px-6 md:px-10 py-3 md:py-6 rounded-2xl md:rounded-3xl font-bold md:font-black text-sm md:text-xl transition-all duration-500 ease-out shadow-lg md:shadow-xl hover:shadow-xl md:hover:shadow-2xl overflow-hidden active:scale-95 ${
+            className={`group relative px-6 md:px-10 py-3 md:py-6 rounded-md md:rounded-md font-bold md:font-black text-sm md:text-xl transition-all duration-500 ease-out shadow-lg md:shadow-xl hover:shadow-xl md:hover:shadow-2xl overflow-hidden active:scale-95 ${
               currentRating === 'ok' 
                 ? 'bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600 text-white scale-105 md:scale-110 shadow-amber-500/50' 
                 : 'bg-white dark:bg-gray-800 text-amber-600 dark:text-amber-400 hover:bg-gradient-to-br hover:from-amber-50 hover:to-yellow-50 dark:hover:from-amber-950/30 dark:hover:to-yellow-950/30 hover:scale-105 md:hover:scale-110 hover:-translate-y-1 md:hover:-translate-y-2 shadow-amber-200/50 hover:shadow-amber-300/60'
@@ -136,7 +136,7 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
               console.log('🟢 GOOD clicked for card:', card.id);
               onRate(card.id, 'good');
             }}
-            className={`group relative px-6 md:px-10 py-3 md:py-6 rounded-2xl md:rounded-3xl font-bold md:font-black text-sm md:text-xl transition-all duration-500 ease-out shadow-lg md:shadow-xl hover:shadow-xl md:hover:shadow-2xl overflow-hidden active:scale-95 ${
+            className={`group relative px-6 md:px-10 py-3 md:py-6 rounded-md md:rounded-md font-bold md:font-black text-sm md:text-xl transition-all duration-500 ease-out shadow-lg md:shadow-xl hover:shadow-xl md:hover:shadow-2xl overflow-hidden active:scale-95 ${
               currentRating === 'good' 
                 ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-emerald-600 text-white scale-105 md:scale-110 shadow-emerald-500/50'
                 : 'bg-white dark:bg-gray-800 text-emerald-600 dark:text-emerald-400 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-green-50 dark:hover:from-emerald-950/30 dark:hover:to-green-950/30 hover:scale-105 md:hover:scale-110 hover:-translate-y-1 md:hover:-translate-y-2 shadow-emerald-200/50 hover:shadow-emerald-300/60'

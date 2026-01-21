@@ -625,7 +625,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
               {/* Notes Option - Recommended */}
               <button
                 onClick={() => setSelectedMaterial("notes")}
-                className="group relative p-8 border-2 border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-2xl hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+                className="group relative p-8 border-2 border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
               >
                 <div className="absolute -top-3 right-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md">
                   Start here
@@ -643,7 +643,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                   if (handleLockedFeature('pdf', 'PDF uploads')) return;
                   setSelectedMaterial("pdf");
                 }}
-                className="group relative p-8 border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl hover:border-blue-300 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+                className="group relative p-8 border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-md hover:border-blue-300 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
               >
                 {!isPremium && (
                   <div className="absolute -top-3 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
@@ -663,7 +663,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                   if (handleLockedFeature('youtube', 'YouTube transcripts')) return;
                   setSelectedMaterial("youtube");
                 }}
-                className="group relative p-8 border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl hover:border-blue-300 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+                className="group relative p-8 border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-md hover:border-blue-300 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
               >
                 {!isPremium && (
                   <div className="absolute -top-3 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
@@ -683,7 +683,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                   if (handleLockedFeature('image', 'Image OCR')) return;
                   setSelectedMaterial("image");
                 }}
-                className="group relative p-8 border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl hover:border-blue-300 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+                className="group relative p-8 border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-md hover:border-blue-300 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
               >
                 {!isPremium && (
                   <div className="absolute -top-3 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
@@ -739,7 +739,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                   placeholder={selectedMaterial === "notes" 
                     ? "Paste your notes here..." 
                     : "Paste YouTube URL (e.g., https://youtube.com/watch?v=...)"}
-                  className="w-full h-56 px-5 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white resize-none text-base transition-all"
+                  className="w-full h-56 px-5 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white resize-none text-base transition-all"
                   autoFocus
                 />
                 
@@ -778,7 +778,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                       {...(isPremium && { multiple: true })}
                       onChange={handleImageUpload}
                       disabled={isLoading}
-                      className="w-full px-4 py-3 border border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50 dark:bg-gray-900 text-sm"
+                      className="w-full px-4 py-3 border border-dashed border-gray-300 dark:border-gray-700 rounded-md cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50 dark:bg-gray-900 text-sm"
                     />
                   </div>
                 )}
@@ -787,7 +787,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                 {uploadedFiles.length > 0 && (
                   <div className="mt-4 space-y-2">
                     {uploadedFiles.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                      <div key={index} className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
                         <span className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
                           <span>📎</span>
                           <span>{file.name}</span>
@@ -816,7 +816,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                   Upload Images for OCR
                 </label>
                 
-                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
                   <p className="text-sm text-blue-800 dark:text-blue-200 mb-2 font-medium">
                     📸 Multi-Image Upload (Images Only)
                   </p>
@@ -843,7 +843,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                   multiple={isPremium}
                   onChange={handleMultiImageSelect}
                   disabled={isLoading}
-                  className="w-full px-5 py-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50 dark:bg-gray-900"
+                  className="w-full px-5 py-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-md cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50 dark:bg-gray-900"
                 />
                 
                 {/* Show selected images (before processing) */}
@@ -863,7 +863,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                     </div>
                     <div className="space-y-2">
                       {selectedImages.map((image, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
+                        <div key={index} className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">
                           <span className="text-sm text-amber-800 dark:text-amber-200 flex items-center gap-2">
                             <span>📎</span>
                             <span>{image.name}</span>
@@ -889,7 +889,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                       type="button"
                       onClick={handleProcessImages}
                       disabled={isLoading || selectedImages.length === 0}
-                      className={`w-full mt-4 px-6 py-4 font-bold rounded-xl transition-all shadow-lg text-white flex items-center justify-center gap-2 ${
+                      className={`w-full mt-4 px-6 py-4 font-bold rounded-md transition-all shadow-lg text-white flex items-center justify-center gap-2 ${
                         isLoading 
                           ? "bg-gradient-to-r from-blue-500 to-purple-500 cursor-wait"
                           : isImageExtractionComplete
@@ -916,7 +916,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                     </button>
                     
                     {/* Progress indicator - shows status and prevents confusion */}
-                    <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                    <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
                       {isLoading && (
                         <div className="space-y-2">
                           <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">
@@ -983,7 +983,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                   {...(isPremium && { multiple: true })}
                   onChange={handleImageUpload}
                   disabled={isLoading}
-                  className="w-full px-5 py-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50 dark:bg-gray-900"
+                  className="w-full px-5 py-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-md cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50 dark:bg-gray-900"
                 />
                 <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                   Supports: PDF, DOCX, TXT, PNG, JPG (max 10MB per file)
@@ -993,7 +993,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                 {uploadedFiles.length > 0 && (
                   <div className="mt-4 space-y-2">
                     {uploadedFiles.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                      <div key={index} className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
                         <span className="text-sm text-green-700 dark:text-green-300 flex items-center gap-2">
                           <span>✓</span>
                           <span>{file.name}</span>
@@ -1030,7 +1030,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                       key={level}
                       type="button"
                       onClick={() => setDifficulty(level)}
-                      className={`px-4 py-3 rounded-xl font-medium transition-all ${
+                      className={`px-4 py-3 rounded-md font-medium transition-all ${
                         difficulty === level
                           ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
                           : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
@@ -1081,14 +1081,14 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
             </div>
 
             {error && (
-              <div className="mb-12 p-8 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-2xl">
+              <div className="mb-12 p-8 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-md">
                 <p className="text-lg text-red-700 dark:text-red-300 font-bold">{error}</p>
               </div>
             )}
 
             {/* Warning if extraction not complete for images */}
             {selectedImages.length > 0 && !isImageExtractionComplete && !isLoading && (
-              <div className="mb-8 p-4 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-xl">
+              <div className="mb-8 p-4 bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-md">
                 <p className="text-sm font-semibold text-amber-800 dark:text-amber-200 flex items-center gap-2">
                   <span>⏳</span>
                   <span>Please extract text from your images first</span>
@@ -1102,7 +1102,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
             <button
               type="submit"
               disabled={isLoading || !textInput.trim() || (selectedImages.length > 0 && !isImageExtractionComplete)}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-6 px-8 rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl text-xl"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-6 px-8 rounded-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl text-xl"
             >
               {isLoading ? (
                 <span className="flex flex-col items-center justify-center gap-2">

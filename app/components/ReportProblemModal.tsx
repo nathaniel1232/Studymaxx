@@ -68,7 +68,7 @@ export default function ReportProblemModal({ isOpen, onClose }: ReportProblemMod
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-gray-900 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl"
+        className="bg-white dark:bg-gray-900 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-md shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

@@ -22,7 +22,7 @@ export default function TermsPage() {
         </div>
 
         {/* Content */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 md:p-12" style={{ border: '1px solid var(--border)' }}>
+        <div className="bg-white dark:bg-gray-800 rounded-md shadow-xl p-8 md:p-12" style={{ border: '1px solid var(--border)' }}>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
             Terms of Service
           </h1>

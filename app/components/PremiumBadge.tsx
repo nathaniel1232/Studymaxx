@@ -86,7 +86,7 @@ export function LockedFeature({
   return (
     <button
       onClick={onClick}
-      className="relative w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl hover:border-amber-400 dark:hover:border-amber-600 transition-all group cursor-pointer bg-gray-50 dark:bg-gray-900"
+      className="relative w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-md hover:border-amber-400 dark:hover:border-amber-600 transition-all group cursor-pointer bg-gray-50 dark:bg-gray-900"
     >
       {/* Premium badge */}
       <div className="absolute -top-2 -right-2">
@@ -117,7 +117,7 @@ export function LockedFeature({
       </div>
 
       {/* Hover effect */}
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-amber-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+      <div className="absolute inset-0 rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
     </button>
   );
 }
@@ -135,7 +135,7 @@ export function FeatureComparison({ onUpgrade }: FeatureComparisonProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Free Tier */}
-      <div className="p-4 border-2 border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800">
+      <div className="p-4 border-2 border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800">
         <h3 className="text-lg font-bold mb-3 text-gray-900 dark:text-white">
           Free
         </h3>
@@ -168,7 +168,7 @@ export function FeatureComparison({ onUpgrade }: FeatureComparisonProps) {
       </div>
 
       {/* Premium Tier */}
-      <div className="relative p-4 border-2 border-amber-500 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20">
+      <div className="relative p-4 border-2 border-amber-500 rounded-md bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20">
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
             MOST POPULAR

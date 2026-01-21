@@ -24,7 +24,7 @@ export default function HowToStudyPage() {
         </div>
 
         {/* Content */}
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 md:p-12" style={{ border: '1px solid var(--border)' }}>
+        <div className="bg-white dark:bg-gray-800 rounded-md shadow-xl p-8 md:p-12" style={{ border: '1px solid var(--border)' }}>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
             {isNorwegian ? "Slik studerer du med StudyMaxx" : "How to Study with StudyMaxx"}
           </h1>
@@ -121,7 +121,7 @@ export default function HowToStudyPage() {
             </section>
 
             {/* Pro Tips Box */}
-            <div className="mt-8 p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl border border-blue-200 dark:border-blue-800">
+            <div className="mt-8 p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-md border border-blue-200 dark:border-blue-800">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <span>💡</span>
                 {isNorwegian ? "Pro-tips" : "Pro Tips"}
@@ -163,7 +163,7 @@ export default function HowToStudyPage() {
             </div>
 
             {/* Study Science Box */}
-            <div className="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-200 dark:border-gray-700">
+            <div className="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-md border border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                 <span>🧠</span>
                 {isNorwegian ? "Hvorfor dette fungerer" : "Why This Works"}

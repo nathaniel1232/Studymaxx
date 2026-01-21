@@ -142,7 +142,7 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
       onClick={onClose}
     >
       <div 
-        className="max-w-md w-full rounded-3xl shadow-2xl overflow-hidden"
+        className="max-w-md w-full rounded-md shadow-2xl overflow-hidden"
         style={{ 
           background: 'var(--surface-elevated)', 
           border: '2px solid var(--border)',
@@ -180,7 +180,7 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
               <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
                 {t("account_created") || "Account Created!"}
               </h2>
-              <div className="mb-6 p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800">
+              <div className="mb-6 p-4 rounded-md bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800">
                 <p className="text-sm font-semibold mb-2" style={{ color: 'var(--foreground)' }}>
                   {t("check_email_to_verify") || "Check your email to activate your account:"}
                 </p>
@@ -207,7 +207,7 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
               </div>
               <button
                 onClick={onClose}
-                className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-xl"
+                className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-md transition-all shadow-lg hover:shadow-xl"
               >
                 {t("got_it") || "Got it!"}
               </button>
@@ -247,7 +247,7 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
             </div>
 
             {error && (
-              <div className="mb-4 p-4 rounded-2xl bg-gradient-to-br from-red-100 to-pink-100 dark:from-red-900/40 dark:to-pink-900/40 border-2 border-red-300 dark:border-red-700">
+              <div className="mb-4 p-4 rounded-md bg-gradient-to-br from-red-100 to-pink-100 dark:from-red-900/40 dark:to-pink-900/40 border-2 border-red-300 dark:border-red-700">
                 <p className="text-sm font-bold text-red-700 dark:text-red-300 flex items-center gap-2">
                   <span>⚠️</span>
                   <span>{error}</span>

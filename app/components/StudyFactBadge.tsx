@@ -38,7 +38,7 @@ export default function StudyFactBadge({ context, position = "inline" }: StudyFa
   return (
     <div className={`${positionClasses[position]} animate-in fade-in slide-in-from-bottom-2`}>
       <div 
-        className="rounded-2xl p-4 cursor-pointer transition-all hover:scale-105"
+        className="rounded-md p-4 cursor-pointer transition-all hover:scale-105"
         style={{ 
           background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)',
           border: '2px solid var(--border)',

@@ -56,7 +56,7 @@ export default function Toast({ message, type = "success", onClose, duration = 3
   return (
     <div className="fixed top-4 right-4 z-[100] animate-slide-in-right max-w-sm">
       <div
-        className={`${colorScheme.bg} ${colorScheme.border} ${colorScheme.text} border rounded-2xl px-5 py-4 shadow-lg backdrop-blur-sm flex items-start gap-3 transition-all duration-300`}
+        className={`${colorScheme.bg} ${colorScheme.border} ${colorScheme.text} border rounded-md px-5 py-4 shadow-lg backdrop-blur-sm flex items-start gap-3 transition-all duration-300`}
       >
         <span className={`text-xl flex-shrink-0 mt-0.5 ${colorScheme.icon}`}>{icons[type]}</span>
         <p className="flex-1 font-medium text-sm leading-relaxed">{message}</p>

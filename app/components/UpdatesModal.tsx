@@ -20,7 +20,7 @@ const updates: UpdateEntry[] = [
     changes: [
       "🎨 Complete UI refresh - all buttons and cards now have subtle cyan gradients",
       "🔘 Subject selection buttons redesigned with hover effects and color",
-      "📦 Material cards are now more rounded and bubbly (rounded-2xl)",
+      "📦 Material cards are now more rounded and bubbly (rounded-md)",
       "⚡ Difficulty and card count buttons have improved visual states",
       "🌍 Language selection cards match new design system",
       "🧮 Math problems feature now premium-only (Beta)",

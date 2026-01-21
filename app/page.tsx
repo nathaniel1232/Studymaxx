@@ -11,6 +11,7 @@ import LoginModal from "./components/LoginModal";
 import PremiumModal from "./components/PremiumModal";
 import UserProfileDropdown from "./components/UserProfileDropdown";
 import StudyFactBadge from "./components/StudyFactBadge";
+import LiveVisitorsCounter from "./components/LiveVisitorsCounter";
 import Toast from "./components/Toast";
 import { updateLastStudied, Flashcard, getSavedFlashcardSets, FlashcardSet } from "./utils/storage";
 import { getStudyFact } from "./utils/studyFacts";
@@ -257,19 +258,42 @@ export default function Home() {
     setViewMode("home");
     setFlashcards([]);
     setCurrentSetId(null);
+    window.history.pushState({}, '', '/');
   };
 
   const handleViewSavedSets = () => {
     setViewMode("saved");
+    window.history.pushState({}, '', '/saved');
   };
 
   const handleCreateNew = () => {
     setViewMode("createFlow");
+    window.history.pushState({}, '', '/create');
   };
 
   const handleViewSettings = () => {
     setViewMode("settings");
+    window.history.pushState({}, '', '/settings');
   };
+
+  // Sync URL with viewMode
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === '/create') {
+        setViewMode('createFlow');
+      } else if (path === '/saved') {
+        setViewMode('saved');
+      } else if (path === '/settings') {
+        setViewMode('settings');
+      } else {
+        setViewMode('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   return (
     <main className="min-h-screen relative overflow-hidden bg-stone-50 dark:bg-slate-900">
@@ -290,7 +314,7 @@ export default function Home() {
                 <>
                   <button
                     onClick={handleViewSettings}
-                    className="px-4 py-2 rounded-xl font-bold text-sm bg-slate-800 text-white hover:bg-slate-700 transition-all flex items-center gap-2"
+                    className="px-4 py-2 rounded-md font-bold text-sm bg-slate-800 text-white hover:bg-slate-700 transition-all flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -309,7 +333,7 @@ export default function Home() {
               ) : (
                 <button
                   onClick={() => setShowLoginModal(true)}
-                  className="px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-lg shadow-purple-500/30 border-2 border-purple-400/50 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                  className="px-5 py-2.5 rounded-md font-bold text-sm bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-lg shadow-purple-500/30 border-2 border-purple-400/50 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 hover:shadow-xl hover:-translate-y-0.5 transition-all"
                 >
                   Sign In
                 </button>
@@ -318,13 +342,17 @@ export default function Home() {
           </nav>
           
           {/* Hero Section */}
-          <div className="flex-1 flex flex-col px-4 py-8 max-w-3xl mx-auto w-full">
+          <div className="flex-1 flex flex-col px-4 py-6 max-w-3xl mx-auto w-full">
             
             {/* Main Hero - Punchy & Direct */}
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
+              {/* Live visitors counter */}
+              <div className="flex justify-center mb-4">
+                <LiveVisitorsCounter />
+              </div>
+              
               {/* Micro social proof */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 mb-6 shadow-lg shadow-emerald-500/20">
-                <span className="flex -space-x-2">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 mb-6 shadow-lg shadow-emerald-500/20">\n                <span className="flex -space-x-2">
                   <span className="w-8 h-8 rounded-full ring-2 ring-slate-800 flex items-center justify-center text-xs font-bold" style={{backgroundColor: '#3b82f6', color: 'white'}}>J</span>
                   <span className="w-8 h-8 rounded-full ring-2 ring-slate-800 flex items-center justify-center text-xs font-bold" style={{backgroundColor: '#a855f7', color: 'white'}}>A</span>
                   <span className="w-8 h-8 rounded-full ring-2 ring-slate-800 flex items-center justify-center text-xs font-bold" style={{backgroundColor: '#ec4899', color: 'white'}}>M</span>
@@ -333,7 +361,7 @@ export default function Home() {
                 <span className="text-sm font-black text-emerald-400">500+ students acing exams</span>
               </div>
               
-              <h1 className="text-5xl md:text-6xl font-black mb-6 leading-[1.1]">
+              <h1 className="text-5xl md:text-6xl font-black mb-4 leading-[1.1]">
                 <span className="text-white">Turn Your Notes Into</span>
                 <br/>
                 <span className="inline-block mt-2 text-white">
@@ -341,7 +369,7 @@ export default function Home() {
                 </span>
               </h1>
               
-              <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto font-semibold leading-relaxed drop-shadow-md">
+              <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto font-semibold leading-relaxed drop-shadow-md">
                 Paste your notes. Get smart flashcards with quiz mode. <span className="font-black text-emerald-400">Instant results.</span>
               </p>
 
@@ -350,7 +378,7 @@ export default function Home() {
                 {/* Primary CTA */}
                 <button
                   onClick={handleCreateNew}
-                  className="group relative inline-flex items-center justify-center gap-3 px-12 py-6 rounded-2xl text-xl font-black text-white hover:-translate-y-2 hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto"
+                  className="group relative inline-flex items-center justify-center gap-3 px-12 py-6 rounded-md text-xl font-black text-white hover:-translate-y-2 hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto"
                   style={{
                     background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
                     boxShadow: '0 0 50px rgba(6, 182, 212, 0.8)',
@@ -366,7 +394,7 @@ export default function Home() {
                 >
                   <span>{user ? "Create study set" : "Create study set"}</span>
                   {/* Shine effect */}
-                  <div className="absolute inset-0 rounded-2xl overflow-hidden">
+                  <div className="absolute inset-0 rounded-md overflow-hidden">
                     <div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
                   </div>
                 </button>
@@ -375,7 +403,7 @@ export default function Home() {
                 {user && savedSets.length > 0 && (
                   <button
                     onClick={handleViewSavedSets}
-                    className="px-8 py-6 rounded-2xl text-lg font-bold bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 hover:shadow-xl hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all duration-200 w-full sm:w-auto"
+                    className="px-8 py-6 rounded-md text-lg font-bold bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 hover:shadow-xl hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all duration-200 w-full sm:w-auto"
                   >
                     My study sets ({savedSets.length})
                   </button>
@@ -391,39 +419,39 @@ export default function Home() {
             </div>
 
             {/* Powerful Benefits - What users get */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <div className="p-6 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl shadow-lg hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all hover:-translate-y-1">
-                <h3 className="text-xl font-black text-white mb-2">Lightning Fast</h3>
-                <p className="text-emerald-100 text-sm font-semibold">Perfect flashcards from your notes automatically generated</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+              <div className="p-4 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-md shadow-lg hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all hover:-translate-y-1">
+                <h3 className="text-lg font-black text-white mb-1">Lightning Fast</h3>
+                <p className="text-emerald-100 text-sm">Auto-generate perfect flashcards</p>
               </div>
               
-              <div className="p-6 bg-gradient-to-br from-violet-600 to-purple-600 rounded-2xl shadow-lg hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all hover:-translate-y-1">
-                <h3 className="text-xl font-black text-white mb-2">Quiz Mode</h3>
-                <p className="text-violet-100 text-sm font-semibold">Test yourself with smart quiz questions. Track your progress instantly</p>
+              <div className="p-4 bg-gradient-to-br from-violet-600 to-purple-600 rounded-md shadow-lg hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all hover:-translate-y-1">
+                <h3 className="text-lg font-black text-white mb-1">Quiz Mode</h3>
+                <p className="text-violet-100 text-sm">Smart quizzes, track progress</p>
               </div>
               
-              <div className="p-6 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-lg hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] transition-all hover:-translate-y-1">
-                <h3 className="text-xl font-black text-white mb-2">Any Subject</h3>
-                <p className="text-blue-100 text-sm font-semibold">Math, Biology, History, Languages - works for everything you study</p>
+              <div className="p-4 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-md shadow-lg hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] transition-all hover:-translate-y-1">
+                <h3 className="text-lg font-black text-white mb-1">Any Subject</h3>
+                <p className="text-blue-100 text-sm">Math, Science, Languages & more</p>
               </div>
             </div>
 
             {/* Social Proof & Trust */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-              <div className="text-center p-4 bg-slate-800/50 rounded-xl hover:bg-emerald-500/10 transition-all hover:shadow-lg hover:shadow-emerald-500/20">
-                <div className="text-2xl font-black text-white mb-1">500+</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+              <div className="text-center p-3 bg-slate-800/50 rounded-md hover:bg-emerald-500/10 transition-all hover:shadow-lg hover:shadow-emerald-500/20">
+                <div className="text-2xl font-black text-white mb-0.5">500+</div>
                 <span className="text-xs font-bold text-slate-400">Active Students</span>
               </div>
-              <div className="text-center p-4 bg-slate-800/50 rounded-xl hover:bg-violet-500/10 transition-all hover:shadow-lg hover:shadow-violet-500/20">
-                <div className="text-2xl font-black text-white mb-1">10k+</div>
+              <div className="text-center p-3 bg-slate-800/50 rounded-md hover:bg-violet-500/10 transition-all hover:shadow-lg hover:shadow-violet-500/20">
+                <div className="text-2xl font-black text-white mb-0.5">10k+</div>
                 <span className="text-xs font-bold text-slate-400">Flashcards Made</span>
               </div>
-              <div className="text-center p-4 bg-slate-800/50 rounded-xl hover:bg-blue-500/10 transition-all hover:shadow-lg hover:shadow-blue-500/20">
-                <div className="text-2xl font-black text-white mb-1">4.9/5</div>
+              <div className="text-center p-3 bg-slate-800/50 rounded-md hover:bg-blue-500/10 transition-all hover:shadow-lg hover:shadow-blue-500/20">
+                <div className="text-2xl font-black text-white mb-0.5">4.9/5</div>
                 <span className="text-xs font-bold text-slate-400">Student Rating</span>
               </div>
-              <div className="text-center p-4 bg-slate-800/50 rounded-xl hover:bg-pink-500/10 transition-all hover:shadow-lg hover:shadow-pink-500/20">
-                <div className="text-2xl font-black text-white mb-1">AI</div>
+              <div className="text-center p-3 bg-slate-800/50 rounded-md hover:bg-pink-500/10 transition-all hover:shadow-lg hover:shadow-pink-500/20">
+                <div className="text-2xl font-black text-white mb-0.5">AI</div>
                 <span className="text-xs font-bold text-slate-400">Powered Learning</span>
               </div>
             </div>
@@ -440,7 +468,7 @@ export default function Home() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                 {/* Free Plan */}
-                <div className="p-8 bg-slate-800/30 rounded-2xl border border-slate-700/50">
+                <div className="p-8 bg-slate-800/30 rounded-md border border-slate-700/50">
                   <h3 className="text-2xl font-bold text-white mb-6">Free</h3>
                   <ul className="space-y-4">
                     <li className="flex items-start gap-3 text-slate-400">
@@ -459,7 +487,7 @@ export default function Home() {
                 </div>
 
                 {/* Premium Plan */}
-                <div className="p-8 rounded-2xl border-2 border-emerald-500 relative" style={{background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(19, 78, 74, 0.4) 100%)', boxShadow: '0 25px 50px -12px rgba(16, 185, 129, 0.2)'}}>
+                <div className="p-8 rounded-md border-2 border-emerald-500 relative" style={{background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(19, 78, 74, 0.4) 100%)', boxShadow: '0 25px 50px -12px rgba(16, 185, 129, 0.2)'}}>
                   <div className="absolute top-6 right-6">
                     <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-md">Active</span>
                   </div>
@@ -492,7 +520,7 @@ export default function Home() {
                   </ul>
                   <button
                     onClick={() => !user ? setShowLoginModal(true) : setShowPremiumModal(true)}
-                    className="w-full py-4 px-6 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl transition-all hover:scale-[1.02] active:scale-95"
+                    className="w-full py-4 px-6 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-md transition-all hover:scale-[1.02] active:scale-95"
                   >
                     Manage Subscription
                   </button>

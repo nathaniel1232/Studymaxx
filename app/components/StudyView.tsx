@@ -552,7 +552,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
         <div className="flex gap-3 mb-8 flex-wrap">
           <button
             onClick={() => setStudyMode("review")}
-            className={`px-10 py-5 font-black text-lg rounded-2xl transition-all duration-500 ease-out transform hover:scale-110 hover:-translate-y-2 shadow-xl hover:shadow-2xl ${
+            className={`px-10 py-5 font-black text-lg rounded-md transition-all duration-500 ease-out transform hover:scale-110 hover:-translate-y-2 shadow-xl hover:shadow-2xl ${
               studyMode === "review"
                 ? "bg-gradient-to-r from-teal-500 via-cyan-500 to-blue-600 text-white shadow-teal-500/50 ring-4 ring-teal-300/40"
                 : "bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 text-teal-700 dark:text-teal-300 hover:from-teal-100 hover:to-cyan-100 dark:hover:from-teal-900/30 dark:hover:to-cyan-900/30 shadow-teal-200/50 hover:shadow-teal-300/60"
@@ -570,7 +570,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               setMaxStreak(0);
               setIsQuizEnded(false);
             }}
-            className={`px-10 py-5 font-black text-lg rounded-2xl transition-all duration-500 ease-out transform hover:scale-110 hover:-translate-y-2 shadow-xl hover:shadow-2xl ${
+            className={`px-10 py-5 font-black text-lg rounded-md transition-all duration-500 ease-out transform hover:scale-110 hover:-translate-y-2 shadow-xl hover:shadow-2xl ${
               studyMode === "test"
                 ? "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-600 text-white shadow-indigo-500/50 ring-4 ring-indigo-300/40"
                 : "bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 text-indigo-700 dark:text-indigo-300 hover:from-indigo-100 hover:to-purple-100 dark:hover:from-indigo-900/30 dark:hover:to-purple-900/30 shadow-indigo-200/50 hover:shadow-indigo-300/60"
@@ -581,7 +581,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
           <button
             onClick={handleShuffle}
             disabled={studyMode === "test"}
-            className="px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-black text-lg rounded-2xl transition-all duration-500 ease-out shadow-xl hover:shadow-2xl hover:shadow-amber-400/50 transform hover:scale-110 hover:-translate-y-2 disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+            className="px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-black text-lg rounded-md transition-all duration-500 ease-out shadow-xl hover:shadow-2xl hover:shadow-amber-400/50 transform hover:scale-110 hover:-translate-y-2 disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
           >
             🔀 {t("shuffle")}
           </button>
@@ -589,7 +589,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
           {ENABLE_SHARE && currentSetId && (
             <button
               onClick={handleShare}
-              className="px-8 py-6 bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white font-black text-xl rounded-3xl transition-all shadow-xl hover:shadow-2xl transform hover:scale-110 hover:-translate-y-2"
+              className="px-8 py-6 bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white font-black text-xl rounded-md transition-all shadow-xl hover:shadow-2xl transform hover:scale-110 hover:-translate-y-2"
             >
               🔗 {t("share")}
             </button>
@@ -597,7 +597,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
           {!currentSetId && (
             <button
               onClick={() => setShowSaveDialog(true)}
-              className="px-10 py-5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white font-black text-lg rounded-2xl transition-all duration-500 ease-out shadow-xl hover:shadow-2xl hover:shadow-violet-400/50 transform hover:scale-110 hover:-translate-y-2"
+              className="px-10 py-5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white font-black text-lg rounded-md transition-all duration-500 ease-out shadow-xl hover:shadow-2xl hover:shadow-violet-400/50 transform hover:scale-110 hover:-translate-y-2"
             >
               💾 {t("save")}
             </button>
@@ -615,13 +615,13 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               value={setName}
               onChange={(e) => setSetName(e.target.value)}
               placeholder={t("name_your_set")}
-              className="w-full px-5 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white mb-6 text-base"
+              className="w-full px-5 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white mb-6 text-base"
               autoFocus
             />
             <div className="flex gap-3">
               <button
                 onClick={handleSaveSet}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-2xl transition-all shadow-lg"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-md transition-all shadow-lg"
               >
                 {t("save")}
               </button>
@@ -630,7 +630,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                   setShowSaveDialog(false);
                   setSetName("");
                 }}
-                className="flex-1 px-6 py-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl transition-all border border-gray-200 dark:border-gray-700"
+                className="flex-1 px-6 py-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-md transition-all border border-gray-200 dark:border-gray-700"
               >
                 {t("cancel")}
               </button>
@@ -640,7 +640,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
 
         {/* Share Dialog - DISABLED for production launch */}
         {ENABLE_SHARE && showShareDialog && (
-          <div className="bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-cyan-900/20 dark:to-teal-900/20 rounded-3xl shadow-2xl p-10 mb-8 border-2 border-cyan-200 dark:border-cyan-800">
+          <div className="bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-cyan-900/20 dark:to-teal-900/20 rounded-md shadow-2xl p-10 mb-8 border-2 border-cyan-200 dark:border-cyan-800">
             <div className="text-center mb-8">
               <div className="text-6xl mb-4">🔗</div>
               <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-3">
@@ -651,7 +651,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               </p>
             </div>
             
-            <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 mb-8 border-2 border-cyan-300 dark:border-cyan-700">
+            <div className="bg-white dark:bg-gray-900 rounded-md p-6 mb-8 border-2 border-cyan-300 dark:border-cyan-700">
               <p className="text-base text-gray-700 dark:text-gray-300 break-all font-mono font-bold text-center">
                 {shareUrl}
               </p>
@@ -665,13 +665,13 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
             <div className="flex gap-4">
               <button
                 onClick={handleCopyShareLink}
-                className="flex-1 px-6 py-4 bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white font-black text-lg rounded-2xl transition-all shadow-lg hover:shadow-2xl transform hover:scale-105"
+                className="flex-1 px-6 py-4 bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white font-black text-lg rounded-md transition-all shadow-lg hover:shadow-2xl transform hover:scale-105"
               >
                 📋 {t("copy_link")}
               </button>
               <button
                 onClick={() => setShowShareDialog(false)}
-                className="flex-1 px-6 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold text-lg rounded-2xl transition-all border-2 border-gray-300 dark:border-gray-600"
+                className="flex-1 px-6 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold text-lg rounded-md transition-all border-2 border-gray-300 dark:border-gray-600"
               >
                 ✕ {t("close")}
               </button>
@@ -685,7 +685,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
 
         {/* Study Fact - Quiz Mode Info */}
         {studyMode === "test" && currentIndex === 0 && !isQuizEnded && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl border border-blue-100 dark:border-blue-800">
+          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-md border border-blue-100 dark:border-blue-800">
             <div className="flex items-start gap-3">
               <div className="flex-1">
                 <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
@@ -704,7 +704,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
           {studyMode === "test" ? (
             <>
               {/* Lives Display - WITH HEART EMOJIS */}
-              <div className="bg-gradient-to-br from-rose-500 via-pink-600 to-red-600 dark:from-rose-600 dark:via-pink-700 dark:to-red-700 rounded-3xl p-6 shadow-2xl shadow-rose-500/50">
+              <div className="bg-gradient-to-br from-rose-500 via-pink-600 to-red-600 dark:from-rose-600 dark:via-pink-700 dark:to-red-700 rounded-md p-6 shadow-2xl shadow-rose-500/50">
                 <p className="text-sm text-white font-black uppercase tracking-wide mb-4 drop-shadow-lg">
                   {t("lives")}
                 </p>
@@ -725,7 +725,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               </div>
 
               {/* Streak Display */}
-              <div className="bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl p-5 shadow-lg">
+              <div className="bg-gradient-to-br from-orange-500 to-amber-500 rounded-md p-5 shadow-lg">
                 <p className="text-sm text-white/80 font-medium uppercase tracking-wide mb-2">
                   {t("streak")}
                 </p>
@@ -737,7 +737,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
           ) : (
             <>
               {/* Progress Display (Review Mode) */}
-              <div className="bg-gradient-to-br from-teal-500 to-cyan-500 rounded-2xl p-5 shadow-lg">
+              <div className="bg-gradient-to-br from-teal-500 to-cyan-500 rounded-md p-5 shadow-lg">
                 <p className="text-sm text-white/80 font-medium uppercase tracking-wide mb-2">
                   {t("progress")}
                 </p>
@@ -747,7 +747,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               </div>
 
               {/* Mastered Display (Review Mode) */}
-              <div className="bg-gradient-to-br from-emerald-500 to-green-500 rounded-2xl p-5 shadow-lg">
+              <div className="bg-gradient-to-br from-emerald-500 to-green-500 rounded-md p-5 shadow-lg">
                 <p className="text-sm text-white/80 font-medium uppercase tracking-wide mb-2">
                   {t("mastered")}
                 </p>
@@ -761,7 +761,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
 
         {/* Quiz Ended (No Lives Left) */}
         {isQuizEnded && studyMode === "test" ? (
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-2xl p-12 text-center border border-gray-100 dark:border-gray-700">
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-md shadow-2xl p-12 text-center border border-gray-100 dark:border-gray-700">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
               {t("quiz_ended")}
             </h2>
@@ -772,7 +772,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
             <div className="flex gap-4 justify-center flex-wrap">
               <button
                 onClick={handleRetakeFailedCards}
-                className="px-8 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-2xl transition-all border-2 border-gray-300 dark:border-gray-700 hover:shadow-lg hover:scale-105"
+                className="px-8 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-md transition-all border-2 border-gray-300 dark:border-gray-700 hover:shadow-lg hover:scale-105"
               >
                 {t("study_mistakes")}
               </button>
@@ -785,14 +785,14 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                   setMaxStreak(0);
                   setIsQuizEnded(false);
                 }}
-                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-2xl transition-all shadow-lg hover:shadow-xl hover:scale-105"
+                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-md transition-all shadow-lg hover:shadow-xl hover:scale-105"
               >
                 {t("retake_quiz")}
               </button>
             </div>
           </div>
         ) : isTestComplete ? (
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-2xl p-12 text-center border border-gray-100 dark:border-gray-700">
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-md shadow-2xl p-12 text-center border border-gray-100 dark:border-gray-700">
             <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
               {correctCount === flashcards.length ? t("perfect_score") : t("quiz_complete")}
             </h2>
@@ -804,7 +804,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               {incorrectCount > 0 ? (
                 <button
                   onClick={handleRetakeFailedCards}
-                  className="px-8 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-2xl transition-all border-2 border-gray-300 dark:border-gray-700 hover:shadow-lg hover:scale-105"
+                  className="px-8 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-md transition-all border-2 border-gray-300 dark:border-gray-700 hover:shadow-lg hover:scale-105"
                 >
                   {t("study_mistakes")}
                 </button>
@@ -818,14 +818,14 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                   setMaxStreak(0);
                   setIsQuizEnded(false);
                 }}
-                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-2xl transition-all shadow-lg hover:shadow-xl hover:scale-105"
+                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-md transition-all shadow-lg hover:shadow-xl hover:scale-105"
               >
                 {t("retake_quiz")}
               </button>
             </div>
           </div>
         ) : isAllMastered && studyMode === "review" ? (
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-2xl p-12 text-center border border-gray-100 dark:border-gray-700">
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-md shadow-2xl p-12 text-center border border-gray-100 dark:border-gray-700">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
               {t("all_done")}
             </h2>
@@ -834,7 +834,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
             </p>
             <button
               onClick={handleReset}
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-2xl transition-all shadow-lg"
+              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-md transition-all shadow-lg"
             >
               {t("study_again")}
             </button>
@@ -853,7 +853,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               <button
                 onClick={handlePrevious}
                 disabled={currentIndex === 0}
-                className="flex-1 px-10 py-5 rounded-2xl font-black text-lg transition-all duration-500 ease-out transform hover:scale-105 hover:-translate-y-1 disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none shadow-lg hover:shadow-2xl bg-gradient-to-br from-slate-500 via-gray-600 to-slate-700 hover:from-slate-400 hover:via-gray-500 hover:to-slate-600 text-white disabled:from-gray-300 disabled:to-gray-400 relative overflow-hidden group"
+                className="flex-1 px-10 py-5 rounded-md font-black text-lg transition-all duration-500 ease-out transform hover:scale-105 hover:-translate-y-1 disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none shadow-lg hover:shadow-2xl bg-gradient-to-br from-slate-500 via-gray-600 to-slate-700 hover:from-slate-400 hover:via-gray-500 hover:to-slate-600 text-white disabled:from-gray-300 disabled:to-gray-400 relative overflow-hidden group"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
                 <span className="flex items-center justify-center gap-3 relative z-10">
@@ -864,7 +864,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               <button
                 onClick={handleNext}
                 disabled={currentIndex === flashcards.length - 1}
-                className="flex-1 px-10 py-5 rounded-2xl font-black text-lg transition-all duration-500 ease-out transform hover:scale-105 hover:-translate-y-1 disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none shadow-lg hover:shadow-2xl bg-gradient-to-br from-teal-500 via-cyan-600 to-blue-600 hover:from-teal-400 hover:via-cyan-500 hover:to-blue-500 text-white disabled:from-gray-300 disabled:to-gray-400 relative overflow-hidden group"
+                className="flex-1 px-10 py-5 rounded-md font-black text-lg transition-all duration-500 ease-out transform hover:scale-105 hover:-translate-y-1 disabled:opacity-30 disabled:cursor-not-allowed disabled:transform-none shadow-lg hover:shadow-2xl bg-gradient-to-br from-teal-500 via-cyan-600 to-blue-600 hover:from-teal-400 hover:via-cyan-500 hover:to-blue-500 text-white disabled:from-gray-300 disabled:to-gray-400 relative overflow-hidden group"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
                 <span className="flex items-center justify-center gap-3 relative z-10">
@@ -880,7 +880,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
             <div className="w-full max-w-4xl mx-auto mb-8">
               {/* Question Display - Styled Like Flashcard */}
               <div 
-                className="relative w-full aspect-[16/9] min-h-[300px] mb-8 rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center justify-center p-8 md:p-12 text-center"
+                className="relative w-full aspect-[16/9] min-h-[300px] mb-8 rounded-md overflow-hidden shadow-2xl flex flex-col items-center justify-center p-8 md:p-12 text-center"
                 style={{
                   background: 'linear-gradient(135deg, #60a5fa 0%, #22d3ee 50%, #3b82f6 100%)',
                   boxShadow: '0 25px 50px -12px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.5)'
@@ -899,7 +899,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                 
                 {/* Math indicator */}
                 {isMathQuestion(currentCard.question) && (
-                  <div className="mb-4 inline-block px-4 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-xl">
+                  <div className="mb-4 inline-block px-4 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-md">
                     <p className="text-sm font-bold text-white flex items-center gap-2">
                        <span>✏️</span> {t("use_pen_paper")}
                     </p>
@@ -924,7 +924,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                     const isCorrectOption = option === currentCard.answer;
                     const showFeedback = selectedAnswer !== null;
                     
-                    let buttonClass = "w-full p-6 text-left font-bold text-lg rounded-2xl transition-all duration-300 relative overflow-hidden group ";
+                    let buttonClass = "w-full p-6 text-left font-bold text-lg rounded-md transition-all duration-300 relative overflow-hidden group ";
                     let bgStyle = {};
                     
                     if (showFeedback) {
@@ -966,7 +966,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                 /* Self-Assessment for Math Problems */
                 <div className="space-y-6 max-w-2xl mx-auto">
                   {/* Show answer */}
-                  <div className="bg-slate-900 text-white rounded-3xl p-8 shadow-xl text-center relative overflow-hidden">
+                  <div className="bg-slate-900 text-white rounded-md p-8 shadow-xl text-center relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
                     <p className="text-sm font-bold text-white/60 mb-4 uppercase tracking-widest">
                       {t("answer")}
@@ -978,14 +978,14 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
 
                   {/* Self-assessment buttons */}
                   {selectedAnswer === null ? (
-                    <div className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-lg border border-gray-100 dark:border-gray-700">
+                    <div className="bg-white dark:bg-gray-800 p-8 rounded-md shadow-lg border border-gray-100 dark:border-gray-700">
                       <p className="text-lg font-bold text-gray-900 dark:text-white mb-6 text-center">
                         {settings.language === 'no' ? 'Hvordan gikk det?' : 'How did you do?'}
                       </p>
                       <div className="flex justify-center gap-4">
                         <button
                           onClick={() => handleQuizAnswer('wrong')}
-                          className="flex-1 py-6 bg-slate-100 dark:bg-slate-900 hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl shadow-rose-100 dark:shadow-rose-900/10 group"
+                          className="flex-1 py-6 bg-slate-100 dark:bg-slate-900 hover:bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold rounded-md transition-all hover:-translate-y-1 hover:shadow-xl shadow-rose-100 dark:shadow-rose-900/10 group"
                         >
                           <span className="flex flex-col items-center gap-2">
                             <span className="text-4xl group-hover:scale-110 transition-transform">😫</span>
@@ -994,7 +994,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         </button>
                         <button
                           onClick={() => handleQuizAnswer('ok')}
-                          className="flex-1 py-6 bg-slate-100 dark:bg-slate-900 hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl shadow-amber-100 dark:shadow-amber-900/10 group"
+                          className="flex-1 py-6 bg-slate-100 dark:bg-slate-900 hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold rounded-md transition-all hover:-translate-y-1 hover:shadow-xl shadow-amber-100 dark:shadow-amber-900/10 group"
                         >
                           <span className="flex flex-col items-center gap-2">
                             <span className="text-4xl group-hover:scale-110 transition-transform">😐</span>
@@ -1003,7 +1003,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         </button>
                         <button
                           onClick={() => handleQuizAnswer('correct')}
-                          className="flex-1 py-6 bg-slate-100 dark:bg-slate-900 hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl shadow-emerald-100 dark:shadow-emerald-900/10 group"
+                          className="flex-1 py-6 bg-slate-100 dark:bg-slate-900 hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold rounded-md transition-all hover:-translate-y-1 hover:shadow-xl shadow-emerald-100 dark:shadow-emerald-900/10 group"
                         >
                           <span className="flex flex-col items-center gap-2">
                             <span className="text-4xl group-hover:scale-110 transition-transform">🤩</span>
@@ -1019,7 +1019,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               {/* Feedback Message - Clean Modern Floating Bar */}
               {selectedAnswer !== null && (
                 <div className="fixed bottom-6 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-full md:max-w-3xl z-50">
-                  <div className={`p-4 rounded-3xl shadow-2xl backdrop-blur-xl border-2 transform transition-all animate-in slide-in-from-bottom duration-300 ${
+                  <div className={`p-4 rounded-md shadow-2xl backdrop-blur-xl border-2 transform transition-all animate-in slide-in-from-bottom duration-300 ${
                     isAnswerCorrect 
                       ? 'bg-white/95 dark:bg-gray-900/95 border-emerald-500 text-gray-900 dark:text-white' 
                       : 'bg-white/95 dark:bg-gray-900/95 border-rose-500 text-gray-900 dark:text-white'
@@ -1061,7 +1061,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                       {/* Next Button */}
                       <button 
                         onClick={handleNext} 
-                        className={`px-6 py-3 rounded-xl font-bold text-white shadow-lg transition-transform active:scale-95 flex-shrink-0 ${
+                        className={`px-6 py-3 rounded-md font-bold text-white shadow-lg transition-transform active:scale-95 flex-shrink-0 ${
                           isAnswerCorrect 
                             ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200' 
                             : 'bg-rose-500 hover:bg-rose-600 shadow-rose-200'

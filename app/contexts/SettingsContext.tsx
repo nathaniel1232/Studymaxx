@@ -20,7 +20,7 @@ interface SettingsContextType {
 }
 
 const defaultSettings: AppSettings = {
-  theme: "dark",
+  theme: "light",
   language: "en",
   gradeSystem: "A-F"
 };
