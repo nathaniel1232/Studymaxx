@@ -1071,34 +1071,41 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   {/* Notes (Free) */}
                   <Card
                     onClick={() => setSelectedMaterial("notes")}
-                    className="cursor-pointer transition-all duration-200 shadow-lg hover:scale-[1.01] border-2 rounded-2xl overflow-hidden"
+                    className="cursor-pointer transition-all duration-300 border-2 rounded-3xl overflow-hidden"
                     style={{
-                      background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
-                      borderColor: '#06b6d4',
-                      boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
+                      background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.12) 100%)',
+                      borderColor: 'rgba(6, 182, 212, 0.4)',
+                      boxShadow: '0 2px 12px rgba(6, 182, 212, 0.15)',
+                      backdropFilter: 'blur(10px)'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.boxShadow = '0 8px 30px rgba(6, 182, 212, 0.5)';
+                      e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(8, 145, 178, 0.2) 100%)';
+                      e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.6)';
+                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(6, 182, 212, 0.25)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.boxShadow = '0 4px 20px rgba(6, 182, 212, 0.3)';
+                      e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.12) 100%)';
+                      e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.4)';
+                      e.currentTarget.style.boxShadow = '0 2px 12px rgba(6, 182, 212, 0.15)';
+                      e.currentTarget.style.transform = 'translateY(0)';
                     }}
                   >
                     <CardContent className="flex items-center justify-between p-5">
                       <div className="flex items-center gap-4">
-                        <div className="w-11 h-11 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center text-xl">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400/20 to-cyan-500/15 flex items-center justify-center text-3xl">
                           📝
                         </div>
                         <div>
-                          <span className="font-bold text-lg text-white">
+                          <span className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
                             {t("notes")}
                           </span>
-                          <span className="text-sm text-white/90 block font-normal mt-0.5">
+                          <span className="text-sm block font-normal mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
                             {t("paste_or_type_text")}
                           </span>
                         </div>
                       </div>
-                      <span className="px-3 py-1.5 bg-white text-cyan-700 text-xs font-bold rounded-lg shadow-md">
+                      <span className="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-xl border border-emerald-200 dark:border-emerald-800">
                         ✓ Free
                       </span>
                     </CardContent>
@@ -1110,53 +1117,67 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         if (!isPremium) setShowPremiumModal(true);
                         else setSelectedMaterial("docx");
                     }}
-                    className="cursor-pointer transition-all duration-200 shadow-lg hover:scale-[1.01] border-2 rounded-2xl overflow-hidden"
+                    className="cursor-pointer transition-all duration-300 border-2 rounded-3xl overflow-hidden"
                     style={{
                       background: isPremium 
-                        ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
-                        : 'var(--card)',
-                      borderColor: isPremium ? '#06b6d4' : 'var(--border)',
+                        ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.12) 100%)'
+                        : 'linear-gradient(135deg, rgba(100, 100, 100, 0.08) 0%, rgba(80, 80, 80, 0.05) 100%)',
+                      borderColor: isPremium ? 'rgba(6, 182, 212, 0.4)' : 'rgba(245, 158, 11, 0.3)',
                       boxShadow: isPremium 
-                        ? '0 4px 20px rgba(6, 182, 212, 0.3)'
-                        : '0 2px 10px rgba(0, 0, 0, 0.1)'
+                        ? '0 2px 12px rgba(6, 182, 212, 0.15)'
+                        : '0 2px 10px rgba(0, 0, 0, 0.05)',
+                      backdropFilter: 'blur(10px)',
+                      opacity: isPremium ? 1 : 0.85
                     }}
                     onMouseEnter={(e) => {
                       if (!isPremium) {
-                        e.currentTarget.style.borderColor = '#f59e0b';
-                        e.currentTarget.style.boxShadow = '0 4px 20px rgba(245, 158, 11, 0.2)';
+                        e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.5)';
+                        e.currentTarget.style.boxShadow = '0 8px 20px rgba(245, 158, 11, 0.15)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.opacity = '0.95';
                       } else {
-                        e.currentTarget.style.boxShadow = '0 8px 30px rgba(6, 182, 212, 0.5)';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(8, 145, 178, 0.2) 100%)';
+                        e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.6)';
+                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(6, 182, 212, 0.25)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isPremium) {
-                        e.currentTarget.style.borderColor = 'var(--border)';
-                        e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+                        e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+                        e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.05)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.opacity = '0.85';
                       } else {
-                        e.currentTarget.style.boxShadow = '0 4px 20px rgba(6, 182, 212, 0.3)';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.12) 100%)';
+                        e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.4)';
+                        e.currentTarget.style.boxShadow = '0 2px 12px rgba(6, 182, 212, 0.15)';
+                        e.currentTarget.style.transform = 'translateY(0)';
                       }
                     }}
                   >
                     <CardContent className="flex items-center justify-between p-5">
                       <div className="flex items-center gap-4">
-                        <div className="w-11 h-11 rounded-lg flex items-center justify-center text-xl" style={{ background: isPremium ? 'rgba(255,255,255,0.2)' : 'var(--muted)' }}>
+                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style={{ 
+                          background: isPremium ? 'linear-gradient(to-br, rgba(6, 182, 212, 0.2), rgba(8, 145, 178, 0.15))' : 'var(--muted)'
+                        }}>
                           📄
                         </div>
                         <div>
-                          <span className="font-bold text-lg" style={{ color: isPremium ? 'white' : 'var(--foreground)' }}>
+                          <span className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
                             Word Document
                           </span>
-                          <span className="text-sm block font-normal mt-0.5" style={{ color: isPremium ? 'rgba(255,255,255,0.9)' : 'var(--muted-foreground)' }}>
+                          <span className="text-sm block font-normal mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
                             {t("upload_docx_file")}
                           </span>
                         </div>
                       </div>
                       {isPremium ? (
-                        <span className="px-3 py-1.5 bg-white text-cyan-700 text-xs font-bold rounded-lg shadow-md">
+                        <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 text-xs font-bold rounded-xl border border-cyan-200 dark:border-cyan-800">
                           ✓ Active
                         </span>
                       ) : (
-                        <span className="px-3 py-1.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-lg border border-amber-300">
+                        <span className="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold rounded-xl border border-amber-200 dark:border-amber-800">
                           🔒 Premium
                         </span>
                       )}
@@ -1169,53 +1190,67 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         if (!isPremium) setShowPremiumModal(true);
                         else setSelectedMaterial("image");
                     }}
-                    className="cursor-pointer transition-all duration-200 shadow-lg hover:scale-[1.01] border-2 rounded-2xl overflow-hidden"
+                    className="cursor-pointer transition-all duration-300 border-2 rounded-3xl overflow-hidden"
                     style={{
                       background: isPremium 
-                        ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
-                        : 'var(--card)',
-                      borderColor: isPremium ? '#06b6d4' : 'var(--border)',
+                        ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.12) 100%)'
+                        : 'linear-gradient(135deg, rgba(100, 100, 100, 0.08) 0%, rgba(80, 80, 80, 0.05) 100%)',
+                      borderColor: isPremium ? 'rgba(6, 182, 212, 0.4)' : 'rgba(245, 158, 11, 0.3)',
                       boxShadow: isPremium 
-                        ? '0 4px 20px rgba(6, 182, 212, 0.3)'
-                        : '0 2px 10px rgba(0, 0, 0, 0.1)'
+                        ? '0 2px 12px rgba(6, 182, 212, 0.15)'
+                        : '0 2px 10px rgba(0, 0, 0, 0.05)',
+                      backdropFilter: 'blur(10px)',
+                      opacity: isPremium ? 1 : 0.85
                     }}
                     onMouseEnter={(e) => {
                       if (!isPremium) {
-                        e.currentTarget.style.borderColor = '#f59e0b';
-                        e.currentTarget.style.boxShadow = '0 4px 20px rgba(245, 158, 11, 0.2)';
+                        e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.5)';
+                        e.currentTarget.style.boxShadow = '0 8px 20px rgba(245, 158, 11, 0.15)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.opacity = '0.95';
                       } else {
-                        e.currentTarget.style.boxShadow = '0 8px 30px rgba(6, 182, 212, 0.5)';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(8, 145, 178, 0.2) 100%)';
+                        e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.6)';
+                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(6, 182, 212, 0.25)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isPremium) {
-                        e.currentTarget.style.borderColor = 'var(--border)';
-                        e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+                        e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+                        e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.05)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.opacity = '0.85';
                       } else {
-                        e.currentTarget.style.boxShadow = '0 4px 20px rgba(6, 182, 212, 0.3)';
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.12) 100%)';
+                        e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.4)';
+                        e.currentTarget.style.boxShadow = '0 2px 12px rgba(6, 182, 212, 0.15)';
+                        e.currentTarget.style.transform = 'translateY(0)';
                       }
                     }}
                   >
                     <CardContent className="flex items-center justify-between p-5">
                       <div className="flex items-center gap-4">
-                        <div className="w-11 h-11 rounded-lg flex items-center justify-center text-xl" style={{ background: isPremium ? 'rgba(255,255,255,0.2)' : 'var(--muted)' }}>
+                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl" style={{ 
+                          background: isPremium ? 'linear-gradient(to-br, rgba(6, 182, 212, 0.2), rgba(8, 145, 178, 0.15))' : 'var(--muted)'
+                        }}>
                           🖼️
                         </div>
                         <div>
-                          <span className="font-bold text-lg" style={{ color: isPremium ? 'white' : 'var(--foreground)' }}>
+                          <span className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
                             Image
                           </span>
-                          <span className="text-sm block font-normal mt-0.5" style={{ color: isPremium ? 'rgba(255,255,255,0.9)' : 'var(--muted-foreground)' }}>
+                          <span className="text-sm block font-normal mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
                             Upload photo or screenshot
                           </span>
                         </div>
                       </div>
                       {isPremium ? (
-                        <span className="px-3 py-1.5 bg-white text-cyan-700 text-xs font-bold rounded-lg shadow-md">
+                        <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 text-xs font-bold rounded-xl border border-cyan-200 dark:border-cyan-800">
                           ✓ Active
                         </span>
                       ) : (
-                        <span className="px-3 py-1.5 bg-amber-100 text-amber-700 text-xs font-bold rounded-lg border border-amber-300">
+                        <span className="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold rounded-xl border border-amber-200 dark:border-amber-800">
                           🔒 Premium
                         </span>
                       )}
