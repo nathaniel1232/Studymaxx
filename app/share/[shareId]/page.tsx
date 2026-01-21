@@ -68,7 +68,7 @@ export default function SharePage() {
   if (error || !flashcardSet) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
-        <div className="max-w-md w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-2xl p-10 border border-gray-100 dark:border-gray-700 text-center">
+        <div className="max-w-md w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-md shadow-2xl p-10 border border-gray-100 dark:border-gray-700 text-center">
           <div className="text-6xl mb-6">😕</div>
           <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-3">
             Study Set Not Found
@@ -78,7 +78,7 @@ export default function SharePage() {
           </p>
           <button
             onClick={() => router.push("/")}
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-black text-lg rounded-2xl hover:shadow-lg transition-all transform hover:scale-105"
+            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-black text-lg rounded-md hover:shadow-lg transition-all transform hover:scale-105"
           >
             🏠 Go Back Home
           </button>
@@ -110,7 +110,7 @@ export default function SharePage() {
             <button
               onClick={handleCopyToMyCollection}
               disabled={isCopied}
-              className={`px-8 py-4 font-black text-lg rounded-2xl transition-all transform hover:scale-105 ${
+              className={`px-8 py-4 font-black text-lg rounded-md transition-all transform hover:scale-105 ${
                 isCopied
                   ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
                   : "bg-gradient-to-r from-cyan-500 to-teal-600 text-white hover:shadow-xl hover:shadow-cyan-400/50"

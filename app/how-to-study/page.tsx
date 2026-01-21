@@ -14,9 +14,9 @@ export default function HowToStudyPage() {
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <Link 
+          <Link
             href="/"
-            className="inline-flex items-center gap-2 px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-colors rounded-full hover:bg-white/50 dark:hover:bg-gray-800/50"
+            className="inline-flex items-center gap-2 px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-colors rounded-md hover:bg-white/50 dark:hover:bg-gray-800/50"
           >
             <ArrowIcon direction="left" size={16} />
             <span>{t("back")}</span>
@@ -180,7 +180,7 @@ export default function HowToStudyPage() {
           <div className="mt-10 text-center">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-white font-bold text-lg transition-all hover:scale-105 shadow-lg"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-md text-white font-bold text-lg transition-all hover:scale-105 shadow-lg"
               style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)' }}
             >
               {isNorwegian ? "Start å studere nå" : "Start Studying Now"}
