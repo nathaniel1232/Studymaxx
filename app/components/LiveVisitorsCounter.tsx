@@ -36,7 +36,7 @@ export default function LiveVisitorsCounter() {
         <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ backgroundColor: '#22c55e' }}></span>
       </span>
       <span className="text-sm font-medium" style={{ color: '#16a34a' }}>
-        {visitorCount} people taking test now
+        {visitorCount} people studying now
       </span>
     </div>
   );
