@@ -496,47 +496,53 @@ REMEMBER: If you write a question starting with "Analyze", "Evaluate", "Explain"
   // Build Language Learning Mode instructions
   let languageInstructions = "";
   if (knownLanguage && learningLanguage) {
-    languageInstructions = `🌍🌍🌍 LANGUAGE LEARNING MODE - BILINGUAL FLASHCARDS 🌍🌍🌍
+    languageInstructions = `🌍🌍🌍 LANGUAGE LEARNING MODE - VOCABULARY FLASHCARDS 🌍🌍🌍
 
-CRITICAL CONTEXT:
+CRITICAL: YOU MUST GENERATE EXACTLY ${bufferedCount} FLASHCARDS. NO EXCEPTIONS.
+
+CONTEXT:
 - Student knows: ${knownLanguage}
-- Student is learning: ${learningLanguage}
-- Input text contains vocabulary in BOTH languages (e.g., "perro - dog", "gato - cat")
+- Student is learning: ${learningLanguage}  
+- Input contains vocabulary pairs (e.g., "perro - dog, gato - cat")
 
-YOUR TASK:
-1. CREATE VOCABULARY FLASHCARDS that test ${learningLanguage} → ${knownLanguage} translation
-2. QUESTIONS must be in ${learningLanguage} (the language being learned)
-3. CORRECT ANSWER must be in ${knownLanguage} (the language the student knows)
-4. DISTRACTORS must be in ${knownLanguage} and semantically similar to the correct answer
+FORMAT RULES:
+1. QUESTION: "What does '[${learningLanguage} word]' mean?" or similar natural phrasing
+2. ANSWER: ${knownLanguage} translation (keep it simple - just the translation)
+3. DISTRACTORS: 3 other ${knownLanguage} words (semantically related)
 
-EXAMPLE (Learning Spanish from English):
-Input: "perro - dog, gato - cat, casa - house, árbol - tree"
-✅ CORRECT Flashcard:
+EXAMPLE:
+Input: "perro - dog, gato - cat, casa - house, árbol - tree, agua - water"
+
+✅ CORRECT Flashcards:
 {
-  "question": "¿Qué significa 'perro'?",
+  "question": "What does 'perro' mean?",
   "answer": "dog",
-  "distractors": ["cat", "house", "tree"]
+  "distractors": ["cat", "horse", "bird"]
+},
+{
+  "question": "What does 'gato' mean?",
+  "answer": "cat",
+  "distractors": ["dog", "mouse", "bird"]
+},
+{
+  "question": "What does 'casa' mean?",
+  "answer": "house",
+  "distractors": ["building", "apartment", "room"]
 }
 
-❌ WRONG - Don't mix languages in distractors:
-{
-  "question": "What does 'perro' mean?",  ❌ Question should be in Spanish!
-  "answer": "dog",
-  "distractors": ["gato", "cat", "house"]  ❌ Don't mix Spanish and English in distractors!
-}
+EXTRACTION:
+- Parse format: "[${learningLanguage}] - [${knownLanguage}]"
+- Extract ALL vocabulary pairs from input
+- Create ONE flashcard per vocabulary word
+- If you see 30 words, create 30 flashcards
 
-VOCABULARY EXTRACTION:
-- If input has paired format (e.g., "Spanish - English"), extract BOTH parts correctly
-- Don't confuse similar-looking languages (e.g., Icelandic vs Norwegian)
-- Create questions that test recall of ${learningLanguage} words
+DISTRACTOR SELECTION:
+- Use OTHER vocabulary words from the input as distractors when possible
+- Keep distractors in ${knownLanguage} only
+- Choose words from similar semantic categories
+- Example: For "dog" → use "cat", "horse", "bird" (all animals)
 
-DISTRACTOR RULES FOR VOCABULARY:
-- ALL distractors must be in ${knownLanguage}
-- Choose semantically related words (e.g., for "dog": "cat", "horse", "bird" - not "house", "car", "book")
-- Use words from the same category when possible
-- Make them plausible - words a student might confuse
-
-REMEMBER: Question in ${learningLanguage}, Answer + Distractors in ${knownLanguage}`;
+REMEMBER: GENERATE ${bufferedCount} FLASHCARDS FROM THE VOCABULARY LIST.`;
   }
 
   const systemPrompt = `You are an expert academic tutor${subject ? ` in ${subject}` : ""} creating educational flashcards.

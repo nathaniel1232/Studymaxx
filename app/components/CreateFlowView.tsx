@@ -45,6 +45,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   // Output language preference
   const [outputLanguage, setOutputLanguage] = useState<"auto" | "en">("auto");
   const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
+  const [detectedLanguages, setDetectedLanguages] = useState<string[]>([]);
 
   // Difficulty
   const [difficulty, setDifficulty] = useState<string>("Medium");
@@ -153,9 +154,76 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     return () => clearInterval(interval);
   }, [isGenerating]);
 
-  // Detect language from text input
+  // Detect ALL languages in text (for bilingual content)
+  const detectLanguages = (text: string): string[] => {
+    if (!text || text.length < 15) return [];
+    
+    const detected: string[] = [];
+    const textLower = text.toLowerCase();
+    const words = textLower.split(/[\s,.;:!?()"\-]+/).filter(w => w.length > 0);
+    
+    const languageProfiles: Record<string, string[]> = {
+      "English": ["the", "and", "is", "of", "to", "in", "that", "it", "with", "as", "you", "are", "have", "not"],
+      "Norwegian": ["og", "er", "det", "som", "en", "av", "på", "til", "med", "har", "ikke", "jeg", "vi", "å"],
+      "Spanish": ["de", "la", "que", "el", "en", "y", "a", "los", "se", "del", "las", "por", "un", "una"],
+      "French": ["de", "la", "le", "et", "les", "des", "en", "un", "du", "une", "est", "pour", "que", "qui"],
+      "German": ["der", "die", "und", "in", "den", "von", "zu", "das", "mit", "sich", "auf", "für", "ist", "nicht"],
+      "Italian": ["di", "e", "il", "la", "che", "in", "a", "per", "un", "del", "non", "sono", "le", "con"],
+      "Portuguese": ["de", "a", "o", "que", "e", "do", "da", "em", "um", "para", "com", "nao", "os", "sua"],
+      "Dutch": ["de", "en", "van", "ik", "te", "dat", "die", "in", "een", "hij", "het", "niet", "is", "op"],
+      "Swedish": ["och", "i", "är", "det", "som", "till", "en", "av", "för", "att", "med", "inte", "på", "jag"],
+      "Danish": ["og", "i", "er", "det", "som", "til", "en", "af", "for", "at", "med", "ikke", "jeg", "vi"],
+      "Icelandic": ["og", "er", "að", "ekki", "við", "það", "fyrir", "með", "sem", "eru", "var", "hann", "hún"],
+      "Polish": ["i", "w", "na", "z", "do", "nie", "się", "o", "że", "to", "jest", "od", "za"],
+      "Russian": ["и", "в", "не", "на", "я", "что", "он", "с", "как", "это", "по", "за"],
+      "Japanese": ["の", "に", "は", "を", "た", "が", "で", "て", "と", "し"],
+      "Chinese": ["的", "一", "是", "在", "不", "了", "有", "和", "人"],
+      "Korean": ["은", "는", "이", "가", "을", "를", "의", "에", "로"],
+    };
+    
+    // Score each language
+    const scores: Record<string, number> = {};
+    Object.entries(languageProfiles).forEach(([lang, stopWords]) => {
+      let score = 0;
+      words.forEach(word => {
+        if (stopWords.includes(word)) score++;
+      });
+      
+      // Bonus for special characters
+      if (lang === "Norwegian" && /[æøå]/.test(textLower)) score += 5;
+      if (lang === "Swedish" && /[äöå]/.test(textLower)) score += 5;
+      if (lang === "German" && /[üöäß]/.test(textLower)) score += 5;
+      if (lang === "Spanish" && /[ñ¿¡]/.test(textLower)) score += 5;
+      if (lang === "French" && /[àèéêç]/.test(textLower)) score += 3;
+      if (lang === "Icelandic" && /[ðþ]/.test(textLower)) score += 10;
+      if (lang === "Russian" && /[а-я]/.test(textLower)) score += 10;
+      if (lang === "Japanese" && /[\u3040-\u309F\u30A0-\u30FF]/.test(text)) score += 10;
+      if (lang === "Chinese" && /[\u4E00-\u9FFF]/.test(text)) score += 10;
+      if (lang === "Korean" && /[\uAC00-\uD7AF]/.test(text)) score += 10;
+      
+      if (score > 0) scores[lang] = score;
+    });
+    
+    // Get languages with significant scores
+    const sortedLangs = Object.entries(scores)
+      .sort((a, b) => b[1] - a[1])
+      .filter(([_, score]) => score >= 2); // Min threshold
+    
+    // If bilingual content, return top 2, otherwise top 1
+    if (sortedLangs.length >= 2 && sortedLangs[1][1] >= sortedLangs[0][1] * 0.3) {
+      // Second language has at least 30% of top score - likely bilingual
+      return [sortedLangs[0][0], sortedLangs[1][0]];
+    } else if (sortedLangs.length > 0) {
+      return [sortedLangs[0][0]];
+    }
+    
+    return [];
+  };
+  
+  // Legacy single language detection
   const detectLanguage = (text: string): string => {
-    if (!text || text.length < 15) return "unknown";
+    const langs = detectLanguages(text);
+    return langs.length > 0 ? langs[0] : "unknown";
     
     // 1. Script Detection (Unicode Ranges) - accurate for non-Latin
     if (/[а-яА-Я]/.test(text)) return "Cyrillic (Russian/Ukrainian)";
@@ -231,9 +299,19 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   useEffect(() => {
     if (textInput && textInput.length >= 50) {
       const lang = detectLanguage(textInput);
+      const langs = detectLanguages(textInput);
       setDetectedLanguage(lang);
+      setDetectedLanguages(langs);
+      
+      // Auto-set language pairs for Languages subject if 2 detected
+      if (isLanguageSubject && langs.length === 2 && !knownLanguage && !learningLanguage) {
+        // Default: first detected = learning, second = known
+        setLearningLanguage(langs[0]);
+        setKnownLanguage(langs[1]);
+      }
     } else {
       setDetectedLanguage(null);
+      setDetectedLanguages([]);
     }
   }, [textInput]);
 
@@ -423,21 +501,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       return;
     }
     
-    // Check if Languages subject requires language selection
-    if (isLanguageSubject) {
-      if (!knownLanguage || !learningLanguage) {
-        setError(settings.language === "no" 
-          ? "Velg hvilket språk du kan og hvilket du lærer" 
-          : "Select which language you know and which you're learning");
-        return;
-      }
-      if (knownLanguage === learningLanguage) {
-        setError(settings.language === "no"
-          ? "Språkene må være forskjellige"
-          : "Languages must be different");
-        return;
-      }
-    }
+    // For Languages subject, validation happens in step 2 after text is entered
+    // (we need to detect languages from text first)
     
     setError("");
     setCurrentStep(2);
@@ -458,6 +523,28 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     if ((selectedMaterial === "docx" || selectedMaterial === "image") && !uploadedFile) {
       setError(messages.errors.fileRequired);
       return;
+    }
+    
+    // Validate language selection for Languages subject
+    if (isLanguageSubject) {
+      if (detectedLanguages.length < 2) {
+        setError(settings.language === "no"
+          ? "Lim inn tekst med to språk (f.eks. 'perro - hund') for språklæring"
+          : "Paste text with two languages (e.g., 'perro - dog') for language learning");
+        return;
+      }
+      if (!knownLanguage || !learningLanguage) {
+        setError(settings.language === "no"
+          ? "Velg hvilket språk du kan og hvilket du lærer"
+          : "Select which language you know and which you're learning");
+        return;
+      }
+      if (knownLanguage === learningLanguage) {
+        setError(settings.language === "no"
+          ? "Språkene må være forskjellige"
+          : "Languages must be different");
+        return;
+      }
     }
     
     setError("");
@@ -1068,67 +1155,63 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       {settings.language === "no" ? "Språkinnstillinger" : "Language Settings"}
                     </h3>
                     
-                    {/* Known Language */}
-                    <div className="mb-3">
-                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                        {settings.language === "no" ? "Jeg kan:" : "I know:"}
-                      </label>
-                      <select
-                        value={knownLanguage}
-                        onChange={(e) => setKnownLanguage(e.target.value)}
-                        className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
-                        style={{ color: 'var(--foreground)' }}
-                      >
-                        <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
-                        <option value="English">English</option>
-                        <option value="Norwegian">Norsk (Norwegian)</option>
-                        <option value="Spanish">Español (Spanish)</option>
-                        <option value="French">Français (French)</option>
-                        <option value="German">Deutsch (German)</option>
-                        <option value="Italian">Italiano (Italian)</option>
-                        <option value="Portuguese">Português (Portuguese)</option>
-                        <option value="Swedish">Svenska (Swedish)</option>
-                        <option value="Danish">Dansk (Danish)</option>
-                        <option value="Dutch">Nederlands (Dutch)</option>
-                        <option value="Chinese">中文 (Chinese)</option>
-                        <option value="Japanese">日本語 (Japanese)</option>
-                        <option value="Korean">한국어 (Korean)</option>
-                      </select>
-                    </div>
+                    {detectedLanguages.length >= 2 ? (
+                      <>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                          {settings.language === "no" 
+                            ? `Detekterte språk: ${detectedLanguages.join(" + ")}` 
+                            : `Detected languages: ${detectedLanguages.join(" + ")}`}
+                        </p>
+                        
+                        {/* Known Language */}
+                        <div className="mb-3">
+                          <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                            {settings.language === "no" ? "Jeg kan:" : "I know:"}
+                          </label>
+                          <select
+                            value={knownLanguage}
+                            onChange={(e) => setKnownLanguage(e.target.value)}
+                            className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
+                            style={{ color: 'var(--foreground)' }}
+                          >
+                            <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
+                            {detectedLanguages.map(lang => (
+                              <option key={lang} value={lang}>{lang}</option>
+                            ))}
+                          </select>
+                        </div>
 
-                    {/* Learning Language */}
-                    <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                        {settings.language === "no" ? "Jeg lærer:" : "I'm learning:"}
-                      </label>
-                      <select
-                        value={learningLanguage}
-                        onChange={(e) => setLearningLanguage(e.target.value)}
-                        className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
-                        style={{ color: 'var(--foreground)' }}
-                      >
-                        <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
-                        <option value="English">English</option>
-                        <option value="Norwegian">Norsk (Norwegian)</option>
-                        <option value="Spanish">Español (Spanish)</option>
-                        <option value="French">Français (French)</option>
-                        <option value="German">Deutsch (German)</option>
-                        <option value="Italian">Italiano (Italian)</option>
-                        <option value="Portuguese">Português (Portuguese)</option>
-                        <option value="Swedish">Svenska (Swedish)</option>
-                        <option value="Danish">Dansk (Danish)</option>
-                        <option value="Dutch">Nederlands (Dutch)</option>
-                        <option value="Chinese">中文 (Chinese)</option>
-                        <option value="Japanese">日本語 (Japanese)</option>
-                        <option value="Korean">한국어 (Korean)</option>
-                      </select>
-                    </div>
+                        {/* Learning Language */}
+                        <div>
+                          <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                            {settings.language === "no" ? "Jeg lærer:" : "I'm learning:"}
+                          </label>
+                          <select
+                            value={learningLanguage}
+                            onChange={(e) => setLearningLanguage(e.target.value)}
+                            className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
+                            style={{ color: 'var(--foreground)' }}
+                          >
+                            <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
+                            {detectedLanguages.map(lang => (
+                              <option key={lang} value={lang}>{lang}</option>
+                            ))}
+                          </select>
+                        </div>
 
-                    {knownLanguage && learningLanguage && knownLanguage !== learningLanguage && (
-                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-3">
-                        ✓ {settings.language === "no" 
-                          ? `Lærer ${learningLanguage} fra ${knownLanguage}` 
-                          : `Learning ${learningLanguage} from ${knownLanguage}`}
+                        {knownLanguage && learningLanguage && knownLanguage !== learningLanguage && (
+                          <p className="text-xs text-green-600 dark:text-green-400 mt-3">
+                            ✓ {settings.language === "no" 
+                              ? `Lærer ${learningLanguage} fra ${knownLanguage}` 
+                              : `Learning ${learningLanguage} from ${knownLanguage}`}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                        {settings.language === "no" 
+                          ? "Lim inn tekst med to språk (f.eks. 'perro - hund') i neste steg for å detektere språkene automatisk" 
+                          : "Paste text with two languages (e.g., 'perro - dog') in the next step to auto-detect languages"}
                       </p>
                     )}
                   </div>
