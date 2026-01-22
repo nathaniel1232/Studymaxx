@@ -496,27 +496,33 @@ REMEMBER: If you write a question starting with "Analyze", "Evaluate", "Explain"
   // Build Language Learning Mode instructions
   let languageInstructions = "";
   if (knownLanguage && learningLanguage) {
-    languageInstructions = `🚨🚨🚨 VOCABULARY MODE - GENERATE EXACTLY ${bufferedCount} FLASHCARDS 🚨🚨🚨
+    languageInstructions = `
+⚠️ VOCABULARY MODE ACTIVE ⚠️
+Language pair: ${learningLanguage} → ${knownLanguage}
+Parse input as: "[word in ${learningLanguage}] - [word in ${knownLanguage}]"
+Create ONE flashcard per vocabulary pair.
+Question format: "What does '[${learningLanguage} word]' mean?"
+Answer: ${knownLanguage} translation only.
+Distractors: 3 other ${knownLanguage} words.
+`;
+  }
 
-You are creating vocabulary flashcards for language learning.
+  const systemPrompt = knownLanguage && learningLanguage 
+    ? `You are creating ${bufferedCount} vocabulary flashcards.
 
 Language pair: ${learningLanguage} → ${knownLanguage}
-
-Input format: "[${learningLanguage} word] - [${knownLanguage} word]"
+Parse input as: "[word in ${learningLanguage}] - [word in ${knownLanguage}]"
 
 For EACH vocabulary pair, create ONE flashcard:
 - Question: "What does '[${learningLanguage} word]' mean?"
-- Answer: [${knownLanguage} translation]
+- Answer: ${knownLanguage} translation only
 - Distractors: 3 other ${knownLanguage} words
 
-Example:
-Input: "chien - dog, chat - cat, maison - house"
-Output 3 flashcards (one per word).
+OUTPUT (JSON only):
+{"flashcards": [{"id": "1", "question": "...", "answer": "...", "distractors": ["...", "...", "..."]}]}
 
-❗ CRITICAL: Generate ${bufferedCount} flashcards total. Count the vocabulary pairs and create that many flashcards.`;
-  }
-
-  const systemPrompt = `You are an expert academic tutor${subject ? ` in ${subject}` : ""} creating educational flashcards.
+⚠️ GENERATE EXACTLY ${bufferedCount} FLASHCARDS - ONE PER VOCABULARY WORD ⚠️`
+    : `You are an expert academic tutor${subject ? ` in ${subject}` : ""} creating educational flashcards.
 
 CRITICAL: You are creating STUDY FLASHCARDS, not code. Do NOT generate programming code, HTML, or any file modifications.
 
@@ -530,8 +536,6 @@ CORE RULES:
 ${difficultyInstructions}
 
 ${mathInstructions}
-
-${languageInstructions}
 
 ${materialInstructions}
 
