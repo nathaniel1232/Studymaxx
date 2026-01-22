@@ -1149,82 +1149,6 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                 </div>
               </div>
 
-              {/* Language Selection - Only show when Languages subject is selected */}
-              {isLanguageSubject && (
-                <div className="space-y-3 mt-4">
-                  <div className="p-4 rounded-lg border bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-                    <h3 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)' }}>
-                      {settings.language === "no" ? "Språkinnstillinger" : "Language Settings"}
-                    </h3>
-                    
-                    {detectedLanguages.length >= 2 ? (
-                      <>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                          {settings.language === "no" 
-                            ? `✓ Detekterte språk: ${detectedLanguages.join(" + ")}` 
-                            : `✓ Detected languages: ${detectedLanguages.join(" + ")}`}
-                        </p>
-                        <p className="text-xs text-blue-600 dark:text-blue-400 mb-3 font-medium">
-                          {settings.language === "no"
-                            ? "Velg ditt morsmål og språket du lærer:"
-                            : "Choose your native language and the language you're learning:"}
-                        </p>
-                        
-                        {/* Known Language */}
-                        <div className="mb-3">
-                          <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                            {settings.language === "no" ? "🏠 Mitt morsmål (jeg kan):" : "🏠 My native language (I know):"}
-                          </label>
-                          <select
-                            value={knownLanguage}
-                            onChange={(e) => setKnownLanguage(e.target.value)}
-                            className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
-                            style={{ color: 'var(--foreground)' }}
-                          >
-                            <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
-                            {detectedLanguages.map(lang => (
-                              <option key={lang} value={lang}>{lang}</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        {/* Learning Language */}
-                        <div>
-                          <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                            {settings.language === "no" ? "📚 Jeg lærer:" : "📚 I'm learning:"}
-                          </label>
-                          <select
-                            value={learningLanguage}
-                            onChange={(e) => setLearningLanguage(e.target.value)}
-                            className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
-                            style={{ color: 'var(--foreground)' }}
-                          >
-                            <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
-                            {detectedLanguages.map(lang => (
-                              <option key={lang} value={lang}>{lang}</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        {knownLanguage && learningLanguage && knownLanguage !== learningLanguage && (
-                          <p className="text-xs text-green-600 dark:text-green-400 mt-3">
-                            ✓ {settings.language === "no" 
-                              ? `Lærer ${learningLanguage} fra ${knownLanguage}` 
-                              : `Learning ${learningLanguage} from ${knownLanguage}`}
-                          </p>
-                        )}
-                      </>
-                    ) : (
-                      <p className="text-xs text-amber-600 dark:text-amber-400">
-                        {settings.language === "no" 
-                          ? "Lim inn tekst med to språk (f.eks. 'perro - hund') i neste steg for å detektere språkene automatisk" 
-                          : "Paste text with two languages (e.g., 'perro - dog') in the next step to auto-detect languages"}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
               {/* Continue button */}
               <button
                 onClick={handleContinueFromStep1}
@@ -1477,13 +1401,89 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
                     {/* Notes input */}
                     {selectedMaterial === "notes" && (
-                      <Textarea
-                        value={textInput}
-                        onChange={(e) => setTextInput(e.target.value)}
-                        placeholder={t("paste_notes_here")}
-                        className="min-h-40 text-sm"
-                        autoFocus
-                      />
+                      <>
+                        <Textarea
+                          value={textInput}
+                          onChange={(e) => setTextInput(e.target.value)}
+                          placeholder={t("paste_notes_here")}
+                          className="min-h-40 text-sm"
+                          autoFocus
+                        />
+                        
+                        {/* Language Selection for Languages subject - Show after text is entered */}
+                        {isLanguageSubject && textInput.length >= 50 && (
+                          <div className="mt-4 p-4 rounded-lg border bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                            <h3 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)' }}>
+                              {settings.language === "no" ? "Språkinnstillinger" : "Language Settings"}
+                            </h3>
+                            
+                            {detectedLanguages.length >= 2 ? (
+                              <>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                  {settings.language === "no" 
+                                    ? `✓ Detekterte språk: ${detectedLanguages.join(" + ")}` 
+                                    : `✓ Detected languages: ${detectedLanguages.join(" + ")}`}
+                                </p>
+                                <p className="text-xs text-blue-600 dark:text-blue-400 mb-3 font-medium">
+                                  {settings.language === "no"
+                                    ? "Velg ditt morsmål og språket du lærer:"
+                                    : "Choose your native language and the language you're learning:"}
+                                </p>
+                                
+                                {/* Known Language */}
+                                <div className="mb-3">
+                                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                                    {settings.language === "no" ? "🏠 Mitt morsmål (jeg kan):" : "🏠 My native language (I know):"}
+                                  </label>
+                                  <select
+                                    value={knownLanguage}
+                                    onChange={(e) => setKnownLanguage(e.target.value)}
+                                    className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
+                                    style={{ color: 'var(--foreground)' }}
+                                  >
+                                    <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
+                                    {detectedLanguages.map(lang => (
+                                      <option key={lang} value={lang}>{lang}</option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                                {/* Learning Language */}
+                                <div>
+                                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                                    {settings.language === "no" ? "📚 Jeg lærer:" : "📚 I'm learning:"}
+                                  </label>
+                                  <select
+                                    value={learningLanguage}
+                                    onChange={(e) => setLearningLanguage(e.target.value)}
+                                    className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
+                                    style={{ color: 'var(--foreground)' }}
+                                  >
+                                    <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
+                                    {detectedLanguages.map(lang => (
+                                      <option key={lang} value={lang}>{lang}</option>
+                                    ))}
+                                  </select>
+                                </div>
+
+                                {knownLanguage && learningLanguage && knownLanguage !== learningLanguage && (
+                                  <p className="text-xs text-green-600 dark:text-green-400 mt-3">
+                                    ✓ {settings.language === "no" 
+                                      ? `Lærer ${learningLanguage} fra ${knownLanguage}` 
+                                      : `Learning ${learningLanguage} from ${knownLanguage}`}
+                                  </p>
+                                )}
+                              </>
+                            ) : (
+                              <p className="text-xs text-amber-600 dark:text-amber-400">
+                                {settings.language === "no" 
+                                  ? "Kunne ikke detektere to språk. Sørg for at teksten inneholder ordpar i to språk (f.eks. 'chien - hund')" 
+                                  : "Could not detect two languages. Make sure text contains word pairs in two languages (e.g., 'chien - dog')"}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </>
                     )}
 
                     {/* DOCX upload */}
