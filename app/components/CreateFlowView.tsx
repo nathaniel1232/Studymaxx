@@ -207,13 +207,18 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     // Get languages with significant scores
     const sortedLangs = Object.entries(scores)
       .sort((a, b) => b[1] - a[1])
-      .filter(([_, score]) => score >= 2); // Min threshold
+      .filter(([_, score]) => score >= 1); // Lower threshold to detect more languages
+    
+    console.log('[detectLanguages] All scores:', scores);
+    console.log('[detectLanguages] Sorted langs:', sortedLangs);
     
     // If bilingual content, return top 2, otherwise top 1
-    if (sortedLangs.length >= 2 && sortedLangs[1][1] >= sortedLangs[0][1] * 0.3) {
-      // Second language has at least 30% of top score - likely bilingual
+    if (sortedLangs.length >= 2 && sortedLangs[1][1] >= sortedLangs[0][1] * 0.15) {
+      // Second language has at least 15% of top score - likely bilingual
+      console.log('[detectLanguages] Detected BILINGUAL:', sortedLangs[0][0], '+', sortedLangs[1][0]);
       return [sortedLangs[0][0], sortedLangs[1][0]];
     } else if (sortedLangs.length > 0) {
+      console.log('[detectLanguages] Detected SINGLE:', sortedLangs[0][0]);
       return [sortedLangs[0][0]];
     }
     
@@ -303,12 +308,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       setDetectedLanguage(lang);
       setDetectedLanguages(langs);
       
-      // Auto-set language pairs for Languages subject if 2 detected
-      if (isLanguageSubject && langs.length === 2 && !knownLanguage && !learningLanguage) {
-        // Default: first detected = learning, second = known
-        setLearningLanguage(langs[0]);
-        setKnownLanguage(langs[1]);
-      }
+      console.log('[CreateFlowView] Detected languages:', langs);
+      
+      // DON'T auto-set - let user choose which is known vs learning
     } else {
       setDetectedLanguage(null);
       setDetectedLanguages([]);
@@ -1157,16 +1159,21 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     
                     {detectedLanguages.length >= 2 ? (
                       <>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
                           {settings.language === "no" 
-                            ? `Detekterte språk: ${detectedLanguages.join(" + ")}` 
-                            : `Detected languages: ${detectedLanguages.join(" + ")}`}
+                            ? `✓ Detekterte språk: ${detectedLanguages.join(" + ")}` 
+                            : `✓ Detected languages: ${detectedLanguages.join(" + ")}`}
+                        </p>
+                        <p className="text-xs text-blue-600 dark:text-blue-400 mb-3 font-medium">
+                          {settings.language === "no"
+                            ? "Velg ditt morsmål og språket du lærer:"
+                            : "Choose your native language and the language you're learning:"}
                         </p>
                         
                         {/* Known Language */}
                         <div className="mb-3">
                           <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                            {settings.language === "no" ? "Jeg kan:" : "I know:"}
+                            {settings.language === "no" ? "🏠 Mitt morsmål (jeg kan):" : "🏠 My native language (I know):"}
                           </label>
                           <select
                             value={knownLanguage}
@@ -1184,7 +1191,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         {/* Learning Language */}
                         <div>
                           <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                            {settings.language === "no" ? "Jeg lærer:" : "I'm learning:"}
+                            {settings.language === "no" ? "📚 Jeg lærer:" : "📚 I'm learning:"}
                           </label>
                           <select
                             value={learningLanguage}

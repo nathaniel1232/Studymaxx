@@ -496,53 +496,24 @@ REMEMBER: If you write a question starting with "Analyze", "Evaluate", "Explain"
   // Build Language Learning Mode instructions
   let languageInstructions = "";
   if (knownLanguage && learningLanguage) {
-    languageInstructions = `🌍🌍🌍 LANGUAGE LEARNING MODE - VOCABULARY FLASHCARDS 🌍🌍🌍
+    languageInstructions = `🚨🚨🚨 VOCABULARY MODE - GENERATE EXACTLY ${bufferedCount} FLASHCARDS 🚨🚨🚨
 
-CRITICAL: YOU MUST GENERATE EXACTLY ${bufferedCount} FLASHCARDS. NO EXCEPTIONS.
+You are creating vocabulary flashcards for language learning.
 
-CONTEXT:
-- Student knows: ${knownLanguage}
-- Student is learning: ${learningLanguage}  
-- Input contains vocabulary pairs (e.g., "perro - dog, gato - cat")
+Language pair: ${learningLanguage} → ${knownLanguage}
 
-FORMAT RULES:
-1. QUESTION: "What does '[${learningLanguage} word]' mean?" or similar natural phrasing
-2. ANSWER: ${knownLanguage} translation (keep it simple - just the translation)
-3. DISTRACTORS: 3 other ${knownLanguage} words (semantically related)
+Input format: "[${learningLanguage} word] - [${knownLanguage} word]"
 
-EXAMPLE:
-Input: "perro - dog, gato - cat, casa - house, árbol - tree, agua - water"
+For EACH vocabulary pair, create ONE flashcard:
+- Question: "What does '[${learningLanguage} word]' mean?"
+- Answer: [${knownLanguage} translation]
+- Distractors: 3 other ${knownLanguage} words
 
-✅ CORRECT Flashcards:
-{
-  "question": "What does 'perro' mean?",
-  "answer": "dog",
-  "distractors": ["cat", "horse", "bird"]
-},
-{
-  "question": "What does 'gato' mean?",
-  "answer": "cat",
-  "distractors": ["dog", "mouse", "bird"]
-},
-{
-  "question": "What does 'casa' mean?",
-  "answer": "house",
-  "distractors": ["building", "apartment", "room"]
-}
+Example:
+Input: "chien - dog, chat - cat, maison - house"
+Output 3 flashcards (one per word).
 
-EXTRACTION:
-- Parse format: "[${learningLanguage}] - [${knownLanguage}]"
-- Extract ALL vocabulary pairs from input
-- Create ONE flashcard per vocabulary word
-- If you see 30 words, create 30 flashcards
-
-DISTRACTOR SELECTION:
-- Use OTHER vocabulary words from the input as distractors when possible
-- Keep distractors in ${knownLanguage} only
-- Choose words from similar semantic categories
-- Example: For "dog" → use "cat", "horse", "bird" (all animals)
-
-REMEMBER: GENERATE ${bufferedCount} FLASHCARDS FROM THE VOCABULARY LIST.`;
+❗ CRITICAL: Generate ${bufferedCount} flashcards total. Count the vocabulary pairs and create that many flashcards.`;
   }
 
   const systemPrompt = `You are an expert academic tutor${subject ? ` in ${subject}` : ""} creating educational flashcards.
