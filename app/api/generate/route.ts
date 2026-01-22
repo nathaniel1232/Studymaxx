@@ -46,6 +46,8 @@ interface GenerateRequest {
   materialType?: string;
   outputLanguage?: "auto" | "en";
   includeMath?: boolean;
+  knownLanguage?: string;
+  learningLanguage?: string;
 }
 
 interface Flashcard {
@@ -242,12 +244,14 @@ async function generateWithAIFast(
   materialType?: string,
   outputLanguage: "auto" | "en" = "auto",
   difficulty?: string,
-  includeMath?: boolean
+  includeMath?: boolean,
+  knownLanguage?: string,
+  learningLanguage?: string
 ): Promise<Flashcard[]> {
   console.log(`[generateWithAIFast] Target: ${numberOfFlashcards} flashcards (fast single-request mode)`);
   
   // Single request with streamlined generation - no batching for speed
-  return await generateWithAI(text, numberOfFlashcards, language, targetGrade, subject, materialType, outputLanguage, difficulty, includeMath);
+  return await generateWithAI(text, numberOfFlashcards, language, targetGrade, subject, materialType, outputLanguage, difficulty, includeMath, knownLanguage, learningLanguage);
 }
 
 /**
@@ -331,7 +335,9 @@ async function generateWithAI(
   materialType?: string,
   outputLanguage: "auto" | "en" = "auto",
   difficulty?: string,
-  includeMath?: boolean
+  includeMath?: boolean,
+  knownLanguage?: string,
+  learningLanguage?: string
 ): Promise<Flashcard[]> {
   const targetCount = numberOfFlashcards; // Store original request
   
@@ -487,6 +493,52 @@ DISTRACTORS:
 REMEMBER: If you write a question starting with "Analyze", "Evaluate", "Explain", or "Why", you have FAILED this task.`;
   }
 
+  // Build Language Learning Mode instructions
+  let languageInstructions = "";
+  if (knownLanguage && learningLanguage) {
+    languageInstructions = `🌍🌍🌍 LANGUAGE LEARNING MODE - BILINGUAL FLASHCARDS 🌍🌍🌍
+
+CRITICAL CONTEXT:
+- Student knows: ${knownLanguage}
+- Student is learning: ${learningLanguage}
+- Input text contains vocabulary in BOTH languages (e.g., "perro - dog", "gato - cat")
+
+YOUR TASK:
+1. CREATE VOCABULARY FLASHCARDS that test ${learningLanguage} → ${knownLanguage} translation
+2. QUESTIONS must be in ${learningLanguage} (the language being learned)
+3. CORRECT ANSWER must be in ${knownLanguage} (the language the student knows)
+4. DISTRACTORS must be in ${knownLanguage} and semantically similar to the correct answer
+
+EXAMPLE (Learning Spanish from English):
+Input: "perro - dog, gato - cat, casa - house, árbol - tree"
+✅ CORRECT Flashcard:
+{
+  "question": "¿Qué significa 'perro'?",
+  "answer": "dog",
+  "distractors": ["cat", "house", "tree"]
+}
+
+❌ WRONG - Don't mix languages in distractors:
+{
+  "question": "What does 'perro' mean?",  ❌ Question should be in Spanish!
+  "answer": "dog",
+  "distractors": ["gato", "cat", "house"]  ❌ Don't mix Spanish and English in distractors!
+}
+
+VOCABULARY EXTRACTION:
+- If input has paired format (e.g., "Spanish - English"), extract BOTH parts correctly
+- Don't confuse similar-looking languages (e.g., Icelandic vs Norwegian)
+- Create questions that test recall of ${learningLanguage} words
+
+DISTRACTOR RULES FOR VOCABULARY:
+- ALL distractors must be in ${knownLanguage}
+- Choose semantically related words (e.g., for "dog": "cat", "horse", "bird" - not "house", "car", "book")
+- Use words from the same category when possible
+- Make them plausible - words a student might confuse
+
+REMEMBER: Question in ${learningLanguage}, Answer + Distractors in ${knownLanguage}`;
+  }
+
   const systemPrompt = `You are an expert academic tutor${subject ? ` in ${subject}` : ""} creating educational flashcards.
 
 CRITICAL: You are creating STUDY FLASHCARDS, not code. Do NOT generate programming code, HTML, or any file modifications.
@@ -501,6 +553,8 @@ CORE RULES:
 ${difficultyInstructions}
 
 ${mathInstructions}
+
+${languageInstructions}
 
 ${materialInstructions}
 
@@ -813,7 +867,7 @@ Generate ${bufferedCount} educational flashcards now. Output ONLY the JSON above
 export async function POST(req: NextRequest) {
   try {
     const body: GenerateRequest = await req.json();
-    const { userId, text, numberOfFlashcards, subject, targetGrade, difficulty, language: detectedLanguage, materialType, outputLanguage } = body;
+    const { userId, text, numberOfFlashcards, subject, targetGrade, difficulty, language: detectedLanguage, materialType, outputLanguage, knownLanguage, learningLanguage } = body;
 
     // Determine the actual output language
     // If outputLanguage is "en", force English; if "auto", use the detected language from input text
@@ -908,7 +962,9 @@ export async function POST(req: NextRequest) {
       materialType,
       outputLanguage,
       difficulty,
-      body.includeMath
+      body.includeMath,
+      knownLanguage,
+      learningLanguage
     );
 
     // STEP 5: Increment usage counters (fire-and-forget - don't wait)

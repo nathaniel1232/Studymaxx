@@ -14,6 +14,10 @@ interface Flashcard {
  * @param userId - User ID for premium checks (optional, will be auto-generated if not provided)
  * @param materialType - Type of material (notes, pdf, youtube, image) - notes has no limits
  * @param outputLanguage - Language for flashcard output: "auto" (detect from input) or "en" (English)
+ * @param difficulty - Difficulty level (Easy, Medium, Hard)
+ * @param includeMath - Whether to use math problem mode
+ * @param knownLanguage - Language the student knows (for language learning)
+ * @param learningLanguage - Language the student is learning (for language learning)
  */
 export async function generateFlashcards(
   text: string,
@@ -24,7 +28,9 @@ export async function generateFlashcards(
   materialType: string = "notes",
   outputLanguage: "auto" | "en" = "auto",
   difficulty: string = "Medium",
-  includeMath: boolean = false
+  includeMath: boolean = false,
+  knownLanguage?: string,
+  learningLanguage?: string
 ): Promise<Flashcard[]> {
   // Get or generate userId
   const effectiveUserId = userId || (typeof window !== 'undefined' 
@@ -44,6 +50,8 @@ export async function generateFlashcards(
       userId: effectiveUserId,
       materialType: materialType,
       outputLanguage: outputLanguage,
+      knownLanguage,
+      learningLanguage,
     }),
   });
 

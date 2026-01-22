@@ -52,12 +52,20 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   // Math problems toggle
   const [includeMathProblems, setIncludeMathProblems] = useState(false);
   
+  // Language learning settings (for Languages subject only)
+  const [knownLanguage, setKnownLanguage] = useState("");
+  const [learningLanguage, setLearningLanguage] = useState("");
+  
   // Check if subject is math-related
   const isMathSubject = subject.toLowerCase().includes("math") || 
                         subject.toLowerCase().includes("matte") ||
                         subject.toLowerCase().includes("matematikk") ||
                         subject.toLowerCase().includes("algebra") ||
                         subject.toLowerCase().includes("calculus");
+  
+  // Check if subject is language-related
+  const isLanguageSubject = subject.toLowerCase().includes("language") ||
+                            subject.toLowerCase().includes("språk");
   
   // Step 3: Grade
   const [targetGrade, setTargetGrade] = useState<Grade | null>(null);
@@ -343,7 +351,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
   // Subject examples
   const getSubjectExamples = () => [
-    { name: settings.language === "no" ? "Engelsk" : "English" },
+    { name: settings.language === "no" ? "Språk" : "Languages" },
     { name: settings.language === "no" ? "Matte" : "Math" },
     { name: settings.language === "no" ? "Biologi" : "Biology" },
     { name: settings.language === "no" ? "Historie" : "History" },
@@ -414,6 +422,23 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       setError(messages.errors.subjectRequired);
       return;
     }
+    
+    // Check if Languages subject requires language selection
+    if (isLanguageSubject) {
+      if (!knownLanguage || !learningLanguage) {
+        setError(settings.language === "no" 
+          ? "Velg hvilket språk du kan og hvilket du lærer" 
+          : "Select which language you know and which you're learning");
+        return;
+      }
+      if (knownLanguage === learningLanguage) {
+        setError(settings.language === "no"
+          ? "Språkene må være forskjellige"
+          : "Languages must be different");
+        return;
+      }
+    }
+    
     setError("");
     setCurrentStep(2);
   };
@@ -764,7 +789,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         selectedMaterial || "notes",
         outputLanguage || "auto",
         difficulty,
-        includeMathProblems && isMathSubject
+        includeMathProblems && isMathSubject,
+        isLanguageSubject ? knownLanguage : undefined,
+        isLanguageSubject ? learningLanguage : undefined
       );
 
       // Increment rate limit counter AFTER successful generation
@@ -1032,6 +1059,81 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   </Card>
                 </div>
               </div>
+
+              {/* Language Selection - Only show when Languages subject is selected */}
+              {isLanguageSubject && (
+                <div className="space-y-3 mt-4">
+                  <div className="p-4 rounded-lg border bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                    <h3 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)' }}>
+                      {settings.language === "no" ? "Språkinnstillinger" : "Language Settings"}
+                    </h3>
+                    
+                    {/* Known Language */}
+                    <div className="mb-3">
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                        {settings.language === "no" ? "Jeg kan:" : "I know:"}
+                      </label>
+                      <select
+                        value={knownLanguage}
+                        onChange={(e) => setKnownLanguage(e.target.value)}
+                        className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
+                        style={{ color: 'var(--foreground)' }}
+                      >
+                        <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
+                        <option value="English">English</option>
+                        <option value="Norwegian">Norsk (Norwegian)</option>
+                        <option value="Spanish">Español (Spanish)</option>
+                        <option value="French">Français (French)</option>
+                        <option value="German">Deutsch (German)</option>
+                        <option value="Italian">Italiano (Italian)</option>
+                        <option value="Portuguese">Português (Portuguese)</option>
+                        <option value="Swedish">Svenska (Swedish)</option>
+                        <option value="Danish">Dansk (Danish)</option>
+                        <option value="Dutch">Nederlands (Dutch)</option>
+                        <option value="Chinese">中文 (Chinese)</option>
+                        <option value="Japanese">日本語 (Japanese)</option>
+                        <option value="Korean">한국어 (Korean)</option>
+                      </select>
+                    </div>
+
+                    {/* Learning Language */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                        {settings.language === "no" ? "Jeg lærer:" : "I'm learning:"}
+                      </label>
+                      <select
+                        value={learningLanguage}
+                        onChange={(e) => setLearningLanguage(e.target.value)}
+                        className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
+                        style={{ color: 'var(--foreground)' }}
+                      >
+                        <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
+                        <option value="English">English</option>
+                        <option value="Norwegian">Norsk (Norwegian)</option>
+                        <option value="Spanish">Español (Spanish)</option>
+                        <option value="French">Français (French)</option>
+                        <option value="German">Deutsch (German)</option>
+                        <option value="Italian">Italiano (Italian)</option>
+                        <option value="Portuguese">Português (Portuguese)</option>
+                        <option value="Swedish">Svenska (Swedish)</option>
+                        <option value="Danish">Dansk (Danish)</option>
+                        <option value="Dutch">Nederlands (Dutch)</option>
+                        <option value="Chinese">中文 (Chinese)</option>
+                        <option value="Japanese">日本語 (Japanese)</option>
+                        <option value="Korean">한국어 (Korean)</option>
+                      </select>
+                    </div>
+
+                    {knownLanguage && learningLanguage && knownLanguage !== learningLanguage && (
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-3">
+                        ✓ {settings.language === "no" 
+                          ? `Lærer ${learningLanguage} fra ${knownLanguage}` 
+                          : `Learning ${learningLanguage} from ${knownLanguage}`}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Continue button */}
               <button

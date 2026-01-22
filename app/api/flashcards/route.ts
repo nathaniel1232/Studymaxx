@@ -23,6 +23,8 @@ interface FlashcardRequest {
   materialType?: string;
   outputLanguage?: "auto" | "en";
   includeMath?: boolean;
+  knownLanguage?: string;
+  learningLanguage?: string;
 }
 
 /**
@@ -32,7 +34,7 @@ interface FlashcardRequest {
 export async function POST(req: NextRequest) {
   try {
     const body: FlashcardRequest = await req.json();
-    const { text, numberOfFlashcards, subject, targetGrade, difficulty, userId, materialType, outputLanguage, includeMath } = body;
+    const { text, numberOfFlashcards, subject, targetGrade, difficulty, userId, materialType, outputLanguage, includeMath, knownLanguage, learningLanguage } = body;
 
     // Validate required fields
     if (!text || !numberOfFlashcards) {
@@ -72,6 +74,8 @@ export async function POST(req: NextRequest) {
           materialType: materialType || "notes",
           outputLanguage: outputLanguage || "auto",
           includeMath: includeMath || false,
+          knownLanguage,
+          learningLanguage,
         }),
         signal: controller.signal,
       });
