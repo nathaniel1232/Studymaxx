@@ -508,20 +508,30 @@ Distractors: 3 other ${knownLanguage} words.
   }
 
   const systemPrompt = knownLanguage && learningLanguage 
-    ? `You are creating ${bufferedCount} vocabulary flashcards.
+    ? `You are creating ${bufferedCount} vocabulary flashcards for learning ${learningLanguage}.
 
-Language pair: ${learningLanguage} → ${knownLanguage}
-Parse input as: "[word in ${learningLanguage}] - [word in ${knownLanguage}]"
+STRICT REQUIREMENTS:
+1. Input format: "[word in ${learningLanguage}] - [word in ${knownLanguage}]"
+2. Generate ONE flashcard PER vocabulary pair
+3. Question MUST be in ${knownLanguage}: Ask "${knownLanguage === 'Norwegian' ? 'Hva betyr' : 'What does'} '[${learningLanguage} word]'${knownLanguage === 'Norwegian' ? '?' : ' mean?'}"
+4. Answer MUST be in ${knownLanguage} ONLY
+5. Distractors MUST be in ${knownLanguage} ONLY
 
-For EACH vocabulary pair, create ONE flashcard:
-- Question: "What does '[${learningLanguage} word]' mean?"
-- Answer: ${knownLanguage} translation only
-- Distractors: 3 other ${knownLanguage} words
+EXAMPLE FOR ${learningLanguage} → ${knownLanguage}:
+Input: "une famille - en familie"
+Output:
+{
+  "id": "1",
+  "question": "${knownLanguage === 'Norwegian' ? 'Hva betyr \'une famille\'?' : 'What does \'une famille\' mean?'}",
+  "answer": "${knownLanguage === 'Norwegian' ? 'en familie' : 'a family'}",
+  "distractors": ["${knownLanguage === 'Norwegian' ? 'et hus' : 'a house'}", "${knownLanguage === 'Norwegian' ? 'en venn' : 'a friend'}", "${knownLanguage === 'Norwegian' ? 'en bok' : 'a book'}"]
+}
 
-OUTPUT (JSON only):
+OUTPUT FORMAT (JSON only):
 {"flashcards": [{"id": "1", "question": "...", "answer": "...", "distractors": ["...", "...", "..."]}]}
 
-⚠️ GENERATE EXACTLY ${bufferedCount} FLASHCARDS - ONE PER VOCABULARY WORD ⚠️`
+⚠️ CRITICAL: Generate EXACTLY ${bufferedCount} flashcards - ONE PER VOCABULARY PAIR ⚠️
+⚠️ ALL text (question, answer, distractors) MUST be in ${knownLanguage} except the ${learningLanguage} word in the question ⚠️`
     : `You are an expert academic tutor${subject ? ` in ${subject}` : ""} creating educational flashcards.
 
 CRITICAL: You are creating STUDY FLASHCARDS, not code. Do NOT generate programming code, HTML, or any file modifications.
@@ -663,12 +673,14 @@ Generate ${bufferedCount} educational flashcards now. Output ONLY the JSON above
 
     console.log("[API /generate] Response finish reason:", finishReason);
     console.log("[API /generate] Raw AI response length:", content.length, "characters");
+    console.log("[API /generate] RAW AI CONTENT:", content); // TEMPORARY DEBUG
 
     // Parse response
     let parsed;
     try {
       parsed = JSON.parse(content);
       console.log("[API /generate] ✅ Parsed JSON structure:", Object.keys(parsed));
+      console.log("[API /generate] Number of flashcards in response:", Array.isArray(parsed) ? parsed.length : (parsed.flashcards?.length || parsed.cards?.length || 0)); // TEMPORARY DEBUG
     } catch (e) {
       console.error("[API /generate] ❌ JSON parse failed:", e);
       console.log("[API /generate] Attempting to repair JSON...");
@@ -759,7 +771,26 @@ Generate ${bufferedCount} educational flashcards now. Output ONLY the JSON above
         const answer = card.answer || card.back || "";
         const distractors = card.distractors || [];
 
-        // Validate minimum quality requirements
+        // RELAXED validation for language mode - vocabulary cards have short answers
+        if (knownLanguage && learningLanguage) {
+          if (!question || question.length < 5) {
+            console.warn(`[API /generate] Language card ${index + 1} rejected: question too short: "${question}"`);
+            return null;
+          }
+          if (!answer || answer.length < 2) {
+            console.warn(`[API /generate] Language card ${index + 1} rejected: answer too short: "${answer}"`);
+            return null;
+          }
+          // Skip other validations for vocabulary cards
+          return {
+            id: card.id || `${Date.now()}-${index}`,
+            question,
+            answer,
+            distractors,
+          };
+        }
+
+        // Standard validation for non-language cards
         if (!question || question.length < 10) {
           console.warn(`[API /generate] Card ${index + 1} has too short question: "${question}"`);
           return null;
@@ -849,6 +880,15 @@ export async function POST(req: NextRequest) {
   try {
     const body: GenerateRequest = await req.json();
     const { userId, text, numberOfFlashcards, subject, targetGrade, difficulty, language: detectedLanguage, materialType, outputLanguage, knownLanguage, learningLanguage } = body;
+
+    console.log("[API /generate POST] ========== NEW REQUEST ==========");
+    console.log("[API /generate POST] numberOfFlashcards requested:", numberOfFlashcards);
+    console.log("[API /generate POST] subject:", subject);
+    console.log("[API /generate POST] knownLanguage:", knownLanguage);
+    console.log("[API /generate POST] learningLanguage:", learningLanguage);
+    console.log("[API /generate POST] text length:", text?.length);
+    console.log("[API /generate POST] text preview:", text?.substring(0, 200));
+    console.log("[API /generate POST] =====================================");
 
     // Determine the actual output language
     // If outputLanguage is "en", force English; if "auto", use the detected language from input text
