@@ -460,11 +460,23 @@ export default function Home() {
             {/* Premium Pricing Cards */}
             <div className="mt-16 mb-8">
               <div className="text-center mb-8">
-                <div className="inline-block px-4 py-2 rounded-full border border-slate-700 bg-slate-800/50 mb-4">
-                  <span className="text-sm font-bold text-white">Premium Active</span>
-                </div>
-                <h2 className="text-3xl font-black text-white mb-2">You have Premium</h2>
-                <p className="text-slate-400">Unlimited study sets and all features unlocked</p>
+                {isPremium && user ? (
+                  <>
+                    <div className="inline-block px-4 py-2 rounded-full border border-emerald-500 bg-emerald-500/20 mb-4">
+                      <span className="text-sm font-bold text-emerald-300">Premium Active</span>
+                    </div>
+                    <h2 className="text-3xl font-black text-white mb-2">You have Premium</h2>
+                    <p className="text-slate-400">Unlimited study sets and all features unlocked</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="inline-block px-4 py-2 rounded-full border border-amber-500 bg-amber-500/20 mb-4">
+                      <span className="text-sm font-bold text-amber-300">⚡ Upgrade Available</span>
+                    </div>
+                    <h2 className="text-3xl font-black text-white mb-2">Unlock Your Full Potential</h2>
+                    <p className="text-slate-400">Get unlimited study sets and powerful features to ace your exams</p>
+                  </>
+                )}
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -489,9 +501,11 @@ export default function Home() {
 
                 {/* Premium Plan */}
                 <div className="p-8 rounded-md border-2 border-emerald-500 relative" style={{background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(19, 78, 74, 0.4) 100%)', boxShadow: '0 25px 50px -12px rgba(16, 185, 129, 0.2)'}}>
-                  <div className="absolute top-6 right-6">
-                    <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-md">Active</span>
-                  </div>
+                  {isPremium && user && (
+                    <div className="absolute top-6 right-6">
+                      <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-md">Active</span>
+                    </div>
+                  )}
                   <h3 className="text-2xl font-bold text-emerald-300 mb-6">Premium</h3>
                   <ul className="space-y-4 mb-8">
                     <li className="flex items-start gap-3 text-slate-300">
@@ -520,10 +534,10 @@ export default function Home() {
                     </li>
                   </ul>
                   <button
-                    onClick={() => !user ? setShowLoginModal(true) : setShowPremiumModal(true)}
+                    onClick={() => !user ? setShowLoginModal(true) : isPremium ? setShowPremiumModal(true) : setShowPremiumModal(true)}
                     className="w-full py-4 px-6 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-md transition-all hover:scale-[1.02] active:scale-95"
                   >
-                    Manage Subscription
+                    {isPremium && user ? 'Manage Subscription' : 'Upgrade to Premium'}
                   </button>
                 </div>
               </div>
