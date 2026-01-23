@@ -100,18 +100,9 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
     (masteredCards.size / flashcards.length) * 100
   );
 
-  // Detect if question is math-related
-  const isMathQuestion = (question: string): boolean => {
-    const mathPatterns = [
-      /solve|calculate|løs|regn/i,
-      /\d+\s*[+\-*/×÷]\s*\d+/,
-      /=\s*\?/,
-      /[xyz]\s*[=+\-*/]/i,
-      /\d+x/i,
-      /equation|likning/i
-    ];
-    return mathPatterns.some(pattern => pattern.test(question));
-  };
+  // Note: Removed automatic math detection as it was showing pen/paper icon
+  // for non-math questions (e.g., "Calculate the distance" in a book plot)
+  // Only Math Mode (explicitly enabled by user) should show math-related UI
 
   // Find semantically similar answers from the flashcard set
   const findSimilarAnswers = (correctAnswer: string, allCards: Flashcard[]): string[] => {
@@ -348,9 +339,8 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
   // Generate quiz options when current question changes in test mode
   useEffect(() => {
     if (studyMode === "test" && currentCard && !testResults.has(currentCard.id)) {
-      // For math problems without distractors, we'll use self-assessment instead of quiz
-      const hasMathQuiz = currentCard.distractors && currentCard.distractors.length > 0;
-      if (hasMathQuiz || !isMathQuestion(currentCard.question)) {
+      // Generate quiz options if distractors exist, otherwise use self-assessment
+      if (currentCard.distractors && currentCard.distractors.length > 0) {
         setQuizOptions(generateQuizOptions(currentCard.answer, flashcards));
       } else {
         setQuizOptions([]); // Empty means use self-assessment
@@ -896,15 +886,6 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                     {testResults.size} / {flashcards.length} answered
                   </span>
                 </div>
-                
-                {/* Math indicator */}
-                {isMathQuestion(currentCard.question) && (
-                  <div className="mb-4 inline-block px-4 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-md">
-                    <p className="text-sm font-bold text-white flex items-center gap-2">
-                       <span>✏️</span> {t("use_pen_paper")}
-                    </p>
-                  </div>
-                )}
                 
                 <h2 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white leading-relaxed drop-shadow-md max-w-3xl">
                   {currentCard.question}

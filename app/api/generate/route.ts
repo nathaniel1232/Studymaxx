@@ -445,14 +445,15 @@ DISTRACTORS FOR HARD MODE:
     // Medium
     difficultyInstructions = `⚠️ DIFFICULTY LEVEL: MEDIUM (STRICTLY STANDARD APPLICATION)
 CRITICAL REQUIREMENTS FOR MEDIUM MODE:
-- Questions: Use "How", "Explain", "Apply", "Calculate" (but NOT "Analyze" or "Evaluate")
+- Questions: Use "How", "Explain", "Apply", "Describe" (but NOT "Analyze", "Evaluate", or "Calculate")
 - Content: Understanding and application of concepts (not just recall, not deep analysis)
-- Math: 2-step problems with clear procedures (e.g., "Find area of rectangle with length 5 and width 3")
+- AVOID "Calculate" unless it's actually a math/science calculation problem with numbers
+- For literature/history content, use "What distance...", "How far...", "When did..." instead of "Calculate"
 - Require understanding HOW things work, not just WHAT they are
 - Example Medium Questions:
   * "How does photosynthesis produce oxygen?"
   * "Explain the main causes of the French Revolution"
-  * "Calculate the speed of an object that travels 100 meters in 20 seconds"
+  * "What distance does the protagonist travel in the story?"
 - Distractors: Common student misconceptions from the same topic`;
   }
 
