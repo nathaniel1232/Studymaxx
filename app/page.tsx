@@ -471,10 +471,10 @@ export default function Home() {
                 ) : (
                   <>
                     <div className="inline-block px-4 py-2 rounded-full border border-amber-500 bg-amber-500/20 mb-4">
-                      <span className="text-sm font-bold text-amber-300">⚡ Upgrade Available</span>
+                      <span className="text-sm font-bold text-amber-300">Upgrade Available</span>
                     </div>
-                    <h2 className="text-3xl font-black text-white mb-2">Unlock Your Full Potential</h2>
-                    <p className="text-slate-400">Get unlimited study sets and powerful features to ace your exams</p>
+                    <h2 className="text-3xl font-black text-white mb-2">Get Premium for $2.99/month</h2>
+                    <p className="text-slate-400">Unlimited study sets and premium features</p>
                   </>
                 )}
               </div>
@@ -500,14 +500,20 @@ export default function Home() {
                 </div>
 
                 {/* Premium Plan */}
-                <div className="p-8 rounded-md border-2 border-emerald-500 relative" style={{background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(19, 78, 74, 0.4) 100%)', boxShadow: '0 25px 50px -12px rgba(16, 185, 129, 0.2)'}}>
+                <div className="p-6 rounded-md border-2 border-emerald-500 relative" style={{background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(19, 78, 74, 0.4) 100%)', boxShadow: '0 25px 50px -12px rgba(16, 185, 129, 0.2)'}}>
                   {isPremium && user && (
                     <div className="absolute top-6 right-6">
                       <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-md">Active</span>
                     </div>
                   )}
-                  <h3 className="text-2xl font-bold text-emerald-300 mb-6">Premium</h3>
-                  <ul className="space-y-4 mb-8">
+                  <h3 className="text-2xl font-bold text-emerald-300 mb-2">Premium</h3>
+                  <div className="mb-4">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-bold text-white">$2.99</span>
+                      <span className="text-slate-400">/month</span>
+                    </div>
+                  </div>
+                  <ul className="space-y-3 mb-6">
                     <li className="flex items-start gap-3 text-slate-300">
                       <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
                       <span><span className="font-bold text-white">Unlimited</span> study sets</span>
@@ -535,10 +541,11 @@ export default function Home() {
                   </ul>
                   <button
                     onClick={() => !user ? setShowLoginModal(true) : isPremium ? setShowPremiumModal(true) : setShowPremiumModal(true)}
-                    className="w-full py-4 px-6 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-md transition-all hover:scale-[1.02] active:scale-95"
+                    className="w-full py-3 px-6 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-md transition-all hover:scale-[1.02] active:scale-95"
                   >
                     {isPremium && user ? 'Manage Subscription' : 'Upgrade to Premium'}
                   </button>
+                  <p className="text-center text-xs text-slate-400 mt-2">Cancel anytime</p>
                 </div>
               </div>
             </div>
