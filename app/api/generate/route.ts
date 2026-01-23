@@ -500,7 +500,7 @@ REMEMBER: If you write a question starting with "Analyze", "Evaluate", "Explain"
     languageInstructions = `
 ⚠️ VOCABULARY MODE ACTIVE ⚠️
 Language pair: ${learningLanguage} → ${knownLanguage}
-Parse input as: "[word in ${learningLanguage}] - [word in ${knownLanguage}]"
+Parse input flexibly: "[word] - [word]" OR "[word] → [word]" OR "[word]-[word]" (hyphens, arrows, or dashes)
 Create ONE flashcard per vocabulary pair.
 Question format: "What does '[${learningLanguage} word]' mean?"
 Answer: ${knownLanguage} translation only.
@@ -512,14 +512,14 @@ Distractors: 3 other ${knownLanguage} words.
     ? `You are creating ${bufferedCount} vocabulary flashcards for learning ${learningLanguage}.
 
 STRICT REQUIREMENTS:
-1. Input format: "[word in ${learningLanguage}] - [word in ${knownLanguage}]"
+1. Input format is FLEXIBLE - accept any separator: "-", "→", "–", "—", ">" between word pairs
 2. Generate ONE flashcard PER vocabulary pair
 3. Question MUST be in ${knownLanguage}: Ask "${knownLanguage === 'Norwegian' ? 'Hva betyr' : 'What does'} '[${learningLanguage} word]'${knownLanguage === 'Norwegian' ? '?' : ' mean?'}"
 4. Answer MUST be in ${knownLanguage} ONLY
 5. Distractors MUST be in ${knownLanguage} ONLY
 
 EXAMPLE FOR ${learningLanguage} → ${knownLanguage}:
-Input: "une famille - en familie"
+Input: "une famille - en familie" OR "une famille-en familie"
 Output:
 {
   "id": "1",

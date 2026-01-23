@@ -160,14 +160,21 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     
     const detected: string[] = [];
     const textLower = text.toLowerCase();
-    const words = textLower.split(/[\s,.;:!?()"\-]+/).filter(w => w.length > 0);
+    // Split on whitespace, punctuation, hyphens, dashes, and arrows (→, ->, etc.)
+    const words = textLower.split(/[\s,.;:!?()"→\-–—>]+/).filter(w => w.length > 0);
     
     const languageProfiles: Record<string, string[]> = {
-      "English": ["the", "and", "is", "of", "to", "in", "that", "it", "with", "as", "you", "are", "have", "not"],
-      "Norwegian": ["og", "er", "det", "som", "en", "av", "på", "til", "med", "har", "ikke", "jeg", "vi", "å"],
-      "Spanish": ["de", "la", "que", "el", "en", "y", "a", "los", "se", "del", "las", "por", "un", "una"],
-      "French": ["de", "la", "le", "et", "les", "des", "en", "un", "du", "une", "est", "pour", "que", "qui"],
-      "German": ["der", "die", "und", "in", "den", "von", "zu", "das", "mit", "sich", "auf", "für", "ist", "nicht"],
+      // English - expanded with common vocabulary words people would use in word lists
+      "English": ["the", "and", "is", "of", "to", "in", "that", "it", "with", "as", "you", "are", "have", "not", 
+                  "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
+                  "dog", "cat", "house", "water", "food", "good", "bad", "big", "small", "man", "woman",
+                  "day", "night", "yes", "no", "hello", "bye", "thank", "please", "sorry", "love", "like",
+                  "go", "come", "see", "eat", "drink", "sleep", "walk", "run", "play", "work", "study",
+                  "book", "word", "name", "time", "year", "way", "thing", "people", "child", "world"],
+      "Norwegian": ["og", "er", "det", "som", "en", "av", "på", "til", "med", "har", "ikke", "jeg", "vi", "å", "hund", "katt", "hus", "vann", "mat"],
+      "Spanish": ["de", "la", "que", "el", "en", "y", "a", "los", "se", "del", "las", "por", "un", "una", "perro", "gato", "casa", "agua", "comida"],
+      "French": ["de", "la", "le", "et", "les", "des", "en", "un", "du", "une", "est", "pour", "que", "qui", "chien", "chat", "maison", "eau", "nourriture"],
+      "German": ["der", "die", "und", "in", "den", "von", "zu", "das", "mit", "sich", "auf", "für", "ist", "nicht", "hund", "katze", "haus", "wasser", "essen"],
       "Italian": ["di", "e", "il", "la", "che", "in", "a", "per", "un", "del", "non", "sono", "le", "con"],
       "Portuguese": ["de", "a", "o", "que", "e", "do", "da", "em", "um", "para", "com", "nao", "os", "sua"],
       "Dutch": ["de", "en", "van", "ik", "te", "dat", "die", "in", "een", "hij", "het", "niet", "is", "op"],
@@ -175,10 +182,12 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       "Danish": ["og", "i", "er", "det", "som", "til", "en", "af", "for", "at", "med", "ikke", "jeg", "vi"],
       "Icelandic": ["og", "er", "að", "ekki", "við", "það", "fyrir", "með", "sem", "eru", "var", "hann", "hún"],
       "Polish": ["i", "w", "na", "z", "do", "nie", "się", "o", "że", "to", "jest", "od", "za"],
-      "Russian": ["и", "в", "не", "на", "я", "что", "он", "с", "как", "это", "по", "за"],
+      "Russian": ["и", "в", "не", "на", "я", "что", "он", "с", "как", "это", "по", "за", "ы", "ё"],
       "Japanese": ["の", "に", "は", "を", "た", "が", "で", "て", "と", "し"],
       "Chinese": ["的", "一", "是", "在", "不", "了", "有", "和", "人"],
       "Korean": ["은", "는", "이", "가", "을", "를", "의", "에", "로"],
+      "Mongolian": ["нь", "байна", "бол", "ба", "юм", "гэж", "гэдэг", "бий", "ө", "ү"],
+      "Other": [], // Fallback for unlisted languages
     };
     
     // Score each language
@@ -196,7 +205,13 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       if (lang === "Spanish" && /[ñ¿¡]/.test(textLower)) score += 5;
       if (lang === "French" && /[àèéêç]/.test(textLower)) score += 3;
       if (lang === "Icelandic" && /[ðþ]/.test(textLower)) score += 10;
-      if (lang === "Russian" && /[а-я]/.test(textLower)) score += 10;
+      // Mongolian has unique Cyrillic letters: ө, ү, ң that Russian doesn't use
+      if (lang === "Mongolian" && /[өүң]/.test(text)) score += 15;
+      // Russian uses ы, э, щ which Mongolian doesn't commonly use
+      if (lang === "Russian" && /[ыэщ]/.test(text)) score += 10;
+      // General Cyrillic - give small boost to both, specific chars above will differentiate
+      if (lang === "Mongolian" && /[\u0400-\u04FF]/.test(text) && !/[ыэщ]/.test(text)) score += 5;
+      if (lang === "Russian" && /[\u0400-\u04FF]/.test(text) && !/[өүң]/.test(text)) score += 5;
       if (lang === "Japanese" && /[\u3040-\u309F\u30A0-\u30FF]/.test(text)) score += 10;
       if (lang === "Chinese" && /[\u4E00-\u9FFF]/.test(text)) score += 10;
       if (lang === "Korean" && /[\uAC00-\uD7AF]/.test(text)) score += 10;
@@ -399,9 +414,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         
         console.log('[CreateFlowView] ===== PREMIUM CHECK COMPLETE ===== isPremium:', data.isPremium);
       } else if (response.status === 401) {
-        console.log('[CreateFlowView] ❌ User not authenticated - treating as free user');
+        console.log('[CreateFlowView] ❌ User not authenticated - treating as free user with device ID');
         setIsPremium(false);
-        const remaining = getRemainingGenerations('', false);
+        // Non-logged in users can still use the service with device ID
+        const remaining = getRemainingGenerations(null, false);
         setRemainingGenerations(remaining);
       } else {
         console.log('[CreateFlowView] ❌ Premium check API failed:', response.status);
@@ -529,12 +545,27 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     
     // Validate language selection for Languages subject
     if (isLanguageSubject) {
-      if (detectedLanguages.length < 2) {
+      // Check if text looks like vocabulary pairs (word-word format with hyphen, arrow, or dash)
+      const hasVocabPairFormat = /[\w\u0400-\u04FF]+\s*[-–—→>]\s*[\w\u0400-\u04FF]+/.test(textInput);
+      
+      if (detectedLanguages.length < 2 && !hasVocabPairFormat) {
         setError(settings.language === "no"
           ? "Lim inn tekst med to språk (f.eks. 'perro - hund') for språklæring"
           : "Paste text with two languages (e.g., 'perro - dog') for language learning");
         return;
       }
+      
+      // If format looks like vocab pairs but languages weren't detected, add "Other" as an option
+      if (hasVocabPairFormat && detectedLanguages.length < 2) {
+        console.log('[Language Learning] Vocab pair format detected, adding "Other" option');
+        setDetectedLanguages(prev => {
+          const langs = [...prev];
+          if (langs.length === 0) langs.push("Other", "Other");
+          else if (langs.length === 1) langs.push("Other");
+          return langs;
+        });
+      }
+      
       if (!knownLanguage || !learningLanguage) {
         setError(settings.language === "no"
           ? "Velg hvilket språk du kan og hvilket du lærer"
@@ -884,8 +915,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       );
 
       // Increment rate limit counter AFTER successful generation
-      if (userId && !isPremium) {
-        incrementAIUsage(userId);
+      if (!isPremium) {
+        incrementAIUsage(userId || null);
         // Update the display counter
         setRemainingGenerations(Math.max(0, remainingGenerations - 1));
       }
@@ -1412,19 +1443,25 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         
                         {/* Language Selection for Languages subject - Show after text is entered */}
                         {isLanguageSubject && textInput.length >= 50 && (
-                          <div className="mt-4 p-4 rounded-lg border bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                          <div 
+                            className="mt-4 p-4 rounded-lg border-2"
+                            style={{
+                              backgroundColor: 'var(--card)',
+                              borderColor: 'var(--border)'
+                            }}
+                          >
                             <h3 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)' }}>
                               {settings.language === "no" ? "Språkinnstillinger" : "Language Settings"}
                             </h3>
                             
                             {detectedLanguages.length >= 2 ? (
                               <>
-                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                <p className="text-xs mb-1" style={{ color: 'var(--muted-foreground)' }}>
                                   {settings.language === "no" 
                                     ? `✓ Detekterte språk: ${detectedLanguages.join(" + ")}` 
                                     : `✓ Detected languages: ${detectedLanguages.join(" + ")}`}
                                 </p>
-                                <p className="text-xs text-blue-600 dark:text-blue-400 mb-3 font-medium">
+                                <p className="text-xs text-cyan-600 dark:text-cyan-400 mb-3 font-medium">
                                   {settings.language === "no"
                                     ? "Velg ditt morsmål og språket du lærer:"
                                     : "Choose your native language and the language you're learning:"}
@@ -1438,8 +1475,12 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                                   <select
                                     value={knownLanguage}
                                     onChange={(e) => setKnownLanguage(e.target.value)}
-                                    className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
-                                    style={{ color: 'var(--foreground)' }}
+                                    className="w-full p-3 rounded-lg border-2 transition-all cursor-pointer"
+                                    style={{ 
+                                      color: 'var(--foreground)', 
+                                      backgroundColor: 'var(--background)',
+                                      borderColor: knownLanguage ? '#06b6d4' : 'var(--border)'
+                                    }}
                                   >
                                     <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
                                     {detectedLanguages.map(lang => (
@@ -1456,8 +1497,12 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                                   <select
                                     value={learningLanguage}
                                     onChange={(e) => setLearningLanguage(e.target.value)}
-                                    className="w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
-                                    style={{ color: 'var(--foreground)' }}
+                                    className="w-full p-3 rounded-lg border-2 transition-all cursor-pointer"
+                                    style={{ 
+                                      color: 'var(--foreground)', 
+                                      backgroundColor: 'var(--background)',
+                                      borderColor: learningLanguage ? '#06b6d4' : 'var(--border)'
+                                    }}
                                   >
                                     <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
                                     {detectedLanguages.map(lang => (
@@ -1467,7 +1512,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                                 </div>
 
                                 {knownLanguage && learningLanguage && knownLanguage !== learningLanguage && (
-                                  <p className="text-xs text-green-600 dark:text-green-400 mt-3">
+                                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-3 font-medium">
                                     ✓ {settings.language === "no" 
                                       ? `Lærer ${learningLanguage} fra ${knownLanguage}` 
                                       : `Learning ${learningLanguage} from ${knownLanguage}`}
