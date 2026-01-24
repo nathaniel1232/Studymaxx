@@ -359,7 +359,7 @@ export default function Home() {
                   <span className="w-8 h-8 rounded-full ring-2 ring-slate-800 flex items-center justify-center text-xs font-bold" style={{backgroundColor: '#ec4899', color: 'white'}}>M</span>
                   <span className="w-8 h-8 rounded-full ring-2 ring-slate-800 flex items-center justify-center text-xs font-bold" style={{backgroundColor: '#f97316', color: 'white'}}>S</span>
                 </span>
-                <span className="text-sm font-black text-emerald-400">500+ students acing exams</span>
+                <span className="text-sm font-black text-emerald-400">1000+ students acing exams</span>
               </div>
               
               <h1 className="text-5xl md:text-6xl font-black mb-4 leading-[1.1]">
@@ -440,11 +440,11 @@ export default function Home() {
             {/* Social Proof & Trust */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
               <div className="text-center p-3 bg-slate-800/50 rounded-md hover:bg-emerald-500/10 transition-all hover:shadow-lg hover:shadow-emerald-500/20">
-                <div className="text-2xl font-black text-white mb-0.5">500+</div>
+                <div className="text-2xl font-black text-white mb-0.5">1000+</div>
                 <span className="text-xs font-bold text-slate-400">Active Students</span>
               </div>
               <div className="text-center p-3 bg-slate-800/50 rounded-md hover:bg-violet-500/10 transition-all hover:shadow-lg hover:shadow-violet-500/20">
-                <div className="text-2xl font-black text-white mb-0.5">10k+</div>
+                <div className="text-2xl font-black text-white mb-0.5">50k+</div>
                 <span className="text-xs font-bold text-slate-400">Flashcards Made</span>
               </div>
               <div className="text-center p-3 bg-slate-800/50 rounded-md hover:bg-blue-500/10 transition-all hover:shadow-lg hover:shadow-blue-500/20">

@@ -730,58 +730,52 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
 
         {/* Test Type Selection Dialog - Step 1: Type, Step 2: Mode */}
         {showTestTypeDialog && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl p-8 max-w-md w-full animate-in zoom-in-95 duration-200">
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-8 max-w-md w-full border border-gray-200 dark:border-gray-700">
               {testType === null ? (
                 <>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                     {settings.language === 'no' ? 'Velg testtype' : 'Choose Test Type'}
                   </h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-center mb-6">
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
                     {settings.language === 'no' ? 'Hvordan vil du svare?' : 'How do you want to answer?'}
                   </p>
                   
                   <div className="space-y-3">
                     <button
                       onClick={() => setTestType('written')}
-                      className="w-full p-5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                      className="w-full p-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md"
                     >
-                      <div className="flex items-center gap-4">
-                        <span className="text-3xl">✍️</span>
-                        <div className="text-left">
-                          <p className="font-bold text-lg">{settings.language === 'no' ? 'Skriv svar' : 'Written'}</p>
-                          <p className="text-sm text-white/80">{settings.language === 'no' ? 'Skriv inn svaret selv' : 'Type in your answer'}</p>
-                        </div>
+                      <div className="text-left">
+                        <p className="font-bold text-lg mb-1">{settings.language === 'no' ? 'Skriv svar' : 'Written Answer'}</p>
+                        <p className="text-sm text-white/90">{settings.language === 'no' ? 'Skriv inn svaret selv' : 'Type in your answer'}</p>
                       </div>
                     </button>
                     
                     <button
                       onClick={() => setTestType('multiple-choice')}
-                      className="w-full p-5 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-400 hover:to-cyan-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                      className="w-full p-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md"
                     >
-                      <div className="flex items-center gap-4">
-                        <span className="text-3xl">🔘</span>
-                        <div className="text-left">
-                          <p className="font-bold text-lg">{settings.language === 'no' ? 'Flervalgtest' : 'Multiple Choice'}</p>
-                          <p className="text-sm text-white/80">{settings.language === 'no' ? 'Velg riktig svar fra alternativene' : 'Pick from answer options'}</p>
-                        </div>
+                      <div className="text-left">
+                        <p className="font-bold text-lg mb-1">{settings.language === 'no' ? 'Flervalg' : 'Multiple Choice'}</p>
+                        <p className="text-sm text-white/90">{settings.language === 'no' ? 'Velg riktig svar fra alternativene' : 'Pick from answer options'}</p>
                       </div>
                     </button>
                   </div>
                   
                   <button
                     onClick={() => setShowTestTypeDialog(false)}
-                    className="w-full mt-4 py-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-medium transition-colors"
+                    className="w-full mt-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 font-medium transition-colors"
                   >
                     {settings.language === 'no' ? 'Avbryt' : 'Cancel'}
                   </button>
                 </>
               ) : (
                 <>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                     {settings.language === 'no' ? 'Velg modus' : 'Choose Mode'}
                   </h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-center mb-6">
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
                     {settings.language === 'no' ? 'Med liv eller bare øving?' : 'With lives or just practice?'}
                   </p>
                   
@@ -800,14 +794,11 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         setWrittenAnswer("");
                         setWrittenSubmitted(false);
                       }}
-                      className="w-full p-5 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                      className="w-full p-4 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md"
                     >
-                      <div className="flex items-center gap-4">
-                        <span className="text-3xl">❤️</span>
-                        <div className="text-left">
-                          <p className="font-bold text-lg">{settings.language === 'no' ? 'Med liv' : 'With Lives'}</p>
-                          <p className="text-sm text-white/80">{settings.language === 'no' ? '3 liv - spillet slutter når du går tom' : '3 lives - game ends when you run out'}</p>
-                        </div>
+                      <div className="text-left">
+                        <p className="font-bold text-lg mb-1">{settings.language === 'no' ? 'Med liv' : 'Lives Mode'}</p>
+                        <p className="text-sm text-white/90">{settings.language === 'no' ? '3 liv - spillet slutter når du går tom' : '3 lives - game ends when you run out'}</p>
                       </div>
                     </button>
                     
@@ -825,23 +816,20 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         setWrittenAnswer("");
                         setWrittenSubmitted(false);
                       }}
-                      className="w-full p-5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                      className="w-full p-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md"
                     >
-                      <div className="flex items-center gap-4">
-                        <span className="text-3xl">📊</span>
-                        <div className="text-left">
-                          <p className="font-bold text-lg">{settings.language === 'no' ? 'Øvingsmodus' : 'Practice Mode'}</p>
-                          <p className="text-sm text-white/80">{settings.language === 'no' ? 'Ingen liv - se poengsum på slutten' : 'No lives - see your score at the end'}</p>
-                        </div>
+                      <div className="text-left">
+                        <p className="font-bold text-lg mb-1">{settings.language === 'no' ? 'Øvingsmodus' : 'Practice Mode'}</p>
+                        <p className="text-sm text-white/90">{settings.language === 'no' ? 'Ingen liv - se poengsum på slutten' : 'No lives - see your score at the end'}</p>
                       </div>
                     </button>
                   </div>
                   
                   <button
                     onClick={() => setTestType(null)}
-                    className="w-full mt-4 py-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-medium transition-colors"
+                    className="w-full mt-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 font-medium transition-colors"
                   >
-                    ← {settings.language === 'no' ? 'Tilbake' : 'Back'}
+                    {settings.language === 'no' ? '← Tilbake' : '← Back'}
                   </button>
                 </>
               )}
