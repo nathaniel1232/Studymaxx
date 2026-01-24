@@ -730,21 +730,23 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
 
         {/* Test Type Selection Dialog - Step 1: Type, Step 2: Mode */}
         {showTestTypeDialog && (
-          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-8 max-w-md w-full border border-gray-200 dark:border-gray-700">
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" style={{ backgroundColor: 'rgba(0,0,0,0.85)' }}>
+            <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-md w-full border-2 border-gray-200 dark:border-gray-700 !opacity-100" style={{ backgroundColor: '#111827', opacity: 1 }}>
+              {/* Force solid background for dark mode via style to prevent transparency issues */}
+              <div className="absolute inset-0 bg-white dark:bg-gray-900 rounded-2xl -z-10" />
               {testType === null ? (
                 <>
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                     {settings.language === 'no' ? 'Velg testtype' : 'Choose Test Type'}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  <p className="text-gray-600 dark:text-gray-300 mb-6">
                     {settings.language === 'no' ? 'Hvordan vil du svare?' : 'How do you want to answer?'}
                   </p>
                   
                   <div className="space-y-3">
                     <button
                       onClick={() => setTestType('written')}
-                      className="w-full p-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md"
+                      className="w-full p-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
                     >
                       <div className="text-left">
                         <p className="font-bold text-lg mb-1">{settings.language === 'no' ? 'Skriv svar' : 'Written Answer'}</p>
@@ -754,7 +756,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                     
                     <button
                       onClick={() => setTestType('multiple-choice')}
-                      className="w-full p-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md"
+                      className="w-full p-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
                     >
                       <div className="text-left">
                         <p className="font-bold text-lg mb-1">{settings.language === 'no' ? 'Flervalg' : 'Multiple Choice'}</p>
@@ -765,7 +767,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                   
                   <button
                     onClick={() => setShowTestTypeDialog(false)}
-                    className="w-full mt-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 font-medium transition-colors"
+                    className="w-full mt-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 font-medium transition-colors"
                   >
                     {settings.language === 'no' ? 'Avbryt' : 'Cancel'}
                   </button>
@@ -775,7 +777,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                     {settings.language === 'no' ? 'Velg modus' : 'Choose Mode'}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  <p className="text-gray-600 dark:text-gray-300 mb-6">
                     {settings.language === 'no' ? 'Med liv eller bare øving?' : 'With lives or just practice?'}
                   </p>
                   
@@ -794,7 +796,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         setWrittenAnswer("");
                         setWrittenSubmitted(false);
                       }}
-                      className="w-full p-4 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md"
+                      className="w-full p-4 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
                     >
                       <div className="text-left">
                         <p className="font-bold text-lg mb-1">{settings.language === 'no' ? 'Med liv' : 'Lives Mode'}</p>
@@ -816,7 +818,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         setWrittenAnswer("");
                         setWrittenSubmitted(false);
                       }}
-                      className="w-full p-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md"
+                      className="w-full p-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
                     >
                       <div className="text-left">
                         <p className="font-bold text-lg mb-1">{settings.language === 'no' ? 'Øvingsmodus' : 'Practice Mode'}</p>
@@ -827,7 +829,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                   
                   <button
                     onClick={() => setTestType(null)}
-                    className="w-full mt-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 font-medium transition-colors"
+                    className="w-full mt-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 font-medium transition-colors"
                   >
                     {settings.language === 'no' ? '← Tilbake' : '← Back'}
                   </button>
