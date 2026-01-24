@@ -13,6 +13,8 @@ import { getCurrentUser } from "../utils/supabase";
 import { messages } from "../utils/messages";
 
 type StudyMode = "review" | "test";
+type TestType = "multiple-choice" | "written" | null;
+type TestMode = "lives" | "practice" | null; // lives = 3 lives, practice = no lives just track score
 
 interface StudyViewProps {
   flashcards: Flashcard[];
@@ -53,6 +55,11 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
   const [quizOptions, setQuizOptions] = useState<string[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean | null>(null);
+  const [showTestTypeDialog, setShowTestTypeDialog] = useState(false);
+  const [testType, setTestType] = useState<TestType>(null);
+  const [testMode, setTestMode] = useState<TestMode>(null); // lives or practice
+  const [writtenAnswer, setWrittenAnswer] = useState("");
+  const [writtenSubmitted, setWrittenSubmitted] = useState(false);
   
   // Gamification state (Quiz Mode only)
   const [lives, setLives] = useState(3);
@@ -103,6 +110,47 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
   // Note: Removed automatic math detection as it was showing pen/paper icon
   // for non-math questions (e.g., "Calculate the distance" in a book plot)
   // Only Math Mode (explicitly enabled by user) should show math-related UI
+
+  // Levenshtein distance for fuzzy matching (typo tolerance)
+  const levenshteinDistance = (str1: string, str2: string): number => {
+    const m = str1.length;
+    const n = str2.length;
+    const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+    
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+    
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        if (str1[i - 1] === str2[j - 1]) {
+          dp[i][j] = dp[i - 1][j - 1];
+        } else {
+          dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+        }
+      }
+    }
+    return dp[m][n];
+  };
+
+  // Check if written answer is correct (with typo tolerance)
+  const checkWrittenAnswer = (userAnswer: string, correctAnswer: string): boolean => {
+    const normalizedUser = userAnswer.trim().toLowerCase();
+    const normalizedCorrect = correctAnswer.trim().toLowerCase();
+    
+    // Exact match
+    if (normalizedUser === normalizedCorrect) return true;
+    
+    // Calculate allowed typos based on answer length
+    const maxLength = Math.max(normalizedUser.length, normalizedCorrect.length);
+    let allowedTypos = 0;
+    if (maxLength <= 4) allowedTypos = 1;
+    else if (maxLength <= 8) allowedTypos = 2;
+    else if (maxLength <= 15) allowedTypos = 3;
+    else allowedTypos = Math.floor(maxLength * 0.2); // 20% of length for longer answers
+    
+    const distance = levenshteinDistance(normalizedUser, normalizedCorrect);
+    return distance <= allowedTypos;
+  };
 
   // Find semantically similar answers from the flashcard set
   const findSimilarAnswers = (correctAnswer: string, allCards: Flashcard[]): string[] => {
@@ -339,20 +387,30 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
   // Generate quiz options when current question changes in test mode
   useEffect(() => {
     if (studyMode === "test" && currentCard && !testResults.has(currentCard.id)) {
-      // Generate quiz options if distractors exist, otherwise use self-assessment
-      if (currentCard.distractors && currentCard.distractors.length > 0) {
+      // For multiple choice mode, always generate options
+      if (testType === 'multiple-choice') {
         setQuizOptions(generateQuizOptions(currentCard.answer, flashcards));
+      } else if (testType === 'written') {
+        setQuizOptions([]); // Written mode doesn't need options
       } else {
-        setQuizOptions([]); // Empty means use self-assessment
+        // Fallback to old behavior (distractors-based)
+        if (currentCard.distractors && currentCard.distractors.length > 0) {
+          setQuizOptions(generateQuizOptions(currentCard.answer, flashcards));
+        } else {
+          setQuizOptions([]); // Empty means use self-assessment
+        }
       }
       setSelectedAnswer(null);
       setIsAnswerCorrect(null);
     }
-  }, [currentIndex, studyMode, currentCard, flashcards, testResults]);
+  }, [currentIndex, studyMode, currentCard, flashcards, testResults, testType]);
 
   const handleNext = () => {
     if (currentIndex < flashcards.length - 1) {
       setCurrentIndex(currentIndex + 1);
+      // Reset written mode state
+      setWrittenAnswer("");
+      setWrittenSubmitted(false);
     }
   };
 
@@ -473,13 +531,16 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
       setMaxStreak(Math.max(maxStreak, newStreak));
     } else {
       setCurrentStreak(0);
-      const newLives = lives - 1;
-      setLives(newLives);
-      
-      // End quiz if no lives left
-      if (newLives <= 0) {
-        setIsQuizEnded(true);
-        return; // Don't auto-advance
+      // Only deduct lives in lives mode
+      if (testMode === 'lives') {
+        const newLives = lives - 1;
+        setLives(newLives);
+        
+        // End quiz if no lives left (only in lives mode)
+        if (newLives <= 0) {
+          setIsQuizEnded(true);
+          return; // Don't auto-advance
+        }
       }
     }
     
@@ -552,13 +613,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
           </button>
           <button
             onClick={() => {
-              setStudyMode("test");
-              setTestResults(new Map());
-              setCurrentIndex(0);
-              setLives(3);
-              setCurrentStreak(0);
-              setMaxStreak(0);
-              setIsQuizEnded(false);
+              setShowTestTypeDialog(true);
             }}
             className={`px-10 py-5 font-black text-lg rounded-md transition-all duration-500 ease-out transform hover:scale-110 hover:-translate-y-2 shadow-xl hover:shadow-2xl ${
               studyMode === "test"
@@ -673,6 +728,127 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
           </div>
         )}
 
+        {/* Test Type Selection Dialog - Step 1: Type, Step 2: Mode */}
+        {showTestTypeDialog && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl p-8 max-w-md w-full animate-in zoom-in-95 duration-200">
+              {testType === null ? (
+                <>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+                    {settings.language === 'no' ? 'Velg testtype' : 'Choose Test Type'}
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400 text-center mb-6">
+                    {settings.language === 'no' ? 'Hvordan vil du svare?' : 'How do you want to answer?'}
+                  </p>
+                  
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => setTestType('written')}
+                      className="w-full p-5 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className="text-3xl">✍️</span>
+                        <div className="text-left">
+                          <p className="font-bold text-lg">{settings.language === 'no' ? 'Skriv svar' : 'Written'}</p>
+                          <p className="text-sm text-white/80">{settings.language === 'no' ? 'Skriv inn svaret selv' : 'Type in your answer'}</p>
+                        </div>
+                      </div>
+                    </button>
+                    
+                    <button
+                      onClick={() => setTestType('multiple-choice')}
+                      className="w-full p-5 bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-400 hover:to-cyan-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className="text-3xl">🔘</span>
+                        <div className="text-left">
+                          <p className="font-bold text-lg">{settings.language === 'no' ? 'Flervalgtest' : 'Multiple Choice'}</p>
+                          <p className="text-sm text-white/80">{settings.language === 'no' ? 'Velg riktig svar fra alternativene' : 'Pick from answer options'}</p>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                  
+                  <button
+                    onClick={() => setShowTestTypeDialog(false)}
+                    className="w-full mt-4 py-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-medium transition-colors"
+                  >
+                    {settings.language === 'no' ? 'Avbryt' : 'Cancel'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+                    {settings.language === 'no' ? 'Velg modus' : 'Choose Mode'}
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400 text-center mb-6">
+                    {settings.language === 'no' ? 'Med liv eller bare øving?' : 'With lives or just practice?'}
+                  </p>
+                  
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => {
+                        setTestMode('lives');
+                        setShowTestTypeDialog(false);
+                        setStudyMode("test");
+                        setTestResults(new Map());
+                        setCurrentIndex(0);
+                        setLives(3);
+                        setCurrentStreak(0);
+                        setMaxStreak(0);
+                        setIsQuizEnded(false);
+                        setWrittenAnswer("");
+                        setWrittenSubmitted(false);
+                      }}
+                      className="w-full p-5 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className="text-3xl">❤️</span>
+                        <div className="text-left">
+                          <p className="font-bold text-lg">{settings.language === 'no' ? 'Med liv' : 'With Lives'}</p>
+                          <p className="text-sm text-white/80">{settings.language === 'no' ? '3 liv - spillet slutter når du går tom' : '3 lives - game ends when you run out'}</p>
+                        </div>
+                      </div>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setTestMode('practice');
+                        setShowTestTypeDialog(false);
+                        setStudyMode("test");
+                        setTestResults(new Map());
+                        setCurrentIndex(0);
+                        setLives(999); // Effectively infinite
+                        setCurrentStreak(0);
+                        setMaxStreak(0);
+                        setIsQuizEnded(false);
+                        setWrittenAnswer("");
+                        setWrittenSubmitted(false);
+                      }}
+                      className="w-full p-5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className="text-3xl">📊</span>
+                        <div className="text-left">
+                          <p className="font-bold text-lg">{settings.language === 'no' ? 'Øvingsmodus' : 'Practice Mode'}</p>
+                          <p className="text-sm text-white/80">{settings.language === 'no' ? 'Ingen liv - se poengsum på slutten' : 'No lives - see your score at the end'}</p>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                  
+                  <button
+                    onClick={() => setTestType(null)}
+                    className="w-full mt-4 py-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-medium transition-colors"
+                  >
+                    ← {settings.language === 'no' ? 'Tilbake' : 'Back'}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Study Fact - Quiz Mode Info */}
         {studyMode === "test" && currentIndex === 0 && !isQuizEnded && (
           <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-md border border-blue-100 dark:border-blue-800">
@@ -693,26 +869,46 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
         <div className="grid grid-cols-2 gap-4 mb-8">
           {studyMode === "test" ? (
             <>
-              {/* Lives Display - WITH HEART EMOJIS */}
-              <div className="bg-gradient-to-br from-rose-500 via-pink-600 to-red-600 dark:from-rose-600 dark:via-pink-700 dark:to-red-700 rounded-md p-6 shadow-2xl shadow-rose-500/50">
-                <p className="text-sm text-white font-black uppercase tracking-wide mb-4 drop-shadow-lg">
-                  {t("lives")}
-                </p>
-                <div className="flex items-center gap-2 justify-center">
-                  {[...Array(3)].map((_, i) => (
-                    <div
-                      key={i} 
-                      className={`text-5xl transition-all duration-300 ${
-                        i < lives 
-                          ? 'scale-110 drop-shadow-2xl' 
-                          : 'opacity-30 grayscale'
-                      }`}
-                    >
-                      {i < lives ? '❤️' : '💔'}
-                    </div>
-                  ))}
+              {testMode === 'lives' ? (
+                /* Lives Display - WITH HEART EMOJIS */
+                <div className="bg-gradient-to-br from-rose-500 via-pink-600 to-red-600 dark:from-rose-600 dark:via-pink-700 dark:to-red-700 rounded-md p-6 shadow-2xl shadow-rose-500/50">
+                  <p className="text-sm text-white font-black uppercase tracking-wide mb-4 drop-shadow-lg">
+                    {t("lives")}
+                  </p>
+                  <div className="flex items-center gap-2 justify-center">
+                    {[...Array(3)].map((_, i) => (
+                      <div
+                        key={i} 
+                        className={`text-5xl transition-all duration-300 ${
+                          i < lives 
+                            ? 'scale-110 drop-shadow-2xl' 
+                            : 'opacity-30 grayscale'
+                        }`}
+                      >
+                        {i < lives ? '❤️' : '💔'}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                /* Practice Mode - Score Display */
+                <div className="bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-md p-6 shadow-2xl">
+                  <p className="text-sm text-white font-black uppercase tracking-wide mb-2 drop-shadow-lg">
+                    {settings.language === 'no' ? 'Poengsum' : 'Score'}
+                  </p>
+                  <div className="flex items-center justify-center gap-4">
+                    <div className="text-center">
+                      <p className="text-3xl font-bold text-emerald-300">{Array.from(testResults.values()).filter(v => v).length}</p>
+                      <p className="text-xs text-white/70">{settings.language === 'no' ? 'Riktig' : 'Correct'}</p>
+                    </div>
+                    <div className="text-2xl text-white/50">/</div>
+                    <div className="text-center">
+                      <p className="text-3xl font-bold text-rose-300">{Array.from(testResults.values()).filter(v => !v).length}</p>
+                      <p className="text-xs text-white/70">{settings.language === 'no' ? 'Feil' : 'Wrong'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Streak Display */}
               <div className="bg-gradient-to-br from-orange-500 to-amber-500 rounded-md p-5 shadow-lg">
@@ -896,8 +1092,114 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                 </div>
               </div>
 
-              {/* Answer Options or Self-Assessment */}
-              {quizOptions.length > 0 ? (
+              {/* Answer Options - Written, Multiple Choice, or Self-Assessment */}
+              {testType === 'written' ? (
+                /* Written Mode */
+                <div className="space-y-6 max-w-2xl mx-auto">
+                  {!writtenSubmitted ? (
+                    <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700">
+                      <p className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">
+                        {settings.language === 'no' ? 'Skriv inn svaret ditt' : 'Type your answer'}
+                      </p>
+                      <input
+                        type="text"
+                        value={writtenAnswer}
+                        onChange={(e) => setWrittenAnswer(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && writtenAnswer.trim()) {
+                            const isCorrect = checkWrittenAnswer(writtenAnswer, currentCard.answer);
+                            setWrittenSubmitted(true);
+                            setIsAnswerCorrect(isCorrect);
+                            setSelectedAnswer(writtenAnswer);
+                            
+                            const newResults = new Map(testResults);
+                            newResults.set(currentCard.id, isCorrect);
+                            setTestResults(newResults);
+                            
+                            if (isCorrect) {
+                              const newStreak = currentStreak + 1;
+                              setCurrentStreak(newStreak);
+                              setMaxStreak(Math.max(maxStreak, newStreak));
+                            } else {
+                              setCurrentStreak(0);
+                              if (testMode === 'lives') {
+                                const newLives = lives - 1;
+                                setLives(newLives);
+                                if (newLives <= 0) {
+                                  setIsQuizEnded(true);
+                                }
+                              }
+                            }
+                          }
+                        }}
+                        placeholder={settings.language === 'no' ? 'Ditt svar...' : 'Your answer...'}
+                        className="w-full px-5 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-900 dark:text-white text-lg"
+                        autoFocus
+                      />
+                      <button
+                        onClick={() => {
+                          if (!writtenAnswer.trim()) return;
+                          const isCorrect = checkWrittenAnswer(writtenAnswer, currentCard.answer);
+                          setWrittenSubmitted(true);
+                          setIsAnswerCorrect(isCorrect);
+                          setSelectedAnswer(writtenAnswer);
+                          
+                          const newResults = new Map(testResults);
+                          newResults.set(currentCard.id, isCorrect);
+                          setTestResults(newResults);
+                          
+                          if (isCorrect) {
+                            const newStreak = currentStreak + 1;
+                            setCurrentStreak(newStreak);
+                            setMaxStreak(Math.max(maxStreak, newStreak));
+                          } else {
+                            setCurrentStreak(0);
+                            if (testMode === 'lives') {
+                              const newLives = lives - 1;
+                              setLives(newLives);
+                              if (newLives <= 0) {
+                                setIsQuizEnded(true);
+                              }
+                            }
+                          }
+                        }}
+                        disabled={!writtenAnswer.trim()}
+                        className="w-full mt-4 py-4 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white font-bold text-lg rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {settings.language === 'no' ? 'Sjekk svar' : 'Check Answer'}
+                      </button>
+                      <p className="text-sm text-gray-400 mt-3 text-center">
+                        {settings.language === 'no' ? 'Små skrivefeil godtas' : 'Small typos are accepted'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700">
+                      <div className={`p-6 rounded-lg mb-4 ${isAnswerCorrect ? 'bg-emerald-50 dark:bg-emerald-900/30' : 'bg-rose-50 dark:bg-rose-900/30'}`}>
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="text-3xl">{isAnswerCorrect ? '✅' : '❌'}</span>
+                          <p className={`font-bold text-xl ${isAnswerCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                            {isAnswerCorrect 
+                              ? (settings.language === 'no' ? 'Riktig!' : 'Correct!') 
+                              : (settings.language === 'no' ? 'Feil' : 'Incorrect')}
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-gray-600 dark:text-gray-300">
+                            <span className="font-medium">{settings.language === 'no' ? 'Ditt svar: ' : 'Your answer: '}</span>
+                            <span className={isAnswerCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400 line-through'}>{writtenAnswer}</span>
+                          </p>
+                          {!isAnswerCorrect && (
+                            <p className="text-gray-600 dark:text-gray-300">
+                              <span className="font-medium">{settings.language === 'no' ? 'Riktig svar: ' : 'Correct answer: '}</span>
+                              <span className="text-emerald-600 dark:text-emerald-400 font-bold">{currentCard.answer}</span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : quizOptions.length > 0 ? (
                 /* Multiple Choice Quiz */
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {quizOptions.map((option, index) => {
@@ -998,7 +1300,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               )}
 
               {/* Feedback Message - Clean Modern Floating Bar */}
-              {selectedAnswer !== null && (
+              {(selectedAnswer !== null || writtenSubmitted) && (
                 <div className="fixed bottom-6 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-full md:max-w-3xl z-50">
                   <div className={`p-4 rounded-md shadow-2xl backdrop-blur-xl border-2 transform transition-all animate-in slide-in-from-bottom duration-300 ${
                     isAnswerCorrect 
@@ -1022,8 +1324,8 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                             {isAnswerCorrect ? t("correct") + "!" : t("incorrect")}
                           </p>
                           
-                          {/* Show answer if incorrect */}
-                          {!isAnswerCorrect && currentCard.answer && (
+                          {/* Show answer if incorrect (not for written mode - already shown inline) */}
+                          {!isAnswerCorrect && currentCard.answer && testType !== 'written' && (
                             <p className="text-sm font-medium opacity-90 truncate max-w-[200px] md:max-w-md">
                               <span className="opacity-60 mr-1">{t("correct_answer_prefix")}:</span>
                               {currentCard.answer}
