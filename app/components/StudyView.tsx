@@ -730,9 +730,9 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
 
         {/* Test Type Selection Dialog - Step 1: Type, Step 2: Mode */}
         {showTestTypeDialog && (
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" style={{ backgroundColor: 'rgba(0,0,0,0.85)' }}>
-            <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-md w-full border-2 border-gray-200 dark:border-gray-700 !opacity-100" style={{ backgroundColor: '#111827', opacity: 1 }}>
-              {/* Force solid background for dark mode via style to prevent transparency issues */}
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
+            <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-md w-full border-2 border-gray-200 dark:border-gray-700">
+              {/* Force solid background via absolute layer to prevent any transparency */}
               <div className="absolute inset-0 bg-white dark:bg-gray-900 rounded-2xl -z-10" />
               {testType === null ? (
                 <>
