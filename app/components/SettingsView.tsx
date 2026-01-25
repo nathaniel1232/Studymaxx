@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSettings, useTranslation, Theme, Language, GradeSystem } from "../contexts/SettingsContext";
 import { studyFacts } from "../utils/studyFacts";
 import ArrowIcon from "./icons/ArrowIcon";
@@ -21,6 +21,9 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showUpdatesModal, setShowUpdatesModal] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadUserInfo();
@@ -31,23 +34,106 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
     try {
       const currentUser = await getCurrentUser();
       setUser(currentUser);
+      
+      // Set avatar URL from user metadata
+      if (currentUser?.user_metadata?.avatar_url) {
+        setAvatarUrl(currentUser.user_metadata.avatar_url);
+      }
 
       if (currentUser && supabase) {
         // Fetch user's premium status from database
         const { data, error } = await supabase
           .from('users')
-          .select('is_premium')
+          .select('is_premium, avatar_url')
           .eq('id', currentUser.id)
           .single();
 
         if (!error && data) {
           setIsPremium(data.is_premium || false);
+          // Also check avatar_url from database
+          if (data.avatar_url) {
+            setAvatarUrl(data.avatar_url);
+          }
         }
       }
     } catch (error) {
       console.error('Error loading user info:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !supabase) return;
+    
+    setIsUploadingAvatar(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('Please sign in to upload an avatar');
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await fetch('/api/user/avatar', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: formData
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setAvatarUrl(data.avatarUrl);
+        setShowSuccessMessage(true);
+        setTimeout(() => setShowSuccessMessage(false), 2000);
+        // Refresh user to get updated metadata
+        await supabase.auth.refreshSession();
+      } else {
+        alert(data.error || 'Failed to upload avatar');
+      }
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      alert('Failed to upload avatar. Please try again.');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!user || !supabase) return;
+    
+    if (!confirm('Are you sure you want to remove your profile picture?')) return;
+    
+    setIsUploadingAvatar(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      
+      const response = await fetch('/api/user/avatar', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+      
+      if (response.ok) {
+        setAvatarUrl(null);
+        setShowSuccessMessage(true);
+        setTimeout(() => setShowSuccessMessage(false), 2000);
+        await supabase.auth.refreshSession();
+      }
+    } catch (error) {
+      console.error('Error removing avatar:', error);
+    } finally {
+      setIsUploadingAvatar(false);
     }
   };
 
@@ -133,6 +219,63 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
               </h2>
 
               <div className="space-y-3">
+                {/* Profile Picture */}
+                <div className="p-4 bg-slate-900/50 rounded-md">
+                  <div className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-3">Profile Picture</div>
+                  <div className="flex items-center gap-4">
+                    {/* Avatar Preview */}
+                    <div className="relative">
+                      {avatarUrl ? (
+                        <img 
+                          src={avatarUrl} 
+                          alt="Profile" 
+                          className="w-20 h-20 rounded-full object-cover border-2 border-slate-700"
+                        />
+                      ) : (
+                        <div 
+                          className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white border-2 border-slate-700"
+                          style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)' }}
+                        >
+                          {user.email?.substring(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                      {isUploadingAvatar && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                          <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Upload Controls */}
+                    <div className="flex-1 space-y-2">
+                      <input 
+                        type="file" 
+                        ref={fileInputRef}
+                        onChange={handleAvatarUpload}
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        className="hidden"
+                      />
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploadingAvatar}
+                        className="w-full py-2 px-4 rounded-md bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold transition-all disabled:opacity-50"
+                      >
+                        {avatarUrl ? 'Change Photo' : 'Upload Photo'}
+                      </button>
+                      {avatarUrl && (
+                        <button
+                          onClick={handleRemoveAvatar}
+                          disabled={isUploadingAvatar}
+                          className="w-full py-2 px-4 rounded-md bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-bold transition-all disabled:opacity-50"
+                        >
+                          Remove Photo
+                        </button>
+                      )}
+                      <p className="text-xs text-slate-500">JPG, PNG, GIF or WebP. Max 2MB.</p>
+                    </div>
+                  </div>
+                </div>
+                
                 {/* Email */}
                 <div className="flex items-center justify-between p-4 bg-slate-900/50 rounded-md">
                   <div>

@@ -52,11 +52,39 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
     return name.substring(0, 2).toUpperCase();
   };
 
+  const getAvatarUrl = () => {
+    return user.user_metadata?.avatar_url || null;
+  };
+
+  const renderAvatar = (size: "sm" | "lg" = "sm") => {
+    const avatarUrl = getAvatarUrl();
+    const sizeClasses = size === "sm" ? "w-8 h-8 text-xs" : "w-12 h-12 text-sm";
+    
+    if (avatarUrl) {
+      return (
+        <img 
+          src={avatarUrl} 
+          alt="Profile" 
+          className={`${sizeClasses} rounded-full object-cover`}
+        />
+      );
+    }
+    
+    return (
+      <div 
+        className={`${sizeClasses} rounded-full flex items-center justify-center font-bold text-white`}
+        style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)' }}
+      >
+        {getInitials()}
+      </div>
+    );
+  };
+
   return (
     <div className="relative" ref={dropdownRef} style={{ zIndex: 1001 }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 px-4 py-2 rounded-md transition-all hover:scale-105 hover:shadow-lg"
+        className="flex items-center gap-3 px-4 py-2 rounded-md transition-all hover:shadow-lg"
         style={{ 
           background: 'var(--surface)', 
           border: '2px solid var(--border)',
@@ -66,12 +94,7 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
         }}
       >
         {/* Avatar */}
-        <div 
-          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
-          style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)' }}
-        >
-          {getInitials()}
-        </div>
+        {renderAvatar("sm")}
         
         {/* User info */}
         <div className="flex items-center gap-2">
@@ -116,12 +139,7 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
           {/* User info section */}
           <div className="p-4 border-b" style={{ borderColor: 'var(--border)' }}>
             <div className="flex items-center gap-3 mb-3">
-              <div 
-                className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold text-white"
-                style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)' }}
-              >
-                {getInitials()}
-              </div>
+              {renderAvatar("lg")}
               <div className="flex-1">
                 <div className="font-bold text-sm" style={{ color: 'var(--foreground)' }}>
                   {getDisplayName()}

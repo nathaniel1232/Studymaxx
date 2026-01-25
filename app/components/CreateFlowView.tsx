@@ -1001,7 +1001,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     <>
       <div className="min-h-screen relative" style={{ background: 'var(--background)' }}>
         {/* Top bar med logo */}
-        <div className="sticky top-0 z-50 px-4 py-3 border-b border-slate-700 bg-slate-900/80 backdrop-blur-sm">
+        <div className="sticky top-0 z-50 px-4 py-3 border-b backdrop-blur-sm" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
           <div className="max-w-2xl mx-auto flex items-center justify-between">
             <div className="text-2xl font-black text-white">
               StudyMaxx
@@ -1014,12 +1014,12 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
           </div>
         </div>
 
-        <div className="px-4 py-6 max-w-2xl mx-auto">
+        <div className="px-3 sm:px-4 py-4 sm:py-6 max-w-2xl mx-auto">
           {/* Header with progress */}
           <div className="mb-4">
           <button
             onClick={handleBack}
-            className="mb-2 px-4 py-2 text-sm font-bold rounded-md transition-all flex items-center gap-2 shadow-md hover:scale-105 hover:shadow-lg"
+            className="mb-2 px-4 py-2 text-sm font-bold rounded-md transition-all flex items-center gap-2 shadow-md hover:-translate-y-0.5 active:translate-y-0 hover:shadow-lg"
             style={{
               background: 'var(--card)',
               color: 'var(--foreground)',
@@ -1067,7 +1067,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         </div>
 
         {/* Main content card */}
-        <div className="card-elevated p-4">
+        <div className="card-elevated p-3 sm:p-4">
           {/* Error message */}
           {error && (
             <div className="mb-3 p-3 rounded-lg" style={{ 
@@ -1099,7 +1099,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
               {/* Subject selection buttons */}
               <div>
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                   {getSubjectExamples().map((example) => (
                     <Card
                       key={example.name}
@@ -1184,7 +1184,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
               <button
                 onClick={handleContinueFromStep1}
                 disabled={!subject.trim()}
-                className="w-full py-4 rounded-md text-lg font-black bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-[0_0_30px_rgba(20,184,166,0.6)] hover:from-emerald-400 hover:via-teal-400 hover:to-cyan-400 hover:shadow-[0_0_40px_rgba(20,184,166,0.8)] hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-md text-lg font-black shadow-xl hover:shadow-2xl hover:-translate-y-1 active:translate-y-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                style={{ background: 'var(--card)', color: 'var(--foreground)', border: '2px solid var(--border)' }}
               >
                 <span>Continue</span>
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1400,7 +1401,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   {/* Material input area */}
                   <div className="space-y-3">
                     {/* Show selected type */}
-                    <Card className="border bg-slate-50 dark:bg-slate-800/50">
+                    <Card className="border" style={{ background: 'var(--surface-elevated)', borderColor: 'var(--border)' }}>
                       <CardContent className="flex items-center justify-between p-3">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
@@ -1546,7 +1547,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer transition-all duration-200 group ${
                             uploadedFile 
                               ? "bg-green-50/50 dark:bg-green-900/10 border-green-400/50 dark:border-green-800" 
-                              : "bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-600"
+                              : "border hover:border-indigo-400"
                           }`}
                         >
                           {uploadedFile ? (
@@ -1561,8 +1562,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                             </div>
                           ) : (
                             <div className="text-center p-3">
-                              <div className="w-10 h-10 mx-auto bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-xl mb-2 shadow-sm border border-slate-100 dark:border-slate-700">📄</div>
-                              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                              <div className="w-10 h-10 mx-auto rounded-full flex items-center justify-center text-xl mb-2 shadow-sm" style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}>📄</div>
+                              <p className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
                                 Upload Word Document
                               </p>
                               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -1592,7 +1593,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer transition-all duration-200 group ${
                             uploadedFile 
                               ? "bg-green-50/50 dark:bg-green-900/10 border-green-400/50 dark:border-green-800" 
-                              : "bg-slate-50/50 dark:bg-slate-900/50 border-slate-300 dark:border-slate-700 hover:border-purple-400 dark:hover:border-purple-600"
+                              : "border hover:border-purple-400"
                           }`}
                         >
                           {uploadedFile ? (
@@ -1607,8 +1608,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                             </div>
                           ) : (
                             <div className="text-center p-3">
-                               <div className="w-10 h-10 mx-auto bg-white dark:bg-slate-800 rounded-full flex items-center justify-center text-xl mb-2 shadow-sm border border-slate-100 dark:border-slate-700">📷</div>
-                              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                               <div className="w-10 h-10 mx-auto rounded-full flex items-center justify-center text-xl mb-2 shadow-sm" style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}>📷</div>
+                              <p className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
                                 Upload Image
                               </p>
                               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -1623,13 +1624,13 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
                   {/* Language selection - only show when we have text */}
                   {textInput.length >= 50 && (
-                    <div className="mt-3 p-3 bg-white dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-700">
+                    <div className="mt-3 p-3 rounded-md" style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}>
                       <div className="mb-2 flex items-baseline justify-between">
-                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                        <h4 className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
                           Output Language
                         </h4>
                         {detectedLanguage && detectedLanguage !== "unknown" && (
-                          <div className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-full text-gray-500 dark:text-gray-400">
+                          <div className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--surface-elevated)', color: 'var(--muted-foreground)' }}>
                             Detected: {detectedLanguage}
                           </div>
                         )}
@@ -1997,7 +1998,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   <span>Start</span>
                   <span>{Math.round((elapsedSeconds / 75) * 100)}%</span>
                 </div>
-                <div className="h-3 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden shadow-inner">
+                <div className="h-3 w-full rounded-full overflow-hidden shadow-inner" style={{ background: 'var(--surface-hover)' }}>
                   <div 
                     className="h-full transition-all duration-300 ease-out"
                     style={{ 
@@ -2025,17 +2026,21 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                             isDone 
                                ? "bg-green-50/50 border-green-100 dark:bg-green-900/10 dark:border-green-800"
                                : isActive
-                               ? "bg-white border-indigo-200 shadow-md scale-[1.02] dark:bg-slate-800 dark:border-indigo-900"
+                               ? "border-indigo-200 shadow-md scale-[1.02] dark:border-indigo-900"
                                : "bg-transparent border-transparent opacity-50"
                         }`}
+                        style={isActive && !isDone ? { background: 'var(--surface-elevated)' } : undefined}
                       >
-                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors ${
+                         <div 
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors ${
                             isDone 
                                ? "bg-green-500 text-white" 
                                : isActive
                                ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300 animate-pulse"
-                               : "bg-gray-100 text-gray-400 dark:bg-gray-800"
-                         }`}>
+                               : "text-gray-400"
+                         }`}
+                            style={!isDone && !isActive ? { background: 'var(--surface-elevated)' } : undefined}
+                         >
                             {isDone ? "✓" : step.icon}
                          </div>
                          <span className={`font-medium ${
@@ -2049,7 +2054,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
               </div>
 
               {/* Fun Fact Card */}
-              <div className="mt-8 p-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-800 dark:to-slate-800/50 rounded-md border border-amber-100/50 dark:border-slate-700 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+              <div className="mt-8 p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-md border border-amber-100/50 dark:border-amber-800/30 shadow-sm relative overflow-hidden group hover:shadow-md transition-all" style={{ background: 'var(--surface-elevated)' }}>
                 <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                    <svg className="w-16 h-16 text-amber-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
                 </div>

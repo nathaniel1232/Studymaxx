@@ -12,7 +12,9 @@ import PremiumModal from "./components/PremiumModal";
 import UserProfileDropdown from "./components/UserProfileDropdown";
 import StudyFactBadge from "./components/StudyFactBadge";
 import LiveVisitorsCounter from "./components/LiveVisitorsCounter";
+import AnimatedCounter from "./components/AnimatedCounter";
 import Toast from "./components/Toast";
+import { getCookieConsent } from "./components/CookieConsent";
 import { updateLastStudied, Flashcard, getSavedFlashcardSets, FlashcardSet } from "./utils/storage";
 import { getStudyFact } from "./utils/studyFacts";
 import { useTranslation, useSettings } from "./contexts/SettingsContext";
@@ -27,6 +29,7 @@ export default function Home() {
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("home");
   const [currentSetId, setCurrentSetId] = useState<string | null>(null);
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
   const [currentSubject, setCurrentSubject] = useState<string>("");
   const [currentGrade, setCurrentGrade] = useState<string>("");
   const [savedSets, setSavedSets] = useState<FlashcardSet[]>([]);
@@ -37,6 +40,20 @@ export default function Home() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning" } | null>(null);
+
+  // Check cookie consent for analytics
+  useEffect(() => {
+    const consent = getCookieConsent();
+    setAnalyticsEnabled(consent === "accepted");
+    
+    // Listen for consent changes
+    const handleConsentChange = (e: CustomEvent) => {
+      setAnalyticsEnabled(e.detail.accepted);
+    };
+    
+    window.addEventListener('cookieConsentChanged', handleConsentChange as EventListener);
+    return () => window.removeEventListener('cookieConsentChanged', handleConsentChange as EventListener);
+  }, []);
 
   // Load saved sets after hydration
   useEffect(() => {
@@ -297,14 +314,15 @@ export default function Home() {
 
   return (
     <main className="min-h-screen relative overflow-hidden bg-stone-50 dark:bg-slate-900">
-      <Analytics />
+      {/* Only load analytics if user accepted cookies */}
+      {analyticsEnabled && <Analytics />}
       {viewMode === "home" && (
         <div className="min-h-screen flex flex-col">
 
           {/* Top Navigation */}
-          <nav className="px-4 py-4 flex justify-between items-center border-b border-slate-700 bg-slate-900/95 backdrop-blur-md sticky top-0 z-50 shadow-lg">
+          <nav className="px-4 py-4 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md sticky top-0 z-50 shadow-lg">
             <div className="flex items-center gap-2">
-              <div className="text-3xl font-black text-white">
+              <div className="text-3xl font-black text-slate-900 dark:text-white">
                 StudyMaxx
               </div>
             </div>
@@ -314,7 +332,7 @@ export default function Home() {
                 <>
                   <button
                     onClick={handleViewSettings}
-                    className="px-4 py-2 rounded-md font-bold text-sm bg-slate-800 text-white hover:bg-slate-700 transition-all flex items-center gap-2"
+                    className="px-4 py-2 rounded-md font-bold text-sm bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -342,7 +360,7 @@ export default function Home() {
           </nav>
           
           {/* Hero Section */}
-          <div className="flex-1 flex flex-col px-4 py-6 max-w-3xl mx-auto w-full">
+          <div className="flex-1 flex flex-col px-4 py-6 max-w-3xl mx-auto w-full bg-slate-900 dark:bg-transparent rounded-b-3xl">
             
             {/* Main Hero - Punchy & Direct */}
             <div className="text-center mb-6">
@@ -379,19 +397,7 @@ export default function Home() {
                 {/* Primary CTA */}
                 <button
                   onClick={handleCreateNew}
-                  className="group relative inline-flex items-center justify-center gap-3 px-12 py-6 rounded-md text-xl font-black text-white hover:-translate-y-2 hover:scale-105 active:scale-95 transition-all duration-300 w-full sm:w-auto"
-                  style={{
-                    background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
-                    boxShadow: '0 0 50px rgba(6, 182, 212, 0.8)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%)';
-                    e.currentTarget.style.boxShadow = '0 0 70px rgba(6, 182, 212, 1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)';
-                    e.currentTarget.style.boxShadow = '0 0 50px rgba(6, 182, 212, 0.8)';
-                  }}
+                  className="group relative inline-flex items-center justify-center gap-3 px-12 py-6 rounded-md text-xl font-black bg-white dark:bg-slate-800 text-slate-900 dark:text-white hover:-translate-y-1 active:translate-y-0 transition-all duration-200 w-full sm:w-auto shadow-xl hover:shadow-2xl border-2 border-slate-200 dark:border-slate-700"
                 >
                   <span>{user ? "Create study set" : "Create study set"}</span>
                   {/* Shine effect */}
@@ -404,7 +410,7 @@ export default function Home() {
                 {user && savedSets.length > 0 && (
                   <button
                     onClick={handleViewSavedSets}
-                    className="px-8 py-6 rounded-md text-lg font-bold bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 hover:shadow-xl hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all duration-200 w-full sm:w-auto"
+                    className="px-8 py-6 rounded-md text-lg font-bold bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white shadow-lg hover:bg-slate-200 dark:hover:bg-slate-700 hover:shadow-xl hover:-translate-y-1 active:translate-y-0 transition-all duration-200 w-full sm:w-auto border-2 border-slate-200 dark:border-slate-700"
                   >
                     My study sets ({savedSets.length})
                   </button>
@@ -440,15 +446,21 @@ export default function Home() {
             {/* Social Proof & Trust */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
               <div className="text-center p-3 bg-slate-800/50 rounded-md hover:bg-emerald-500/10 transition-all hover:shadow-lg hover:shadow-emerald-500/20">
-                <div className="text-2xl font-black text-white mb-0.5">1000+</div>
+                <div className="text-2xl font-black text-white mb-0.5">
+                  <AnimatedCounter end={1000} suffix="+" duration={2000} />
+                </div>
                 <span className="text-xs font-bold text-slate-400">Active Students</span>
               </div>
               <div className="text-center p-3 bg-slate-800/50 rounded-md hover:bg-violet-500/10 transition-all hover:shadow-lg hover:shadow-violet-500/20">
-                <div className="text-2xl font-black text-white mb-0.5">50k+</div>
+                <div className="text-2xl font-black text-white mb-0.5">
+                  <AnimatedCounter end={50} suffix="k+" duration={2000} />
+                </div>
                 <span className="text-xs font-bold text-slate-400">Flashcards Made</span>
               </div>
               <div className="text-center p-3 bg-slate-800/50 rounded-md hover:bg-blue-500/10 transition-all hover:shadow-lg hover:shadow-blue-500/20">
-                <div className="text-2xl font-black text-white mb-0.5">4.9/5</div>
+                <div className="text-2xl font-black text-white mb-0.5">
+                  <AnimatedCounter end={4.9} suffix="/5" duration={2000} decimals={1} />
+                </div>
                 <span className="text-xs font-bold text-slate-400">Student Rating</span>
               </div>
               <div className="text-center p-3 bg-slate-800/50 rounded-md hover:bg-pink-500/10 transition-all hover:shadow-lg hover:shadow-pink-500/20">

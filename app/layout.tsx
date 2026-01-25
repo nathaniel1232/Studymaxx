@@ -3,6 +3,7 @@ import { Outfit } from "next/font/google";
 import "./globals.css";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import ThemeWrapper from "./components/ThemeWrapper";
+import CookieConsent from "./components/CookieConsent";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -29,6 +30,7 @@ export default function RootLayout({
         <SettingsProvider>
           <ThemeWrapper>
             {children}
+            <CookieConsent />
           </ThemeWrapper>
         </SettingsProvider>
       </body>
