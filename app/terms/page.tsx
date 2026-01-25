@@ -133,7 +133,16 @@ export default function TermsPage() {
 
             <section>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                10. Changes to Terms
+                10. Payments and Subscriptions
+              </h2>
+              <p>
+                Premium subscriptions are billed monthly. By subscribing, you acknowledge that all payments are final and non-refundable. You may cancel your subscription at any time, and you will retain access until the end of your current billing period.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                11. Changes to Terms
               </h2>
               <p>
                 We may update these Terms of Service at any time. Continued use of the Service after changes constitutes acceptance of the new terms.
@@ -142,7 +151,7 @@ export default function TermsPage() {
 
             <section>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                11. Governing Law
+                12. Governing Law
               </h2>
               <p>
                 These Terms are governed by the laws of Norway. Any disputes shall be resolved in Norwegian courts.
@@ -151,7 +160,7 @@ export default function TermsPage() {
 
             <section>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                12. Contact
+                13. Contact
               </h2>
               <p>
                 For questions about these Terms, contact us at{" "}
