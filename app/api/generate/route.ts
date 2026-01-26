@@ -498,69 +498,73 @@ REMEMBER: If you write a question starting with "Analyze", "Evaluate", "Explain"
   let languageInstructions = "";
   if (knownLanguage && learningLanguage) {
     languageInstructions = `
-⚠️ VOCABULARY MODE ACTIVE ⚠️
-Language pair: ${learningLanguage} → ${knownLanguage}
+⚠️ VOCABULARY MODE ACTIVE - PRODUCTION FOCUS ⚠️
+Language pair: Learning ${learningLanguage} from ${knownLanguage}
 Parse input flexibly: "[word] - [word]" OR "[word] → [word]" OR "[word]-[word]" (hyphens, arrows, or dashes)
 Create ONE flashcard per vocabulary pair.
-Question: Write the question entirely in ${knownLanguage}, asking what the ${learningLanguage} word means.
-Answer: ${knownLanguage} translation only.
-Distractors: 3 other ${knownLanguage} words that could be plausible wrong translations.
+Question: Ask in ${knownLanguage} how to say/translate the ${knownLanguage} word into ${learningLanguage}.
+Answer: The ${learningLanguage} word/phrase (what the user is LEARNING to produce).
+Distractors: 3 other ${learningLanguage} words that could be plausible but wrong translations.
 `;
   }
 
   const systemPrompt = knownLanguage && learningLanguage 
-    ? `You are creating ${bufferedCount} vocabulary flashcards for learning ${learningLanguage}.
+    ? `You are creating ${bufferedCount} vocabulary flashcards for ACTIVELY LEARNING ${learningLanguage}.
+
+🎯 LEARNING PHILOSOPHY: The user wants to PRODUCE ${learningLanguage}, not just recognize it.
+- Questions show the ${knownLanguage} word and ask "How do you say this in ${learningLanguage}?"
+- Answers are in ${learningLanguage} - the language the user is LEARNING
+- This tests RECALL and PRODUCTION, which is how you actually learn a language!
 
 STRICT REQUIREMENTS:
 1. Input format is FLEXIBLE - accept any separator: "-", "→", "–", "—", ">" between word pairs
 2. Generate ONE flashcard PER vocabulary pair
-3. The QUESTION text MUST be written entirely in ${knownLanguage} - ask what the ${learningLanguage} word means
-4. Answer MUST be in ${knownLanguage} ONLY
-5. Distractors MUST be in ${knownLanguage} ONLY
+3. QUESTION: Written in ${knownLanguage}, showing the ${knownLanguage} word and asking how to say it in ${learningLanguage}
+4. ANSWER: The ${learningLanguage} word/phrase - this is what the user must learn to produce!
+5. DISTRACTORS: 3 other ${learningLanguage} words that could be confused with the correct answer
 
-QUESTION FORMAT (write in ${knownLanguage}):
-- The question should be written naturally in ${knownLanguage}, asking what a ${learningLanguage} word/phrase means
-- Keep the ${learningLanguage} word in quotes within the question
-- Examples of question phrasing in different languages:
-  * English: "What does 'famille' mean?"
-  * Spanish: "¿Qué significa 'famille'?"
-  * Norwegian: "Hva betyr 'famille'?"
-  * German: "Was bedeutet 'famille'?"
-  * French: "Que signifie 'famille'?"
-  * Swedish: "Vad betyder 'famille'?"
-  * Italian: "Cosa significa 'famille'?"
-  * Portuguese: "O que significa 'famille'?"
-  * Dutch: "Wat betekent 'famille'?"
-  * Danish: "Hvad betyder 'famille'?"
-  * Polish: "Co znaczy 'famille'?"
-  * Russian: "Что означает 'famille'?"
-  * Finnish: "Mitä 'famille' tarkoittaa?"
-  * Czech: "Co znamená 'famille'?"
-  * Hungarian: "Mit jelent a 'famille'?"
-  * Turkish: "'famille' ne demek?"
-  * Greek: "Τι σημαίνει 'famille';"
-  * Japanese: "'famille'はどういう意味ですか？"
-  * Chinese: "'famille'是什么意思？"
-  * Korean: "'famille'는 무슨 뜻인가요?"
-  * Arabic: "ما معنى 'famille'؟"
-  * Indonesian: "Apa artinya 'famille'?"
-  * Vietnamese: "'famille' nghĩa là gì?"
+QUESTION FORMAT (ask in ${knownLanguage} for ${learningLanguage} translation):
+- English asking for French: "How do you say 'family' in French?"
+- English asking for Spanish: "What is 'house' in Spanish?"
+- Spanish asking for English: "¿Cómo se dice 'casa' en inglés?"
+- French asking for German: "Comment dit-on 'maison' en allemand?"
+- Swedish asking for Spanish: "Hur säger man 'hund' på spanska?"
+- Norwegian asking for French: "Hvordan sier man 'hund' på fransk?"
+- German asking for Italian: "Wie sagt man 'Haus' auf Italienisch?"
+- Japanese asking for English: "「家」は英語で何と言いますか？"
+- Korean asking for Japanese: "'집'을 일본어로 어떻게 말하나요?"
 
-EXAMPLE FOR ${learningLanguage} → ${knownLanguage}:
-Input: "une famille - a family" OR "une famille-a family"
+EXAMPLE - Learning French from English:
+Input: "une famille - a family"
 Output:
 {
   "id": "1",
-  "question": "[Write question naturally in ${knownLanguage} asking what 'une famille' means]",
-  "answer": "a family",
-  "distractors": ["a house", "a friend", "a book"]
+  "question": "How do you say 'family' in French?",
+  "answer": "une famille",
+  "distractors": ["une maison", "un ami", "un livre"]
+}
+
+EXAMPLE - Learning English from Spanish:
+Input: "dog - perro"
+Output:
+{
+  "id": "1",
+  "question": "¿Cómo se dice 'perro' en inglés?",
+  "answer": "dog",
+  "distractors": ["cat", "house", "car"]
 }
 
 OUTPUT FORMAT (JSON only):
 {"flashcards": [{"id": "1", "question": "...", "answer": "...", "distractors": ["...", "...", "..."]}]}
 
-⚠️ CRITICAL: Generate EXACTLY ${bufferedCount} flashcards - ONE PER VOCABULARY PAIR ⚠️
-⚠️ ALL text (question, answer, distractors) MUST be in ${knownLanguage} except the ${learningLanguage} word in quotes ⚠️`
+⚠️ CRITICAL: Generate EXACTLY ${bufferedCount} flashcards total! ⚠️
+⚠️ If input has fewer vocabulary pairs than ${bufferedCount}, DO BOTH:
+   1. FORWARD cards: "${knownLanguage} → ${learningLanguage}" (asking user to translate TO ${learningLanguage})
+   2. REVERSE cards: "${learningLanguage} → ${knownLanguage}" (asking user to translate FROM ${learningLanguage})
+   This means each word pair can generate 2 flashcards to reach the target count!
+⚠️ For FORWARD cards: Question in ${knownLanguage}, Answer in ${learningLanguage}
+⚠️ For REVERSE cards: Question in ${learningLanguage}, Answer in ${knownLanguage}
+⚠️ DISTRACTORS must match the answer language ⚠️`
     : `You are an expert academic tutor${subject ? ` in ${subject}` : ""} creating educational flashcards.
 
 CRITICAL: You are creating STUDY FLASHCARDS, not code. Do NOT generate programming code, HTML, or any file modifications.

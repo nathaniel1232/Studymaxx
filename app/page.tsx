@@ -14,6 +14,7 @@ import StudyFactBadge from "./components/StudyFactBadge";
 import LiveVisitorsCounter from "./components/LiveVisitorsCounter";
 import AnimatedCounter from "./components/AnimatedCounter";
 import Toast from "./components/Toast";
+import FeedbackModal from "./components/FeedbackModal";
 import { getCookieConsent } from "./components/CookieConsent";
 import { updateLastStudied, Flashcard, getSavedFlashcardSets, FlashcardSet } from "./utils/storage";
 import { getStudyFact } from "./utils/studyFacts";
@@ -39,6 +40,7 @@ export default function Home() {
   const [remainingStudySets, setRemainingStudySets] = useState(3);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning" } | null>(null);
 
   // Check cookie consent for analytics
@@ -654,6 +656,23 @@ export default function Home() {
           duration={4000}
         />
       )}
+
+      {/* Floating Feedback Button */}
+      <button
+        onClick={() => setShowFeedbackModal(true)}
+        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/40 hover:scale-110 active:scale-95 transition-all duration-200 flex items-center justify-center"
+        title={settings.language === "no" ? "Send tilbakemelding" : "Send Feedback"}
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      </button>
+
+      {/* Feedback Modal */}
+      <FeedbackModal 
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+      />
     </main>
   );
 }

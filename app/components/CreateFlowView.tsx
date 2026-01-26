@@ -41,11 +41,13 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   const [textInput, setTextInput] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [isExtractingImage, setIsExtractingImage] = useState(false);
   
   // Output language preference
   const [outputLanguage, setOutputLanguage] = useState<"auto" | "en">("auto");
   const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
   const [detectedLanguages, setDetectedLanguages] = useState<string[]>([]);
+  const [languagesFromImage, setLanguagesFromImage] = useState(false); // Flag: GPT detected from image
 
   // Difficulty
   const [difficulty, setDifficulty] = useState<string>("Medium");
@@ -464,22 +466,28 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     return detected;
   };
 
-  // Update detected language when text changes
+  // Update detected language when text changes (only if not already detected from image)
   useEffect(() => {
+    // Skip if languages were already detected from image by GPT
+    if (languagesFromImage) {
+      console.log('[CreateFlowView] Skipping text-based detection - using GPT image detection');
+      return;
+    }
+    
     if (textInput && textInput.length >= 50) {
       const lang = detectLanguage(textInput);
       const langs = detectLanguages(textInput);
       setDetectedLanguage(lang);
       setDetectedLanguages(langs);
       
-      console.log('[CreateFlowView] Detected languages:', langs);
+      console.log('[CreateFlowView] Detected languages (text-based):', langs);
       
       // DON'T auto-set - let user choose which is known vs learning
     } else {
       setDetectedLanguage(null);
       setDetectedLanguages([]);
     }
-  }, [textInput]);
+  }, [textInput, languagesFromImage]);
 
   // Listen for premium status changes (e.g., after successful purchase)
   useEffect(() => {
@@ -887,6 +895,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       }
     } else if (file.type.startsWith("image/")) {
       // Handle image with GPT-4 Vision API
+      setIsExtractingImage(true);
       try {
         console.log('[CreateFlowView] Processing single image with GPT-4 Vision...');
         
@@ -913,18 +922,42 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         }
         
         const data = await response.json();
-        const extractedText = data.text;
+        let extractedText = data.text;
         
         if (!extractedText || extractedText.trim().length === 0) {
           setError(t("no_text_image"));
           return;
         }
         
+        // Check if GPT detected languages in the image
+        const langMatch = extractedText.match(/DETECTED_LANGUAGES:\s*(.+?)$/m);
+        if (langMatch) {
+          const detectedLangs = langMatch[1].split(',').map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+          console.log('[CreateFlowView] 🌍 GPT detected languages from image:', detectedLangs);
+          
+          // Remove the DETECTED_LANGUAGES line from the text
+          extractedText = extractedText.replace(/DETECTED_LANGUAGES:\s*.+$/m, '').trim();
+          
+          // Set detected languages directly from GPT's analysis
+          if (detectedLangs.length >= 2) {
+            setLanguagesFromImage(true); // Flag that GPT detected languages
+            setDetectedLanguages(detectedLangs.slice(0, 2));
+            setDetectedLanguage(detectedLangs[0]);
+            console.log('[CreateFlowView] ✅ Set languages from image:', detectedLangs.slice(0, 2));
+          } else if (detectedLangs.length === 1) {
+            setLanguagesFromImage(true);
+            setDetectedLanguages(detectedLangs);
+            setDetectedLanguage(detectedLangs[0]);
+          }
+        }
+        
         console.log('[CreateFlowView] ✅ GPT-4 Vision extracted:', extractedText.length, 'characters');
         setTextInput(extractedText);
+        setIsExtractingImage(false);
       } catch (err: any) {
         console.error('[CreateFlowView] Image extraction error:', err);
         setError(err.message || "Failed to extract text from image. Please try another image.");
+        setIsExtractingImage(false);
       }
     } else {
       // For DOCX, use the API
@@ -1571,6 +1604,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                             setSelectedMaterial(null);
                             setTextInput("");
                             setUploadedFile(null);
+                            setLanguagesFromImage(false); // Reset image detection flag
+                            setDetectedLanguages([]);
+                            setDetectedLanguage(null);
                           }}
                           size="sm"
                           className="text-xs"
@@ -1651,11 +1687,26 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           htmlFor="image-upload"
                           className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer transition-all duration-200 group ${
                             uploadedFile 
-                              ? "bg-green-50/50 dark:bg-green-900/10 border-green-400/50 dark:border-green-800" 
+                              ? (isExtractingImage ? "bg-purple-50/50 dark:bg-purple-900/10 border-purple-400/50 dark:border-purple-800" : "bg-green-50/50 dark:bg-green-900/10 border-green-400/50 dark:border-green-800")
                               : "border hover:border-purple-400"
                           }`}
                         >
-                          {uploadedFile ? (
+                          {isExtractingImage ? (
+                            <div className="text-center p-4">
+                              <div className="w-12 h-12 mx-auto bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mb-2">
+                                <svg className="animate-spin h-6 w-6 text-purple-600 dark:text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                              </div>
+                              <p className="text-sm font-bold text-purple-700 dark:text-purple-300">
+                                Extracting text...
+                              </p>
+                              <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+                                This may take a few seconds
+                              </p>
+                            </div>
+                          ) : uploadedFile ? (
                             <div className="text-center p-4">
                               <div className="w-12 h-12 mx-auto bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-2xl mb-2 text-green-600 dark:text-green-400">✅</div>
                               <p className="text-sm font-bold text-slate-900 dark:text-white">
@@ -1707,7 +1758,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           : "Choose your native language and the language you're learning:"}
                       </p>
                       
-                      {/* Known Language - Allow ANY language selection */}
+                      {/* Known Language - Only detected languages */}
                       <div className="mb-3">
                         <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
                           {settings.language === "no" ? "🏠 Mitt morsmål (jeg kan):" : "🏠 My native language (I know):"}
@@ -1723,47 +1774,13 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           }}
                         >
                           <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
-                          {/* Show detected languages first */}
-                          {detectedLanguages.length > 0 && (
-                            <optgroup label={settings.language === "no" ? "Detekterte språk" : "Detected languages"}>
-                              {detectedLanguages.map(lang => (
-                                <option key={`detected-${lang}`} value={lang}>{lang}</option>
-                              ))}
-                            </optgroup>
-                          )}
-                          {/* All languages as fallback */}
-                          <optgroup label={settings.language === "no" ? "Alle språk" : "All languages"}>
-                            <option value="English">English</option>
-                            <option value="Spanish">Spanish / Español</option>
-                            <option value="French">French / Français</option>
-                            <option value="German">German / Deutsch</option>
-                            <option value="Italian">Italian / Italiano</option>
-                            <option value="Portuguese">Portuguese / Português</option>
-                            <option value="Dutch">Dutch / Nederlands</option>
-                            <option value="Swedish">Swedish / Svenska</option>
-                            <option value="Norwegian">Norwegian / Norsk</option>
-                            <option value="Danish">Danish / Dansk</option>
-                            <option value="Finnish">Finnish / Suomi</option>
-                            <option value="Polish">Polish / Polski</option>
-                            <option value="Russian">Russian / Русский</option>
-                            <option value="Czech">Czech / Čeština</option>
-                            <option value="Hungarian">Hungarian / Magyar</option>
-                            <option value="Turkish">Turkish / Türkçe</option>
-                            <option value="Greek">Greek / Ελληνικά</option>
-                            <option value="Arabic">Arabic / العربية</option>
-                            <option value="Hindi">Hindi / हिंदी</option>
-                            <option value="Japanese">Japanese / 日本語</option>
-                            <option value="Chinese">Chinese / 中文</option>
-                            <option value="Korean">Korean / 한국어</option>
-                            <option value="Vietnamese">Vietnamese / Tiếng Việt</option>
-                            <option value="Thai">Thai / ไทย</option>
-                            <option value="Indonesian">Indonesian / Bahasa</option>
-                            <option value="Icelandic">Icelandic / Íslenska</option>
-                          </optgroup>
+                          {detectedLanguages.map(lang => (
+                            <option key={`known-${lang}`} value={lang}>{lang}</option>
+                          ))}
                         </select>
                       </div>
 
-                      {/* Learning Language - Allow ANY language selection */}
+                      {/* Learning Language - Only detected languages */}
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
                           {settings.language === "no" ? "📚 Jeg lærer:" : "📚 I'm learning:"}
@@ -1779,43 +1796,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           }}
                         >
                           <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
-                          {/* Show detected languages first */}
-                          {detectedLanguages.length > 0 && (
-                            <optgroup label={settings.language === "no" ? "Detekterte språk" : "Detected languages"}>
-                              {detectedLanguages.map(lang => (
-                                <option key={`detected-${lang}`} value={lang}>{lang}</option>
-                              ))}
-                            </optgroup>
-                          )}
-                          {/* All languages as fallback */}
-                          <optgroup label={settings.language === "no" ? "Alle språk" : "All languages"}>
-                            <option value="English">English</option>
-                            <option value="Spanish">Spanish / Español</option>
-                            <option value="French">French / Français</option>
-                            <option value="German">German / Deutsch</option>
-                            <option value="Italian">Italian / Italiano</option>
-                            <option value="Portuguese">Portuguese / Português</option>
-                            <option value="Dutch">Dutch / Nederlands</option>
-                            <option value="Swedish">Swedish / Svenska</option>
-                            <option value="Norwegian">Norwegian / Norsk</option>
-                            <option value="Danish">Danish / Dansk</option>
-                            <option value="Finnish">Finnish / Suomi</option>
-                            <option value="Polish">Polish / Polski</option>
-                            <option value="Russian">Russian / Русский</option>
-                            <option value="Czech">Czech / Čeština</option>
-                            <option value="Hungarian">Hungarian / Magyar</option>
-                            <option value="Turkish">Turkish / Türkçe</option>
-                            <option value="Greek">Greek / Ελληνικά</option>
-                            <option value="Arabic">Arabic / العربية</option>
-                            <option value="Hindi">Hindi / हिंदी</option>
-                            <option value="Japanese">Japanese / 日本語</option>
-                            <option value="Chinese">Chinese / 中文</option>
-                            <option value="Korean">Korean / 한국어</option>
-                            <option value="Vietnamese">Vietnamese / Tiếng Việt</option>
-                            <option value="Thai">Thai / ไทย</option>
-                            <option value="Indonesian">Indonesian / Bahasa</option>
-                            <option value="Icelandic">Icelandic / Íslenska</option>
-                          </optgroup>
+                          {detectedLanguages.map(lang => (
+                            <option key={`learning-${lang}`} value={lang}>{lang}</option>
+                          ))}
                         </select>
                       </div>
 

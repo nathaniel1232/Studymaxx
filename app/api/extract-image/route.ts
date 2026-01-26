@@ -35,7 +35,23 @@ export async function POST(request: NextRequest) {
               content: [
                 {
                   type: 'text',
-                  text: 'Transcribe all text from this image in the original language. Do not translate. Extract educational content only, ignore dates and page numbers.',
+                  text: `Transcribe all text from this image exactly as written.
+                  
+IMPORTANT RULES:
+1. Keep text in original languages - do NOT translate anything
+2. For vocabulary lists (word pairs), format as: word1 → translation1
+3. Preserve all special characters and accents (é, ñ, ü, etc.)
+4. Ignore dates, page numbers, and non-educational content
+5. If this is a vocabulary list between two languages, preserve BOTH languages exactly
+
+Output format for vocabulary:
+word → translation
+word → translation
+
+At the END of your response, add a line:
+DETECTED_LANGUAGES: [Language1], [Language2]
+
+Example: DETECTED_LANGUAGES: French, English`,
                 },
                 {
                   type: 'image_url',

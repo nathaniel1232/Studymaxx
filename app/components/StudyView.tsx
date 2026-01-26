@@ -758,60 +758,137 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
           </div>
         )}
 
-        {/* Test Type Selection Dialog - Step 1: Type, Step 2: Mode */}
+        {/* Test Type Selection Dialog - Cookie consent style */}
         {showTestTypeDialog && (
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
-            <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-md w-full border-2 border-gray-200 dark:border-gray-700">
-              {/* Force solid background via absolute layer to prevent any transparency */}
-              <div className="absolute inset-0 bg-white dark:bg-gray-900 rounded-2xl -z-10" />
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+            <div 
+              className="relative rounded-xl shadow-2xl max-w-md w-full overflow-hidden"
+              style={{
+                backgroundColor: settings.theme === 'dark' ? '#1e293b' : '#ffffff',
+                border: settings.theme === 'dark' ? '2px solid #334155' : '2px solid #e2e8f0',
+                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)'
+              }}
+            >
               {testType === null ? (
                 <>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                    {settings.language === 'no' ? 'Velg testtype' : 'Choose Test Type'}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-6">
-                    {settings.language === 'no' ? 'Hvordan vil du svare?' : 'How do you want to answer?'}
-                  </p>
-                  
-                  <div className="space-y-3">
+                  {/* Header */}
+                  <div 
+                    className="p-5"
+                    style={{ borderBottom: settings.theme === 'dark' ? '2px solid #334155' : '2px solid #e2e8f0' }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-12 h-12 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: settings.theme === 'dark' ? '#312e81' : '#eef2ff' }}
+                      >
+                        <svg className="w-6 h-6" style={{ color: settings.theme === 'dark' ? '#a5b4fc' : '#6366f1' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 
+                          className="text-lg font-bold"
+                          style={{ color: settings.theme === 'dark' ? '#f1f5f9' : '#1e293b' }}
+                        >
+                          {settings.language === 'no' ? 'Velg testtype' : 'Choose Test Type'}
+                        </h3>
+                        <p 
+                          className="text-xs"
+                          style={{ color: settings.theme === 'dark' ? '#94a3b8' : '#64748b' }}
+                        >
+                          {settings.language === 'no' ? 'Hvordan vil du svare?' : 'How do you want to answer?'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Options */}
+                  <div className="p-5 space-y-3">
                     <button
                       onClick={() => setTestType('written')}
-                      className="w-full p-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                      className="w-full p-4 rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      style={{
+                        backgroundColor: settings.theme === 'dark' ? '#4c1d95' : '#8b5cf6',
+                        border: '2px solid #7c3aed',
+                        color: '#ffffff'
+                      }}
                     >
                       <div className="text-left">
-                        <p className="font-bold text-lg mb-1">{settings.language === 'no' ? 'Skriv svar' : 'Written Answer'}</p>
-                        <p className="text-sm text-white/90">{settings.language === 'no' ? 'Skriv inn svaret selv' : 'Type in your answer'}</p>
+                        <p className="font-bold text-base mb-1">{settings.language === 'no' ? 'Skriv svar' : 'Written Answer'}</p>
+                        <p className="text-sm opacity-90">{settings.language === 'no' ? 'Skriv inn svaret selv' : 'Type in your answer'}</p>
                       </div>
                     </button>
                     
                     <button
                       onClick={() => setTestType('multiple-choice')}
-                      className="w-full p-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                      className="w-full p-4 rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      style={{
+                        backgroundColor: settings.theme === 'dark' ? '#0369a1' : '#0ea5e9',
+                        border: '2px solid #0284c7',
+                        color: '#ffffff'
+                      }}
                     >
                       <div className="text-left">
-                        <p className="font-bold text-lg mb-1">{settings.language === 'no' ? 'Flervalg' : 'Multiple Choice'}</p>
-                        <p className="text-sm text-white/90">{settings.language === 'no' ? 'Velg riktig svar fra alternativene' : 'Pick from answer options'}</p>
+                        <p className="font-bold text-base mb-1">{settings.language === 'no' ? 'Flervalg' : 'Multiple Choice'}</p>
+                        <p className="text-sm opacity-90">{settings.language === 'no' ? 'Velg riktig svar fra alternativene' : 'Pick from answer options'}</p>
                       </div>
                     </button>
                   </div>
                   
-                  <button
-                    onClick={() => setShowTestTypeDialog(false)}
-                    className="w-full mt-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 font-medium transition-colors"
+                  {/* Cancel button */}
+                  <div 
+                    className="p-5"
+                    style={{ borderTop: settings.theme === 'dark' ? '2px solid #334155' : '2px solid #e2e8f0' }}
                   >
-                    {settings.language === 'no' ? 'Avbryt' : 'Cancel'}
-                  </button>
+                    <button
+                      onClick={() => setShowTestTypeDialog(false)}
+                      className="w-full px-5 py-2.5 rounded-lg text-sm font-bold transition-all"
+                      style={{
+                        backgroundColor: settings.theme === 'dark' ? '#334155' : '#f1f5f9',
+                        color: settings.theme === 'dark' ? '#94a3b8' : '#475569',
+                        border: settings.theme === 'dark' ? '2px solid #475569' : '2px solid #cbd5e1'
+                      }}
+                    >
+                      {settings.language === 'no' ? 'Avbryt' : 'Cancel'}
+                    </button>
+                  </div>
                 </>
               ) : (
                 <>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                    {settings.language === 'no' ? 'Velg modus' : 'Choose Mode'}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-6">
-                    {settings.language === 'no' ? 'Med liv eller bare øving?' : 'With lives or just practice?'}
-                  </p>
-                  
-                  <div className="space-y-3">
+                  {/* Header */}
+                  <div 
+                    className="p-5"
+                    style={{ borderBottom: settings.theme === 'dark' ? '2px solid #334155' : '2px solid #e2e8f0' }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-12 h-12 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: settings.theme === 'dark' ? '#064e3b' : '#d1fae5' }}
+                      >
+                        <svg className="w-6 h-6" style={{ color: settings.theme === 'dark' ? '#6ee7b7' : '#059669' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 
+                          className="text-lg font-bold"
+                          style={{ color: settings.theme === 'dark' ? '#f1f5f9' : '#1e293b' }}
+                        >
+                          {settings.language === 'no' ? 'Velg modus' : 'Choose Mode'}
+                        </h3>
+                        <p 
+                          className="text-xs"
+                          style={{ color: settings.theme === 'dark' ? '#94a3b8' : '#64748b' }}
+                        >
+                          {settings.language === 'no' ? 'Med liv eller bare øving?' : 'With lives or just practice?'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Options */}
+                  <div className="p-5 space-y-3">
                     <button
                       onClick={() => {
                         setTestMode('lives');
@@ -826,11 +903,16 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         setWrittenAnswer("");
                         setWrittenSubmitted(false);
                       }}
-                      className="w-full p-4 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                      className="w-full p-4 rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      style={{
+                        backgroundColor: settings.theme === 'dark' ? '#991b1b' : '#ef4444',
+                        border: '2px solid #dc2626',
+                        color: '#ffffff'
+                      }}
                     >
                       <div className="text-left">
-                        <p className="font-bold text-lg mb-1">{settings.language === 'no' ? 'Med liv' : 'Lives Mode'}</p>
-                        <p className="text-sm text-white/90">{settings.language === 'no' ? '3 liv - spillet slutter når du går tom' : '3 lives - game ends when you run out'}</p>
+                        <p className="font-bold text-base mb-1">{settings.language === 'no' ? 'Med liv' : 'Lives Mode'}</p>
+                        <p className="text-sm opacity-90">{settings.language === 'no' ? '3 liv - spillet slutter når du går tom' : '3 lives - game ends when you run out'}</p>
                       </div>
                     </button>
                     
@@ -848,21 +930,37 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         setWrittenAnswer("");
                         setWrittenSubmitted(false);
                       }}
-                      className="w-full p-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+                      className="w-full p-4 rounded-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      style={{
+                        backgroundColor: settings.theme === 'dark' ? '#065f46' : '#10b981',
+                        border: '2px solid #059669',
+                        color: '#ffffff'
+                      }}
                     >
                       <div className="text-left">
-                        <p className="font-bold text-lg mb-1">{settings.language === 'no' ? 'Øvingsmodus' : 'Practice Mode'}</p>
-                        <p className="text-sm text-white/90">{settings.language === 'no' ? 'Ingen liv - se poengsum på slutten' : 'No lives - see your score at the end'}</p>
+                        <p className="font-bold text-base mb-1">{settings.language === 'no' ? 'Øvingsmodus' : 'Practice Mode'}</p>
+                        <p className="text-sm opacity-90">{settings.language === 'no' ? 'Ingen liv - se poengsum på slutten' : 'No lives - see your score at the end'}</p>
                       </div>
                     </button>
                   </div>
                   
-                  <button
-                    onClick={() => setTestType(null)}
-                    className="w-full mt-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 font-medium transition-colors"
+                  {/* Back button */}
+                  <div 
+                    className="p-5"
+                    style={{ borderTop: settings.theme === 'dark' ? '2px solid #334155' : '2px solid #e2e8f0' }}
                   >
-                    {settings.language === 'no' ? '← Tilbake' : '← Back'}
-                  </button>
+                    <button
+                      onClick={() => setTestType(null)}
+                      className="w-full px-5 py-2.5 rounded-lg text-sm font-bold transition-all"
+                      style={{
+                        backgroundColor: settings.theme === 'dark' ? '#334155' : '#f1f5f9',
+                        color: settings.theme === 'dark' ? '#94a3b8' : '#475569',
+                        border: settings.theme === 'dark' ? '2px solid #475569' : '2px solid #cbd5e1'
+                      }}
+                    >
+                      {settings.language === 'no' ? '← Tilbake' : '← Back'}
+                    </button>
+                  </div>
                 </>
               )}
             </div>
