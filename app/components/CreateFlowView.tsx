@@ -1803,11 +1803,28 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       </div>
 
                       {knownLanguage && learningLanguage && knownLanguage !== learningLanguage && (
-                        <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-3 font-medium">
-                          ✓ {settings.language === "no" 
-                            ? `Lærer ${learningLanguage} fra ${knownLanguage}` 
-                            : `Learning ${learningLanguage} from ${knownLanguage}`}
-                        </p>
+                        <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '2px solid #10b981' }}>
+                          <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300 mb-2">
+                            ✓ {settings.language === "no" 
+                              ? `Lærer ${learningLanguage} fra ${knownLanguage}` 
+                              : `Learning ${learningLanguage} from ${knownLanguage}`}
+                          </p>
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400 leading-relaxed">
+                            {settings.language === "no"
+                              ? `📝 Alle spørsmål vil være på ${knownLanguage} og be deg oversette til ${learningLanguage}`
+                              : `📝 All questions will be in ${knownLanguage} asking you to translate into ${learningLanguage}`}
+                          </p>
+                        </div>
+                      )}
+
+                      {knownLanguage && learningLanguage && knownLanguage === learningLanguage && (
+                        <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '2px solid #ef4444' }}>
+                          <p className="text-xs font-bold text-red-600 dark:text-red-400">
+                            ⚠️ {settings.language === "no"
+                              ? "Velg to forskjellige språk"
+                              : "Please select two different languages"}
+                          </p>
+                        </div>
                       )}
                     </div>
                   )}

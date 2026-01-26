@@ -558,13 +558,11 @@ OUTPUT FORMAT (JSON only):
 {"flashcards": [{"id": "1", "question": "...", "answer": "...", "distractors": ["...", "...", "..."]}]}
 
 ⚠️ CRITICAL: Generate EXACTLY ${bufferedCount} flashcards total! ⚠️
-⚠️ If input has fewer vocabulary pairs than ${bufferedCount}, DO BOTH:
-   1. FORWARD cards: "${knownLanguage} → ${learningLanguage}" (asking user to translate TO ${learningLanguage})
-   2. REVERSE cards: "${learningLanguage} → ${knownLanguage}" (asking user to translate FROM ${learningLanguage})
-   This means each word pair can generate 2 flashcards to reach the target count!
-⚠️ For FORWARD cards: Question in ${knownLanguage}, Answer in ${learningLanguage}
-⚠️ For REVERSE cards: Question in ${learningLanguage}, Answer in ${knownLanguage}
-⚠️ DISTRACTORS must match the answer language ⚠️`
+⚠️ ALL questions MUST be in ${knownLanguage} (the language the user knows) ⚠️
+⚠️ ALL answers MUST be in ${learningLanguage} (the language the user is learning) ⚠️
+⚠️ If input has fewer vocabulary pairs than ${bufferedCount}, add related vocabulary words in the same categories to reach the target count ⚠️
+⚠️ NEVER ask questions in ${learningLanguage} - the user doesn't know it yet! ⚠️
+⚠️ DISTRACTORS must be in ${learningLanguage} (matching the answer language) ⚠️`
     : `You are an expert academic tutor${subject ? ` in ${subject}` : ""} creating educational flashcards.
 
 CRITICAL: You are creating STUDY FLASHCARDS, not code. Do NOT generate programming code, HTML, or any file modifications.
