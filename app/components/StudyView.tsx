@@ -67,6 +67,10 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
   const [maxStreak, setMaxStreak] = useState(0);
   const [isQuizEnded, setIsQuizEnded] = useState(false);
   
+  // Explanation state (for wrong answers)
+  const [explanation, setExplanation] = useState<string | null>(null);
+  const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
+  
   const showToast = (message: string, type: ToastType = "success") => {
     setToast({ message, type });
   };
@@ -411,6 +415,30 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
       // Reset written mode state
       setWrittenAnswer("");
       setWrittenSubmitted(false);
+      // Reset explanation
+      setExplanation(null);
+      setIsLoadingExplanation(false);
+    }
+  };
+
+  // Generate explanation for wrong answers
+  const generateExplanation = async (question: string, correctAnswer: string, userAnswer: string) => {
+    setIsLoadingExplanation(true);
+    try {
+      const response = await fetch('/api/explain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, correctAnswer, userAnswer }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setExplanation(data.explanation);
+      }
+    } catch (error) {
+      console.error('Failed to generate explanation:', error);
+    } finally {
+      setIsLoadingExplanation(false);
     }
   };
 
@@ -531,6 +559,8 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
       setMaxStreak(Math.max(maxStreak, newStreak));
     } else {
       setCurrentStreak(0);
+      // Generate explanation for wrong answer
+      generateExplanation(currentCard.question, currentCard.answer, selectedOption);
       // Only deduct lives in lives mode
       if (testMode === 'lives') {
         const newLives = lives - 1;
@@ -1112,6 +1142,8 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                               setMaxStreak(Math.max(maxStreak, newStreak));
                             } else {
                               setCurrentStreak(0);
+                              // Generate explanation for wrong answer
+                              generateExplanation(currentCard.question, currentCard.answer, writtenAnswer);
                               if (testMode === 'lives') {
                                 const newLives = lives - 1;
                                 setLives(newLives);
@@ -1144,6 +1176,8 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                             setMaxStreak(Math.max(maxStreak, newStreak));
                           } else {
                             setCurrentStreak(0);
+                            // Generate explanation for wrong answer
+                            generateExplanation(currentCard.question, currentCard.answer, writtenAnswer);
                             if (testMode === 'lives') {
                               const newLives = lives - 1;
                               setLives(newLives);
@@ -1186,6 +1220,33 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                           )}
                         </div>
                       </div>
+                      
+                      {/* Explanation for wrong answer */}
+                      {!isAnswerCorrect && (
+                        <div className="mt-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                          <div className="flex items-start gap-2">
+                            <span className="text-xl">💡</span>
+                            <div className="flex-1">
+                              <p className="font-semibold text-blue-800 dark:text-blue-300 mb-1">
+                                {settings.language === 'no' ? 'Forklaring' : 'Explanation'}
+                              </p>
+                              {isLoadingExplanation ? (
+                                <p className="text-blue-600 dark:text-blue-400 text-sm animate-pulse">
+                                  {settings.language === 'no' ? 'Genererer forklaring...' : 'Generating explanation...'}
+                                </p>
+                              ) : explanation ? (
+                                <p className="text-blue-700 dark:text-blue-300 text-sm leading-relaxed">
+                                  {explanation}
+                                </p>
+                              ) : (
+                                <p className="text-blue-600 dark:text-blue-400 text-sm italic">
+                                  {settings.language === 'no' ? 'Ingen forklaring tilgjengelig' : 'No explanation available'}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1234,6 +1295,33 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                       </button>
                     );
                   })}
+                  
+                  {/* Explanation for wrong answer - Multiple Choice */}
+                  {selectedAnswer !== null && !isAnswerCorrect && (
+                    <div className="col-span-full mt-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                      <div className="flex items-start gap-2">
+                        <span className="text-xl">💡</span>
+                        <div className="flex-1">
+                          <p className="font-semibold text-blue-800 dark:text-blue-300 mb-1">
+                            {settings.language === 'no' ? 'Forklaring' : 'Explanation'}
+                          </p>
+                          {isLoadingExplanation ? (
+                            <p className="text-blue-600 dark:text-blue-400 text-sm animate-pulse">
+                              {settings.language === 'no' ? 'Genererer forklaring...' : 'Generating explanation...'}
+                            </p>
+                          ) : explanation ? (
+                            <p className="text-blue-700 dark:text-blue-300 text-sm leading-relaxed">
+                              {explanation}
+                            </p>
+                          ) : (
+                            <p className="text-blue-600 dark:text-blue-400 text-sm italic">
+                              {settings.language === 'no' ? 'Ingen forklaring tilgjengelig' : 'No explanation available'}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 /* Self-Assessment for Math Problems */

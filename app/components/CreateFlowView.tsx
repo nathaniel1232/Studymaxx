@@ -170,23 +170,161 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   "dog", "cat", "house", "water", "food", "good", "bad", "big", "small", "man", "woman",
                   "day", "night", "yes", "no", "hello", "bye", "thank", "please", "sorry", "love", "like",
                   "go", "come", "see", "eat", "drink", "sleep", "walk", "run", "play", "work", "study",
-                  "book", "word", "name", "time", "year", "way", "thing", "people", "child", "world"],
-      "Norwegian": ["og", "er", "det", "som", "en", "av", "på", "til", "med", "har", "ikke", "jeg", "vi", "å", "hund", "katt", "hus", "vann", "mat"],
-      "Spanish": ["de", "la", "que", "el", "en", "y", "a", "los", "se", "del", "las", "por", "un", "una", "perro", "gato", "casa", "agua", "comida"],
-      "French": ["de", "la", "le", "et", "les", "des", "en", "un", "du", "une", "est", "pour", "que", "qui", "chien", "chat", "maison", "eau", "nourriture"],
-      "German": ["der", "die", "und", "in", "den", "von", "zu", "das", "mit", "sich", "auf", "für", "ist", "nicht", "hund", "katze", "haus", "wasser", "essen"],
-      "Italian": ["di", "e", "il", "la", "che", "in", "a", "per", "un", "del", "non", "sono", "le", "con"],
-      "Portuguese": ["de", "a", "o", "que", "e", "do", "da", "em", "um", "para", "com", "nao", "os", "sua"],
-      "Dutch": ["de", "en", "van", "ik", "te", "dat", "die", "in", "een", "hij", "het", "niet", "is", "op"],
-      "Swedish": ["och", "i", "är", "det", "som", "till", "en", "av", "för", "att", "med", "inte", "på", "jag"],
-      "Danish": ["og", "i", "er", "det", "som", "til", "en", "af", "for", "at", "med", "ikke", "jeg", "vi"],
-      "Icelandic": ["og", "er", "að", "ekki", "við", "það", "fyrir", "með", "sem", "eru", "var", "hann", "hún"],
-      "Polish": ["i", "w", "na", "z", "do", "nie", "się", "o", "że", "to", "jest", "od", "za"],
-      "Russian": ["и", "в", "не", "на", "я", "что", "он", "с", "как", "это", "по", "за", "ы", "ё"],
-      "Japanese": ["の", "に", "は", "を", "た", "が", "で", "て", "と", "し"],
-      "Chinese": ["的", "一", "是", "在", "不", "了", "有", "和", "人"],
-      "Korean": ["은", "는", "이", "가", "을", "를", "의", "에", "로"],
-      "Mongolian": ["нь", "байна", "бол", "ба", "юм", "гэж", "гэдэг", "бий", "ө", "ү"],
+                  "book", "word", "name", "time", "year", "way", "thing", "people", "child", "world",
+                  "what", "does", "mean", "how", "say", "this", "that", "these", "those", "here", "there"],
+      // Norwegian - expanded with vocabulary
+      "Norwegian": ["og", "er", "det", "som", "en", "av", "på", "til", "med", "har", "ikke", "jeg", "vi", "å", 
+                    "hund", "katt", "hus", "vann", "mat", "bok", "skole", "lærer", "elev", "lekse",
+                    "god", "dårlig", "stor", "liten", "lett", "vanskelig", "være", "ha", "gå", "gjøre",
+                    "spise", "drikke", "en", "to", "tre", "fire", "fem", "seks", "sju", "åtte", "ni", "ti",
+                    "hva", "betyr", "hei", "hade", "takk", "ja", "nei", "bra", "fin"],
+      // Spanish - expanded with common vocabulary including accented words
+      "Spanish": ["de", "la", "que", "el", "en", "y", "a", "los", "se", "del", "las", "por", "un", "una", 
+                  "perro", "gato", "casa", "agua", "comida", "libro", "examen", "deberes", "aula", "bolígrafo",
+                  "bueno", "malo", "grande", "pequeño", "fácil", "difícil", "ser", "estar", "tener", "ir", 
+                  "hacer", "comer", "beber", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho",
+                  "qué", "significa", "hola", "adiós", "gracias", "favor", "sí", "bien", "nuevo", "viejo",
+                  "hombre", "mujer", "niño", "niña", "día", "noche", "tiempo", "año", "escuela", "trabajo"],
+      // French - expanded with vocabulary
+      "French": ["de", "la", "le", "et", "les", "des", "en", "un", "du", "une", "est", "pour", "que", "qui",
+                 "chien", "chat", "maison", "eau", "nourriture", "livre", "école", "professeur", "élève",
+                 "bon", "mauvais", "grand", "petit", "facile", "difficile", "être", "avoir", "aller", "faire",
+                 "manger", "boire", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix",
+                 "que", "signifie", "bonjour", "salut", "merci", "oui", "non", "bien", "homme", "femme", "jour", "nuit"],
+      // German - expanded with vocabulary
+      "German": ["der", "die", "und", "in", "den", "von", "zu", "das", "mit", "sich", "auf", "für", "ist", "nicht",
+                 "hund", "katze", "haus", "wasser", "essen", "buch", "schule", "lehrer", "schüler", "hausaufgabe",
+                 "gut", "schlecht", "groß", "klein", "leicht", "schwer", "sein", "haben", "gehen", "machen",
+                 "essen", "trinken", "eins", "zwei", "drei", "vier", "fünf", "sechs", "sieben", "acht", "neun", "zehn",
+                 "was", "bedeutet", "hallo", "tschüss", "danke", "ja", "nein", "mann", "frau", "tag", "nacht"],
+      // Italian - expanded with vocabulary
+      "Italian": ["di", "e", "il", "la", "che", "in", "a", "per", "un", "del", "non", "sono", "le", "con",
+                  "cane", "gatto", "casa", "acqua", "cibo", "libro", "scuola", "insegnante", "studente", "compito",
+                  "buono", "cattivo", "grande", "piccolo", "facile", "difficile", "essere", "avere", "andare", "fare",
+                  "mangiare", "bere", "uno", "due", "tre", "quattro", "cinque", "sei", "sette", "otto", "nove", "dieci",
+                  "cosa", "significa", "ciao", "grazie", "sì", "no", "bene", "uomo", "donna", "giorno", "notte"],
+      // Portuguese - expanded with vocabulary
+      "Portuguese": ["de", "a", "o", "que", "e", "do", "da", "em", "um", "para", "com", "não", "os", "sua",
+                     "cão", "gato", "casa", "água", "comida", "livro", "escola", "professor", "aluno", "lição",
+                     "bom", "mau", "grande", "pequeno", "fácil", "difícil", "ser", "ter", "ir", "fazer",
+                     "comer", "beber", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez",
+                     "que", "significa", "olá", "obrigado", "sim", "bem", "homem", "mulher", "dia", "noite"],
+      // Dutch - expanded with vocabulary
+      "Dutch": ["de", "en", "van", "ik", "te", "dat", "die", "in", "een", "hij", "het", "niet", "is", "op",
+                "hond", "kat", "huis", "water", "eten", "boek", "school", "leraar", "student", "huiswerk",
+                "goed", "slecht", "groot", "klein", "makkelijk", "moeilijk", "zijn", "hebben", "gaan", "doen",
+                "eten", "drinken", "een", "twee", "drie", "vier", "vijf", "zes", "zeven", "acht", "negen", "tien",
+                "wat", "betekent", "hallo", "dag", "dank", "ja", "nee", "man", "vrouw", "ochtend", "nacht"],
+      // Swedish - expanded with common vocabulary
+      "Swedish": ["och", "i", "är", "det", "som", "till", "en", "av", "för", "att", "med", "inte", "på", "jag",
+                  "hund", "katt", "hus", "vatten", "mat", "bok", "skola", "lärare", "elev", "läxa",
+                  "prov", "läxor", "penna", "klassrum", "vara", "ha", "gå", "göra", "äta", "dricka",
+                  "bra", "dålig", "stor", "liten", "lätt", "svår", "ett", "två", "tre", "fyra", "fem",
+                  "sex", "sju", "åtta", "nio", "tio", "vad", "betyder", "hej", "adjö", "tack", "ja", "nej",
+                  "man", "kvinna", "dag", "natt", "god", "ny", "gammal"],
+      // Danish - expanded with vocabulary
+      "Danish": ["og", "i", "er", "det", "som", "til", "en", "af", "for", "at", "med", "ikke", "jeg", "vi",
+                 "hund", "kat", "hus", "vand", "mad", "bog", "skole", "lærer", "elev", "lektie",
+                 "god", "dårlig", "stor", "lille", "let", "svær", "være", "have", "gå", "gøre",
+                 "spise", "drikke", "en", "to", "tre", "fire", "fem", "seks", "syv", "otte", "ni", "ti",
+                 "hvad", "betyder", "hej", "farvel", "tak", "ja", "nej", "mand", "kvinde", "dag", "nat"],
+      // Icelandic - expanded
+      "Icelandic": ["og", "er", "að", "ekki", "við", "það", "fyrir", "með", "sem", "eru", "var", "hann", "hún",
+                    "hundur", "köttur", "hús", "vatn", "matur", "bók", "skóli", "kennari", "nemandi",
+                    "góður", "slæmur", "stór", "lítill", "auðveldur", "erfiður", "vera", "hafa", "fara", "gera",
+                    "einn", "tveir", "þrír", "fjórir", "fimm", "sex", "sjö", "átta", "níu", "tíu",
+                    "hvað", "þýðir", "halló", "bless", "takk", "já", "nei"],
+      // Polish - expanded with vocabulary
+      "Polish": ["i", "w", "na", "z", "do", "nie", "się", "o", "że", "to", "jest", "od", "za",
+                 "pies", "kot", "dom", "woda", "jedzenie", "książka", "szkoła", "nauczyciel", "uczeń", "lekcja",
+                 "dobry", "zły", "duży", "mały", "łatwy", "trudny", "być", "mieć", "iść", "robić",
+                 "jeść", "pić", "jeden", "dwa", "trzy", "cztery", "pięć", "sześć", "siedem", "osiem", "dziewięć", "dziesięć",
+                 "co", "znaczy", "cześć", "dziękuję", "tak", "nie", "mężczyzna", "kobieta", "dzień", "noc"],
+      // Russian - expanded with vocabulary
+      "Russian": ["и", "в", "не", "на", "я", "что", "он", "с", "как", "это", "по", "за", "ы", "ё",
+                  "собака", "кошка", "дом", "вода", "еда", "книга", "школа", "учитель", "ученик", "урок",
+                  "хороший", "плохой", "большой", "маленький", "лёгкий", "трудный", "быть", "иметь", "идти", "делать",
+                  "есть", "пить", "один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять", "десять",
+                  "что", "значит", "привет", "спасибо", "да", "нет", "мужчина", "женщина", "день", "ночь"],
+      // Japanese - expanded with common words
+      "Japanese": ["の", "に", "は", "を", "た", "が", "で", "て", "と", "し",
+                   "犬", "猫", "家", "水", "食べ物", "本", "学校", "先生", "生徒", "宿題",
+                   "良い", "悪い", "大きい", "小さい", "簡単", "難しい", "いる", "ある", "行く", "する",
+                   "食べる", "飲む", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十",
+                   "何", "意味", "こんにちは", "さようなら", "ありがとう", "はい", "いいえ"],
+      // Chinese - expanded with common words
+      "Chinese": ["的", "一", "是", "在", "不", "了", "有", "和", "人",
+                  "狗", "猫", "家", "水", "食物", "书", "学校", "老师", "学生", "作业",
+                  "好", "坏", "大", "小", "容易", "难", "是", "有", "去", "做",
+                  "吃", "喝", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十",
+                  "什么", "意思", "你好", "再见", "谢谢", "是", "不是"],
+      // Korean - expanded with common words
+      "Korean": ["은", "는", "이", "가", "을", "를", "의", "에", "로",
+                 "개", "고양이", "집", "물", "음식", "책", "학교", "선생님", "학생", "숙제",
+                 "좋은", "나쁜", "큰", "작은", "쉬운", "어려운", "이다", "있다", "가다", "하다",
+                 "먹다", "마시다", "일", "이", "삼", "사", "오", "육", "칠", "팔", "구", "십",
+                 "무엇", "뜻", "안녕하세요", "안녕", "감사합니다", "네", "아니요"],
+      // Mongolian
+      "Mongolian": ["нь", "байна", "бол", "ба", "юм", "гэж", "гэдэг", "бий", "ө", "ү",
+                    "нохой", "муур", "гэр", "ус", "хоол", "ном", "сургууль", "багш", "сурагч",
+                    "сайн", "муу", "том", "жижиг", "амархан", "хэцүү", "байх", "явах", "хийх",
+                    "идэх", "уух", "нэг", "хоёр", "гурав", "дөрөв", "тав", "зургаа", "долоо", "найм", "ес", "арав"],
+      // Turkish - NEW
+      "Turkish": ["ve", "bir", "bu", "da", "de", "için", "ile", "ne", "var", "olan", "gibi", "daha",
+                  "köpek", "kedi", "ev", "su", "yemek", "kitap", "okul", "öğretmen", "öğrenci", "ödev",
+                  "iyi", "kötü", "büyük", "küçük", "kolay", "zor", "olmak", "gitmek", "yapmak",
+                  "yemek", "içmek", "bir", "iki", "üç", "dört", "beş", "altı", "yedi", "sekiz", "dokuz", "on",
+                  "ne", "demek", "merhaba", "güle güle", "teşekkürler", "evet", "hayır"],
+      // Arabic - NEW
+      "Arabic": ["في", "من", "على", "إلى", "عن", "مع", "هذا", "هذه", "التي", "الذي",
+                 "كلب", "قط", "بيت", "ماء", "طعام", "كتاب", "مدرسة", "معلم", "طالب", "واجب",
+                 "جيد", "سيء", "كبير", "صغير", "سهل", "صعب", "يكون", "يذهب", "يفعل",
+                 "يأكل", "يشرب", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة", "عشرة",
+                 "ما", "معنى", "مرحبا", "شكرا", "نعم", "لا"],
+      // Hindi - NEW
+      "Hindi": ["का", "की", "के", "है", "में", "को", "से", "पर", "और", "एक",
+                "कुत्ता", "बिल्ली", "घर", "पानी", "खाना", "किताब", "स्कूल", "शिक्षक", "छात्र",
+                "अच्छा", "बुरा", "बड़ा", "छोटा", "आसान", "कठिन", "होना", "जाना", "करना",
+                "खाना", "पीना", "एक", "दो", "तीन", "चार", "पांच", "छह", "सात", "आठ", "नौ", "दस",
+                "क्या", "मतलब", "नमस्ते", "धन्यवाद", "हां", "नहीं"],
+      // Greek - NEW
+      "Greek": ["και", "το", "να", "είναι", "της", "του", "με", "για", "στο", "από",
+                "σκύλος", "γάτα", "σπίτι", "νερό", "φαγητό", "βιβλίο", "σχολείο", "δάσκαλος", "μαθητής",
+                "καλός", "κακός", "μεγάλος", "μικρός", "εύκολος", "δύσκολος", "είμαι", "πηγαίνω", "κάνω",
+                "τρώω", "πίνω", "ένα", "δύο", "τρία", "τέσσερα", "πέντε", "έξι", "επτά", "οκτώ", "εννέα", "δέκα",
+                "τι", "σημαίνει", "γεια", "ευχαριστώ", "ναι", "όχι"],
+      // Finnish - NEW
+      "Finnish": ["ja", "on", "ei", "se", "että", "niin", "kun", "mutta", "tai", "joka",
+                  "koira", "kissa", "talo", "vesi", "ruoka", "kirja", "koulu", "opettaja", "oppilas", "läksy",
+                  "hyvä", "huono", "iso", "pieni", "helppo", "vaikea", "olla", "mennä", "tehdä",
+                  "syödä", "juoda", "yksi", "kaksi", "kolme", "neljä", "viisi", "kuusi", "seitsemän", "kahdeksan", "yhdeksän", "kymmenen",
+                  "mitä", "tarkoittaa", "hei", "moi", "kiitos", "kyllä", "ei"],
+      // Czech - NEW
+      "Czech": ["a", "je", "v", "na", "se", "to", "že", "s", "z", "do",
+                "pes", "kočka", "dům", "voda", "jídlo", "kniha", "škola", "učitel", "student", "úkol",
+                "dobrý", "špatný", "velký", "malý", "snadný", "těžký", "být", "jít", "dělat",
+                "jíst", "pít", "jeden", "dva", "tři", "čtyři", "pět", "šest", "sedm", "osm", "devět", "deset",
+                "co", "znamená", "ahoj", "děkuji", "ano", "ne"],
+      // Hungarian - NEW
+      "Hungarian": ["a", "az", "és", "hogy", "nem", "is", "van", "ez", "meg", "már",
+                    "kutya", "macska", "ház", "víz", "étel", "könyv", "iskola", "tanár", "diák", "házi",
+                    "jó", "rossz", "nagy", "kicsi", "könnyű", "nehéz", "lenni", "menni", "csinálni",
+                    "enni", "inni", "egy", "kettő", "három", "négy", "öt", "hat", "hét", "nyolc", "kilenc", "tíz",
+                    "mit", "jelent", "szia", "köszönöm", "igen", "nem"],
+      // Vietnamese - NEW
+      "Vietnamese": ["và", "là", "của", "có", "trong", "cho", "với", "được", "này", "một",
+                     "chó", "mèo", "nhà", "nước", "thức ăn", "sách", "trường", "giáo viên", "học sinh", "bài tập",
+                     "tốt", "xấu", "lớn", "nhỏ", "dễ", "khó", "là", "đi", "làm",
+                     "ăn", "uống", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín", "mười",
+                     "gì", "nghĩa là", "xin chào", "cảm ơn", "vâng", "không"],
+      // Thai - NEW
+      "Thai": ["และ", "ที่", "ใน", "ของ", "มี", "ไม่", "เป็น", "จะ", "ได้", "ว่า"],
+      // Indonesian - NEW
+      "Indonesian": ["dan", "yang", "di", "ini", "dengan", "untuk", "tidak", "dari", "ke", "adalah",
+                     "anjing", "kucing", "rumah", "air", "makanan", "buku", "sekolah", "guru", "murid", "tugas",
+                     "baik", "buruk", "besar", "kecil", "mudah", "sulit", "adalah", "pergi", "melakukan",
+                     "makan", "minum", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh",
+                     "apa", "artinya", "halo", "terima kasih", "ya", "tidak"],
       "Other": [], // Fallback for unlisted languages
     };
     
@@ -198,23 +336,34 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         if (stopWords.includes(word)) score++;
       });
       
-      // Bonus for special characters
-      if (lang === "Norwegian" && /[æøå]/.test(textLower)) score += 5;
-      if (lang === "Swedish" && /[äöå]/.test(textLower)) score += 5;
-      if (lang === "German" && /[üöäß]/.test(textLower)) score += 5;
-      if (lang === "Spanish" && /[ñ¿¡]/.test(textLower)) score += 5;
-      if (lang === "French" && /[àèéêç]/.test(textLower)) score += 3;
-      if (lang === "Icelandic" && /[ðþ]/.test(textLower)) score += 10;
-      // Mongolian has unique Cyrillic letters: ө, ү, ң that Russian doesn't use
+      // Bonus for special characters - helps differentiate similar languages
+      if (lang === "Norwegian" && /[æøå]/.test(textLower)) score += 8;
+      if (lang === "Swedish" && /[äöå]/.test(textLower)) score += 8;
+      if (lang === "Danish" && /[æøå]/.test(textLower)) score += 5;
+      if (lang === "German" && /[üöäß]/.test(textLower)) score += 8;
+      if (lang === "Spanish" && /[ñ¿¡áéíóú]/.test(textLower)) score += 10;
+      if (lang === "French" && /[àâçéèêëïîôùûü]/.test(textLower)) score += 8;
+      if (lang === "Portuguese" && /[ãõçáéíóúâêô]/.test(textLower)) score += 8;
+      if (lang === "Italian" && /[àèéìíîòóùú]/.test(textLower)) score += 5;
+      if (lang === "Polish" && /[ąćęłńóśźż]/.test(textLower)) score += 10;
+      if (lang === "Czech" && /[áčďéěíňóřšťúůýž]/.test(textLower)) score += 10;
+      if (lang === "Hungarian" && /[áéíóöőúüű]/.test(textLower)) score += 8;
+      if (lang === "Turkish" && /[çğıöşü]/.test(textLower)) score += 10;
+      if (lang === "Finnish" && /[äö]/.test(textLower)) score += 5;
+      if (lang === "Vietnamese" && /[àảãáạăằẳẵắặâầẩẫấậèẻẽéẹêềểễếệìỉĩíịòỏõóọôồổỗốộơờởỡớợùủũúụưừửữứựỳỷỹýỵđ]/.test(textLower)) score += 15;
+      if (lang === "Icelandic" && /[ðþæö]/.test(textLower)) score += 10;
+      // Script-based detection (very reliable)
+      if (lang === "Greek" && /[\u0370-\u03FF]/.test(text)) score += 15;
+      if (lang === "Arabic" && /[\u0600-\u06FF]/.test(text)) score += 15;
+      if (lang === "Hindi" && /[\u0900-\u097F]/.test(text)) score += 15;
+      if (lang === "Thai" && /[\u0E00-\u0E7F]/.test(text)) score += 15;
       if (lang === "Mongolian" && /[өүң]/.test(text)) score += 15;
-      // Russian uses ы, э, щ which Mongolian doesn't commonly use
       if (lang === "Russian" && /[ыэщ]/.test(text)) score += 10;
-      // General Cyrillic - give small boost to both, specific chars above will differentiate
       if (lang === "Mongolian" && /[\u0400-\u04FF]/.test(text) && !/[ыэщ]/.test(text)) score += 5;
       if (lang === "Russian" && /[\u0400-\u04FF]/.test(text) && !/[өүң]/.test(text)) score += 5;
-      if (lang === "Japanese" && /[\u3040-\u309F\u30A0-\u30FF]/.test(text)) score += 10;
-      if (lang === "Chinese" && /[\u4E00-\u9FFF]/.test(text)) score += 10;
-      if (lang === "Korean" && /[\uAC00-\uD7AF]/.test(text)) score += 10;
+      if (lang === "Japanese" && /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(text)) score += 15;
+      if (lang === "Chinese" && /[\u4E00-\u9FFF]/.test(text) && !/[\u3040-\u309F\u30A0-\u30FF]/.test(text)) score += 15;
+      if (lang === "Korean" && /[\uAC00-\uD7AF]/.test(text)) score += 15;
       
       if (score > 0) scores[lang] = score;
     });
@@ -1433,103 +1582,13 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
                     {/* Notes input */}
                     {selectedMaterial === "notes" && (
-                      <>
-                        <Textarea
-                          value={textInput}
-                          onChange={(e) => setTextInput(e.target.value)}
-                          placeholder={t("paste_notes_here")}
-                          className="min-h-40 text-sm"
-                          autoFocus
-                        />
-                        
-                        {/* Language Selection for Languages subject - Show after text is entered */}
-                        {isLanguageSubject && textInput.length >= 50 && (
-                          <div 
-                            className="mt-4 p-4 rounded-lg border-2"
-                            style={{
-                              backgroundColor: 'var(--card)',
-                              borderColor: 'var(--border)'
-                            }}
-                          >
-                            <h3 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)' }}>
-                              {settings.language === "no" ? "Språkinnstillinger" : "Language Settings"}
-                            </h3>
-                            
-                            {detectedLanguages.length >= 2 ? (
-                              <>
-                                <p className="text-xs mb-1" style={{ color: 'var(--muted-foreground)' }}>
-                                  {settings.language === "no" 
-                                    ? `✓ Detekterte språk: ${detectedLanguages.join(" + ")}` 
-                                    : `✓ Detected languages: ${detectedLanguages.join(" + ")}`}
-                                </p>
-                                <p className="text-xs text-cyan-600 dark:text-cyan-400 mb-3 font-medium">
-                                  {settings.language === "no"
-                                    ? "Velg ditt morsmål og språket du lærer:"
-                                    : "Choose your native language and the language you're learning:"}
-                                </p>
-                                
-                                {/* Known Language */}
-                                <div className="mb-3">
-                                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                                    {settings.language === "no" ? "🏠 Mitt morsmål (jeg kan):" : "🏠 My native language (I know):"}
-                                  </label>
-                                  <select
-                                    value={knownLanguage}
-                                    onChange={(e) => setKnownLanguage(e.target.value)}
-                                    className="w-full p-3 rounded-lg border-2 transition-all cursor-pointer"
-                                    style={{ 
-                                      color: 'var(--foreground)', 
-                                      backgroundColor: 'var(--background)',
-                                      borderColor: knownLanguage ? '#06b6d4' : 'var(--border)'
-                                    }}
-                                  >
-                                    <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
-                                    {detectedLanguages.map(lang => (
-                                      <option key={lang} value={lang}>{lang}</option>
-                                    ))}
-                                  </select>
-                                </div>
-
-                                {/* Learning Language */}
-                                <div>
-                                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
-                                    {settings.language === "no" ? "📚 Jeg lærer:" : "📚 I'm learning:"}
-                                  </label>
-                                  <select
-                                    value={learningLanguage}
-                                    onChange={(e) => setLearningLanguage(e.target.value)}
-                                    className="w-full p-3 rounded-lg border-2 transition-all cursor-pointer"
-                                    style={{ 
-                                      color: 'var(--foreground)', 
-                                      backgroundColor: 'var(--background)',
-                                      borderColor: learningLanguage ? '#06b6d4' : 'var(--border)'
-                                    }}
-                                  >
-                                    <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
-                                    {detectedLanguages.map(lang => (
-                                      <option key={lang} value={lang}>{lang}</option>
-                                    ))}
-                                  </select>
-                                </div>
-
-                                {knownLanguage && learningLanguage && knownLanguage !== learningLanguage && (
-                                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-3 font-medium">
-                                    ✓ {settings.language === "no" 
-                                      ? `Lærer ${learningLanguage} fra ${knownLanguage}` 
-                                      : `Learning ${learningLanguage} from ${knownLanguage}`}
-                                  </p>
-                                )}
-                              </>
-                            ) : (
-                              <p className="text-xs text-amber-600 dark:text-amber-400">
-                                {settings.language === "no" 
-                                  ? "Kunne ikke detektere to språk. Sørg for at teksten inneholder ordpar i to språk (f.eks. 'chien - hund')" 
-                                  : "Could not detect two languages. Make sure text contains word pairs in two languages (e.g., 'chien - dog')"}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </>
+                      <Textarea
+                        value={textInput}
+                        onChange={(e) => setTextInput(e.target.value)}
+                        placeholder={t("paste_notes_here")}
+                        className="min-h-40 text-sm"
+                        autoFocus
+                      />
                     )}
 
                     {/* DOCX upload */}
@@ -1622,8 +1681,96 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     )}
                   </div>
 
-                  {/* Language selection - only show when we have text */}
-                  {textInput.length >= 50 && (
+                  {/* Language Selection for Languages subject - Show after text is extracted (from any source) */}
+                  {isLanguageSubject && textInput.length >= 50 && (
+                    <div 
+                      className="mt-4 p-4 rounded-lg border-2"
+                      style={{
+                        backgroundColor: 'var(--card)',
+                        borderColor: 'var(--border)'
+                      }}
+                    >
+                      <h3 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)' }}>
+                        {settings.language === "no" ? "🌍 Språkinnstillinger" : "🌍 Language Settings"}
+                      </h3>
+                      
+                      {detectedLanguages.length >= 2 ? (
+                        <>
+                          <p className="text-xs mb-1" style={{ color: 'var(--muted-foreground)' }}>
+                            {settings.language === "no" 
+                              ? `✓ Detekterte språk: ${detectedLanguages.join(" + ")}` 
+                              : `✓ Detected languages: ${detectedLanguages.join(" + ")}`}
+                          </p>
+                          <p className="text-xs text-cyan-600 dark:text-cyan-400 mb-3 font-medium">
+                            {settings.language === "no"
+                              ? "Velg ditt morsmål og språket du lærer:"
+                              : "Choose your native language and the language you're learning:"}
+                          </p>
+                          
+                          {/* Known Language */}
+                          <div className="mb-3">
+                            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                              {settings.language === "no" ? "🏠 Mitt morsmål (jeg kan):" : "🏠 My native language (I know):"}
+                            </label>
+                            <select
+                              value={knownLanguage}
+                              onChange={(e) => setKnownLanguage(e.target.value)}
+                              className="w-full p-3 rounded-lg border-2 transition-all cursor-pointer"
+                              style={{ 
+                                color: 'var(--foreground)', 
+                                backgroundColor: 'var(--background)',
+                                borderColor: knownLanguage ? '#06b6d4' : 'var(--border)'
+                              }}
+                            >
+                              <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
+                              {detectedLanguages.map(lang => (
+                                <option key={lang} value={lang}>{lang}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Learning Language */}
+                          <div>
+                            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                              {settings.language === "no" ? "📚 Jeg lærer:" : "📚 I'm learning:"}
+                            </label>
+                            <select
+                              value={learningLanguage}
+                              onChange={(e) => setLearningLanguage(e.target.value)}
+                              className="w-full p-3 rounded-lg border-2 transition-all cursor-pointer"
+                              style={{ 
+                                color: 'var(--foreground)', 
+                                backgroundColor: 'var(--background)',
+                                borderColor: learningLanguage ? '#06b6d4' : 'var(--border)'
+                              }}
+                            >
+                              <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
+                              {detectedLanguages.map(lang => (
+                                <option key={lang} value={lang}>{lang}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {knownLanguage && learningLanguage && knownLanguage !== learningLanguage && (
+                            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-3 font-medium">
+                              ✓ {settings.language === "no" 
+                                ? `Lærer ${learningLanguage} fra ${knownLanguage}` 
+                                : `Learning ${learningLanguage} from ${knownLanguage}`}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                          {settings.language === "no" 
+                            ? "Kunne ikke detektere to språk. Sørg for at teksten inneholder ordpar i to språk (f.eks. 'chien - hund')" 
+                            : "Could not detect two languages. Make sure text contains word pairs in two languages (e.g., 'chien - dog')"}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Language selection - only show when we have text and NOT a language subject */}
+                  {textInput.length >= 50 && !isLanguageSubject && (
                     <div className="mt-3 p-3 rounded-md" style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}>
                       <div className="mb-2 flex items-baseline justify-between">
                         <h4 className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>

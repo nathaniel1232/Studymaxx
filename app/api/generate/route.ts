@@ -502,9 +502,9 @@ REMEMBER: If you write a question starting with "Analyze", "Evaluate", "Explain"
 Language pair: ${learningLanguage} → ${knownLanguage}
 Parse input flexibly: "[word] - [word]" OR "[word] → [word]" OR "[word]-[word]" (hyphens, arrows, or dashes)
 Create ONE flashcard per vocabulary pair.
-Question format: "What does '[${learningLanguage} word]' mean?"
+Question: Write the question entirely in ${knownLanguage}, asking what the ${learningLanguage} word means.
 Answer: ${knownLanguage} translation only.
-Distractors: 3 other ${knownLanguage} words.
+Distractors: 3 other ${knownLanguage} words that could be plausible wrong translations.
 `;
   }
 
@@ -514,25 +514,53 @@ Distractors: 3 other ${knownLanguage} words.
 STRICT REQUIREMENTS:
 1. Input format is FLEXIBLE - accept any separator: "-", "→", "–", "—", ">" between word pairs
 2. Generate ONE flashcard PER vocabulary pair
-3. Question MUST be in ${knownLanguage}: Ask "${knownLanguage === 'Norwegian' ? 'Hva betyr' : 'What does'} '[${learningLanguage} word]'${knownLanguage === 'Norwegian' ? '?' : ' mean?'}"
+3. The QUESTION text MUST be written entirely in ${knownLanguage} - ask what the ${learningLanguage} word means
 4. Answer MUST be in ${knownLanguage} ONLY
 5. Distractors MUST be in ${knownLanguage} ONLY
 
+QUESTION FORMAT (write in ${knownLanguage}):
+- The question should be written naturally in ${knownLanguage}, asking what a ${learningLanguage} word/phrase means
+- Keep the ${learningLanguage} word in quotes within the question
+- Examples of question phrasing in different languages:
+  * English: "What does 'famille' mean?"
+  * Spanish: "¿Qué significa 'famille'?"
+  * Norwegian: "Hva betyr 'famille'?"
+  * German: "Was bedeutet 'famille'?"
+  * French: "Que signifie 'famille'?"
+  * Swedish: "Vad betyder 'famille'?"
+  * Italian: "Cosa significa 'famille'?"
+  * Portuguese: "O que significa 'famille'?"
+  * Dutch: "Wat betekent 'famille'?"
+  * Danish: "Hvad betyder 'famille'?"
+  * Polish: "Co znaczy 'famille'?"
+  * Russian: "Что означает 'famille'?"
+  * Finnish: "Mitä 'famille' tarkoittaa?"
+  * Czech: "Co znamená 'famille'?"
+  * Hungarian: "Mit jelent a 'famille'?"
+  * Turkish: "'famille' ne demek?"
+  * Greek: "Τι σημαίνει 'famille';"
+  * Japanese: "'famille'はどういう意味ですか？"
+  * Chinese: "'famille'是什么意思？"
+  * Korean: "'famille'는 무슨 뜻인가요?"
+  * Arabic: "ما معنى 'famille'؟"
+  * Indonesian: "Apa artinya 'famille'?"
+  * Vietnamese: "'famille' nghĩa là gì?"
+
 EXAMPLE FOR ${learningLanguage} → ${knownLanguage}:
-Input: "une famille - en familie" OR "une famille-en familie"
+Input: "une famille - a family" OR "une famille-a family"
 Output:
 {
   "id": "1",
-  "question": "${knownLanguage === 'Norwegian' ? 'Hva betyr \'une famille\'?' : 'What does \'une famille\' mean?'}",
-  "answer": "${knownLanguage === 'Norwegian' ? 'en familie' : 'a family'}",
-  "distractors": ["${knownLanguage === 'Norwegian' ? 'et hus' : 'a house'}", "${knownLanguage === 'Norwegian' ? 'en venn' : 'a friend'}", "${knownLanguage === 'Norwegian' ? 'en bok' : 'a book'}"]
+  "question": "[Write question naturally in ${knownLanguage} asking what 'une famille' means]",
+  "answer": "a family",
+  "distractors": ["a house", "a friend", "a book"]
 }
 
 OUTPUT FORMAT (JSON only):
 {"flashcards": [{"id": "1", "question": "...", "answer": "...", "distractors": ["...", "...", "..."]}]}
 
 ⚠️ CRITICAL: Generate EXACTLY ${bufferedCount} flashcards - ONE PER VOCABULARY PAIR ⚠️
-⚠️ ALL text (question, answer, distractors) MUST be in ${knownLanguage} except the ${learningLanguage} word in the question ⚠️`
+⚠️ ALL text (question, answer, distractors) MUST be in ${knownLanguage} except the ${learningLanguage} word in quotes ⚠️`
     : `You are an expert academic tutor${subject ? ` in ${subject}` : ""} creating educational flashcards.
 
 CRITICAL: You are creating STUDY FLASHCARDS, not code. Do NOT generate programming code, HTML, or any file modifications.
