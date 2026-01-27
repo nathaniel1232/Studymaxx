@@ -166,6 +166,9 @@ export function detectLanguage(text: string): string {
   const icelandicWords = ['og', 'er', 'að', 'ekki', 'við', 'það', 'fyrir', 'með', 'sem', 'eru', 'var', 'hann', 'hún'];
   const icelandicChars = ['ð', 'þ', 'ö', 'á', 'í', 'ú', 'ý'];
 
+  // Dutch indicators
+  const dutchWords = ['de', 'het', 'een', 'en', 'van', 'ik', 'te', 'dat', 'die', 'in', 'is', 'niet', 'zijn', 'op', 'aan', 'voor', 'met', 'als', 'hebben', 'worden'];
+  
   // Indonesian indicators (Bahasa)
   const indonesianWords = ['yang', 'dan', 'di', 'ke', 'dari', 'ini', 'itu', 'untuk', 'saya', 'mereka', 'adalah', 'dengan', 'tidak', 'akan', 'pada', 'bisa'];
 
@@ -192,7 +195,8 @@ export function detectLanguage(text: string): string {
     Icelandic: 0,
     Indonesian: 0,
     Italian: 0,
-    Portuguese: 0
+    Portuguese: 0,
+    Dutch: 0
   };
 
   // Italian indicators
@@ -230,6 +234,9 @@ export function detectLanguage(text: string): string {
   portugueseWords.forEach(word => {
     scores.Portuguese += (sample.match(new RegExp(`\\b${word}\\b`, 'g')) || []).length;
   });
+  dutchWords.forEach(word => {
+    scores.Dutch += (sample.match(new RegExp(`\\b${word}\\b`, 'g')) || []).length;
+  });
   
   // Score by special characters (weighted higher)
   norwegianChars.forEach(char => scores.Norwegian += (sample.split(char).length - 1) * 3);
@@ -242,6 +249,13 @@ export function detectLanguage(text: string): string {
   if (sample.includes('ð') || sample.includes('þ')) {
     scores.Icelandic += 50;
     scores.Norwegian -= 20; // Penalize Norwegian if these chars exist
+  }
+  
+  // SPECIAL RULE: Dutch has distinctive double vowels (aa, ee, oo, uu) and ij digraph
+  const dutchPatterns = /\b\w*(aa|ee|oo|uu|ij)\w*\b/gi;
+  const dutchMatches = sample.match(dutchPatterns);
+  if (dutchMatches && dutchMatches.length > 3) {
+    scores.Dutch += dutchMatches.length * 3;
   }
   
   // Find highest score
