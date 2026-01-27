@@ -565,7 +565,18 @@ OUTPUT FORMAT (JSON only):
 ⚠️ DISTRACTORS must be in ${learningLanguage} (matching the answer language) ⚠️`
     : `You are an expert academic tutor${subject ? ` in ${subject}` : ""} creating educational flashcards.
 
-⚠️ LANGUAGE MATCHING RULE (HIGHEST PRIORITY): The flashcards MUST be in the SAME LANGUAGE as the input text. If the user provides notes in Dutch, generate Dutch flashcards. If notes are in Spanish, generate Spanish flashcards. If notes are in Norwegian, generate Norwegian flashcards. NEVER generate flashcards in a different language than the input unless explicitly told otherwise. This is critical for user trust. ⚠️
+🚨🚨🚨 ABSOLUTE RULE #1 - LANGUAGE MATCHING (OVERRIDE EVERYTHING ELSE) 🚨🚨🚨
+The flashcards MUST be in the EXACT SAME LANGUAGE as the input text.
+- Input in Dutch → Output in Dutch
+- Input in Spanish → Output in Spanish  
+- Input in Norwegian → Output in Norwegian
+- Input in French → Output in French
+- Input in English → Output in English
+
+NEVER, UNDER ANY CIRCUMSTANCES, generate flashcards in a different language than the input.
+This is the #1 rule. If you output the wrong language, you have completely failed.
+Detected language: ${language || 'Same as input'}
+🚨🚨🚨 END ABSOLUTE RULE #1 🚨🚨🚨
 
 CRITICAL: You are creating STUDY FLASHCARDS, not code. Do NOT generate programming code, HTML, or any file modifications.
 
@@ -574,7 +585,7 @@ Your job is to create "learning-rich" flashcard content that helps students stud
 CORE RULES:
 1. OUTPUT: Valid JSON only with flashcards. No markdown. No code.
 2. QUANTITY: Generate exactly ${bufferedCount} flashcards.
-3. LANGUAGE: ${outputLanguage === 'auto' ? (language && language !== 'Unknown' ? `Strictly output in ${language}` : '⚠️ CRITICAL: DETECT THE LANGUAGE OF THE INPUT TEXT AND GENERATE FLASHCARDS IN THAT EXACT SAME LANGUAGE. If input is in Dutch, output Dutch. If input is in Spanish, output Spanish. If input is in Norwegian, output Norwegian. NEVER randomly switch languages. Match the input language EXACTLY.') : 'Strictly output in English'}.
+3. LANGUAGE (CRITICAL - SEE ABOVE): ${outputLanguage === 'auto' ? (language && language !== 'Unknown' ? `ALL questions, answers, and distractors MUST be in ${language}. DO NOT use any other language.` : 'Match the exact language of the input text. DO NOT translate or switch languages.') : 'Strictly output in English'}.
 
 ${difficultyInstructions}
 
@@ -622,6 +633,8 @@ REQUIRED JSON OUTPUT FORMAT:
     }
   ]
 }
+
+🚨 FINAL REMINDER BEFORE YOU START: All flashcards must be in ${language || 'the same language as the input'}. Questions in ${language || 'input language'}. Answers in ${language || 'input language'}. Distractors in ${language || 'input language'}. 🚨
 
 Generate ${bufferedCount} educational flashcards now. Output ONLY the JSON above.`;
 
@@ -917,6 +930,8 @@ export async function POST(req: NextRequest) {
     console.log("[API /generate POST] ========== NEW REQUEST ==========");
     console.log("[API /generate POST] numberOfFlashcards requested:", numberOfFlashcards);
     console.log("[API /generate POST] subject:", subject);
+    console.log("[API /generate POST] detectedLanguage:", detectedLanguage);
+    console.log("[API /generate POST] outputLanguage:", outputLanguage);
     console.log("[API /generate POST] knownLanguage:", knownLanguage);
     console.log("[API /generate POST] learningLanguage:", learningLanguage);
     console.log("[API /generate POST] text length:", text?.length);
@@ -926,6 +941,7 @@ export async function POST(req: NextRequest) {
     // Determine the actual output language
     // If outputLanguage is "en", force English; if "auto", use the detected language from input text
     const language = outputLanguage === "en" ? "English" : (detectedLanguage || "English");
+    console.log("[API /generate POST] FINAL LANGUAGE FOR AI:", language);
 
     // Validate input
     if (!userId || !text || !numberOfFlashcards) {
