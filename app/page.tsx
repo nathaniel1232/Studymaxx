@@ -572,7 +572,23 @@ export default function Home() {
                     </li>
                   </ul>
                   <button
-                    onClick={() => !user ? setShowLoginModal(true) : isPremium ? (window.location.href = '/settings') : (window.location.href = '/pricing')}
+                    onClick={async () => {
+                      if (!user) {
+                        setShowLoginModal(true);
+                      } else if (isPremium) {
+                        try {
+                          const res = await fetch('/api/stripe/portal', { method: 'POST' });
+                          const data = await res.json();
+                          if (data.url) {
+                            window.location.href = data.url;
+                          }
+                        } catch (error) {
+                          console.error('Error redirecting to portal:', error);
+                        }
+                      } else {
+                        window.location.href = '/pricing';
+                      }
+                    }}
                     className="w-full py-3 px-6 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-md transition-all hover:scale-[1.02] active:scale-95"
                   >
                     {isPremium && user ? 'Manage Subscription' : 'Lock In Early Bird Price'}
