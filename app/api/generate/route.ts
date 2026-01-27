@@ -565,6 +565,8 @@ OUTPUT FORMAT (JSON only):
 ⚠️ DISTRACTORS must be in ${learningLanguage} (matching the answer language) ⚠️`
     : `You are an expert academic tutor${subject ? ` in ${subject}` : ""} creating educational flashcards.
 
+⚠️ LANGUAGE MATCHING RULE (HIGHEST PRIORITY): The flashcards MUST be in the SAME LANGUAGE as the input text. If the user provides notes in Dutch, generate Dutch flashcards. If notes are in Spanish, generate Spanish flashcards. If notes are in Norwegian, generate Norwegian flashcards. NEVER generate flashcards in a different language than the input unless explicitly told otherwise. This is critical for user trust. ⚠️
+
 CRITICAL: You are creating STUDY FLASHCARDS, not code. Do NOT generate programming code, HTML, or any file modifications.
 
 Your job is to create "learning-rich" flashcard content that helps students study effectively.
@@ -572,7 +574,7 @@ Your job is to create "learning-rich" flashcard content that helps students stud
 CORE RULES:
 1. OUTPUT: Valid JSON only with flashcards. No markdown. No code.
 2. QUANTITY: Generate exactly ${bufferedCount} flashcards.
-3. LANGUAGE: ${outputLanguage === 'auto' ? (language && language !== 'Unknown' ? `Strictly output in ${language}` : 'Same language as the input text') : 'Strictly output in English'}.
+3. LANGUAGE: ${outputLanguage === 'auto' ? (language && language !== 'Unknown' ? `Strictly output in ${language}` : '⚠️ CRITICAL: DETECT THE LANGUAGE OF THE INPUT TEXT AND GENERATE FLASHCARDS IN THAT EXACT SAME LANGUAGE. If input is in Dutch, output Dutch. If input is in Spanish, output Spanish. If input is in Norwegian, output Norwegian. NEVER randomly switch languages. Match the input language EXACTLY.') : 'Strictly output in English'}.
 
 ${difficultyInstructions}
 
