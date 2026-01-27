@@ -108,7 +108,7 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
               </div>
             ) : isPremium && (
               <div className="text-xs font-bold" style={{ color: '#fbbf24' }}>
-                ⭐ Premium
+                ⭐ Premium Early Bird
               </div>
             )}
           </div>

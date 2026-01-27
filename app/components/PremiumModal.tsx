@@ -76,64 +76,14 @@ export default function PremiumModal({
   const features = getPremiumFeatures();
   const pitch = getPremiumPitch();
 
-  const handleUpgrade = async () => {
-    setIsLoading(true);
-    setError("");
-
-    try {
-      // Check if supabase is initialized
-      if (!supabase) {
-        setError("Internal error: Supabase not initialized");
-        setIsLoading(false);
-        return;
-      }
-      // Check if user is authenticated
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-      if (sessionError || !session) {
-        // User not logged in - open login modal
-        if (onRequestLogin) {
-          setIsLoading(false);
-          // Brief message before closing
-          setError("");
-          onClose(); // Close premium modal
-          setTimeout(() => onRequestLogin(), 300); // Open login modal after modal closes
-          return;
-        } else {
-          setError("Please sign in first to upgrade to Premium. Use the Sign In button in the top menu.");
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      // Call Stripe checkout API with auth token
-      const response = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({ interval: billingInterval }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to create checkout session");
-      }
-
-      const { url } = await response.json();
-      
-      // Redirect to Stripe Checkout
-      if (url) {
-        window.location.href = url;
-      } else {
-        throw new Error("No checkout URL received");
-      }
-    } catch (err: any) {
-      console.error("Checkout error:", err);
-      setError(err.message || "Failed to start checkout. Please try again.");
-      setIsLoading(false);
-    }
+  const handleUpgrade = () => {
+    console.log('[PremiumModal] Redirecting to /pricing');
+    // Close modal first
+    onClose();
+    // Then redirect
+    setTimeout(() => {
+      window.location.href = '/pricing';
+    }, 100);
   };
 
   return (
@@ -268,29 +218,10 @@ export default function PremiumModal({
           ) : (
             <div className="flex flex-col gap-2">
               <button
-                onClick={() => {
-                  if (isLoggedIn) {
-                    handleUpgrade();
-                  } else {
-                    onClose();
-                    if (onRequestLogin) {
-                      onRequestLogin();
-                    }
-                  }
-                }}
-                disabled={isLoading}
-                className="w-full py-3.5 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 text-white font-bold rounded-md shadow-xl shadow-purple-500/40 border-2 border-purple-400/50 hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-base"
+                onClick={handleUpgrade}
+                className="w-full py-3.5 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 text-white font-bold rounded-md shadow-xl shadow-purple-500/40 border-2 border-purple-400/50 hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-base"
               >
-                {isLoading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    <span>Processing...</span>
-                  </>
-                ) : isLoggedIn ? (
-                  <span>🚀 Start Premium Access</span>
-                ) : (
-                  <span>🔐 Sign In to Upgrade</span>
-                )}
+                <span>🚀 View Premium Plans</span>
               </button>
               
               <button

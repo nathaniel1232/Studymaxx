@@ -9,6 +9,7 @@ import { useTranslation, useSettings } from "../contexts/SettingsContext";
 import { getCurrentUser, supabase } from "../utils/supabase";
 import ArrowIcon from "./icons/ArrowIcon";
 import PremiumModal from "./PremiumModal";
+import { canUseFeature, type TierName } from "../utils/subscriptionTiers";
 import { messages } from "../utils/messages";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +24,7 @@ interface CreateFlowViewProps {
 }
 
 type Step = 1 | 2 | 3 | 4;
-type MaterialType = "notes" | "image" | "docx" | null;
+type MaterialType = "notes" | "image" | "docx" | "pdf" | "youtube" | null;
 type Grade = "A" | "B" | "C" | "D" | "E";
 
 export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequestLogin }: CreateFlowViewProps) {
@@ -42,6 +43,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [isExtractingImage, setIsExtractingImage] = useState(false);
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [isExtractingYouTube, setIsExtractingYouTube] = useState(false);
+  const [userTier, setUserTier] = useState<TierName>('free');
   
   // Output language preference
   const [outputLanguage, setOutputLanguage] = useState<"auto" | "en">("auto");
@@ -93,11 +97,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   // Check premium status on mount AND when session changes
   useEffect(() => {
     console.log('[CreateFlowView] 🚀 MOUNT useEffect running');
-    // Add a small delay to ensure session is fully initialized
-    const timer = setTimeout(() => {
-      console.log('[CreateFlowView] ⏰ Timer fired - calling checkPremiumStatus');
-      checkPremiumStatus();
-    }, 50);
+    // IMMEDIATE check - don't wait
+    checkPremiumStatus();
     
     // Listen for auth state changes
     if (supabase) {
@@ -105,12 +106,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         console.log('[CreateFlowView] 🔄 Auth state changed:', event, 'Has session:', !!session);
         setHasSession(!!session);
         if (session) {
-          // Add delay before checking premium to allow session to fully sync
-          console.log('[CreateFlowView] ⏰ Session detected - scheduling premium check in 100ms');
-          setTimeout(() => {
-            console.log('[CreateFlowView] ⏰ Session timer fired - calling checkPremiumStatus');
-            checkPremiumStatus();
-          }, 100);
+          // Check premium immediately when session is available
+          console.log('[CreateFlowView] ⏰ Session detected - calling checkPremiumStatus NOW');
+          checkPremiumStatus();
         } else {
           console.log('[CreateFlowView] ❌ No session - setting isPremium to FALSE');
           setIsPremium(false);
@@ -119,12 +117,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       });
       
       return () => {
-        clearTimeout(timer);
         subscription.unsubscribe();
       };
     }
-    
-    return () => clearTimeout(timer);
   }, []);
 
   // Timer effect for generation progress
@@ -508,8 +503,11 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
   // Debug: Log whenever isPremium changes
   useEffect(() => {
+    console.log('[CreateFlowView] ========================================');
     console.log('[CreateFlowView] 🎯 isPremium STATE CHANGED TO:', isPremium);
-    console.log('[CreateFlowView] Stack trace:', new Error().stack);
+    console.log('[CreateFlowView] 🎯 Type:', typeof isPremium);
+    console.log('[CreateFlowView] 🎯 Boolean value:', Boolean(isPremium));
+    console.log('[CreateFlowView] ========================================');
   }, [isPremium]);
 
   const checkPremiumStatus = async () => {
@@ -548,15 +546,23 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       
       if (response.ok) {
         const data = await response.json();
-        console.log('[CreateFlowView] ✅ Premium status received:', data);
-        console.log('[CreateFlowView] 🎯 Setting isPremium to:', data.isPremium);
+        console.log('[CreateFlowView] ✅✅✅ Premium status received:', data);
+        console.log('[CreateFlowView] 🎯🎯🎯 Setting isPremium to:', data.isPremium);
         console.log('[CreateFlowView] 🔍 API Response full data:', JSON.stringify(data, null, 2));
         console.log('[CreateFlowView] 🔍 data.isPremium type:', typeof data.isPremium);
         console.log('[CreateFlowView] 🔍 data.isPremium === true:', data.isPremium === true);
         console.log('[CreateFlowView] 🔍 data.isPremium === false:', data.isPremium === false);
+        console.log('[CreateFlowView] 🔍 Boolean(data.isPremium):', Boolean(data.isPremium));
         
-        setIsPremium(data.isPremium);
-        console.log('[CreateFlowView] ✅ setIsPremium CALLED with:', data.isPremium);
+        // FORCE set to true if the API says premium
+        const premiumValue = data.isPremium === true;
+        console.log('[CreateFlowView] 🎯 FORCING isPremium to:', premiumValue);
+        setIsPremium(premiumValue);
+        console.log('[CreateFlowView] ✅✅✅ setIsPremium CALLED with:', premiumValue);
+        
+        // Set user tier (default to 'free' if not provided)
+        setUserTier(data.subscriptionTier || (data.isPremium ? 'pro' : 'free'));
+        console.log('[CreateFlowView] ✅ User tier:', data.subscriptionTier || 'free');
         
         setSetsCreated(data.setsCreated);
         setCanCreateMore(data.canCreateMore);
@@ -695,8 +701,14 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     }
     
     // Check for file uploads
-    if ((selectedMaterial === "docx" || selectedMaterial === "image") && !uploadedFile) {
+    if ((selectedMaterial === "docx" || selectedMaterial === "image" || selectedMaterial === "pdf") && !uploadedFile) {
       setError(messages.errors.fileRequired);
+      return;
+    }
+    
+    // Check for YouTube URL
+    if (selectedMaterial === "youtube" && !youtubeUrl.trim()) {
+      setError("Please enter a YouTube URL");
       return;
     }
     
@@ -856,7 +868,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     setError("");
 
     // For PDF, extract text client-side
-    if (file.type === "application/pdf") {
+    if (file.type === "application/pdf" || selectedMaterial === "pdf") {
       try {
         setError(""); // Clear any previous errors
         console.log("📑 Extracting PDF client-side...");
@@ -996,7 +1008,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       
       if (userSets.length >= 3) {
         setError("You've reached your limit of 3 free study sets. Upgrade to Premium for unlimited study sets!");
-        setShowPremiumModal(true);
+        setTimeout(() => window.location.href = '/pricing', 500);
         setCurrentStep(1); // Go back to step 1
         return;
       }
@@ -1029,7 +1041,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     
     if (!rateLimit.allowed) {
       setError(rateLimit.reason || messages.errors.generationTooShort);
-      setShowPremiumModal(true);
+      setTimeout(() => window.location.href = '/pricing', 500);
       // Don't continue to generation if rate limited
       setCurrentStep(1);
       return;
@@ -1113,7 +1125,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       // Handle premium-related errors
       if (err.message === "PREMIUM_REQUIRED" || err.message.includes("Upgrade to Premium")) {
         setIsDailyLimit(false);
-        setShowPremiumModal(true);
+        setTimeout(() => window.location.href = '/pricing', 500);
         setIsGenerating(false);
         setCurrentStep(2);
         return;
@@ -1124,7 +1136,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         setIsGenerating(false);
         setCurrentStep(2);
         setIsDailyLimit(true);
-        setTimeout(() => setShowPremiumModal(true), 300);
+        setTimeout(() => window.location.href = '/pricing', 500);
         return;
       }
 
@@ -1432,151 +1444,101 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     </CardContent>
                   </Card>
 
-                  {/* Word Document (Premium) */}
-                  <Card
-                    onClick={() => {
-                        if (!isPremium) setShowPremiumModal(true);
-                        else setSelectedMaterial("docx");
-                    }}
-                    className="cursor-pointer transition-all duration-300 border-2 rounded-md overflow-hidden"
-                    style={{
-                      background: isPremium 
-                        ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.12) 100%)'
-                        : 'linear-gradient(135deg, rgba(100, 100, 100, 0.08) 0%, rgba(80, 80, 80, 0.05) 100%)',
-                      borderColor: isPremium ? 'rgba(6, 182, 212, 0.4)' : 'rgba(245, 158, 11, 0.3)',
-                      boxShadow: isPremium 
-                        ? '0 2px 12px rgba(6, 182, 212, 0.15)'
-                        : '0 2px 10px rgba(0, 0, 0, 0.05)',
-                      backdropFilter: 'blur(10px)',
-                      opacity: isPremium ? 1 : 0.85
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isPremium) {
+                  {!isPremium ? (
+                    <Card
+                      onClick={() => window.location.href = '/pricing'}
+                      className="cursor-pointer transition-all duration-300 border-2 rounded-md overflow-hidden"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.05) 100%)',
+                        borderColor: 'rgba(245, 158, 11, 0.3)',
+                        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+                        backdropFilter: 'blur(10px)'
+                      }}
+                      onMouseEnter={(e) => {
                         e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.5)';
                         e.currentTarget.style.boxShadow = '0 8px 20px rgba(245, 158, 11, 0.15)';
                         e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.opacity = '0.95';
-                      } else {
-                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(8, 145, 178, 0.2) 100%)';
-                        e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.6)';
-                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(6, 182, 212, 0.25)';
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isPremium) {
+                      }}
+                      onMouseLeave={(e) => {
                         e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.3)';
                         e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.05)';
                         e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.opacity = '0.85';
-                      } else {
-                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.12) 100%)';
-                        e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.4)';
-                        e.currentTarget.style.boxShadow = '0 2px 12px rgba(6, 182, 212, 0.15)';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                      }
-                    }}
-                  >
-                    <CardContent className="flex items-center justify-between p-5">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-md flex items-center justify-center text-3xl" style={{ 
-                          background: isPremium ? 'linear-gradient(to-br, rgba(6, 182, 212, 0.2), rgba(8, 145, 178, 0.15))' : 'var(--muted)'
-                        }}>
-                          📄
+                      }}
+                    >
+                      <CardContent className="flex items-center justify-between p-5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 rounded-md bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center text-3xl">
+                            🚀
+                          </div>
+                          <div>
+                            <span className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
+                              Premium Access
+                            </span>
+                            <span className="text-xs block mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                              Unlock all current & upcoming features
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <span className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
-                            Word Document
-                          </span>
-                          <span className="text-xs block mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
-                            Upload .docx
-                          </span>
-                        </div>
-                      </div>
-                      {isPremium ? (
-                        <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 text-xs font-bold rounded-md border border-cyan-200 dark:border-cyan-800">
-                          ✓ Active
-                        </span>
-                      ) : (
                         <span className="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold rounded-md border border-amber-200 dark:border-amber-800">
-                          🔒 Premium
+                          🔒 Early Bird
                         </span>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Image (Premium) */}
-                  <Card
-                    onClick={() => {
-                        if (!isPremium) setShowPremiumModal(true);
-                        else setSelectedMaterial("image");
-                    }}
-                    className="cursor-pointer transition-all duration-300 border-2 rounded-md overflow-hidden"
-                    style={{
-                      background: isPremium 
-                        ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.12) 100%)'
-                        : 'linear-gradient(135deg, rgba(100, 100, 100, 0.08) 0%, rgba(80, 80, 80, 0.05) 100%)',
-                      borderColor: isPremium ? 'rgba(6, 182, 212, 0.4)' : 'rgba(245, 158, 11, 0.3)',
-                      boxShadow: isPremium 
-                        ? '0 2px 12px rgba(6, 182, 212, 0.15)'
-                        : '0 2px 10px rgba(0, 0, 0, 0.05)',
-                      backdropFilter: 'blur(10px)',
-                      opacity: isPremium ? 1 : 0.85
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isPremium) {
-                        e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.5)';
-                        e.currentTarget.style.boxShadow = '0 8px 20px rgba(245, 158, 11, 0.15)';
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.opacity = '0.95';
-                      } else {
-                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(8, 145, 178, 0.2) 100%)';
-                        e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.6)';
-                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(6, 182, 212, 0.25)';
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isPremium) {
-                        e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.3)';
-                        e.currentTarget.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.05)';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.opacity = '0.85';
-                      } else {
-                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.12) 100%)';
-                        e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.4)';
-                        e.currentTarget.style.boxShadow = '0 2px 12px rgba(6, 182, 212, 0.15)';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                      }
-                    }}
-                  >
-                    <CardContent className="flex items-center justify-between p-5">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-md flex items-center justify-center text-3xl" style={{ 
-                          background: isPremium ? 'linear-gradient(to-br, rgba(6, 182, 212, 0.2), rgba(8, 145, 178, 0.15))' : 'var(--muted)'
-                        }}>
-                          🖼️
-                        </div>
-                        <div>
-                          <span className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
-                            Image
-                          </span>
-                          <span className="text-xs block mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
-                            Upload image
-                          </span>
-                        </div>
-                      </div>
-                      {isPremium ? (
-                        <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 text-xs font-bold rounded-md border border-cyan-200 dark:border-cyan-800">
-                          ✓ Active
-                        </span>
-                      ) : (
-                        <span className="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold rounded-md border border-amber-200 dark:border-amber-800">
-                          🔒 Premium
-                        </span>
-                      )}
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <>
+                      {/* Document */}
+                      <Card
+                        onClick={() => setSelectedMaterial("docx")}
+                        className="cursor-pointer transition-all duration-300 border-2 rounded-md overflow-hidden"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.12) 100%)',
+                          borderColor: 'rgba(6, 182, 212, 0.4)'
+                        }}
+                      >
+                        <CardContent className="flex items-center justify-between p-5">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-md bg-cyan-100 dark:bg-cyan-900/20 flex items-center justify-center text-3xl">
+                              📄
+                            </div>
+                            <div>
+                              <span className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
+                                Document
+                              </span>
+                              <span className="text-xs block mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                                Upload .docx
+                              </span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      {/* Image */}
+                      <Card
+                        onClick={() => setSelectedMaterial("image")}
+                        className="cursor-pointer transition-all duration-300 border-2 rounded-md overflow-hidden"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.12) 100%)',
+                          borderColor: 'rgba(6, 182, 212, 0.4)'
+                        }}
+                      >
+                        <CardContent className="flex items-center justify-between p-5">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-md bg-cyan-100 dark:bg-cyan-900/20 flex items-center justify-center text-3xl">
+                              🖼️
+                            </div>
+                            <div>
+                              <span className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
+                                Image
+                              </span>
+                              <span className="text-xs block mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                                Upload image
+                              </span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </>
+                  )}
+                  {/* End Premium Features */}
                 </div>
               ) : (
                 <>
@@ -1591,12 +1553,16 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                               {selectedMaterial === "notes" && "📝"}
                               {selectedMaterial === "docx" && "📄"}
                               {selectedMaterial === "image" && "🖼️"}
+                              {selectedMaterial === "pdf" && "📕"}
+                              {selectedMaterial === "youtube" && "📺"}
                               </span>
                           </div>
                           <span className="font-medium text-sm">
                             {selectedMaterial === "notes" && t("notes")}
                             {selectedMaterial === "docx" && "Word Document"}
                             {selectedMaterial === "image" && t("image")}
+                            {selectedMaterial === "pdf" && "PDF Document"}
+                            {selectedMaterial === "youtube" && "YouTube Video"}
                           </span>
                         </div>
                         <Button
@@ -1670,7 +1636,114 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       </div>
                     )}
 
-                   {/* YouTube input REMOVED */}
+                   {/* PDF upload */}
+                   {selectedMaterial === "pdf" && (
+                      <div>
+                        <input
+                          type="file"
+                          id="pdf-upload"
+                          accept=".pdf"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                        <label
+                          htmlFor="pdf-upload"
+                          className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer transition-all duration-200 group ${
+                            uploadedFile 
+                              ? "bg-green-50/50 dark:bg-green-900/10 border-green-400/50 dark:border-green-800" 
+                              : "border hover:border-indigo-400"
+                          }`}
+                        >
+                          {uploadedFile ? (
+                            <div className="text-center p-4">
+                              <div className="w-12 h-12 mx-auto bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-2xl mb-2 text-green-600 dark:text-green-400">✅</div>
+                              <p className="text-sm font-bold text-slate-900 dark:text-white">
+                                {uploadedFile.name}
+                              </p>
+                              <p className="text-xs font-medium text-green-600 dark:text-green-400 mt-1">
+                                Ready to process
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="text-center p-3">
+                              <div className="w-10 h-10 mx-auto rounded-full flex items-center justify-center text-xl mb-2 shadow-sm" style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}>📕</div>
+                              <p className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
+                                Upload PDF Document
+                              </p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                Supports .pdf files
+                              </p>
+                            </div>
+                          )}
+                        </label>
+                      </div>
+                    )}
+
+                   {/* YouTube input */}
+                   {selectedMaterial === "youtube" && (
+                      <div className="space-y-3">
+                        <div>
+                          <input
+                            type="text"
+                            value={youtubeUrl}
+                            onChange={(e) => setYoutubeUrl(e.target.value)}
+                            placeholder="https://www.youtube.com/watch?v=..."
+                            className="w-full px-4 py-3 border-2 rounded-md text-sm"
+                            style={{ 
+                              background: 'var(--surface)', 
+                              borderColor: 'var(--border)',
+                              color: 'var(--foreground)'
+                            }}
+                          />
+                        </div>
+                        {isExtractingYouTube && (
+                          <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                            <span>Extracting transcript...</span>
+                          </div>
+                        )}
+                        {youtubeUrl && !isExtractingYouTube && (
+                          <Button
+                            onClick={async () => {
+                              try {
+                                setIsExtractingYouTube(true);
+                                setError("");
+                                const response = await fetch('/api/youtube/transcript', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ videoUrl: youtubeUrl }),
+                                });
+                                
+                                if (!response.ok) {
+                                  const error = await response.json();
+                                  throw new Error(error.error || 'Failed to extract transcript');
+                                }
+                                
+                                const data = await response.json();
+                                setTextInput(data.transcript);
+                                setError("");
+                              } catch (err: any) {
+                                console.error('YouTube extraction error:', err);
+                                setError(err.message || 'Failed to extract YouTube transcript');
+                              } finally {
+                                setIsExtractingYouTube(false);
+                              }
+                            }}
+                            className="w-full"
+                            disabled={!youtubeUrl.trim() || isExtractingYouTube}
+                          >
+                            Extract Transcript
+                          </Button>
+                        )}
+                        {textInput && !isExtractingYouTube && (
+                          <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+                            <p className="text-xs font-medium text-green-700 dark:text-green-400">
+                              ✓ Transcript extracted ({textInput.length} characters)
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Image upload */}
                     {selectedMaterial === "image" && (
@@ -1972,7 +2045,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       type="button"
                       onClick={() => {
                         if (locked) {
-                           setShowPremiumModal(true);
+                           window.location.href = '/pricing';
                            return;
                         }
                         setDifficulty(level);
@@ -2042,7 +2115,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         type="button"
                         onClick={() => {
                           if (locked) {
-                            setShowPremiumModal(true);
+                            window.location.href = '/pricing';
                           } else {
                             setTargetGrade(gradeValue);
                           }
@@ -2104,7 +2177,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                 <div 
                   onClick={() => {
                     if (!isPremium) {
-                      setShowPremiumModal(true);
+                      window.location.href = '/pricing';
                     } else {
                       setIncludeMathProblems(!includeMathProblems);
                     }
@@ -2284,20 +2357,6 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         </div>
       </div>
       </div>
-      
-      {/* Premium Modal */}
-      {showPremiumModal && (
-        <PremiumModal 
-          isOpen={showPremiumModal}
-          onClose={() => {
-            setShowPremiumModal(false);
-            setIsDailyLimit(false);
-          }}
-          setsCreated={setsCreated}
-          isDailyLimit={isDailyLimit}
-          onRequestLogin={onRequestLogin}
-        />
-      )}
     </>
   );
 }

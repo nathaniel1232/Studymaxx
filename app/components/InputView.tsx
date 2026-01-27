@@ -6,7 +6,6 @@ import { Flashcard } from "../utils/storage";
 import { useTranslation } from "../contexts/SettingsContext";
 import ArrowIcon from "./icons/ArrowIcon";
 import { canUseFeature, FREE_LIMITS, getUserLimits } from "../utils/premium";
-import PremiumModal from "./PremiumModal";
 import { supabase } from "../utils/supabase";
 import { messages } from "../utils/messages";
 
@@ -23,8 +22,6 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
   const [selectedMaterial, setSelectedMaterial] = useState<MaterialType>(null);
   const [textInput, setTextInput] = useState("");
   const [isPremium, setIsPremium] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [premiumModalReason, setPremiumModalReason] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState<"processing" | "analyzing" | "generating" | "finalizing" | null>(null);
   const [error, setError] = useState("");
@@ -130,8 +127,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
   const handleLockedFeature = (feature: 'pdf' | 'image' | 'youtube', featureName: string) => {
     const check = canUseFeature(feature, isPremium);
     if (!check.allowed) {
-      setPremiumModalReason(`${featureName} is a Premium feature. Upgrade to unlock unlimited ${featureName.toLowerCase()} and more!`);
-      setShowPremiumModal(true);
+      window.location.href = '/pricing';
       return true;
     }
     return false;
@@ -175,8 +171,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
     if (filesArray.length > maxAllowed) {
       if (!isPremium) {
         setError(messages.errors.premiumMultiImage);
-        setPremiumModalReason("Multi-image upload is a Premium feature. Upgrade to process up to 5 images at once!");
-        setShowPremiumModal(true);
+        window.location.href = '/pricing';
       } else {
         setError(messages.errors.tooManyImages);
       }
@@ -245,8 +240,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
 
       if (!response.ok) {
         if (data.premiumRequired) {
-          setPremiumModalReason(data.error);
-          setShowPremiumModal(true);
+          window.location.href = '/pricing';
         }
         throw new Error(data.error || "Failed to process images");
       }
@@ -296,8 +290,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
     // Enforce file limits based on plan
     if (!isPremium && files.length > 1) {
       setError(messages.errors.premiumMultiImage);
-      setPremiumModalReason("Multi-image upload is a Premium feature. Upgrade to process multiple images at once!");
-      setShowPremiumModal(true);
+      window.location.href = '/pricing';
       e.target.value = ''; // Clear the input
       return;
     }
@@ -637,63 +630,20 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                 </p>
               </button>
 
-              {/* PDF/Documents Option */}
+              {/* Premium Features Option */}
               <button
                 onClick={() => {
-                  if (handleLockedFeature('pdf', 'PDF uploads')) return;
-                  setSelectedMaterial("pdf");
+                  window.location.href = '/pricing';
                 }}
                 className="group relative p-8 border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-md hover:border-blue-300 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
               >
-                {!isPremium && (
-                  <div className="absolute -top-3 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
-                    ⭐ Premium
-                  </div>
-                )}
-                <div className="text-5xl mb-4">📄</div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Upload files</h3>
+                <div className="absolute -top-3 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                  ⭐ Early Bird
+                </div>
+                <div className="text-5xl mb-4">🚀</div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Premium Access</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  PDF, Word, images, YouTube
-                </p>
-              </button>
-
-              {/* YouTube Option */}
-              <button
-                onClick={() => {
-                  if (handleLockedFeature('youtube', 'YouTube transcripts')) return;
-                  setSelectedMaterial("youtube");
-                }}
-                className="group relative p-8 border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-md hover:border-blue-300 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
-              >
-                {!isPremium && (
-                  <div className="absolute -top-3 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
-                    ⭐ Premium
-                  </div>
-                )}
-                <div className="text-5xl mb-4">📺</div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">YouTube</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  From video transcript
-                </p>
-              </button>
-
-              {/* Image Option */}
-              <button
-                onClick={() => {
-                  if (handleLockedFeature('image', 'Image OCR')) return;
-                  setSelectedMaterial("image");
-                }}
-                className="group relative p-8 border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-md hover:border-blue-300 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
-              >
-                {!isPremium && (
-                  <div className="absolute -top-3 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
-                    ⭐ Premium
-                  </div>
-                )}
-                <div className="text-5xl mb-4">🖼️</div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Image</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Upload an image
+                  Unlock all current & upcoming features
                 </p>
               </button>
             </div>
@@ -827,7 +777,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                       </>
                     ) : (
                       <>
-                        Free plan: 1 image at a time. <button type="button" onClick={() => setShowPremiumModal(true)} className="underline font-semibold">Upgrade to Premium</button> to upload up to 5 images at once.
+                        Free plan: 1 image at a time. <button type="button" onClick={() => { window.location.href = '/pricing'; }} className="underline font-semibold">Upgrade to Premium</button> to upload up to 5 images at once.
                       </>
                     )}
                   </p>
@@ -1060,8 +1010,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                   onChange={(e) => {
                     const value = parseInt(e.target.value);
                     if (!isPremium && value > FREE_LIMITS.maxFlashcardsPerSet) {
-                      setPremiumModalReason(`Free users are limited to ${FREE_LIMITS.maxFlashcardsPerSet} flashcards per set. Upgrade to Premium for unlimited flashcards!`);
-                      setShowPremiumModal(true);
+                      window.location.href = '/pricing';
                       return;
                     }
                     setNumberOfFlashcards(value);
@@ -1123,15 +1072,6 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
           </form>
         )}
       </div>
-
-      {/* Premium Modal */}
-      {showPremiumModal && (
-        <PremiumModal
-          isOpen={showPremiumModal}
-          onClose={() => setShowPremiumModal(false)}
-          customMessage={premiumModalReason}
-        />
-      )}
     </div>
   );
 }

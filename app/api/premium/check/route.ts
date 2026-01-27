@@ -58,7 +58,6 @@ export async function GET(request: NextRequest) {
     const userId = user.id;
 
     // 1. Get user data (premium status)
-    // Note: older schema might not have daily_generation_count, handle gracefully
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('is_premium, stripe_subscription_id')
@@ -67,7 +66,12 @@ export async function GET(request: NextRequest) {
 
     if (userError) {
       console.error('[/api/premium/check] Error fetching user data:', userError);
+      console.error('[/api/premium/check] User ID:', userId);
     }
+
+    console.log('[/api/premium/check] Raw userData from DB:', JSON.stringify(userData, null, 2));
+    console.log('[/api/premium/check] userData?.is_premium:', userData?.is_premium);
+    console.log('[/api/premium/check] Type:', typeof userData?.is_premium);
 
     // 2. Count actual flashcard sets
     const { count: setsCount, error: countError } = await supabase
@@ -80,7 +84,15 @@ export async function GET(request: NextRequest) {
     }
 
     const isPremium = userData?.is_premium || false;
+    const subscriptionTier = isPremium ? 'pro' : 'free';
     const setsCreated = setsCount || 0;
+    
+    console.log('[/api/premium/check] ================================');
+    console.log('[/api/premium/check] PREMIUM CHECK RESULT:');
+    console.log('[/api/premium/check] isPremium:', isPremium, '(type:', typeof isPremium, ')');
+    console.log('[/api/premium/check] subscriptionTier:', subscriptionTier);
+    console.log('[/api/premium/check] setsCreated:', setsCreated);
+    console.log('[/api/premium/check] ================================');
     
     // Limits
     const MAX_FREE_SETS = 3;
@@ -89,10 +101,11 @@ export async function GET(request: NextRequest) {
     // Determine if user can create more sets
     const canCreateMore = isPremium ? true : (setsCreated < MAX_FREE_SETS);
 
-    console.log(`[/api/premium/check] User ${userId} | Premium: ${isPremium} | Sets: ${setsCreated}/${isPremium ? '∞' : MAX_FREE_SETS}`);
+    console.log(`[/api/premium/check] User ${userId} | Premium: ${isPremium} | Tier: ${subscriptionTier} | Sets: ${setsCreated}/${isPremium ? 'unlimited' : MAX_FREE_SETS}`);
 
     return NextResponse.json({
       isPremium: isPremium,
+      subscriptionTier: subscriptionTier,
       setsCreated: setsCreated,
       maxSets: isPremium ? -1 : MAX_FREE_SETS,
       canCreateMore: canCreateMore,

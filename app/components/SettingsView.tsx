@@ -41,19 +41,35 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
       }
 
       if (currentUser && supabase) {
-        // Fetch user's premium status from database
+        // Fetch user's premium status from API
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          try {
+            const response = await fetch('/api/premium/check', {
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`
+              }
+            });
+            
+            if (response.ok) {
+              const premiumData = await response.json();
+              console.log('[SettingsView] Premium status:', premiumData.isPremium);
+              setIsPremium(premiumData.isPremium);
+            }
+          } catch (error) {
+            console.error('[SettingsView] Error checking premium:', error);
+          }
+        }
+        
+        // Fetch avatar from database
         const { data, error } = await supabase
           .from('users')
-          .select('is_premium, avatar_url')
+          .select('avatar_url')
           .eq('id', currentUser.id)
           .single();
 
-        if (!error && data) {
-          setIsPremium(data.is_premium || false);
-          // Also check avatar_url from database
-          if (data.avatar_url) {
-            setAvatarUrl(data.avatar_url);
-          }
+        if (!error && data?.avatar_url) {
+          setAvatarUrl(data.avatar_url);
         }
       }
     } catch (error) {

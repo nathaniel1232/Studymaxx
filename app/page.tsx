@@ -8,7 +8,6 @@ import StudyView from "./components/StudyView";
 import SavedSetsView from "./components/SavedSetsView";
 import SettingsView from "./components/SettingsView";
 import LoginModal from "./components/LoginModal";
-import PremiumModal from "./components/PremiumModal";
 import UserProfileDropdown from "./components/UserProfileDropdown";
 import StudyFactBadge from "./components/StudyFactBadge";
 import LiveVisitorsCounter from "./components/LiveVisitorsCounter";
@@ -39,7 +38,6 @@ export default function Home() {
   const [isOwner, setIsOwner] = useState(false);
   const [remainingStudySets, setRemainingStudySets] = useState(3);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning" } | null>(null);
 
@@ -241,7 +239,7 @@ export default function Home() {
   // Listen for custom events from other components
   useEffect(() => {
     const handleShowLogin = () => setShowLoginModal(true);
-    const handleShowPremium = () => setShowPremiumModal(true);
+    const handleShowPremium = () => { window.location.href = '/pricing'; };
 
     window.addEventListener('showLogin', handleShowLogin);
     window.addEventListener('showPremium', handleShowPremium);
@@ -330,6 +328,18 @@ export default function Home() {
             </div>
             
             <div className="flex items-center gap-3">
+              {/* Pricing Tab */}
+              <a
+                href="/pricing"
+                className="px-4 py-2 rounded-md font-bold text-sm bg-gradient-to-r from-amber-500 to-yellow-500 text-white hover:from-amber-600 hover:to-yellow-600 transition-all flex items-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+                </svg>
+                Pricing
+              </a>
+              
               {user ? (
                 <>
                   <button
@@ -347,7 +357,7 @@ export default function Home() {
                     isPremium={isPremium}
                     isOwner={isOwner}
                     onNavigateSettings={handleViewSettings}
-                    onUpgradePremium={() => setShowPremiumModal(true)}
+                    onUpgradePremium={() => { window.location.href = '/pricing'; }}
                   />
                 </>
               ) : (
@@ -484,11 +494,11 @@ export default function Home() {
                   </>
                 ) : (
                   <>
-                    <div className="inline-block px-4 py-2 rounded-full border border-amber-500 bg-amber-500/20 mb-4">
-                      <span className="text-sm font-bold text-amber-300">Upgrade Available</span>
+                    <div className="inline-block px-4 py-2 rounded-full border border-red-500 bg-red-500/20 mb-4 animate-pulse">
+                      <span className="text-sm font-bold text-red-300">⚠️ EARLY BIRD - ENDS FEB 10</span>
                     </div>
-                    <h2 className="text-3xl font-black text-white mb-2">Get Premium for $2.99/month</h2>
-                    <p className="text-slate-400">Unlimited study sets and premium features</p>
+                    <h2 className="text-3xl font-black text-white mb-2">Premium Early Bird - Special Launch Pricing</h2>
+                    <p className="text-slate-400">Keep this price as long as you stay subscribed. Prices increase on Feb 10</p>
                   </>
                 )}
               </div>
@@ -513,14 +523,18 @@ export default function Home() {
                   </ul>
                 </div>
 
-                {/* Premium Plan */}
+                {/* Premium Early Bird Plan */}
                 <div className="p-6 rounded-md border-2 border-emerald-500 relative" style={{background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(19, 78, 74, 0.4) 100%)', boxShadow: '0 25px 50px -12px rgba(16, 185, 129, 0.2)'}}>
+                  <div className="absolute top-4 right-4">
+                    <span className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-md animate-pulse">EARLY BIRD</span>
+                  </div>
                   {isPremium && user && (
-                    <div className="absolute top-6 right-6">
+                    <div className="absolute top-14 right-4">
                       <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-md">Active</span>
                     </div>
                   )}
-                  <h3 className="text-2xl font-bold text-emerald-300 mb-2">Premium</h3>
+                  <h3 className="text-2xl font-bold text-emerald-300 mb-1">Premium Early Bird</h3>
+                  <p className="text-xs text-red-300 font-bold mb-3">Prices increase on Feb 10 - Lock in now!</p>
                   <div className="mb-4">
                     <div className="flex items-baseline gap-2">
                       <span className="text-3xl font-bold text-white">$2.99</span>
@@ -552,14 +566,18 @@ export default function Home() {
                       <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
                       <span>Share study sets</span>
                     </li>
+                    <li className="flex items-start gap-3 text-emerald-300">
+                      <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                      <span className="font-bold">Access to all premium features</span>
+                    </li>
                   </ul>
                   <button
-                    onClick={() => !user ? setShowLoginModal(true) : isPremium ? setShowPremiumModal(true) : setShowPremiumModal(true)}
+                    onClick={() => !user ? setShowLoginModal(true) : isPremium ? (window.location.href = '/settings') : (window.location.href = '/pricing')}
                     className="w-full py-3 px-6 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-md transition-all hover:scale-[1.02] active:scale-95"
                   >
-                    {isPremium && user ? 'Manage Subscription' : 'Upgrade to Premium'}
+                    {isPremium && user ? 'Manage Subscription' : 'Lock In Early Bird Price'}
                   </button>
-                  <p className="text-center text-xs text-slate-400 mt-2">Cancel anytime</p>
+                  <p className="text-center text-xs text-slate-400 mt-2">Keep this price as long as you stay subscribed - Cancel anytime</p>
                 </div>
               </div>
             </div>
@@ -584,6 +602,8 @@ export default function Home() {
           {/* Footer - Minimal */}
           <footer className="mt-16 pt-8 border-t border-slate-700/50 pb-8">
             <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-slate-400">
+              <a href="/pricing" className="hover:text-emerald-400 transition-colors font-medium">💎 Pricing</a>
+              <span className="text-slate-600">·</span>
               <a href="mailto:studymaxxer@gmail.com" className="hover:text-emerald-400 transition-colors">Contact</a>
               <span className="text-slate-600">·</span>
               <a href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy</a>
@@ -634,16 +654,6 @@ export default function Home() {
         <LoginModal 
           onClose={() => setShowLoginModal(false)}
           onSkip={() => setShowLoginModal(false)}
-        />
-      )}
-
-      {showPremiumModal && (
-        <PremiumModal
-          isOpen={showPremiumModal}
-          onClose={() => setShowPremiumModal(false)}
-          setsCreated={savedSets.length}
-          onRequestLogin={() => setShowLoginModal(true)}
-          isPremium={isPremium}
         />
       )}
 
