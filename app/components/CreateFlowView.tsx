@@ -1973,7 +1973,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                               <span className="text-lg">🌍</span>
                               <div className="text-left">
                                   <div className="font-medium text-sm" style={{ color: outputLanguage === "auto" ? 'white' : 'var(--foreground)' }}>
-                                    {detectedLanguage && detectedLanguage !== "unknown" ? detectedLanguage.split(" ")[0] : "Auto"}
+                                    Auto
                                   </div>
                               </div>
                            </div>
