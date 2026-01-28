@@ -153,7 +153,8 @@ export function getTextStats(text: string) {
  */
 export async function detectLanguage(text: string): Promise<string> {
   try {
-    const sample = text.slice(0, 1000); // Use first 1000 chars for speed
+    // Use ALL the text for maximum accuracy, just like flashcard generation does
+    const sample = text; // Use entire text for accurate detection
     
     // Quick script-based detection for non-Latin scripts (very reliable)
     if ((sample.match(/[\u0370-\u03FF]/g)?.length ?? 0) > 5) return 'Greek';
@@ -173,17 +174,47 @@ export async function detectLanguage(text: string): Promise<string> {
     if ((sample.match(/[\u0980-\u09FF]/g)?.length ?? 0) > 5) return 'Bengali';
     if ((sample.match(/[\u0B80-\u0BFF]/g)?.length ?? 0) > 5) return 'Tamil';
     
-    // For Latin-script languages, use AI detection
+    // Quick pattern detection for unique characters
+    if (sample.includes('ð') || sample.includes('þ')) return 'Icelandic';
+    if (sample.includes('ł')) return 'Polish';
+    if (sample.includes('ř')) return 'Czech';
+    if (sample.includes('ğ') || sample.includes('ı')) return 'Turkish';
+    if (sample.match(/[țș]/)) return 'Romanian';
+    
+    // Analyze key indicator words to narrow down language family
+    const hints: string[] = [];
+    if (sample.match(/\b(ikke|eller|også|derfor|allerede)\b/i)) hints.push('Norwegian common');
+    if (sample.match(/\b(að|ekki|þetta|fyrir|með)\b/i)) hints.push('Icelandic common');
+    if (sample.match(/\b(the|this|that|which|these|those|where)\b/i)) hints.push('English common');
+    if (sample.match(/\b(der|die|das|und|nicht|auch)\b/i)) hints.push('German common');
+    if (sample.match(/\b(le|la|les|dans|avec|sont)\b/i)) hints.push('French common');
+    if (sample.match(/\b(het|een|van|zijn|deze|worden)\b/i)) hints.push('Dutch common');
+    if (sample.match(/\b(jag|och|till|från)\b/i)) hints.push('Swedish common');
+    if (sample.match(/\b(jeg|af|blev|alle)\b/i)) hints.push('Danish common');
+    
+    const hintText = hints.length > 0 ? `\n\nPattern hints detected: ${hints.join(', ')}` : '';
+    
+    // For Latin-script languages, use AI detection with enhanced prompt
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
-          content: 'You are a language detection expert. Respond with ONLY the name of the language in English (e.g., "English", "Spanish", "German"). Be precise and confident.'
+          content: `You are an expert linguist specializing in language identification. Analyze the text carefully and respond with ONLY the language name in English.
+
+Key distinctions:
+- Norwegian: uses "ikke", "også", "være", "eller", "derfor". Has letters æ, ø, å but NOT ð or þ.
+- Icelandic: uses "að", "ekki", "þetta", "fyrir". Has unique letters ð and þ that NO other language uses.
+- Swedish: uses "jag", "och", "till", "från". Has å, ä, ö.
+- Danish: uses "jeg", "af", "blev", "alle". Has æ, ø, å.
+- English: uses "the", "this", "that", "which", "these", "those".
+- German: uses "der", "die", "das", "und", "nicht", "auch". Has ä, ö, ü, ß.
+
+Be 100% certain before responding. One word only.`
         },
         {
           role: 'user',
-          content: `What language is this text written in?\n\n"${sample}"`
+          content: `What language is this text?${hintText}\n\n"${sample}"`
         }
       ],
       temperature: 0,
@@ -191,7 +222,7 @@ export async function detectLanguage(text: string): Promise<string> {
     });
     
     const detectedLanguage = response.choices[0]?.message?.content?.trim() || 'English';
-    console.log('[AI Language Detection]:', detectedLanguage);
+    console.log('[AI Language Detection]:', detectedLanguage, hints.length > 0 ? `(hints: ${hints.join(', ')})` : '');
     return detectedLanguage;
     
   } catch (error) {

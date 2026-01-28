@@ -587,7 +587,12 @@ Your job is to create "learning-rich" flashcard content that helps students stud
 
 CORE RULES:
 1. OUTPUT: Valid JSON only with flashcards. No markdown. No code.
-2. QUANTITY: Generate exactly ${bufferedCount} flashcards.
+2. QUANTITY: Generate exactly ${bufferedCount} flashcards. NO EXCEPTIONS.
+   - If the provided text has limited information, EXPAND on the topic with additional related facts within the same theme.
+   - Example: If notes are about "World War 2", add related facts like key leaders, battles, dates, causes, effects, etc.
+   - Example: If notes are about "Photosynthesis", add related facts like chloroplasts, light reactions, Calvin cycle, etc.
+   - All added information MUST be factually accurate and directly related to the main topic.
+   - ALWAYS deliver the full ${bufferedCount} flashcards requested.
 3. LANGUAGE (CRITICAL - SEE ABOVE): ${outputLanguage === 'auto' ? (language && language !== 'Unknown' ? `ALL questions, answers, and distractors MUST be in ${language}. DO NOT use any other language.` : 'Match the exact language of the input text. DO NOT translate or switch languages.') : 'Strictly output in English'}.
 
 ${difficultyInstructions}
@@ -879,8 +884,12 @@ Generate ${bufferedCount} educational flashcards now. Output ONLY the JSON above
 
     console.log(`[API /generate] Validated: ${validatedCards.length} of ${flashcards.length} cards passed quality check`);
 
-    // Return immediately - don't wait for perfect count
-    // Fast mode: return what we have, even if slightly short
+    // If we don't have enough cards, log a warning
+    if (validatedCards.length < targetCount) {
+      console.warn(`[API /generate] ⚠️ Only got ${validatedCards.length} cards, requested ${targetCount}. AI should generate more related content.`);
+    }
+
+    // Return what we have - the AI prompt should ensure we get the full count
     if (validatedCards.length === 0) {
       throw new Error("No valid flashcards generated. Please try again.");
     }
@@ -888,7 +897,7 @@ Generate ${bufferedCount} educational flashcards now. Output ONLY the JSON above
     // Return up to requested number
     const finalCards = validatedCards.slice(0, targetCount);
     
-    console.log(`[API /generate] Returning ${finalCards.length} flashcards (fast mode)`);
+    console.log(`[API /generate] Returning ${finalCards.length} flashcards`);
 
     return finalCards;
   } catch (error: any) {
