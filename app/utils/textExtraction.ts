@@ -156,22 +156,22 @@ export async function detectLanguage(text: string): Promise<string> {
     const sample = text.slice(0, 1000); // Use first 1000 chars for speed
     
     // Quick script-based detection for non-Latin scripts (very reliable)
-    if (sample.match(/[\u0370-\u03FF]/g)?.length > 5) return 'Greek';
-    if (sample.match(/[\u0600-\u06FF]/g)?.length > 5) return 'Arabic';
-    if (sample.match(/[\u0590-\u05FF]/g)?.length > 5) return 'Hebrew';
-    if (sample.match(/[\u0E00-\u0E7F]/g)?.length > 5) return 'Thai';
-    if (sample.match(/[\u3040-\u309F\u30A0-\u30FF]/g)?.length > 3) return 'Japanese';
-    if (sample.match(/[\uAC00-\uD7AF]/g)?.length > 5) return 'Korean';
-    if (sample.match(/[\u4E00-\u9FFF]/g)?.length > 5) return 'Chinese';
-    if (sample.match(/[\u0400-\u04FF]/g)?.length > 10) {
+    if ((sample.match(/[\u0370-\u03FF]/g)?.length ?? 0) > 5) return 'Greek';
+    if ((sample.match(/[\u0600-\u06FF]/g)?.length ?? 0) > 5) return 'Arabic';
+    if ((sample.match(/[\u0590-\u05FF]/g)?.length ?? 0) > 5) return 'Hebrew';
+    if ((sample.match(/[\u0E00-\u0E7F]/g)?.length ?? 0) > 5) return 'Thai';
+    if ((sample.match(/[\u3040-\u309F\u30A0-\u30FF]/g)?.length ?? 0) > 3) return 'Japanese';
+    if ((sample.match(/[\uAC00-\uD7AF]/g)?.length ?? 0) > 5) return 'Korean';
+    if ((sample.match(/[\u4E00-\u9FFF]/g)?.length ?? 0) > 5) return 'Chinese';
+    if ((sample.match(/[\u0400-\u04FF]/g)?.length ?? 0) > 10) {
       if (sample.includes('і') || sample.includes('ї') || sample.includes('є')) return 'Ukrainian';
       if (sample.includes('ъ') && sample.includes('ѝ')) return 'Bulgarian';
       if (sample.match(/[јљњћђџ]/)) return 'Serbian';
       return 'Russian';
     }
-    if (sample.match(/[\u0900-\u097F]/g)?.length > 5) return 'Hindi';
-    if (sample.match(/[\u0980-\u09FF]/g)?.length > 5) return 'Bengali';
-    if (sample.match(/[\u0B80-\u0BFF]/g)?.length > 5) return 'Tamil';
+    if ((sample.match(/[\u0900-\u097F]/g)?.length ?? 0) > 5) return 'Hindi';
+    if ((sample.match(/[\u0980-\u09FF]/g)?.length ?? 0) > 5) return 'Bengali';
+    if ((sample.match(/[\u0B80-\u0BFF]/g)?.length ?? 0) > 5) return 'Tamil';
     
     // For Latin-script languages, use AI detection
     const response = await openai.chat.completions.create({
