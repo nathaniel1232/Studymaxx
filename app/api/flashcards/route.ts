@@ -47,8 +47,8 @@ export async function POST(req: NextRequest) {
     // Get userId from body or generate anonymous ID
     const effectiveUserId = userId || `anon-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    // Detect language from text (simple detection)
-    const language = detectLanguage(text);
+    // Detect language from text using AI
+    const language = await detectLanguage(text);
 
     // Call /api/generate (the real AI gateway with premium enforcement)
     const generateUrl = new URL("/api/generate", req.url);
