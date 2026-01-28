@@ -214,33 +214,34 @@ export function detectLanguage(text: string): string {
   // ============ LATIN SCRIPT LANGUAGES ============
   
   // Define comprehensive word indicators for each language
-  const languageWords: { [key: string]: string[] } = {
-    English: ['the', 'is', 'are', 'was', 'were', 'this', 'that', 'what', 'which', 'have', 'been', 'from', 'they', 'their', 'about', 'would', 'there', 'could', 'should'],
-    Spanish: ['el', 'la', 'los', 'las', 'de', 'que', 'es', 'en', 'un', 'una', 'por', 'para', 'con', 'del', 'al', 'como', 'pero', 'más', 'todo', 'esta', 'están'],
-    French: ['le', 'la', 'les', 'de', 'et', 'est', 'un', 'une', 'dans', 'pour', 'que', 'qui', 'pas', 'nous', 'vous', 'sont', 'tout', 'mais', 'avec', 'ces', 'été'],
-    German: ['der', 'die', 'das', 'und', 'ist', 'in', 'den', 'von', 'zu', 'mit', 'auf', 'für', 'auch', 'nicht', 'werden', 'sein', 'wurde', 'diesem', 'werden', 'einer'],
-    Italian: ['il', 'la', 'i', 'gli', 'le', 'di', 'da', 'in', 'con', 'su', 'per', 'tra', 'fra', 'del', 'della', 'sono', 'essere', 'stato', 'anche', 'molto'],
-    Portuguese: ['o', 'a', 'os', 'as', 'de', 'do', 'da', 'em', 'um', 'uma', 'para', 'com', 'não', 'é', 'que', 'são', 'por', 'mais', 'dos', 'como', 'está'],
-    Dutch: ['de', 'het', 'een', 'en', 'van', 'ik', 'te', 'dat', 'die', 'in', 'is', 'niet', 'zijn', 'op', 'aan', 'voor', 'met', 'als', 'hebben', 'worden', 'deze', 'werd'],
-    Norwegian: ['og', 'er', 'det', 'på', 'til', 'med', 'som', 'for', 'av', 'en', 'å', 'ikke', 'har', 'skal', 'kan', 'være', 'fra', 'ved', 'eller', 'blir', 'denne'],
-    Swedish: ['och', 'i', 'är', 'det', 'som', 'till', 'en', 'av', 'för', 'att', 'med', 'inte', 'på', 'jag', 'den', 'har', 'var', 'blir', 'från', 'om', 'alla'],
-    Danish: ['og', 'i', 'er', 'det', 'som', 'til', 'en', 'af', 'for', 'at', 'med', 'ikke', 'jeg', 'vi', 'den', 'har', 'var', 'fra', 'blev', 'alle', 'denne'],
-    Icelandic: ['og', 'er', 'að', 'ekki', 'við', 'það', 'fyrir', 'með', 'sem', 'eru', 'var', 'hann', 'hún', 'þetta', 'vera', 'hafa', 'frá', 'til', 'upp', 'um'],
-    Finnish: ['on', 'ja', 'ei', 'se', 'että', 'oli', 'olla', 'voi', 'hän', 'nyt', 'kun', 'mutta', 'jos', 'kuin', 'tai', 'niin', 'joka', 'sen', 'kaikki', 'ovat'],
-    Polish: ['i', 'w', 'na', 'z', 'do', 'nie', 'się', 'o', 'że', 'to', 'jest', 'od', 'za', 'co', 'jak', 'ale', 'jego', 'czy', 'być', 'był', 'jako'],
-    Czech: ['a', 'je', 'se', 'v', 'na', 'že', 'z', 'o', 'to', 'do', 's', 'za', 'by', 'jako', 'pro', 'byl', 'jsou', 'nebo', 'při', 'také'],
-    Slovak: ['a', 'je', 'v', 'na', 'sa', 'že', 'do', 'o', 'z', 'si', 'to', 'ako', 'za', 'aj', 'by', 's', 'pre', 'od', 'po', 'nie'],
-    Hungarian: ['a', 'az', 'és', 'van', 'hogy', 'nem', 'ez', 'volt', 'de', 'meg', 'egy', 'még', 'mint', 'le', 'el', 'amit', 'csak', 'már', 'igen', 'most'],
-    Romanian: ['de', 'a', 'în', 'la', 'și', 'cu', 'un', 'o', 'este', 'pentru', 'pe', 'din', 'al', 'unei', 'că', 'sunt', 'era', 'mai', 'sau', 'dar'],
-    Turkish: ['ve', 'bir', 'bu', 'da', 'de', 'değil', 'mi', 'ne', 'ile', 'için', 'var', 'yok', 'gibi', 'daha', 'çok', 'kadar', 'olan', 'ama', 'ancak'],
-    Indonesian: ['yang', 'dan', 'di', 'ke', 'dari', 'ini', 'itu', 'untuk', 'saya', 'mereka', 'adalah', 'dengan', 'tidak', 'akan', 'pada', 'bisa', 'ada', 'juga', 'atau'],
-    Malay: ['yang', 'dan', 'di', 'ke', 'dari', 'ini', 'itu', 'untuk', 'dengan', 'tidak', 'pada', 'adalah', 'ada', 'atau', 'juga', 'akan', 'telah', 'boleh', 'sudah'],
-    Vietnamese: ['và', 'của', 'là', 'có', 'này', 'được', 'trong', 'cho', 'với', 'để', 'các', 'đã', 'một', 'những', 'không', 'người', 'hay', 'như', 'từ'],
-    Tagalog: ['ang', 'ng', 'sa', 'na', 'ay', 'mga', 'at', 'kung', 'para', 'ito', 'ko', 'mo', 'po', 'ako', 'siya', 'niya', 'yan', 'kasi', 'lang', 'daw'],
-    Croatian: ['i', 'u', 'je', 'se', 'na', 'za', 'da', 'su', 'to', 's', 'od', 'po', 'kao', 'iz', 'ili', 'bio', 'koja', 'biti', 'nije', 'ima'],
-    Lithuanian: ['ir', 'yra', 'kad', 'į', 'tai', 'su', 'bet', 'ne', 'jo', 'kai', 'jis', 'už', 'dar', 'bei', 'buvo', 'turi', 'nuo', 'kas', 'per', 'bus'],
-    Latvian: ['un', 'ir', 'ar', 'uz', 'par', 'no', 'bet', 'kas', 'ka', 'tas', 'lai', 'vai', 'pie', 'gan', 'tā', 'pēc', 'arī', 'bija', 'tiek', 'būt'],
-    Estonian: ['ja', 'on', 'ei', 'see', 'kui', 'oli', 'siis', 'ning', 'või', 'aga', 'et', 'ka', 'ta', 'nii', 'veel', 'kuid', 'olla', 'pole', 'kes', 'just'],
+  // Format: [words, weight_multiplier] - higher weight = more confident matches
+  const languageWords: { [key: string]: { words: string[], weight: number } } = {
+    English: { words: ['the', 'is', 'are', 'was', 'were', 'this', 'that', 'what', 'which', 'have', 'been', 'from', 'they', 'their', 'about', 'would', 'there', 'could', 'should', 'with', 'will', 'can', 'your', 'when', 'these', 'those', 'where', 'here'], weight: 3 },
+    Spanish: { words: ['el', 'la', 'los', 'las', 'de', 'que', 'es', 'en', 'un', 'una', 'por', 'para', 'con', 'del', 'al', 'como', 'pero', 'más', 'todo', 'esta', 'están'], weight: 1.5 },
+    French: { words: ['le', 'la', 'les', 'de', 'et', 'est', 'un', 'une', 'dans', 'pour', 'que', 'qui', 'pas', 'nous', 'vous', 'sont', 'tout', 'mais', 'avec', 'ces', 'été'], weight: 1.5 },
+    German: { words: ['der', 'die', 'das', 'und', 'ist', 'den', 'von', 'zu', 'mit', 'auf', 'für', 'auch', 'nicht', 'werden', 'sein', 'wurde', 'diesem', 'einer', 'durch', 'nach', 'über', 'bei'], weight: 2.5 },
+    Italian: { words: ['il', 'la', 'i', 'gli', 'le', 'di', 'da', 'con', 'su', 'per', 'tra', 'fra', 'del', 'della', 'sono', 'essere', 'stato', 'anche', 'molto'], weight: 1.5 },
+    Portuguese: { words: ['o', 'a', 'os', 'as', 'de', 'do', 'da', 'em', 'um', 'uma', 'para', 'com', 'não', 'é', 'que', 'são', 'por', 'mais', 'dos', 'como', 'está'], weight: 1.5 },
+    Dutch: { words: ['de', 'het', 'een', 'en', 'van', 'ik', 'te', 'dat', 'die', 'niet', 'zijn', 'op', 'aan', 'voor', 'met', 'als', 'hebben', 'worden', 'deze', 'werd'], weight: 1.5 },
+    Norwegian: { words: ['og', 'er', 'det', 'på', 'til', 'med', 'som', 'for', 'av', 'å', 'ikke', 'har', 'skal', 'kan', 'være', 'fra', 'ved', 'eller', 'blir', 'denne'], weight: 1.5 },
+    Swedish: { words: ['och', 'är', 'det', 'som', 'till', 'av', 'för', 'att', 'med', 'inte', 'på', 'jag', 'den', 'har', 'var', 'blir', 'från', 'om', 'alla'], weight: 1.5 },
+    Danish: { words: ['og', 'er', 'det', 'som', 'til', 'af', 'for', 'at', 'med', 'ikke', 'jeg', 'vi', 'den', 'har', 'var', 'fra', 'blev', 'alle', 'denne'], weight: 1.5 },
+    Icelandic: { words: ['og', 'er', 'að', 'ekki', 'við', 'það', 'fyrir', 'með', 'sem', 'eru', 'var', 'hann', 'hún', 'þetta', 'vera', 'hafa', 'frá', 'til', 'upp', 'um'], weight: 1.5 },
+    Finnish: { words: ['että', 'olla', 'voi', 'hän', 'nyt', 'kun', 'mutta', 'kuin', 'tai', 'niin', 'joka', 'kaikki', 'ovat', 'minä', 'sinä'], weight: 0.8 },
+    Polish: { words: ['w', 'na', 'z', 'do', 'nie', 'się', 'że', 'jest', 'od', 'za', 'co', 'jak', 'ale', 'jego', 'czy', 'być', 'był', 'jako'], weight: 1.5 },
+    Czech: { words: ['je', 'se', 'v', 'na', 'že', 'z', 'do', 's', 'za', 'by', 'jako', 'pro', 'byl', 'jsou', 'nebo', 'při', 'také'], weight: 1.5 },
+    Slovak: { words: ['je', 'v', 'na', 'sa', 'že', 'do', 'z', 'si', 'ako', 'za', 'aj', 'by', 's', 'pre', 'od', 'po', 'nie'], weight: 1.5 },
+    Hungarian: { words: ['az', 'és', 'van', 'hogy', 'nem', 'ez', 'volt', 'meg', 'még', 'mint', 'le', 'el', 'amit', 'csak', 'már', 'igen', 'most'], weight: 1.5 },
+    Romanian: { words: ['și', 'este', 'pentru', 'într', 'această', 'sunt', 'către', 'dintre', 'astfel'], weight: 1 },
+    Turkish: { words: ['değil', 'için', 'olarak', 'ancak', 'arasında', 'göre', 'özellikle', 'üzerinde'], weight: 0.5 },
+    Indonesian: { words: ['yang', 'dan', 'ke', 'dari', 'ini', 'itu', 'untuk', 'saya', 'mereka', 'adalah', 'dengan', 'tidak', 'akan', 'pada', 'bisa', 'ada', 'juga', 'atau'], weight: 1.5 },
+    Malay: { words: ['yang', 'dan', 'ke', 'dari', 'ini', 'itu', 'untuk', 'dengan', 'tidak', 'pada', 'adalah', 'ada', 'atau', 'juga', 'akan', 'telah', 'boleh', 'sudah'], weight: 1.5 },
+    Vietnamese: { words: ['và', 'của', 'là', 'có', 'này', 'được', 'trong', 'cho', 'với', 'để', 'các', 'đã', 'một', 'những', 'không', 'người', 'hay', 'như', 'từ'], weight: 1.5 },
+    Tagalog: { words: ['ang', 'ng', 'sa', 'na', 'ay', 'mga', 'at', 'kung', 'para', 'ito', 'ko', 'mo', 'po', 'ako', 'siya', 'niya', 'yan', 'kasi', 'lang', 'daw'], weight: 1.5 },
+    Croatian: { words: ['u', 'je', 'se', 'na', 'za', 'da', 'su', 's', 'od', 'po', 'kao', 'iz', 'ili', 'bio', 'koja', 'biti', 'nije', 'ima'], weight: 1.5 },
+    Lithuanian: { words: ['ir', 'yra', 'kad', 'į', 'tai', 'su', 'bet', 'ne', 'jo', 'kai', 'jis', 'už', 'dar', 'bei', 'buvo', 'turi', 'nuo', 'kas', 'per', 'bus'], weight: 1.5 },
+    Latvian: { words: ['un', 'ir', 'ar', 'uz', 'par', 'no', 'bet', 'kas', 'ka', 'tas', 'lai', 'vai', 'pie', 'gan', 'tā', 'pēc', 'arī', 'bija', 'tiek', 'būt'], weight: 1.5 },
+    Estonian: { words: ['kui', 'oli', 'siis', 'ning', 'või', 'aga', 'et', 'ka', 'ta', 'nii', 'veel', 'kuid', 'olla', 'pole', 'kes', 'just'], weight: 1.5 },
   };
   
   // Special characters for each language
@@ -271,31 +272,64 @@ export function detectLanguage(text: string): string {
   // Initialize scores for all languages
   Object.keys(languageWords).forEach(lang => scores[lang] = 0);
 
-  // Score by words
-  Object.entries(languageWords).forEach(([lang, words]) => {
-    words.forEach(word => {
+  // Score by words with language-specific weights
+  Object.entries(languageWords).forEach(([lang, config]) => {
+    config.words.forEach(word => {
       const matches = sample.match(new RegExp(`\\b${word}\\b`, 'g'));
-      if (matches) scores[lang] += matches.length;
+      if (matches) scores[lang] += matches.length * config.weight;
     });
   });
 
-  // Score by special characters (weighted heavily - 5x)
+  // Score by special characters (weighted heavily - 8x)
   Object.entries(languageChars).forEach(([lang, chars]) => {
     chars.forEach(char => {
       const count = sample.split(char).length - 1;
-      if (count > 0) scores[lang] += count * 5;
-    });
-  });
-
-  // Score by special characters (weighted heavily - 5x)
-  Object.entries(languageChars).forEach(([lang, chars]) => {
-    chars.forEach(char => {
-      const count = sample.split(char).length - 1;
-      if (count > 0) scores[lang] += count * 5;
+      if (count > 0) scores[lang] += count * 8;
     });
   });
 
   // ============ SPECIAL PATTERN BONUSES ============
+  
+  // English: Strong indicators of English - HIGHEST PRIORITY
+  const strongEnglishWords = sample.match(/\b(the|this|that|these|those|which|what|about|would|should|could|their|there|where|here|when|with)\b/g);
+  if (strongEnglishWords && strongEnglishWords.length > 2) {
+    scores.English = (scores.English || 0) + strongEnglishWords.length * 5;
+    // Strongly penalize other languages if English is clearly present
+    scores.Finnish = (scores.Finnish || 0) * 0.2;
+    scores.Estonian = (scores.Estonian || 0) * 0.2;
+  }
+  
+  // German: Strong indicators (compound words, umlauts)
+  const germanWords = sample.match(/\b(der|die|das|und|nicht|werden|wurde|diesem|durch)\b/g);
+  if (germanWords && germanWords.length > 2) {
+    scores.German = (scores.German || 0) + germanWords.length * 4;
+  }
+  
+  // Finnish: REQUIRE special Finnish characters for confident detection
+  const finnishChars = sample.match(/[äöå]/g);
+  const finnishWords = sample.match(/\b(että|olla|hän|kuin|joka|minä|sinä)\b/g);
+  if ((!finnishChars || finnishChars.length < 3) && (!finnishWords || finnishWords.length < 2)) {
+    // If no Finnish-specific indicators, heavily penalize Finnish score
+    scores.Finnish = (scores.Finnish || 0) * 0.05;
+  } else if (finnishChars && finnishChars.length > 4) {
+    scores.Finnish = (scores.Finnish || 0) + finnishChars.length * 5;
+  }
+  
+  // Turkish: REQUIRE special Turkish characters for confident detection
+  const turkishChars = sample.match(/[ğıİşç]/g);
+  if (!turkishChars || turkishChars.length < 2) {
+    scores.Turkish = (scores.Turkish || 0) * 0.05;
+  } else {
+    scores.Turkish = (scores.Turkish || 0) + turkishChars.length * 10;
+  }
+  
+  // Romanian: REQUIRE special Romanian characters for confident detection
+  const romanianChars = sample.match(/[țșăâî]/g);
+  if (!romanianChars || romanianChars.length < 2) {
+    scores.Romanian = (scores.Romanian || 0) * 0.05;
+  } else {
+    scores.Romanian = (scores.Romanian || 0) + romanianChars.length * 10;
+  }
   
   // Icelandic: ð and þ are UNIQUE to Icelandic
   if (sample.includes('ð') || sample.includes('þ')) {
@@ -318,11 +352,6 @@ export function detectLanguage(text: string): string {
   // Vietnamese: tone marks combined with vowels
   if (sample.match(/[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/g)) {
     scores.Vietnamese = (scores.Vietnamese || 0) + 50;
-  }
-  
-  // Turkish: ğ and ı are very distinctive
-  if (sample.includes('ğ') || sample.includes('ı')) {
-    scores.Turkish = (scores.Turkish || 0) + 30;
   }
   
   // Polish: ł is unique to Polish
@@ -380,12 +409,25 @@ export function detectLanguage(text: string): string {
   // Find highest score
   const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
   
-  // Require a minimum confidence score
-  if (sorted[0][1] < 3) {
+  console.log('[Language Detection] Top 5 scores:', sorted.slice(0, 5).map(([lang, score]) => `${lang}: ${score.toFixed(1)}`).join(', '));
+  
+  // Require minimum confidence and significant gap between first and second
+  const topScore = sorted[0][1];
+  const secondScore = sorted[1]?.[1] || 0;
+  
+  if (topScore < 5) {
     // Check if it looks like English by default (has many Latin letters but no clear language match)
     const latinLetters = sample.match(/[a-z]/g);
     if (latinLetters && latinLetters.length > 50) return 'English';
     return 'Unknown';
+  }
+  
+  // If the gap between first and second is too small, prefer English if it's in top 2
+  if (topScore - secondScore < 5 && topScore < 20) {
+    if (sorted[0][0] === 'English' || sorted[1][0] === 'English') {
+      console.log('[Language Detection] Close scores, defaulting to English');
+      return 'English';
+    }
   }
   
   return sorted[0][0];
