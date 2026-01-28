@@ -174,23 +174,30 @@ export async function detectLanguage(text: string): Promise<string> {
     if ((sample.match(/[\u0980-\u09FF]/g)?.length ?? 0) > 5) return 'Bengali';
     if ((sample.match(/[\u0B80-\u0BFF]/g)?.length ?? 0) > 5) return 'Tamil';
     
-    // Quick pattern detection for unique characters
-    if (sample.includes('ð') || sample.includes('þ')) return 'Icelandic';
-    if (sample.includes('ł')) return 'Polish';
-    if (sample.includes('ř')) return 'Czech';
-    if (sample.includes('ğ') || sample.includes('ı')) return 'Turkish';
-    if (sample.match(/[țș]/)) return 'Romanian';
-    
-    // Analyze key indicator words to narrow down language family
+    // Analyze key indicator words and unique characters to guide AI
     const hints: string[] = [];
-    if (sample.match(/\b(ikke|eller|også|derfor|allerede)\b/i)) hints.push('Norwegian common');
-    if (sample.match(/\b(að|ekki|þetta|fyrir|með)\b/i)) hints.push('Icelandic common');
-    if (sample.match(/\b(the|this|that|which|these|those|where)\b/i)) hints.push('English common');
-    if (sample.match(/\b(der|die|das|und|nicht|auch)\b/i)) hints.push('German common');
-    if (sample.match(/\b(le|la|les|dans|avec|sont)\b/i)) hints.push('French common');
-    if (sample.match(/\b(het|een|van|zijn|deze|worden)\b/i)) hints.push('Dutch common');
-    if (sample.match(/\b(jag|och|till|från)\b/i)) hints.push('Swedish common');
-    if (sample.match(/\b(jeg|af|blev|alle)\b/i)) hints.push('Danish common');
+    
+    // Unique character detection (used as hints, not definitive)
+    if (sample.includes('ð') && sample.includes('þ')) {
+      hints.push('Icelandic letters ð and þ detected');
+    }
+    if (sample.includes('ł')) hints.push('Polish letter ł detected');
+    if (sample.includes('ř')) hints.push('Czech letter ř detected');
+    if (sample.includes('ğ') && sample.includes('ı')) hints.push('Turkish letters ğ/ı detected');
+    if (sample.match(/[țș]/)) hints.push('Romanian letters detected');
+    
+    // Word pattern detection
+    if (sample.match(/\b(ikke|eller|også|derfor|allerede|gjennom)\b/i)) hints.push('Norwegian words detected');
+    if (sample.match(/\b(að|ekki|þetta|fyrir|með|gegnum)\b/i)) hints.push('Icelandic words detected');
+    // Word pattern detection
+    if (sample.match(/\b(ikke|eller|også|derfor|allerede|gjennom)\b/i)) hints.push('Norwegian words detected');
+    if (sample.match(/\b(að|ekki|þetta|fyrir|með|gegnum)\b/i)) hints.push('Icelandic words detected');
+    if (sample.match(/\b(the|this|that|which|these|those|where)\b/i)) hints.push('English words detected');
+    if (sample.match(/\b(der|die|das|und|nicht|auch)\b/i)) hints.push('German words detected');
+    if (sample.match(/\b(le|la|les|dans|avec|sont)\b/i)) hints.push('French words detected');
+    if (sample.match(/\b(het|een|van|zijn|deze|worden)\b/i)) hints.push('Dutch words detected');
+    if (sample.match(/\b(jag|och|till|från)\b/i)) hints.push('Swedish words detected');
+    if (sample.match(/\b(jeg|af|blev|alle)\b/i)) hints.push('Danish words detected');
     
     const hintText = hints.length > 0 ? `\n\nPattern hints detected: ${hints.join(', ')}` : '';
     
@@ -200,17 +207,25 @@ export async function detectLanguage(text: string): Promise<string> {
       messages: [
         {
           role: 'system',
-          content: `You are an expert linguist specializing in language identification. Analyze the text carefully and respond with ONLY the language name in English.
+          content: `You are an expert linguist specializing in Nordic language identification. Analyze the text carefully and respond with ONLY the language name in English.
 
-Key distinctions:
-- Norwegian: uses "ikke", "også", "være", "eller", "derfor". Has letters æ, ø, å but NOT ð or þ.
-- Icelandic: uses "að", "ekki", "þetta", "fyrir". Has unique letters ð and þ that NO other language uses.
-- Swedish: uses "jag", "och", "till", "från". Has å, ä, ö.
-- Danish: uses "jeg", "af", "blev", "alle". Has æ, ø, å.
-- English: uses "the", "this", "that", "which", "these", "those".
-- German: uses "der", "die", "das", "und", "nicht", "auch". Has ä, ö, ü, ß.
+CRITICAL DISTINCTIONS for Nordic languages:
+- **Norwegian**: Common words: "ikke", "også", "være", "eller", "derfor", "gjennom", "mennesker", "påvirker". Uses æ, ø, å (NO ð or þ).
+- **Icelandic**: Common words: "að", "ekki", "þetta", "fyrir", "með", "gegnum". ALWAYS has unique letters ð AND þ that appear frequently.
+- **Swedish**: Uses "jag", "och", "till", "från", "är". Has å, ä, ö.
+- **Danish**: Uses "jeg", "af", "blev", "alle", "gennem". Has æ, ø, å.
 
-Be 100% certain before responding. One word only.`
+Other languages:
+- **English**: "the", "this", "that", "which", "these", "those", "where"
+- **German**: "der", "die", "das", "und", "nicht", "auch". Has ä, ö, ü, ß.
+- **Polish**: Has unique letter ł
+- **Czech**: Has unique letter ř  
+- **Turkish**: Has unique letters ğ and ı
+- **Romanian**: Has unique letters ț and ș
+
+IMPORTANT: If the text has words like "påvirker", "mennesker", "gjennom" but NO ð or þ characters, it is Norwegian, NOT Icelandic.
+
+Respond with ONE word only - the language name.`
         },
         {
           role: 'user',
