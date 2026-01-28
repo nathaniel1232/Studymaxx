@@ -1943,11 +1943,6 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         <h4 className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
                           Output Language
                         </h4>
-                        {detectedLanguage && detectedLanguage !== "unknown" && (
-                          <div className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--surface-elevated)', color: 'var(--muted-foreground)' }}>
-                            Detected: {detectedLanguage}
-                          </div>
-                        )}
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <Card
