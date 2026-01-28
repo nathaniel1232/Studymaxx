@@ -610,12 +610,30 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
   // Subject examples
   const getSubjectExamples = () => [
-    { name: settings.language === "no" ? "Språk" : "Languages" },
-    { name: settings.language === "no" ? "Matte" : "Math" },
-    { name: settings.language === "no" ? "Biologi" : "Biology" },
-    { name: settings.language === "no" ? "Historie" : "History" },
-    { name: settings.language === "no" ? "Naturfag" : "Chemistry" },
-    { name: settings.language === "no" ? "Fysikk" : "Physics" }
+    { 
+      name: settings.language === "no" ? "Språk" : "Language Learning",
+      description: settings.language === "no" ? "Lær ordforråd mellom to språk" : "Learn vocabulary between two languages"
+    },
+    { 
+      name: settings.language === "no" ? "Matte" : "Math",
+      description: null
+    },
+    { 
+      name: settings.language === "no" ? "Biologi" : "Biology",
+      description: null
+    },
+    { 
+      name: settings.language === "no" ? "Historie" : "History",
+      description: null
+    },
+    { 
+      name: settings.language === "no" ? "Naturfag" : "Chemistry",
+      description: null
+    },
+    { 
+      name: settings.language === "no" ? "Fysikk" : "Physics",
+      description: null
+    }
   ];
 
   // Grade options with descriptions - adapts to selected grade system
@@ -712,41 +730,39 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       return;
     }
     
-    // Validate language selection for Languages subject
+    // Validate language selection for Languages subject ONLY if vocabulary pairs detected
     if (isLanguageSubject) {
       // Check if text looks like vocabulary pairs (word-word format with hyphen, arrow, or dash)
-      const hasVocabPairFormat = /[\w\u0400-\u04FF]+\s*[-–—→>]\s*[\w\u0400-\u04FF]+/.test(textInput);
+      const hasVocabPairFormat = /[\w\u0400-\u04FF\u0370-\u03FF\u4E00-\u9FFF]+\s*[-–—→>]\s*[\w\u0400-\u04FF\u0370-\u03FF\u4E00-\u9FFF]+/g.test(textInput);
       
-      if (detectedLanguages.length < 2 && !hasVocabPairFormat) {
-        setError(settings.language === "no"
-          ? "Lim inn tekst med to språk (f.eks. 'perro - hund') for språklæring"
-          : "Paste text with two languages (e.g., 'perro - dog') for language learning");
-        return;
+      // Only enforce language selection if text contains vocabulary pairs
+      if (hasVocabPairFormat) {
+        if (detectedLanguages.length < 2) {
+          // Add "Other" options if format looks like vocab pairs but languages not detected
+          console.log('[Language Learning] Vocab pair format detected, adding "Other" options');
+          setDetectedLanguages(prev => {
+            const langs = [...prev];
+            if (langs.length === 0) langs.push("Language 1", "Language 2");
+            else if (langs.length === 1) langs.push("Language 2");
+            return langs;
+          });
+        }
+        
+        if (!knownLanguage || !learningLanguage) {
+          setError(settings.language === "no"
+            ? "Velg hvilket språk du kan og hvilket du lærer"
+            : "Select which language you know and which you're learning");
+          return;
+        }
+        
+        if (knownLanguage === learningLanguage) {
+          setError(settings.language === "no"
+            ? "Språkene må være forskjellige"
+            : "Languages must be different");
+          return;
+        }
       }
-      
-      // If format looks like vocab pairs but languages weren't detected, add "Other" as an option
-      if (hasVocabPairFormat && detectedLanguages.length < 2) {
-        console.log('[Language Learning] Vocab pair format detected, adding "Other" option');
-        setDetectedLanguages(prev => {
-          const langs = [...prev];
-          if (langs.length === 0) langs.push("Other", "Other");
-          else if (langs.length === 1) langs.push("Other");
-          return langs;
-        });
-      }
-      
-      if (!knownLanguage || !learningLanguage) {
-        setError(settings.language === "no"
-          ? "Velg hvilket språk du kan og hvilket du lærer"
-          : "Select which language you know and which you're learning");
-        return;
-      }
-      if (knownLanguage === learningLanguage) {
-        setError(settings.language === "no"
-          ? "Språkene må være forskjellige"
-          : "Languages must be different");
-        return;
-      }
+      // If no vocab pairs detected, treat as regular notes (don't enforce language selection)
     }
     
     setError("");
@@ -1326,9 +1342,18 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       }}
                     >
                       <CardContent className="p-3 flex items-center justify-between">
-                        <span className="font-semibold text-base" style={{ color: subject === example.name ? 'white' : 'var(--foreground)' }}>{example.name}</span>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-base" style={{ color: subject === example.name ? 'white' : 'var(--foreground)' }}>
+                            {example.name}
+                          </span>
+                          {example.description && (
+                            <span className="text-xs mt-0.5" style={{ color: subject === example.name ? 'rgba(255,255,255,0.85)' : 'var(--muted-foreground)' }}>
+                              {example.description}
+                            </span>
+                          )}
+                        </div>
                         {subject === example.name && (
-                          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                          <svg className="w-4 h-4 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                         )}
                       </CardContent>
                     </Card>
@@ -1805,8 +1830,11 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     )}
                   </div>
 
-                  {/* Language Selection for Languages subject - Show after text is extracted (from any source) */}
-                  {isLanguageSubject && textInput.length >= 50 && (
+                  {/* Language Selection for Languages subject - ONLY show if vocabulary pairs detected */}
+                  {isLanguageSubject && textInput.length >= 50 && (() => {
+                    const hasVocabPairFormat = /[\w\u0400-\u04FF\u0370-\u03FF\u4E00-\u9FFF]+\s*[-–—→>]\s*[\w\u0400-\u04FF\u0370-\u03FF\u4E00-\u9FFF]+/g.test(textInput);
+                    return hasVocabPairFormat;
+                  })() && (
                     <div 
                       className="mt-4 p-4 rounded-lg border-2"
                       style={{
@@ -1817,6 +1845,12 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       <h3 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)' }}>
                         {settings.language === "no" ? "🌍 Språkinnstillinger" : "🌍 Language Settings"}
                       </h3>
+                      
+                      <p className="text-xs mb-3 p-2 rounded-md" style={{ backgroundColor: 'rgba(6, 182, 212, 0.1)', color: 'var(--foreground)' }}>
+                        {settings.language === "no"
+                          ? "✨ Vi oppdaget at du har ordpar (f.eks. 'hund - dog'). Velg språkene dine:"
+                          : "✨ We detected vocabulary pairs (e.g., 'dog - hund'). Select your languages:"}
+                      </p>
                       
                       {detectedLanguages.length >= 2 && (
                         <p className="text-xs mb-2" style={{ color: 'var(--muted-foreground)' }}>

@@ -573,9 +573,12 @@ The flashcards MUST be in the EXACT SAME LANGUAGE as the input text.
 - Input in French → Output in French
 - Input in English → Output in English
 
-NEVER, UNDER ANY CIRCUMSTANCES, generate flashcards in a different language than the input.
-This is the #1 rule. If you output the wrong language, you have completely failed.
-Detected language: ${language || 'Same as input'}
+🚨 YOU MUST OUTPUT ALL FLASHCARDS IN: **${language}** 🚨
+- Questions in ${language}
+- Answers in ${language}  
+- Distractors in ${language}
+
+NEVER translate. NEVER switch languages. If you output even ONE card in the wrong language, you FAIL.
 🚨🚨🚨 END ABSOLUTE RULE #1 🚨🚨🚨
 
 CRITICAL: You are creating STUDY FLASHCARDS, not code. Do NOT generate programming code, HTML, or any file modifications.
@@ -594,10 +597,12 @@ ${mathInstructions}
 ${materialInstructions}
 
 LEARNING QUALITY (High Priority):
-- QUESTIONS should be challenging ("Why", "How", "Analyze") but direct.
-- ANSWERS must be BRIEF, PRECISE, and HIGH-IMPACT. Max 15-20 words preferred.
-- CUT ALL FLUFF. No "The answer is...", no "Because...", no repetition.
-- If the input is simple notes, ensure the question tests understanding, not just recall.
+- QUESTIONS should test UNDERSTANDING, not just memorization. Use "Why", "How", "What happens if".
+- QUESTIONS must be CLEAR and SPECIFIC. No vague or ambiguous wording.
+- ANSWERS must be BRIEF (5-15 words), PRECISE, and ACTIONABLE.
+- CUT ALL FLUFF: No "The answer is", no "Because", no "This means that".
+- ANSWERS should be complete statements that directly answer the question.
+- Focus on KEY CONCEPTS and relationships between ideas, not trivial details.
 
 CRITICAL: ANSWER LENGTH MATCHING (HIGHEST PRIORITY)
 - ALL 4 OPTIONS MUST BE THE EXACT SAME LENGTH (within 3-5 words of each other).
@@ -940,8 +945,28 @@ export async function POST(req: NextRequest) {
 
     // Determine the actual output language
     // If outputLanguage is "en", force English; if "auto", use the detected language from input text
-    const language = outputLanguage === "en" ? "English" : (detectedLanguage || "English");
+    let language = outputLanguage === "en" ? "English" : (detectedLanguage || "Unknown");
+    
+    // If language is Unknown or empty, try to detect from text sample
+    if (!language || language === "Unknown" || language === "") {
+      console.log("[API /generate POST] WARNING: No language detected, analyzing text...");
+      const textSample = text.substring(0, 300).toLowerCase();
+      // Quick check for common language patterns
+      if (/\b(the|is|are|was|were|have|has|been)\b/g.test(textSample)) {
+        language = "English";
+      } else if (/\b(de|het|een|en|van|zijn)\b/g.test(textSample)) {
+        language = "Dutch";
+      } else if (/\b(der|die|das|und|ist|sind)\b/g.test(textSample)) {
+        language = "German";
+      } else {
+        // If still unknown, default to English but log warning
+        console.error("[API /generate POST] ⚠️ Could not detect language! Defaulting to English");
+        language = "English";
+      }
+    }
+    
     console.log("[API /generate POST] FINAL LANGUAGE FOR AI:", language);
+    console.log("[API /generate POST] Language source:", detectedLanguage ? "detected" : "fallback");
 
     // Validate input
     if (!userId || !text || !numberOfFlashcards) {
