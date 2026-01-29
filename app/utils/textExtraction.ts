@@ -184,9 +184,12 @@ export async function detectLanguage(text: string): Promise<string> {
     if (sample.includes('ł')) hints.push('Polish letter ł detected');
     if (sample.includes('ř')) hints.push('Czech letter ř detected');
     if (sample.includes('ğ') && sample.includes('ı')) hints.push('Turkish letters ğ/ı detected');
-    if (sample.match(/[țș]/)) hints.push('Romanian letters detected');
+    if (sample.match(/[țș]/)) hints.push('Romanian letters ț/ș detected');
+    if (sample.match(/[ăâî]/)) hints.push('Romanian letters ă/â/î detected');
     
     // Word pattern detection
+    if (sample.match(/\b(și|este|sunt|pentru|acest|această|într|către)\b/i)) hints.push('Romanian words detected');
+    if (sample.match(/\b(không|và|của|là|có|này|được|trong)\b/i)) hints.push('Vietnamese words detected');
     if (sample.match(/\b(ikke|eller|også|derfor|allerede|gjennom)\b/i)) hints.push('Norwegian words detected');
     if (sample.match(/\b(að|ekki|þetta|fyrir|með|gegnum)\b/i)) hints.push('Icelandic words detected');
     // Word pattern detection
@@ -207,23 +210,34 @@ export async function detectLanguage(text: string): Promise<string> {
       messages: [
         {
           role: 'system',
-          content: `You are an expert linguist specializing in Nordic language identification. Analyze the text carefully and respond with ONLY the language name in English.
+          content: `You are an expert linguist. Analyze the text and respond with ONLY the language name in English.
 
-CRITICAL DISTINCTIONS for Nordic languages:
-- **Norwegian**: Common words: "ikke", "også", "være", "eller", "derfor", "gjennom", "mennesker", "påvirker". Uses æ, ø, å (NO ð or þ).
-- **Icelandic**: Common words: "að", "ekki", "þetta", "fyrir", "með", "gegnum". ALWAYS has unique letters ð AND þ that appear frequently.
-- **Swedish**: Uses "jag", "och", "till", "från", "är". Has å, ä, ö.
-- **Danish**: Uses "jeg", "af", "blev", "alle", "gennem". Has æ, ø, å.
+KEY DISTINCTIONS:
 
-Other languages:
-- **English**: "the", "this", "that", "which", "these", "those", "where"
-- **German**: "der", "die", "das", "und", "nicht", "auch". Has ä, ö, ü, ß.
-- **Polish**: Has unique letter ł
-- **Czech**: Has unique letter ř  
-- **Turkish**: Has unique letters ğ and ı
-- **Romanian**: Has unique letters ț and ș
+**Nordic Languages:**
+- **Norwegian**: "ikke", "også", "være", "eller", "gjennom", "mennesker". Uses æ, ø, å (NO ð or þ).
+- **Icelandic**: "að", "ekki", "þetta", "fyrir", "með". ALWAYS has ð AND þ.
+- **Swedish**: "jag", "och", "till", "från", "är". Uses å, ä, ö.
+- **Danish**: "jeg", "af", "blev", "alle", "gennem". Uses æ, ø, å.
 
-IMPORTANT: If the text has words like "påvirker", "mennesker", "gjennom" but NO ð or þ characters, it is Norwegian, NOT Icelandic.
+**Romance Languages:**
+- **Romanian**: "și", "este", "sunt", "pentru", "acest", "către". Has UNIQUE letters ă, â, î, ș, ț (with comma below).
+- **Italian**: "il", "la", "di", "che", "non", "sono"
+- **Spanish**: "el", "la", "que", "de", "y", "más"
+- **Portuguese**: "o", "a", "de", "que", "não", "é"
+- **French**: "le", "la", "de", "et", "est", "dans"
+
+**Asian Languages:**
+- **Vietnamese**: "không", "và", "của", "là", "có", "này", "được". Has MANY tone marks on vowels (à, á, ả, ã, ạ, ă, ằ, etc).
+
+**Other:**
+- **English**: "the", "this", "that", "which", "where"
+- **German**: "der", "die", "das", "und", "nicht". Has ä, ö, ü, ß.
+- **Polish**: Has ł. Words: "w", "na", "się", "że"
+- **Czech**: Has ř. Words: "je", "se", "v", "že"
+- **Turkish**: Has ğ and ı. Words: "için", "değil"
+
+CRITICAL: Romanian (ț/ș with comma below) vs Vietnamese (tone marks) - completely different scripts.
 
 Respond with ONE word only - the language name.`
         },
