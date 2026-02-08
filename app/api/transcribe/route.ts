@@ -281,9 +281,3 @@ Make it study-friendly, visually organized, and easy to review later.`;
     );
   }
 }
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
