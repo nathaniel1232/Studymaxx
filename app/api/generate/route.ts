@@ -682,11 +682,19 @@ ${materialInstructions}
 
 LEARNING QUALITY (High Priority):
 - FLASHCARD QUESTIONS MUST have a SINGLE, SPECIFIC, FACTUAL ANSWER.
-- 🚫 FORBIDDEN question types (these DO NOT work for flashcards):
-  * "Explain..." / "Discuss..." / "Describe in detail..." / "Analyze..."
-  * "Compare and contrast..." / "Evaluate..." / "What are the advantages..."
-  * Any question requiring a paragraph or essay to answer
-  * Any question with multiple valid answers
+
+🚨🚨🚨 ABSOLUTE FORBIDDEN QUESTION STARTERS (DO NOT USE THESE - YOU WILL FAIL) 🚨🚨🚨
+IF YOUR QUESTION STARTS WITH ANY OF THESE WORDS, DELETE IT AND START OVER:
+  ❌ "Explain..." 
+  ❌ "Discuss..." 
+  ❌ "Describe in detail..."
+  ❌ "Analyze..."
+  ❌ "Compare and contrast..."
+  ❌ "Evaluate..."
+  ❌ "What are the advantages/disadvantages..."
+
+THESE REQUIRE ESSAYS, NOT FLASHCARDS. FLASHCARDS = SHORT FACTUAL ANSWERS ONLY.
+
 - ✅ GOOD question types for flashcards:
   * "What is..." / "What does...mean?" / "Define..."
   * "Which...?" / "Who...?" / "When...?" / "Where...?"
@@ -699,6 +707,8 @@ LEARNING QUALITY (High Priority):
 - ANSWERS should be direct facts, not explanations or discussions.
 - Focus on KEY CONCEPTS, definitions, and specific facts.
 - A flashcard should test RECALL of a specific piece of knowledge.
+
+⚠️ FINAL CHECK: Before submitting, review EVERY question. If it starts with "Explain", "Discuss", or "Describe", REJECT IT and write a proper factual question instead.
 
 CRITICAL: ANSWER LENGTH MATCHING (HIGHEST PRIORITY)
 - ALL 4 OPTIONS MUST BE THE EXACT SAME LENGTH (within 1-3 words of each other).

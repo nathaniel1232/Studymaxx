@@ -160,13 +160,15 @@ export default function Home() {
     }
   }, [user]);
 
-  // Auto-redirect logged in users to dashboard
+  // Auto-redirect logged in users to dashboard (only on login, not manual navigation)
+  const hasRedirected = useRef(false);
   useEffect(() => {
-    if (user && viewMode === 'home') {
+    if (user && viewMode === 'home' && !hasRedirected.current) {
+      hasRedirected.current = true;
       setViewMode('dashboard');
       window.history.replaceState({}, '', '/dashboard');
     }
-  }, [user]);
+  }, [user, viewMode]);
 
   // Onboarding redirect removed - users see landing page first
   // Personalization is handled inline on the dashboard instead
