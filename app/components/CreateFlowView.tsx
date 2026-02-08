@@ -1074,7 +1074,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   const handleGenerate = async () => {
     if (!targetGrade) return;
     
-    // Check if free user has hit study set limit - check ACTUAL saved sets, not just state
+    // PREMIUM USERS: NO LIMITS - defensive check
     if (!isPremium) {
       const currentUser = await getCurrentUser();
       const userId = currentUser?.id || getOrCreateUserId();
@@ -1087,6 +1087,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         setCurrentStep(1); // Go back to step 1
         return;
       }
+    } else {
+      console.log('[CreateFlowView] ✅ PREMIUM USER - Bypassing all limits');
     }
     
     // Wait for Premium check to complete if still loading

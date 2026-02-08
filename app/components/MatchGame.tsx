@@ -183,10 +183,10 @@ export default function MatchGame({ terms, definitions, subject, onBack }: Match
             }}
           >
             <div className="text-6xl mb-4">🎯</div>
-            <h2 className="text-3xl font-bold mb-2" style={{ color: isDarkMode ? "#ffffff" : "#000000" }}>
+            <h2 className="text-4xl md:text-5xl font-bold mb-2" style={{ color: isDarkMode ? "#ffffff" : "#000000" }}>
               Game Complete!
             </h2>
-            <p className="text-lg mb-6" style={{ color: isDarkMode ? "#5f6368" : "#5f6368" }}>
+            <p className="text-xl md:text-2xl mb-6" style={{ color: isDarkMode ? "#5f6368" : "#5f6368" }}>
               All pairs matched!
             </p>
 
@@ -195,10 +195,10 @@ export default function MatchGame({ terms, definitions, subject, onBack }: Match
                 className="p-4 rounded-xl"
                 style={{ backgroundColor: "rgba(26, 115, 232, 0.15)" }}
               >
-                <p className="text-2xl font-bold" style={{ color: "#1a73e8" }}>
+                <p className="text-3xl md:text-4xl font-bold" style={{ color: "#1a73e8" }}>
                   {formatTime(timer)}
                 </p>
-                <p className="text-sm mt-1" style={{ color: isDarkMode ? "#5f6368" : "#5f6368" }}>
+                <p className="text-base md:text-lg mt-1" style={{ color: isDarkMode ? "#5f6368" : "#5f6368" }}>
                   Time
                 </p>
               </div>
@@ -207,10 +207,10 @@ export default function MatchGame({ terms, definitions, subject, onBack }: Match
                 className="p-4 rounded-xl"
                 style={{ backgroundColor: "rgba(34, 197, 94, 0.15)" }}
               >
-                <p className="text-2xl font-bold" style={{ color: "#22c55e" }}>
+                <p className="text-3xl md:text-4xl font-bold" style={{ color: "#22c55e" }}>
                   {matches}
                 </p>
-                <p className="text-sm mt-1" style={{ color: isDarkMode ? "#5f6368" : "#5f6368" }}>
+                <p className="text-base md:text-lg mt-1" style={{ color: isDarkMode ? "#5f6368" : "#5f6368" }}>
                   Matches
                 </p>
               </div>
@@ -219,10 +219,10 @@ export default function MatchGame({ terms, definitions, subject, onBack }: Match
                 className="p-4 rounded-xl"
                 style={{ backgroundColor: "rgba(0, 0, 0, 0.1)" }}
               >
-                <p className="text-2xl font-bold" style={{ color: "#000000" }}>
+                <p className="text-3xl md:text-4xl font-bold" style={{ color: "#000000" }}>
                   {accuracy}%
                 </p>
-                <p className="text-sm mt-1" style={{ color: isDarkMode ? "#5f6368" : "#5f6368" }}>
+                <p className="text-base md:text-lg mt-1" style={{ color: isDarkMode ? "#5f6368" : "#5f6368" }}>
                   Accuracy
                 </p>
               </div>
@@ -231,7 +231,7 @@ export default function MatchGame({ terms, definitions, subject, onBack }: Match
             <div className="flex gap-3 justify-center">
               <button
                 onClick={handleRestart}
-                className="px-6 py-3 rounded-xl font-medium transition-all hover:scale-105"
+                className="px-6 py-3 rounded-xl text-lg md:text-xl font-medium transition-all hover:scale-105"
                 style={{ 
                   background: "linear-gradient(90deg, #1a73e8 0%, #34a853 100%)",
                   color: "#ffffff"
@@ -241,7 +241,7 @@ export default function MatchGame({ terms, definitions, subject, onBack }: Match
               </button>
               <button
                 onClick={onBack}
-                className="px-6 py-3 rounded-xl font-medium transition-all hover:scale-105"
+                className="px-6 py-3 rounded-xl text-lg md:text-xl font-medium transition-all hover:scale-105"
                 style={{ 
                   backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
                   color: isDarkMode ? "#ffffff" : "#000000",
@@ -282,14 +282,14 @@ export default function MatchGame({ terms, definitions, subject, onBack }: Match
 
           <div className="flex gap-6">
             <div className="text-center">
-              <p className="text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Time</p>
-              <p className="text-xl font-bold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <p className="text-base md:text-lg" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Time</p>
+              <p className="text-2xl md:text-3xl font-bold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
                 {formatTime(timer)}
               </p>
             </div>
             <div className="text-center">
-              <p className="text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Matches</p>
-              <p className="text-xl font-bold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <p className="text-base md:text-lg" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Matches</p>
+              <p className="text-2xl md:text-3xl font-bold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
                 {matches}/{terms.length}
               </p>
             </div>
@@ -304,7 +304,7 @@ export default function MatchGame({ terms, definitions, subject, onBack }: Match
             border: "1px solid rgba(168, 85, 247, 0.2)"
           }}
         >
-          <p className="font-medium" style={{ color: "#a855f7" }}>
+          <p className="text-lg md:text-xl font-medium" style={{ color: "#a855f7" }}>
             Match terms with their definitions by clicking pairs
           </p>
         </div>
@@ -320,7 +320,7 @@ export default function MatchGame({ terms, definitions, subject, onBack }: Match
               style={getCardStyle(card)}
             >
               <span 
-                className="text-sm"
+                className="text-base md:text-lg font-semibold"
                 dangerouslySetInnerHTML={{ 
                   __html: card.content
                     .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')

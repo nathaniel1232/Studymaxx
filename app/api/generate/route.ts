@@ -1161,6 +1161,8 @@ export async function POST(req: NextRequest) {
           }
         );
       }
+    } else {
+      console.log('[API /generate] ✅ PREMIUM USER - Bypassing rate limits');
     }
 
     // STEP 1: Reset daily counter if new day

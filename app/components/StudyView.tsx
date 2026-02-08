@@ -1202,7 +1202,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                   </span>
                 </div>
                 
-                <h2 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-white leading-relaxed drop-shadow-md max-w-3xl">
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-relaxed drop-shadow-md max-w-3xl">
                   {currentCard.question}
                 </h2>
                 

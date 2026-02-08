@@ -210,7 +210,7 @@ export default function DashboardView({
               Welcome back, <span style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>{userName}</span>
             </p>
           )}
-          <h1 className="text-2xl font-semibold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+          <h1 className="text-3xl md:text-4xl font-semibold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
             What would you like to create?
           </h1>
         </div>
@@ -331,13 +331,13 @@ export default function DashboardView({
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium mb-1 flex items-center gap-2" style={{ color: isDarkMode ? '#e2e8f0' : '#0f172a' }}>
+                    <h3 className="text-lg md:text-xl font-medium mb-1 flex items-center gap-2" style={{ color: isDarkMode ? '#e2e8f0' : '#0f172a' }}>
                       {option.title}
                       <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" style={{ color: option.color }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </h3>
-                    <p className="text-sm" style={{ color: isDarkMode ? '#9ca3af' : '#475569' }}>{option.subtitle}</p>
+                    <p className="text-base md:text-lg" style={{ color: isDarkMode ? '#9ca3af' : '#475569' }}>{option.subtitle}</p>
                   </div>
                 </div>
               </button>
