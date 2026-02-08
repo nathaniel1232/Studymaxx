@@ -16,7 +16,18 @@ import { emailTemplates } from "@/app/utils/emailTemplates";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+let resend: Resend | null = null;
+
+function initializeResend() {
+  if (!resend && process.env.RESEND_API_KEY) {
+    try {
+      resend = new Resend(process.env.RESEND_API_KEY);
+    } catch (e) {
+      console.error('[Streak Reminder] Failed to initialize Resend:', e);
+    }
+  }
+}
 
 export async function GET(req: NextRequest) {
   // Verify cron secret
@@ -25,8 +36,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Initialize Resend at runtime
+  initializeResend();
+
   // Check if Resend is configured
-  if (!process.env.RESEND_API_KEY) {
+  if (!resend || !process.env.RESEND_API_KEY) {
     console.warn('[Streak Reminder] RESEND_API_KEY not configured');
     return NextResponse.json({ 
       message: "Email service not configured. Add RESEND_API_KEY to environment variables.",
@@ -95,12 +109,14 @@ export async function GET(req: NextRequest) {
             'your study set' // Could be fetched from database
           );
           
-          await resend.emails.send({
-            from: 'StudyMaxx <noreply@studymaxx.com>', // Update with your verified domain
-            to: user.user.email,
-            subject: template.subject,
-            html: template.html,
-          });
+          if (resend) {
+            await resend.emails.send({
+              from: 'StudyMaxx <noreply@studymaxx.com>', // Update with your verified domain
+              to: user.user.email,
+              subject: template.subject,
+              html: template.html,
+            });
+          }
           
           console.log(`[Streak Reminder] ✅ Sent email to ${user.user.email}`);
           emailsSent++;
