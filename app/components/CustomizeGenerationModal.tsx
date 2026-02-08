@@ -78,7 +78,7 @@ export default function CustomizeGenerationModal({
   // Free users get restricted count options
   const countOptions = generationType === "match" 
     ? (isPremium ? [4, 6, 8, 10, 12, 15] : [6, 8])
-    : (isPremium ? [10, 15, 20, 25, 30] : [10]);
+    : (isPremium ? [10, 15, 20, 25, 30, 40, 50] : [10]);
 
   const currentCount = generationType === "match" ? settings.matchPairs : settings.count;
   const premiumLimit = generationType === "match" ? 10 : 20;
@@ -124,7 +124,7 @@ export default function CustomizeGenerationModal({
             >
               {generationType === "match" ? "Number of Pairs" : "Number of Cards"}
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {countOptions.map((num) => (
                 <button
                   key={num}
@@ -135,7 +135,7 @@ export default function CustomizeGenerationModal({
                       setSettings(s => ({ ...s, count: num }));
                     }
                   }}
-                  className="px-3 py-3 rounded-xl font-bold text-lg transition-all hover:scale-105"
+                  className="px-2 py-2.5 rounded-xl font-bold text-base transition-all hover:scale-105"
                   style={{
                     backgroundColor: currentCount === num
                       ? "#1a73e8"

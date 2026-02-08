@@ -293,6 +293,16 @@ export default function DocumentView({
       return;
     }
 
+    // Free trial check: allow 1 free document generation, then require premium
+    if (!isPremium) {
+      const key = `document_generation_count_${user?.id || 'anon'}`;
+      const useCount = parseInt(localStorage.getItem(key) || '0', 10);
+      if (useCount >= 1) {
+        setError("You've used your free file upload. Upgrade to Premium for unlimited document uploads!");
+        return;
+      }
+    }
+
     const type = pendingGenerationType;
     if (!type) return;
 
@@ -473,6 +483,13 @@ export default function DocumentView({
         
         setSavedMatchData({ terms, definitions });
         onGenerateMatch?.(terms, definitions, subject);
+      }
+
+      // Increment free trial counter after successful generation
+      if (!isPremium) {
+        const key = `document_generation_count_${user?.id || 'anon'}`;
+        const count = parseInt(localStorage.getItem(key) || '0', 10);
+        localStorage.setItem(key, String(count + 1));
       }
     } catch (err: any) {
       console.error("[DocumentView] Generation error details:", {

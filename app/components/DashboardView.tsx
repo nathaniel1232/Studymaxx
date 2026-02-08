@@ -100,11 +100,35 @@ export default function DashboardView({
   const [chatMessages, setChatMessages] = useState<Array<{role: 'user' | 'ai', text: string}>>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
 
+  // Track whether free trials have been used
+  const [documentTrialUsed, setDocumentTrialUsed] = useState(false);
+  const [audioTrialUsed, setAudioTrialUsed] = useState(false);
+
+  useEffect(() => {
+    if (!isPremium) {
+      const docKey = `document_generation_count_${user?.id || 'anon'}`;
+      const audioKey = `audio_transcription_count_${user?.id || 'anon'}`;
+      setDocumentTrialUsed(parseInt(localStorage.getItem(docKey) || '0', 10) >= 1);
+      setAudioTrialUsed(parseInt(localStorage.getItem(audioKey) || '0', 10) >= 1);
+    }
+  }, [isPremium, user]);
+
   // Determine if dark mode
   const isDarkMode = settings.theme === 'dark' || 
     (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   const handleOptionClick = (option: typeof INPUT_OPTIONS[0]) => {
+    // If trial is used for locked features, redirect to pricing
+    if (!isPremium) {
+      if (option.id === 'document' && documentTrialUsed) {
+        window.location.href = '/pricing';
+        return;
+      }
+      if (option.id === 'audio' && audioTrialUsed) {
+        window.location.href = '/pricing';
+        return;
+      }
+    }
     onSelectOption(option.id);
   };
 
@@ -309,6 +333,11 @@ export default function DashboardView({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
           {INPUT_OPTIONS.map((option) => {
             const IconComponent = option.Icon;
+            const isLocked = !isPremium && (
+              (option.id === 'document' && documentTrialUsed) ||
+              (option.id === 'audio' && audioTrialUsed)
+            );
+            const isFreeTrial = !isPremium && !isLocked && (option.id === 'document' || option.id === 'audio');
             return (
               <button
                 key={option.id}
@@ -318,8 +347,24 @@ export default function DashboardView({
                   backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#ffffff', 
                   border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0',
                   boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.04)',
+                  opacity: isLocked ? 0.7 : 1,
                 }}
               >
+                {/* Lock badge */}
+                {isLocked && (
+                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold"
+                    style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+                    Premium
+                  </div>
+                )}
+                {/* Free trial badge */}
+                {isFreeTrial && (
+                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold"
+                    style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' }}>
+                    1 free try
+                  </div>
+                )}
                 <div className="flex items-start gap-4">
                   {/* Icon */}
                   <div 
@@ -333,11 +378,17 @@ export default function DashboardView({
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm md:text-base font-medium mb-1 flex items-center gap-2" style={{ color: isDarkMode ? '#e2e8f0' : '#0f172a' }}>
                       {option.title}
-                      <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" style={{ color: option.color }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                      {isLocked ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#ef4444' }}><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+                      ) : (
+                        <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" style={{ color: option.color }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      )}
                     </h3>
-                    <p className="text-xs md:text-sm" style={{ color: isDarkMode ? '#9ca3af' : '#475569' }}>{option.subtitle}</p>
+                    <p className="text-xs md:text-sm" style={{ color: isDarkMode ? '#9ca3af' : '#475569' }}>
+                      {isLocked ? 'Upgrade to Premium to unlock' : option.subtitle}
+                    </p>
                   </div>
                 </div>
               </button>

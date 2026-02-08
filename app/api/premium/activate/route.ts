@@ -1,24 +1,31 @@
 /**
  * Manual Premium Activation Endpoint
- * USE THIS IN TEST MODE to activate Premium after Stripe checkout
- * In production, the webhook handles this automatically
+ * Called client-side after Stripe checkout redirect to ?premium=success
+ * Uses service role key to bypass RLS and update user premium status
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  throw new Error("Supabase credentials not configured");
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  throw new Error("Supabase credentials not configured (need SERVICE_ROLE_KEY)");
 }
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error("STRIPE_SECRET_KEY is not set");
 }
 
+// Use service role key to bypass RLS for premium activation
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+// Secondary client for auth verification only
+const supabaseAuth = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 );
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -36,9 +43,9 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
-    // Verify token and get user
+    // Verify token and get user (use auth client, not service role)
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
 
     if (authError || !user) {
       return NextResponse.json({
@@ -53,6 +60,7 @@ export async function POST(request: NextRequest) {
 
     // Find the user's Stripe customer by searching with the email
     let stripeCustomerId: string | null = null;
+    let activeSubscription: any = null;
     let hasActiveSubscription = false;
     
     try {
@@ -77,6 +85,7 @@ export async function POST(request: NextRequest) {
           
           if (sub.status === 'active' || sub.status === 'trialing') {
             stripeCustomerId = customer.id;
+            activeSubscription = sub;
             hasActiveSubscription = true;
             console.log(`[Premium Activate] ✅ Active subscription found: ${sub.id}`);
             break;
@@ -100,6 +109,12 @@ export async function POST(request: NextRequest) {
       }, { status: 402 });
     }
 
+    // Calculate expiration from subscription
+    const subData = activeSubscription as any;
+    const premiumExpiresAt = subData?.current_period_end
+      ? new Date(subData.current_period_end * 1000).toISOString()
+      : null;
+
     // Check if user exists in users table
     const { data: existingUser } = await supabase
       .from("users")
@@ -107,12 +122,21 @@ export async function POST(request: NextRequest) {
       .eq("id", userId)
       .single();
 
+    const updateData = {
+      is_premium: true,
+      email: userEmail,
+      stripe_customer_id: stripeCustomerId,
+      stripe_subscription_id: activeSubscription?.id || null,
+      subscription_tier: 'premium',
+      premium_expires_at: premiumExpiresAt,
+    };
+
     if (existingUser) {
       // Update existing user to Premium
       console.log(`[Premium Activate] Updating user ${userId} to premium`);
       const { error } = await supabase
         .from("users")
-        .update({ is_premium: true })
+        .update(updateData)
         .eq("id", userId);
 
       if (error) {
@@ -123,7 +147,7 @@ export async function POST(request: NextRequest) {
         }, { status: 500 });
       }
 
-      console.log(`[Premium Activate] ✅ User ${userId} (${userEmail}) activated as Premium`);
+      console.log(`[Premium Activate] ✅ User ${userId} (${userEmail}) activated as Premium until ${premiumExpiresAt}`);
     } else {
       // Create new user as Premium
       console.log(`[Premium Activate] Creating new user ${userId} as Premium`);
@@ -131,8 +155,7 @@ export async function POST(request: NextRequest) {
         .from("users")
         .insert({
           id: userId,
-          email: userEmail,
-          is_premium: true
+          ...updateData,
         });
 
       if (error) {
@@ -143,7 +166,7 @@ export async function POST(request: NextRequest) {
         }, { status: 500 });
       }
 
-      console.log(`[Premium Activate] ✅ User ${userId} (${userEmail}) created as Premium`);
+      console.log(`[Premium Activate] ✅ User ${userId} (${userEmail}) created as Premium until ${premiumExpiresAt}`);
     }
 
     return NextResponse.json({
