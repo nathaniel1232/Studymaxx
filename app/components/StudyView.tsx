@@ -30,6 +30,7 @@ interface ToastMessage {
 export default function StudyView({ flashcards: initialFlashcards, currentSetId, onBack }: StudyViewProps) {
   const t = useTranslation();
   const { settings } = useSettings();
+  const isDarkMode = settings.theme === 'dark' || (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const [originalFlashcards] = useState<Flashcard[]>(initialFlashcards); // Keep original set for saving
   const [flashcards, setFlashcards] = useState<Flashcard[]>(initialFlashcards);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -612,7 +613,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
   const isAllMastered = masteredCards.size === flashcards.length;
 
   return (
-    <div className="flex items-center justify-center min-h-screen px-4 py-8" style={{ background: 'var(--background)' }}>
+    <div className="flex items-center justify-center min-h-screen px-4 py-8" style={{ background: isDarkMode ? '#1a1a2e' : '#f1f5f9' }}>
       <div className="w-full max-w-3xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
@@ -681,7 +682,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
 
         {/* Save Dialog */}
         {showSaveDialog && (
-          <div className="card-elevated p-12 mb-8" style={{ borderRadius: 'var(--radius-xl)' }}>
+          <div className="card-elevated p-12 mb-8" style={{ borderRadius: '1rem' }}>
             <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
               {t("save_this_set")}
             </h3>
@@ -1556,3 +1557,4 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
     </div>
   );
 }
+

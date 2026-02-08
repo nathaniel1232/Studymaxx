@@ -5,7 +5,7 @@
 
 -- 1. Create subscription tiers table
 CREATE TABLE IF NOT EXISTS subscription_tiers (
-  tier_name TEXT PRIMARY KEY CHECK (tier_name IN ('free', 'student', 'pro', 'team')),
+  tier_name TEXT PRIMARY KEY CHECK (tier_name IN ('free', 'premium', 'pro', 'team')),
   display_name TEXT NOT NULL,
   monthly_price_cents INTEGER NOT NULL,
   yearly_price_cents INTEGER NOT NULL,
@@ -29,10 +29,10 @@ INSERT INTO subscription_tiers (tier_name, display_name, monthly_price_cents, ye
 ('free', 'Free', 0, 0, 3, 10, 5, 
   '{"pdf": false, "youtube": false, "ocr_images": 0, "export": false, "analytics": false, "srs": false, "collaboration": false, "priority_support": false}'::jsonb),
   
-('student', 'Student', 499, 4900, 20, 25, 10, 
-  '{"pdf": true, "youtube": false, "ocr_images": 3, "export": true, "analytics": true, "srs": false, "collaboration": false, "priority_support": false}'::jsonb),
+('premium', 'Premium', 499, 4900, -1, 30, -1, 
+  '{"pdf": true, "youtube": true, "ocr_images": -1, "export": true, "analytics": true, "srs": true, "collaboration": false, "priority_support": true}'::jsonb),
   
-('pro', 'Pro', 999, 9900, -1, 50, -1, 
+('pro', 'Pro', 1499, 14900, -1, 60, -1, 
   '{"pdf": true, "youtube": true, "ocr_images": -1, "export": true, "analytics": true, "srs": true, "collaboration": true, "priority_support": true}'::jsonb),
   
 ('team', 'Team', 2999, 29900, -1, 100, -1, 
@@ -89,6 +89,34 @@ BEGIN
   END IF;
 END $$;
 
+-- 5a. Add grandfathering support for legacy $2.99 users
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'users' AND column_name = 'grandfathered_price_cents'
+  ) THEN
+    ALTER TABLE users ADD COLUMN grandfathered_price_cents INTEGER DEFAULT NULL;
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'users' AND column_name = 'is_grandfathered'
+  ) THEN
+    ALTER TABLE users ADD COLUMN is_grandfathered BOOLEAN DEFAULT FALSE;
+  END IF;
+END $$;
+
+-- Migrate existing $2.99 premium users to grandfathered status
+-- They get 'premium' tier features but keep their $2.99 price
+UPDATE users 
+SET 
+  is_grandfathered = TRUE,
+  grandfathered_price_cents = 299,
+  subscription_tier = 'premium'
+WHERE is_premium = TRUE 
+  AND (grandfathered_price_cents IS NULL OR grandfathered_price_cents = 0);
+
 -- 6. Create study sessions table for analytics
 CREATE TABLE IF NOT EXISTS study_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -119,10 +147,12 @@ CREATE POLICY "Users can insert own sessions"
   ON study_sessions FOR INSERT
   WITH CHECK (auth.uid()::text = user_id);
 
--- 9. Update existing premium users to 'pro' tier
+-- 9. Update existing premium users to 'premium' tier (if not already grandfathered)
 UPDATE users 
-SET subscription_tier = 'pro' 
-WHERE is_premium = TRUE AND (subscription_tier = 'free' OR subscription_tier IS NULL);
+SET subscription_tier = 'premium' 
+WHERE is_premium = TRUE 
+  AND (subscription_tier = 'free' OR subscription_tier IS NULL)
+  AND is_grandfathered = FALSE;
 
 -- 10. Create function to check tier features
 CREATE OR REPLACE FUNCTION get_user_tier_features(user_tier TEXT)
@@ -163,6 +193,7 @@ $$ LANGUAGE plpgsql STABLE;
 DO $$
 BEGIN
   RAISE NOTICE '✅ Multi-tier subscription system created successfully!';
-  RAISE NOTICE '📊 Tiers: Free (0), Student ($4.99), Pro ($9.99), Team ($29.99)';
+  RAISE NOTICE '📊 Tiers: Free ($0), Premium ($4.99), Pro ($14.99), Team ($29.99)';
+  RAISE NOTICE '🎁 Legacy $2.99 users are grandfathered with Premium features!';
   RAISE NOTICE '🎯 Next: Update Stripe with new price IDs';
 END $$;

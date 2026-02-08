@@ -78,9 +78,15 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
           <p className="text-xs font-black text-white/90 mb-3 md:mb-4 uppercase tracking-widest">
             {isFlipped ? t("answer") : t("question")}
           </p>
-          <p className="text-base md:text-lg lg:text-2xl font-black text-white leading-relaxed drop-shadow-xl">
-            {isFlipped ? card.answer : card.question}
-          </p>
+          <p 
+            className="text-base md:text-lg lg:text-2xl font-black text-white leading-relaxed drop-shadow-xl"
+            dangerouslySetInnerHTML={{ 
+              __html: (isFlipped ? card.answer : card.question)
+                .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                .replace(/\*(.*?)\*/g, '<i>$1</i>')
+                .replace(/\n/g, '<br/>')
+            }}
+          />
         </div>
 
         {/* Flip Hint */}
@@ -153,3 +159,4 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
     </div>
   );
 }
+

@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
-import { SettingsProvider } from "./contexts/SettingsContext";
-import ThemeWrapper from "./components/ThemeWrapper";
-import CookieConsent from "./components/CookieConsent";
+import Providers from "./components/Providers";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -27,12 +25,9 @@ export default function RootLayout({
         className={`${outfit.variable} font-sans antialiased`}
         style={{ fontFamily: 'var(--font-outfit), system-ui, sans-serif' }}
       >
-        <SettingsProvider>
-          <ThemeWrapper>
-            {children}
-            <CookieConsent />
-          </ThemeWrapper>
-        </SettingsProvider>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

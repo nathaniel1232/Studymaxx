@@ -2,7 +2,7 @@
 
 import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { generateFlashcards } from "../utils/flashcardGenerator";
-import { Flashcard, getOrCreateUserId, getSavedFlashcardSets } from "../utils/storage";
+import { Flashcard, getOrCreateUserId, getSavedFlashcardSets, saveFlashcardSet } from "../utils/storage";
 import { getStudyFact } from "../utils/studyFacts";
 import { checkAIRateLimit, incrementAIUsage, getRemainingGenerations } from "../utils/aiRateLimit";
 import { useTranslation, useSettings } from "../contexts/SettingsContext";
@@ -21,18 +21,34 @@ interface CreateFlowViewProps {
   onGenerateFlashcards: (cards: Flashcard[], subject: string, grade: string) => void;
   onBack: () => void;
   onRequestLogin?: () => void;
+  initialMaterialType?: "notes" | "audio" | "document" | "youtube" | null;
+  initialText?: string;
+  initialSubject?: string;
 }
 
 type Step = 1 | 2 | 3 | 4;
-type MaterialType = "notes" | "image" | "docx" | "pdf" | "youtube" | null;
+type MaterialType = "notes" | "image" | "docx" | "pdf" | "pptx" | "youtube" | null;
 type Grade = "A" | "B" | "C" | "D" | "E";
 
-export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequestLogin }: CreateFlowViewProps) {
+// Map dashboard options to material types
+const DASHBOARD_TO_MATERIAL: Record<string, MaterialType> = {
+  "notes": "notes",
+  "audio": "notes", // Audio will be handled with a special audio UI
+  "document": "pdf", // Default to PDF but can switch
+  "youtube": "youtube",
+};
+
+export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequestLogin, initialMaterialType, initialText, initialSubject }: CreateFlowViewProps) {
   const t = useTranslation();
   const { settings } = useSettings();
+  const isDarkMode = settings.theme === 'dark' || 
+    (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   
   // Flow state
   const [currentStep, setCurrentStep] = useState<Step>(1);
+  
+  // Track which dashboard option was selected (for free trial tracking)
+  const [dashboardOption, setDashboardOption] = useState<"notes" | "audio" | "document" | "youtube" | null>(null);
   
   // Step 1: Subject
   const [subject, setSubject] = useState("");
@@ -46,6 +62,28 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [isExtractingYouTube, setIsExtractingYouTube] = useState(false);
   const [userTier, setUserTier] = useState<TierName>('free');
+  
+  // Handle initial material type from dashboard
+  useEffect(() => {
+    if (initialMaterialType) {
+      setDashboardOption(initialMaterialType);
+      const materialType = DASHBOARD_TO_MATERIAL[initialMaterialType];
+      if (materialType) {
+        setSelectedMaterial(materialType);
+      }
+    }
+  }, [initialMaterialType]);
+
+  // Handle initial text and subject (from audio/youtube views)
+  useEffect(() => {
+    if (initialText) {
+      setTextInput(initialText);
+      setSelectedMaterial("notes");
+    }
+    if (initialSubject) {
+      setSubject(initialSubject);
+    }
+  }, [initialText, initialSubject]);
   
   // Output language preference
   const [outputLanguage, setOutputLanguage] = useState<"auto" | "en">("auto");
@@ -719,7 +757,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     }
     
     // Check for file uploads
-    if ((selectedMaterial === "docx" || selectedMaterial === "image" || selectedMaterial === "pdf") && !uploadedFile) {
+    if ((selectedMaterial === "docx" || selectedMaterial === "image" || selectedMaterial === "pdf" || selectedMaterial === "pptx") && !uploadedFile) {
       setError(messages.errors.fileRequired);
       return;
     }
@@ -987,8 +1025,29 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         setError(err.message || "Failed to extract text from image. Please try another image.");
         setIsExtractingImage(false);
       }
+    } else if (file.name.match(/\.pptx?$/i) || selectedMaterial === "pptx") {
+      // Handle PowerPoint files
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch("/api/extract-pptx", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) throw new Error("Failed to extract text from PowerPoint");
+
+        const data = await response.json();
+        setTextInput(data.text || "");
+        if (data.metadata?.language) {
+          setDetectedLanguage(data.metadata.language);
+        }
+      } catch (err) {
+        setError("Failed to extract text from PowerPoint. Please try another format.");
+      }
     } else {
-      // For DOCX, use the API
+      // For DOCX and other documents, use the API
       const formData = new FormData();
       formData.append("file", file);
 
@@ -1022,8 +1081,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       const savedSets = await getSavedFlashcardSets();
       const userSets = savedSets.filter(set => set.userId === userId);
       
-      if (userSets.length >= 3) {
-        setError("You've reached your limit of 3 free study sets. Upgrade to Premium for unlimited study sets!");
+      if (userSets.length >= 2) {
+        setError("You've reached your daily limit of 2 free study sets. Upgrade to Premium for unlimited study sets!");
         setTimeout(() => window.location.href = '/pricing', 500);
         setCurrentStep(1); // Go back to step 1
         return;
@@ -1131,6 +1190,19 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         setRemainingGenerations(Math.max(0, remainingGenerations - 1));
       }
 
+      // Auto-save flashcards to storage
+      try {
+        await saveFlashcardSet(
+          subject,
+          cards,
+          subject,
+          targetGrade
+        );
+        console.log('[CreateFlowView] ✅ Auto-saved flashcards:', cards.length);
+      } catch (saveErr) {
+        console.error('[CreateFlowView] Failed to auto-save flashcards:', saveErr);
+      }
+
       onGenerateFlashcards(cards, subject, targetGrade);
       
       // Refresh premium status after successful generation
@@ -1209,15 +1281,21 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
   return (
     <>
-      <div className="min-h-screen relative" style={{ background: 'var(--background)' }}>
+      <div className="min-h-screen relative" style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#f1f5f9' }}>
+        {/* Background gradients */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full blur-[120px]" style={{ backgroundColor: isDarkMode ? 'rgba(6, 182, 212, 0.15)' : 'rgba(6, 182, 212, 0.08)' }} />
+          <div className="absolute top-1/2 -left-40 w-[500px] h-[500px] rounded-full blur-[100px]" style={{ backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)' }} />
+        </div>
+
         {/* Top bar med logo */}
-        <div className="sticky top-0 z-50 px-4 py-3 border-b backdrop-blur-sm" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+        <div className="sticky top-0 z-50 px-4 py-3 backdrop-blur-sm" style={{ backgroundColor: isDarkMode ? 'rgba(15, 29, 50, 0.8)' : 'rgba(255, 255, 255, 0.8)', borderBottom: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)' }}>
           <div className="max-w-2xl mx-auto flex items-center justify-between">
-            <div className="text-2xl font-black text-white">
-              StudyMaxx
+            <div className="text-2xl font-black" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <span style={{ color: '#22d3ee' }}>Study</span>Maxx
             </div>
             {hasSession && (
-              <div className="text-sm text-slate-400 font-semibold">
+              <div className="text-sm font-semibold" style={{ color: '#5f6368' }}>
                 {isPremium ? "⭐ Premium" : `${remainingGenerations}/3 free`}
               </div>
             )}
@@ -1231,16 +1309,16 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
             onClick={handleBack}
             className="mb-2 px-4 py-2 text-sm font-bold rounded-md transition-all flex items-center gap-2 shadow-md hover:-translate-y-0.5 active:translate-y-0 hover:shadow-lg"
             style={{
-              background: 'var(--card)',
-              color: 'var(--foreground)',
-              border: '2px solid var(--border)'
+              background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#ffffff',
+              color: isDarkMode ? '#ffffff' : '#000000',
+              border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = '#06b6d4';
               e.currentTarget.style.boxShadow = '0 4px 20px rgba(6, 182, 212, 0.3)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border)';
+              e.currentTarget.style.borderColor = isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
               e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
             }}
           >
@@ -1263,14 +1341,14 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     ? 'linear-gradient(90deg, #06b6d4 0%, #14b8a6 50%, #10b981 100%)'
                     : step < currentStep
                     ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)'
-                    : 'var(--border)',
+                    : isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
                   boxShadow: step === currentStep ? '0 0 20px rgba(6, 182, 212, 0.5)' : 'none'
                 }}
               />
             ))}
           </div>
 
-          <h1 className="text-2xl md:text-3xl font-bold text-center mb-1" style={{ color: 'var(--foreground)' }}>
+          <h1 className="text-2xl md:text-3xl font-bold text-center mb-1" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
             {t("create_study_set")}
           </h1>
           <p className="text-center text-sm text-muted-foreground">Transform your notes into study tools</p>
@@ -1281,9 +1359,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
           {/* Error message */}
           {error && (
             <div className="mb-3 p-3 rounded-lg" style={{ 
-              background: 'var(--error-light)',
-              border: '1px solid var(--error)',
-              color: 'var(--error)'
+              background: isDarkMode ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid #ef4444',
+              color: '#ef4444'
             }}>
               <p className="text-sm font-medium">{error}</p>
             </div>
@@ -1302,7 +1380,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
               )}
 
               <div className="mb-3">
-                <h2 className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>
+                <h2 className="text-xl font-bold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
                   Choose subject
                 </h2>
               </div>
@@ -1343,11 +1421,11 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     >
                       <CardContent className="p-3 flex items-center justify-between">
                         <div className="flex flex-col">
-                          <span className="font-semibold text-base" style={{ color: subject === example.name ? 'white' : 'var(--foreground)' }}>
+                          <span className="font-semibold text-base" style={{ color: subject === example.name ? 'white' : isDarkMode ? '#ffffff' : '#000000' }}>
                             {example.name}
                           </span>
                           {example.description && (
-                            <span className="text-xs mt-0.5" style={{ color: subject === example.name ? 'rgba(255,255,255,0.85)' : 'var(--muted-foreground)' }}>
+                            <span className="text-xs mt-0.5" style={{ color: subject === example.name ? 'rgba(255,255,255,0.85)' : isDarkMode ? '#9aa0a6' : '#5f6368' }}>
                               {example.description}
                             </span>
                           )}
@@ -1390,7 +1468,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     }}
                   >
                     <CardContent className="p-4 flex items-center justify-center gap-2">
-                      <span className="font-semibold text-base" style={{ color: subject === "Other" ? 'white' : 'var(--foreground)' }}>✨ Other Subject</span>
+                      <span className="font-semibold text-base" style={{ color: subject === "Other" ? 'white' : isDarkMode ? '#ffffff' : '#000000' }}>✨ Other Subject</span>
                       {subject === "Other" && (
                         <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                       )}
@@ -1404,7 +1482,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                 onClick={handleContinueFromStep1}
                 disabled={!subject.trim()}
                 className="w-full py-4 rounded-md text-lg font-black shadow-xl hover:shadow-2xl hover:-translate-y-1 active:translate-y-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                style={{ background: 'var(--card)', color: 'var(--foreground)', border: '2px solid var(--border)' }}
+                style={{ background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#ffffff', color: isDarkMode ? '#ffffff' : '#000000', border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` }}
               >
                 <span>Continue</span>
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1418,7 +1496,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
           {currentStep === 2 && (
             <div className="space-y-3">
               <div className="mb-3">
-                <h2 className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>
+                <h2 className="text-xl font-bold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
                   Add material
                 </h2>
               </div>
@@ -1455,10 +1533,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           📝
                         </div>
                         <div>
-                          <span className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
+                          <span className="font-bold text-base" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
                             Notes
                           </span>
-                          <span className="text-xs block mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                          <span className="text-xs block mt-0.5" style={{ color: (isDarkMode ? '#94a3b8' : '#64748b') }}>
                             Paste text
                           </span>
                         </div>
@@ -1496,16 +1574,16 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                             🚀
                           </div>
                           <div>
-                            <span className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
+                            <span className="font-bold text-base" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
                               Premium Access
                             </span>
-                            <span className="text-xs block mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                            <span className="text-xs block mt-0.5" style={{ color: (isDarkMode ? '#94a3b8' : '#64748b') }}>
                               Unlock all current & upcoming features
                             </span>
                           </div>
                         </div>
-                        <span className="px-3 py-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold rounded-md border border-amber-200 dark:border-amber-800">
-                          🔒 Early Bird
+                        <span className="px-3 py-1.5 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 text-xs font-bold rounded-md border border-cyan-200 dark:border-cyan-800">
+                          🔒 Premium
                         </span>
                       </CardContent>
                     </Card>
@@ -1526,11 +1604,36 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                               📄
                             </div>
                             <div>
-                              <span className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
+                              <span className="font-bold text-base" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
                                 Document
                               </span>
-                              <span className="text-xs block mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                              <span className="text-xs block mt-0.5" style={{ color: (isDarkMode ? '#94a3b8' : '#64748b') }}>
                                 Upload .docx
+                              </span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      {/* PowerPoint */}
+                      <Card
+                        onClick={() => setSelectedMaterial("pptx")}
+                        className="cursor-pointer transition-all duration-300 border-2 rounded-md overflow-hidden"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.12) 100%)',
+                          borderColor: 'rgba(6, 182, 212, 0.4)'
+                        }}
+                      >
+                        <CardContent className="flex items-center justify-between p-5">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-md bg-cyan-100 dark:bg-cyan-900/20 flex items-center justify-center text-3xl">
+                              📊
+                            </div>
+                            <div>
+                              <span className="font-bold text-base" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
+                                PowerPoint
+                              </span>
+                              <span className="text-xs block mt-0.5" style={{ color: (isDarkMode ? '#94a3b8' : '#64748b') }}>
+                                Upload .pptx
                               </span>
                             </div>
                           </div>
@@ -1551,10 +1654,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                               🖼️
                             </div>
                             <div>
-                              <span className="font-bold text-base" style={{ color: 'var(--foreground)' }}>
+                              <span className="font-bold text-base" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
                                 Image
                               </span>
-                              <span className="text-xs block mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                              <span className="text-xs block mt-0.5" style={{ color: (isDarkMode ? '#94a3b8' : '#64748b') }}>
                                 Upload image
                               </span>
                             </div>
@@ -1570,7 +1673,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   {/* Material input area */}
                   <div className="space-y-3">
                     {/* Show selected type */}
-                    <Card className="border" style={{ background: 'var(--surface-elevated)', borderColor: 'var(--border)' }}>
+                    <Card className="border" style={{ background: (isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4'), borderColor: (isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)') }}>
                       <CardContent className="flex items-center justify-between p-3">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
@@ -1579,6 +1682,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                               {selectedMaterial === "docx" && "📄"}
                               {selectedMaterial === "image" && "🖼️"}
                               {selectedMaterial === "pdf" && "📕"}
+                              {selectedMaterial === "pptx" && "📊"}
                               {selectedMaterial === "youtube" && "📺"}
                               </span>
                           </div>
@@ -1648,8 +1752,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                             </div>
                           ) : (
                             <div className="text-center p-3">
-                              <div className="w-10 h-10 mx-auto rounded-full flex items-center justify-center text-xl mb-2 shadow-sm" style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}>📄</div>
-                              <p className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
+                              <div className="w-10 h-10 mx-auto rounded-full flex items-center justify-center text-xl mb-2 shadow-sm" style={{ background: (isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4'), border: "1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}" }}>📄</div>
+                              <p className="text-sm font-bold" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
                                 Upload Word Document
                               </p>
                               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -1691,12 +1795,55 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                             </div>
                           ) : (
                             <div className="text-center p-3">
-                              <div className="w-10 h-10 mx-auto rounded-full flex items-center justify-center text-xl mb-2 shadow-sm" style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}>📕</div>
-                              <p className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
+                              <div className="w-10 h-10 mx-auto rounded-full flex items-center justify-center text-xl mb-2 shadow-sm" style={{ background: (isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4'), border: "1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}" }}>📕</div>
+                              <p className="text-sm font-bold" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
                                 Upload PDF Document
                               </p>
                               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                                 Supports .pdf files
+                              </p>
+                            </div>
+                          )}
+                        </label>
+                      </div>
+                    )}
+
+                   {/* PPTX upload */}
+                   {selectedMaterial === "pptx" && (
+                      <div>
+                        <input
+                          type="file"
+                          id="pptx-upload"
+                          accept=".ppt,.pptx"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                        <label
+                          htmlFor="pptx-upload"
+                          className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md cursor-pointer transition-all duration-200 group ${
+                            uploadedFile 
+                              ? "bg-green-50/50 dark:bg-green-900/10 border-green-400/50 dark:border-green-800" 
+                              : "border hover:border-indigo-400"
+                          }`}
+                        >
+                          {uploadedFile ? (
+                            <div className="text-center p-4">
+                              <div className="w-12 h-12 mx-auto bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-2xl mb-2 text-green-600 dark:text-green-400">✅</div>
+                              <p className="text-sm font-bold text-slate-900 dark:text-white">
+                                {uploadedFile.name}
+                              </p>
+                              <p className="text-xs font-medium text-green-600 dark:text-green-400 mt-1">
+                                Ready to process
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="text-center p-3">
+                              <div className="w-10 h-10 mx-auto rounded-full flex items-center justify-center text-xl mb-2 shadow-sm" style={{ background: (isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4'), border: "1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}" }}>📊</div>
+                              <p className="text-sm font-bold" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
+                                Upload PowerPoint
+                              </p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                Supports .ppt, .pptx files
                               </p>
                             </div>
                           )}
@@ -1715,9 +1862,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                             placeholder="https://www.youtube.com/watch?v=..."
                             className="w-full px-4 py-3 border-2 rounded-md text-sm"
                             style={{ 
-                              background: 'var(--surface)', 
-                              borderColor: 'var(--border)',
-                              color: 'var(--foreground)'
+                              background: (isDarkMode ? 'rgba(255,255,255,0.03)' : '#ffffff'), 
+                              borderColor: (isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'),
+                              color: (isDarkMode ? '#ffffff' : '#000000')
                             }}
                           />
                         </div>
@@ -1816,8 +1963,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                             </div>
                           ) : (
                             <div className="text-center p-3">
-                               <div className="w-10 h-10 mx-auto rounded-full flex items-center justify-center text-xl mb-2 shadow-sm" style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}>📷</div>
-                              <p className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
+                               <div className="w-10 h-10 mx-auto rounded-full flex items-center justify-center text-xl mb-2 shadow-sm" style={{ background: (isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4'), border: "1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}" }}>📷</div>
+                              <p className="text-sm font-bold" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
                                 Upload Image
                               </p>
                               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -1838,22 +1985,22 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     <div 
                       className="mt-4 p-4 rounded-lg border-2"
                       style={{
-                        backgroundColor: 'var(--card)',
-                        borderColor: 'var(--border)'
+                        backgroundColor: (isDarkMode ? 'rgba(255,255,255,0.03)' : '#ffffff'),
+                        borderColor: (isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)')
                       }}
                     >
-                      <h3 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)' }}>
+                      <h3 className="font-bold text-sm mb-3" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
                         {settings.language === "no" ? "🌍 Språkinnstillinger" : "🌍 Language Settings"}
                       </h3>
                       
-                      <p className="text-xs mb-3 p-2 rounded-md" style={{ backgroundColor: 'rgba(6, 182, 212, 0.1)', color: 'var(--foreground)' }}>
+                      <p className="text-xs mb-3 p-2 rounded-md" style={{ backgroundColor: 'rgba(6, 182, 212, 0.1)', color: (isDarkMode ? '#ffffff' : '#000000') }}>
                         {settings.language === "no"
                           ? "✨ Vi oppdaget at du har ordpar (f.eks. 'hund - dog'). Velg språkene dine:"
                           : "✨ We detected vocabulary pairs (e.g., 'dog - hund'). Select your languages:"}
                       </p>
                       
                       {detectedLanguages.length >= 2 && (
-                        <p className="text-xs mb-2" style={{ color: 'var(--muted-foreground)' }}>
+                        <p className="text-xs mb-2" style={{ color: (isDarkMode ? '#9aa0a6' : '#5f6368') }}>
                           {settings.language === "no" 
                             ? `✓ Detekterte språk: ${detectedLanguages.join(" + ")}` 
                             : `✓ Detected languages: ${detectedLanguages.join(" + ")}`}
@@ -1867,7 +2014,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       
                       {/* Known Language - Only detected languages */}
                       <div className="mb-3">
-                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                        <label className="block text-sm font-medium mb-2" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
                           {settings.language === "no" ? "🏠 Mitt morsmål (jeg kan):" : "🏠 My native language (I know):"}
                         </label>
                         <select
@@ -1875,9 +2022,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           onChange={(e) => setKnownLanguage(e.target.value)}
                           className="w-full p-3 rounded-lg border-2 transition-all cursor-pointer"
                           style={{ 
-                            color: 'var(--foreground)', 
-                            backgroundColor: 'var(--background)',
-                            borderColor: knownLanguage ? '#06b6d4' : 'var(--border)'
+                            color: (isDarkMode ? '#ffffff' : '#000000'), 
+                            backgroundColor: (isDarkMode ? '#0a1628' : '#fafaf9'),
+                            borderColor: knownLanguage ? '#06b6d4' : (isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)')
                           }}
                         >
                           <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
@@ -1889,7 +2036,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
                       {/* Learning Language - Only detected languages */}
                       <div>
-                        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--foreground)' }}>
+                        <label className="block text-sm font-medium mb-2" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
                           {settings.language === "no" ? "📚 Jeg lærer:" : "📚 I'm learning:"}
                         </label>
                         <select
@@ -1897,9 +2044,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                           onChange={(e) => setLearningLanguage(e.target.value)}
                           className="w-full p-3 rounded-lg border-2 transition-all cursor-pointer"
                           style={{ 
-                            color: 'var(--foreground)', 
-                            backgroundColor: 'var(--background)',
-                            borderColor: learningLanguage ? '#06b6d4' : 'var(--border)'
+                            color: (isDarkMode ? '#ffffff' : '#000000'), 
+                            backgroundColor: (isDarkMode ? '#0a1628' : '#fafaf9'),
+                            borderColor: learningLanguage ? '#06b6d4' : (isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)')
                           }}
                         >
                           <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
@@ -1938,9 +2085,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
                   {/* Language selection - only show when we have text and NOT a language subject */}
                   {textInput.length >= 50 && !isLanguageSubject && (
-                    <div className="mt-3 p-3 rounded-md" style={{ background: 'var(--surface-elevated)', border: '1px solid var(--border)' }}>
+                    <div className="mt-3 p-3 rounded-md" style={{ background: (isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4'), border: "1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}" }}>
                       <div className="mb-2 flex items-baseline justify-between">
-                        <h4 className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                        <h4 className="text-sm font-semibold" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
                           Output Language
                         </h4>
                       </div>
@@ -1972,7 +2119,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                            <div className="flex items-center gap-2">
                               <span className="text-lg">🌍</span>
                               <div className="text-left">
-                                  <div className="font-medium text-sm" style={{ color: outputLanguage === "auto" ? 'white' : 'var(--foreground)' }}>
+                                  <div className="font-medium text-sm" style={{ color: outputLanguage === "auto" ? 'white' : (isDarkMode ? '#ffffff' : '#000000') }}>
                                     Auto
                                   </div>
                               </div>
@@ -2008,7 +2155,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                            <div className="flex items-center gap-2">
                               <span className="text-lg">🇺🇸</span>
                               <div className="text-left">
-                                  <div className="font-medium text-sm" style={{ color: outputLanguage === "en" ? 'white' : 'var(--foreground)' }}>English</div>
+                                  <div className="font-medium text-sm" style={{ color: outputLanguage === "en" ? 'white' : (isDarkMode ? '#ffffff' : '#000000') }}>English</div>
                               </div>
                            </div>
                            {outputLanguage === "en" && <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
@@ -2052,14 +2199,14 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
           {currentStep === 3 && (
             <div className="space-y-3">
               <div className="mb-3">
-                <h2 className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>
+                <h2 className="text-xl font-bold" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
                   Set difficulty & card count
                 </h2>
               </div>
 
               {/* Difficulty Selection */}
               <div>
-                 <label className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
+                 <label className="text-sm font-medium" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
                    Difficulty
                  </label>
                 
@@ -2087,7 +2234,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                             ? 'linear-gradient(135deg, #334155 0%, #475569 100%)' 
                             : 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(8, 145, 178, 0.04) 100%)',
                         borderColor: difficulty === level ? '#0891b2' : locked ? '#475569' : 'rgba(6, 182, 212, 0.3)',
-                        color: difficulty === level || locked ? 'white' : 'var(--foreground)',
+                        color: difficulty === level || locked ? 'white' : (isDarkMode ? '#ffffff' : '#000000'),
                         boxShadow: difficulty === level ? '0 4px 15px rgba(6, 182, 212, 0.4)' : '0 2px 8px rgba(0, 0, 0, 0.05)'
                       }}
                       onMouseEnter={(e) => {
@@ -2121,17 +2268,17 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
               {/* Flashcard Count Selection */}
               <div>
-                 <label className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>
+                 <label className="text-sm font-medium" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
                    {t("number_of_flashcards")}
                  </label>
 
                 <div className="grid grid-cols-1 gap-2 mt-2">
                   {[
                     { count: 10, label: "10 cards", grade: "Pass", locked: false, desc: null },
-                    { count: 15, label: "15 cards", grade: "Good", locked: false, desc: null },
-                    { count: 20, label: "20 cards", grade: "Very Good", locked: false, desc: null },
-                    { count: 25, label: "25 cards", grade: "Excellent", locked: !isPremium, desc: "Better grades" },
-                    { count: 30, label: "30 cards", grade: "Top Grade", locked: !isPremium, desc: "Top results" }
+                    { count: 15, label: "15 cards", grade: "Good", locked: !isPremium, desc: !isPremium ? "Premium" : null },
+                    { count: 20, label: "20 cards", grade: "Very Good", locked: !isPremium, desc: !isPremium ? "Premium" : null },
+                    { count: 25, label: "25 cards", grade: "Excellent", locked: !isPremium, desc: !isPremium ? "Better grades" : "Better grades" },
+                    { count: 30, label: "30 cards", grade: "Top Grade", locked: !isPremium, desc: !isPremium ? "Top results" : "Top results" }
                   ].map(({ count, label, grade: gradeText, locked, desc }) => {
                     // Map count to grade letter for backend
                     const gradeMap: Record<number, Grade> = { 10: "E", 15: "D", 20: "C", 25: "B", 30: "A" };
@@ -2157,7 +2304,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                               ? 'linear-gradient(135deg, #334155 0%, #475569 100%)' 
                               : 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(8, 145, 178, 0.04) 100%)',
                           borderColor: isSelected ? '#0891b2' : locked ? '#475569' : 'rgba(6, 182, 212, 0.3)',
-                          color: isSelected || locked ? 'white' : 'var(--foreground)',
+                          color: isSelected || locked ? 'white' : (isDarkMode ? '#ffffff' : '#000000'),
                           boxShadow: isSelected ? '0 4px 15px rgba(6, 182, 212, 0.4)' : '0 2px 8px rgba(0, 0, 0, 0.05)',
                           padding: desc ? '0.65rem' : '0.65rem'
                         }}
@@ -2227,12 +2374,12 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       <span className="text-2xl">🧮</span>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-sm" style={{ color: includeMathProblems && isPremium ? 'white' : 'var(--foreground)' }}>
+                          <span className="font-semibold text-sm" style={{ color: includeMathProblems && isPremium ? 'white' : (isDarkMode ? '#ffffff' : '#000000') }}>
                             Include Practice Problems
                           </span>
                           {!isPremium && <span className="text-base">🔒</span>}
                         </div>
-                        <p className="text-xs mt-0.5" style={{ color: includeMathProblems && isPremium ? 'rgba(255,255,255,0.8)' : 'var(--muted-foreground)' }}>
+                        <p className="text-xs mt-0.5" style={{ color: includeMathProblems && isPremium ? 'rgba(255,255,255,0.8)' : (isDarkMode ? '#9aa0a6' : '#5f6368') }}>
                           Add solvable math problems to practice {!isPremium && '(Premium)'}
                         </p>
                         <p className="text-[10px] mt-1 italic" style={{ color: includeMathProblems && isPremium ? 'rgba(255,255,255,0.7)' : '#f59e0b' }}>
@@ -2248,14 +2395,14 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         }}
                         className="relative w-12 h-6 rounded-full transition-all duration-200"
                         style={{
-                          background: includeMathProblems ? 'white' : 'var(--muted)'
+                          background: includeMathProblems ? 'white' : (isDarkMode ? 'rgba(255,255,255,0.1)' : '#e5e5e4')
                         }}
                       >
                         <div 
                           className="absolute w-5 h-5 rounded-full top-0.5 transition-all duration-200"
                           style={{
                             left: includeMathProblems ? '26px' : '2px',
-                            background: includeMathProblems ? '#06b6d4' : 'var(--muted-foreground)'
+                            background: includeMathProblems ? '#1a73e8' : (isDarkMode ? '#9aa0a6' : '#5f6368')
                           }}
                         />
                       </button>
@@ -2307,7 +2454,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   <span>Start</span>
                   <span>{Math.round((elapsedSeconds / 75) * 100)}%</span>
                 </div>
-                <div className="h-3 w-full rounded-full overflow-hidden shadow-inner" style={{ background: 'var(--surface-hover)' }}>
+                <div className="h-3 w-full rounded-full overflow-hidden shadow-inner" style={{ background: (isDarkMode ? 'rgba(255,255,255,0.08)' : '#f0f0ef') }}>
                   <div 
                     className="h-full transition-all duration-300 ease-out"
                     style={{ 
@@ -2338,7 +2485,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                                ? "border-indigo-200 shadow-md scale-[1.02] dark:border-indigo-900"
                                : "bg-transparent border-transparent opacity-50"
                         }`}
-                        style={isActive && !isDone ? { background: 'var(--surface-elevated)' } : undefined}
+                        style={isActive && !isDone ? { background: (isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4') } : undefined}
                       >
                          <div 
                             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors ${
@@ -2348,7 +2495,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                                ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300 animate-pulse"
                                : "text-gray-400"
                          }`}
-                            style={!isDone && !isActive ? { background: 'var(--surface-elevated)' } : undefined}
+                            style={!isDone && !isActive ? { background: (isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4') } : undefined}
                          >
                             {isDone ? "✓" : step.icon}
                          </div>
@@ -2363,7 +2510,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
               </div>
 
               {/* Fun Fact Card */}
-              <div className="mt-8 p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-md border border-amber-100/50 dark:border-amber-800/30 shadow-sm relative overflow-hidden group hover:shadow-md transition-all" style={{ background: 'var(--surface-elevated)' }}>
+              <div className="mt-8 p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-md border border-amber-100/50 dark:border-amber-800/30 shadow-sm relative overflow-hidden group hover:shadow-md transition-all" style={{ background: (isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4') }}>
                 <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                    <svg className="w-16 h-16 text-amber-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
                 </div>
@@ -2389,3 +2536,6 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     </>
   );
 }
+
+
+

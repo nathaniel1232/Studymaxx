@@ -18,9 +18,11 @@ export interface UsageLimits {
   maxStudySets: number;
   maxFlashcardsPerSet: number;
   maxAIGenerationsPerDay: number;
+  maxChatMessagesPerDay: number;
   canUploadPDF: boolean;
   canUploadImages: boolean;
   canUseYouTube: boolean;
+  canUseAudioRecording: boolean;
   canRegenerate: boolean;
   canSelectDifficulty: boolean;
   canSyncDevices: boolean;
@@ -29,12 +31,14 @@ export interface UsageLimits {
 
 // Free tier limits - HARD LIMITS enforced server-side
 export const FREE_LIMITS: UsageLimits = {
-  maxStudySets: 3, // 3 study sets per 24 hours
+  maxStudySets: 2, // 2 study sets per 24 hours via notes
   maxFlashcardsPerSet: 10, // Only 10 cards for free
-  maxAIGenerationsPerDay: 3, // 3 AI generations per day (was 1)
-  canUploadPDF: false,
-  canUploadImages: false,
-  canUseYouTube: false,
+  maxAIGenerationsPerDay: 2, // 2 AI generations per day
+  maxChatMessagesPerDay: 10, // 10 AI chat messages per day
+  canUploadPDF: false, // One-time trial only
+  canUploadImages: false, // One-time trial only
+  canUseYouTube: true, // YouTube/website extraction is free (no AI cost)
+  canUseAudioRecording: false, // One-time trial only
   canRegenerate: false,
   canSelectDifficulty: false,
   canSyncDevices: false,
@@ -44,11 +48,13 @@ export const FREE_LIMITS: UsageLimits = {
 // Premium tier (unlimited)
 export const PREMIUM_LIMITS: UsageLimits = {
   maxStudySets: Infinity,
-  maxFlashcardsPerSet: 30, // 30 cards for premium
+  maxFlashcardsPerSet: 50, // 50 cards for premium
   maxAIGenerationsPerDay: Infinity,
+  maxChatMessagesPerDay: Infinity,
   canUploadPDF: true,
   canUploadImages: true,
   canUseYouTube: true,
+  canUseAudioRecording: true,
   canRegenerate: true,
   canSelectDifficulty: true,
   canSyncDevices: true,
@@ -225,15 +231,15 @@ export function getLocalizedPricing() {
   
   // Price mapping
   const prices: { [key: string]: { amount: number; symbol: string; display: string; yearlyAmount: number; yearlyDisplay: string } } = {
-    'NOK': { amount: 29, symbol: 'kr', display: '29 kr', yearlyAmount: 250, yearlyDisplay: '250 kr' },
-    'SEK': { amount: 35, symbol: 'kr', display: '35 kr', yearlyAmount: 300, yearlyDisplay: '300 kr' },
-    'DKK': { amount: 26, symbol: 'kr', display: '26 kr', yearlyAmount: 220, yearlyDisplay: '220 kr' },
-    'EUR': { amount: 2.99, symbol: '€', display: '€2.99', yearlyAmount: 25, yearlyDisplay: '€25.00' },
-    'USD': { amount: 2.99, symbol: '$', display: '$2.99', yearlyAmount: 25, yearlyDisplay: '$25.00' },
-    'GBP': { amount: 2.59, symbol: '£', display: '£2.59', yearlyAmount: 22, yearlyDisplay: '£22.00' },
-    'CAD': { amount: 4.19, symbol: '$', display: '$4.19 CAD', yearlyAmount: 35, yearlyDisplay: '$35.00' },
-    'AUD': { amount: 4.99, symbol: '$', display: '$4.99 AUD', yearlyAmount: 42, yearlyDisplay: '$42.00' },
-    'NZD': { amount: 5.49, symbol: '$', display: '$5.49 NZD', yearlyAmount: 46, yearlyDisplay: '$46.00' },
+    'NOK': { amount: 89, symbol: 'kr', display: '89 kr', yearlyAmount: 799, yearlyDisplay: '799 kr' },
+    'SEK': { amount: 99, symbol: 'kr', display: '99 kr', yearlyAmount: 899, yearlyDisplay: '899 kr' },
+    'DKK': { amount: 65, symbol: 'kr', display: '65 kr', yearlyAmount: 549, yearlyDisplay: '549 kr' },
+    'EUR': { amount: 8.49, symbol: '€', display: '€8.49', yearlyAmount: 74.99, yearlyDisplay: '€74.99' },
+    'USD': { amount: 8.99, symbol: '$', display: '$8.99', yearlyAmount: 79.99, yearlyDisplay: '$79.99' },
+    'GBP': { amount: 7.49, symbol: '£', display: '£7.49', yearlyAmount: 64.99, yearlyDisplay: '£64.99' },
+    'CAD': { amount: 11.99, symbol: '$', display: '$11.99 CAD', yearlyAmount: 99.99, yearlyDisplay: '$99.99' },
+    'AUD': { amount: 13.99, symbol: '$', display: '$13.99 AUD', yearlyAmount: 119.99, yearlyDisplay: '$119.99' },
+    'NZD': { amount: 14.99, symbol: '$', display: '$14.99 NZD', yearlyAmount: 129.99, yearlyDisplay: '$129.99' },
   };
   
   const pricing = prices[userCurrency] || prices['EUR'];

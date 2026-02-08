@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { signOut } from "../utils/supabase";
-import { useTranslation } from "../contexts/SettingsContext";
+import { useTranslation, useSettings } from "../contexts/SettingsContext";
 
 interface UserProfileDropdownProps {
   user: any;
@@ -14,8 +14,13 @@ interface UserProfileDropdownProps {
 
 export default function UserProfileDropdown({ user, isPremium, isOwner, onNavigateSettings, onUpgradePremium }: UserProfileDropdownProps) {
   const t = useTranslation();
+  const { settings } = useSettings();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Determine dark mode
+  const isDarkMode = settings.theme === 'dark' || 
+    (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -73,7 +78,7 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
     return (
       <div 
         className={`${sizeClasses} rounded-full flex items-center justify-center font-bold text-white`}
-        style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)' }}
+        style={{ background: 'linear-gradient(135deg, #1a73e8 0%, #34a853 100%)' }}
       >
         {getInitials()}
       </div>
@@ -86,8 +91,8 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-3 px-4 py-2 rounded-md transition-all hover:shadow-lg"
         style={{ 
-          background: 'var(--surface)', 
-          border: '2px solid var(--border)',
+          background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#ffffff', 
+          border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
           position: 'relative',
           zIndex: 1
@@ -99,7 +104,7 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
         {/* User info */}
         <div className="flex items-center gap-2">
           <div className="text-left">
-            <div className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
+            <div className="text-sm font-bold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
               {getDisplayName()}
             </div>
             {isOwner ? (
@@ -108,7 +113,7 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
               </div>
             ) : isPremium && (
               <div className="text-xs font-bold" style={{ color: '#fbbf24' }}>
-                ⭐ Premium Early Bird
+                ⭐ Premium
               </div>
             )}
           </div>
@@ -117,7 +122,7 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
-            style={{ color: 'var(--foreground-muted)' }}
+            style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
@@ -129,22 +134,22 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
         <div 
           className="absolute right-0 mt-2 w-64 rounded-md overflow-hidden shadow-2xl animate-in fade-in slide-in-from-top-2"
           style={{ 
-            background: 'var(--surface-elevated)', 
-            border: '2px solid var(--border)',
+            background: isDarkMode ? '#0f1d32' : '#ffffff', 
+            border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
             zIndex: 1002,
             boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
             position: 'absolute'
           }}
         >
           {/* User info section */}
-          <div className="p-4 border-b" style={{ borderColor: 'var(--border)' }}>
+          <div className="p-4 border-b" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
             <div className="flex items-center gap-3 mb-3">
               {renderAvatar("lg")}
               <div className="flex-1">
-                <div className="font-bold text-sm" style={{ color: 'var(--foreground)' }}>
+                <div className="font-bold text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
                   {getDisplayName()}
                 </div>
-                <div className="text-xs" style={{ color: 'var(--foreground-muted)' }}>
+                <div className="text-xs" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
                   {user.email}
                 </div>
               </div>
@@ -174,8 +179,8 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
                 }
               }}
               className="w-full px-4 py-3 rounded-md text-left text-sm font-medium flex items-center gap-3 transition-colors"
-              style={{ color: 'var(--foreground)' }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface)'}
+              style={{ color: isDarkMode ? '#ffffff' : '#000000' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4'}
               onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,7 +199,7 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
                   }
                 }}
                 className="w-full px-4 py-3 rounded-md text-left text-sm font-bold flex items-center gap-3 transition-colors text-yellow-600 dark:text-yellow-400"
-                onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface)'}
+                onMouseEnter={(e) => e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4'}
                 onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,12 +209,12 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
               </button>
             )}
 
-            <div className="my-2 h-px" style={{ background: 'var(--border)' }}></div>
+            <div className="my-2 h-px" style={{ background: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}></div>
 
             <button
               onClick={handleSignOut}
               className="w-full px-4 py-3 rounded-md text-left text-sm font-medium flex items-center gap-3 transition-colors text-red-600 dark:text-red-400"
-              onMouseEnter={(e) => e.currentTarget.style.background = 'var(--surface)'}
+              onMouseEnter={(e) => e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4'}
               onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -223,3 +228,4 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
     </div>
   );
 }
+

@@ -6,7 +6,7 @@
 
 -- Step 1: Create subscription tiers table
 CREATE TABLE IF NOT EXISTS subscription_tiers (
-  tier_name TEXT PRIMARY KEY CHECK (tier_name IN ('free', 'student', 'pro', 'team')),
+  tier_name TEXT PRIMARY KEY CHECK (tier_name IN ('free', 'premium', 'pro', 'team')),
   display_name TEXT NOT NULL,
   monthly_price_cents INTEGER NOT NULL,
   yearly_price_cents INTEGER NOT NULL,
@@ -30,10 +30,10 @@ INSERT INTO subscription_tiers (tier_name, display_name, monthly_price_cents, ye
 ('free', 'Free', 0, 0, 3, 10, 5, 
   '{"pdf": false, "youtube": false, "ocr_images": 0, "export": false, "analytics": false, "srs": false, "collaboration": false, "priority_support": false}'::jsonb),
   
-('student', 'Student', 499, 4900, 20, 25, 10, 
-  '{"pdf": true, "youtube": false, "ocr_images": 3, "export": true, "analytics": true, "srs": false, "collaboration": false, "priority_support": false}'::jsonb),
+('premium', 'Premium', 499, 4900, -1, 30, -1, 
+  '{"pdf": true, "youtube": true, "ocr_images": -1, "export": true, "analytics": true, "srs": true, "collaboration": false, "priority_support": true}'::jsonb),
   
-('pro', 'Pro', 999, 9900, -1, 50, -1, 
+('pro', 'Pro', 1499, 14900, -1, 60, -1, 
   '{"pdf": true, "youtube": true, "ocr_images": -1, "export": true, "analytics": true, "srs": true, "collaboration": true, "priority_support": true}'::jsonb),
   
 ('team', 'Team', 2999, 29900, -1, 100, -1, 

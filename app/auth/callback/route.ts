@@ -20,8 +20,15 @@ export async function GET(request: NextRequest) {
     host,
     protocol,
     origin,
-    state: state ? 'present' : 'missing'
+    state: state ? 'present' : 'missing',
+    isNetworkHost: /^\d+\.\d+\.\d+\.\d+/.test(host)
   });
+  
+  // Warn if network host
+  if (/^\d+\.\d+\.\d+\.\d+/.test(host)) {
+    console.warn('[AUTH CALLBACK] ⚠️ Network host detected:', origin);
+    console.warn('[AUTH CALLBACK] Make sure this URL is added to Supabase and Google Cloud Console!');
+  }
 
   // Check for OAuth errors from Google/Supabase
   if (error) {

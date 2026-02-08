@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Analytics } from "@vercel/analytics/next";
 import InputView from "./components/InputView";
 import CreateFlowView from "./components/CreateFlowView";
-import StudyView from "./components/StudyView";
+import StudyView from "./components/StudyViewNew";
 import SavedSetsView from "./components/SavedSetsView";
 import SettingsView from "./components/SettingsView";
 import LoginModal from "./components/LoginModal";
@@ -18,14 +19,51 @@ import { getCookieConsent } from "./components/CookieConsent";
 import { updateLastStudied, Flashcard, getSavedFlashcardSets, FlashcardSet } from "./utils/storage";
 import { getStudyFact } from "./utils/studyFacts";
 import { useTranslation, useSettings } from "./contexts/SettingsContext";
+import { usePersonalization } from "./contexts/PersonalizationContext";
 import ArrowIcon from "./components/icons/ArrowIcon";
 import { getCurrentUser, onAuthStateChange, supabase } from "./utils/supabase";
+import DashboardView from "./components/DashboardView";
+import Sidebar from "./components/Sidebar";
+import AudioRecordingView from "./components/AudioRecordingView";
+import YouTubeView from "./components/YouTubeView";
+import DocumentView from "./components/DocumentView";
+import NotesEditorView from "./components/NotesEditorView";
+import QuizView from "./components/QuizView";
+import MatchGame from "./components/MatchGame";
+import SubjectPromptModal from "./components/SubjectPromptModal";
 
-type ViewMode = "home" | "input" | "createFlow" | "studying" | "saved" | "settings";
+// Custom SVG Icons for landing page (replacing emojis)
+const EditNoteIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+    <polyline points="14,2 14,8 20,8"/>
+    <line x1="8" y1="13" x2="16" y2="13"/>
+    <line x1="8" y1="17" x2="14" y2="17"/>
+  </svg>
+);
+
+const BoltIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/>
+  </svg>
+);
+
+const TargetIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <circle cx="12" cy="12" r="6"/>
+    <circle cx="12" cy="12" r="2"/>
+  </svg>
+);
+
+type ViewMode = "home" | "input" | "createFlow" | "dashboard" | "studying" | "saved" | "settings" | "audio" | "youtube" | "document" | "notes" | "quiz" | "match" | "pricing" | "tips" | "about";
+type MaterialType = "notes" | "audio" | "document" | "youtube" | null;
 
 export default function Home() {
+  const router = useRouter();
   const t = useTranslation();
   const { settings } = useSettings();
+  const { profile, needsOnboarding, isLoading: personalizationLoading, getPersonalizedGreeting, getSubjectDisplay, daysUntilExam } = usePersonalization();
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("home");
   const [currentSetId, setCurrentSetId] = useState<string | null>(null);
@@ -40,6 +78,99 @@ export default function Home() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning" } | null>(null);
+  const [selectedMaterialType, setSelectedMaterialType] = useState<MaterialType>(null);
+  const [pendingTranscription, setPendingTranscription] = useState<{ text: string; subject: string } | null>(null);
+  const [pendingExtraction, setPendingExtraction] = useState<{ text: string; subject: string; title: string } | null>(null);
+  
+  // Quiz and Match game state
+  const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
+  const [matchTerms, setMatchTerms] = useState<string[]>([]);
+  const [matchDefinitions, setMatchDefinitions] = useState<string[]>([]);
+  const [quizSubject, setQuizSubject] = useState<string>("");
+  
+  // Subject prompt modal state
+  const [showSubjectPrompt, setShowSubjectPrompt] = useState(false);
+  const [pendingView, setPendingView] = useState<"notes" | "audio" | "document" | "youtube" | null>(null);
+  const [initialSubject, setInitialSubject] = useState<string>("");
+  
+  // Navigation history for proper back button behavior
+  const navigationHistory = useRef<ViewMode[]>([]);
+
+  // Helper to navigate with history tracking
+  const navigateTo = (view: ViewMode, url?: string) => {
+    navigationHistory.current.push(viewMode);
+    setViewMode(view);
+    if (url) window.history.pushState({}, '', url);
+  };
+
+  // Helper to go back properly
+  const goBack = () => {
+    const previousView = navigationHistory.current.pop();
+    if (previousView) {
+      setViewMode(previousView);
+      // Update URL based on view
+      const urlMap: Record<ViewMode, string> = {
+        home: '/',
+        dashboard: '/dashboard',
+        createFlow: '/create',
+        studying: '/study',
+        saved: '/saved',
+        settings: '/settings',
+        audio: '/audio',
+        youtube: '/youtube',
+        document: '/document',
+        input: '/input',
+        pricing: '/pricing',
+        tips: '/tips',
+        about: '/about',
+        notes: '/notes',
+        quiz: '/quiz',
+        match: '/match'
+      };
+      window.history.pushState({}, '', urlMap[previousView] || '/');
+    } else if (user) {
+      setViewMode('dashboard');
+      window.history.pushState({}, '', '/dashboard');
+    } else {
+      setViewMode('home');
+      window.history.pushState({}, '', '/');
+    }
+  };
+
+  // Check URL params for view on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewParam = urlParams.get('view');
+    if (viewParam === 'create') {
+      // Only redirect to dashboard if user is logged in
+      if (user) {
+        setViewMode('dashboard');
+      }
+      // Clean the URL
+      window.history.replaceState({}, '', '/');
+    } else if (viewParam === 'audio' && user) {
+      setViewMode('audio');
+      window.history.replaceState({}, '', '/');
+    } else if (viewParam === 'youtube' && user) {
+      setViewMode('youtube');
+      window.history.replaceState({}, '', '/');
+    } else if (viewParam === 'dashboard' && user) {
+      setViewMode('dashboard');
+      window.history.replaceState({}, '', '/');
+    }
+  }, [user]);
+
+  // Auto-redirect logged in users to dashboard - REMOVED
+  // Logged in users should see the same landing page with dashboard button
+  // useEffect(() => {
+  //   if (user && viewMode === 'home') {
+  //     setViewMode('dashboard');
+  //     window.history.replaceState({}, '', '/dashboard');
+  //   }
+  // }, [user, viewMode]);
+
+  // Onboarding redirect removed - users see landing page first
+  // Personalization is handled inline on the dashboard instead
 
   // Check cookie consent for analytics
   useEffect(() => {
@@ -198,11 +329,32 @@ export default function Home() {
         // Get premium status
         const { data } = await supabase
           .from('users')
-          .select('is_premium')
+          .select('is_premium, premium_expires_at')
           .eq('id', currentUser.id)
           .single();
         
-        setIsPremium(data?.is_premium || isOwnerUser);
+        // Check if premium has expired
+        let isPremium = data?.is_premium || isOwnerUser;
+        if (data?.premium_expires_at && !isOwnerUser) {
+          const expirationDate = new Date(data.premium_expires_at);
+          const now = new Date();
+          
+          if (now > expirationDate) {
+            console.log('[Page] Premium expired on', expirationDate);
+            isPremium = false;
+            
+            // Update database to mark as expired (fire and forget)
+            supabase
+              .from('users')
+              .update({ is_premium: false })
+              .eq('id', currentUser.id)
+              .then(({ error: updateErr }) => { if (updateErr) console.error(updateErr); });
+          } else {
+            console.log('[Page] Premium active until', expirationDate);
+          }
+        }
+        
+        setIsPremium(isPremium);
       }
     };
     
@@ -225,10 +377,31 @@ export default function Home() {
         // Get premium status
         supabase
           .from('users')
-          .select('is_premium')
+          .select('is_premium, premium_expires_at')
           .eq('id', newUser.id)
           .single()
-          .then(({ data }) => setIsPremium(data?.is_premium || isOwnerUser));
+          .then(({ data }) => {
+            // Check if premium has expired
+            let isPremium = data?.is_premium || isOwnerUser;
+            if (data?.premium_expires_at && !isOwnerUser) {
+              const expirationDate = new Date(data.premium_expires_at);
+              const now = new Date();
+              
+              if (now > expirationDate) {
+                console.log('[Page] Premium expired on', expirationDate);
+                isPremium = false;
+                
+                // Update database to mark as expired (fire and forget)
+                supabase!
+                  .from('users')
+                  .update({ is_premium: false })
+                  .eq('id', newUser.id)
+                  .then(({ error: updateErr }) => { if (updateErr) console.error(updateErr); });
+              }
+            }
+            
+            setIsPremium(isPremium);
+          });
       } else {
         setIsPremium(false);
       }
@@ -238,7 +411,7 @@ export default function Home() {
 
   // Listen for custom events from other components
   useEffect(() => {
-    const handleShowLogin = () => setShowLoginModal(true);
+    const handleShowLogin = () => handleOpenLoginModal();
     const handleShowPremium = () => { window.location.href = '/pricing'; };
 
     window.addEventListener('showLogin', handleShowLogin);
@@ -255,42 +428,56 @@ export default function Home() {
     setCurrentSetId(null);
     if (subject) setCurrentSubject(subject);
     if (grade) setCurrentGrade(grade);
-    setViewMode("studying");
+    navigateTo("studying", "/study");
   };
 
   const handleLoadSet = (cards: Flashcard[], setId: string) => {
     setFlashcards(cards);
     setCurrentSetId(setId);
     updateLastStudied(setId);
-    setViewMode("studying");
+    navigateTo("studying", "/study");
   };
 
   const handleBackToInput = () => {
-    setViewMode("input");
+    goBack();
     setFlashcards([]);
     setCurrentSetId(null);
   };
 
   const handleBackToHome = () => {
-    setViewMode("home");
+    goBack();
     setFlashcards([]);
     setCurrentSetId(null);
-    window.history.pushState({}, '', '/');
   };
 
   const handleViewSavedSets = () => {
-    setViewMode("saved");
-    window.history.pushState({}, '', '/saved');
+    navigateTo("saved", "/saved");
   };
 
   const handleCreateNew = () => {
-    setViewMode("createFlow");
-    window.history.pushState({}, '', '/create');
+    // Require login to access dashboard
+    if (!user) {
+      handleOpenLoginModal();
+      return;
+    }
+    navigateTo("dashboard", "/dashboard");
+  };
+
+  const handleGoToCreate = (option?: "notes" | "audio" | "document" | "youtube") => {
+    // Route to dedicated views for audio, youtube, document, and notes
+    // But first show subject prompt modal
+    if (option === "audio" || option === "youtube" || option === "document" || option === "notes") {
+      setPendingView(option);
+      setShowSubjectPrompt(true);
+      return;
+    }
+    // Set the material type so CreateFlowView can pre-select it
+    setSelectedMaterialType(option || null);
+    navigateTo("createFlow", "/create");
   };
 
   const handleViewSettings = () => {
-    setViewMode("settings");
-    window.history.pushState({}, '', '/settings');
+    navigateTo("settings", "/settings");
   };
 
   // Sync URL with viewMode
@@ -299,58 +486,103 @@ export default function Home() {
       const path = window.location.pathname;
       if (path === '/create') {
         setViewMode('createFlow');
+      } else if (path === '/dashboard') {
+        setViewMode('dashboard');
       } else if (path === '/saved') {
         setViewMode('saved');
       } else if (path === '/settings') {
         setViewMode('settings');
+      } else if (path === '/audio') {
+        setViewMode('audio');
+      } else if (path === '/youtube') {
+        setViewMode('youtube');
+      } else if (path === '/document') {
+        setViewMode('document');
+      } else if (path === '/pricing') {
+        window.location.href = '/pricing';
+      } else if (path === '/' || path === '') {
+        // If user is logged in, go to dashboard. Otherwise, go to home.
+        if (user) {
+          setViewMode('dashboard');
+          window.history.replaceState({}, '', '/dashboard');
+        } else {
+          setViewMode('home');
+        }
       } else {
-        setViewMode('home');
+        // Unknown path - redirect appropriately
+        if (user) {
+          setViewMode('dashboard');
+          window.history.replaceState({}, '', '/dashboard');
+        } else {
+          setViewMode('home');
+          window.history.replaceState({}, '', '/');
+        }
       }
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [user]);
+
+  // Determine if dark mode should be applied
+  const isDarkMode = settings.theme === 'dark' || 
+    (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  // Track scroll position before login modal opens and restore after close
+  const scrollPositionRef = useRef(0);
+  const handleOpenLoginModal = () => {
+    scrollPositionRef.current = window.scrollY;
+    setShowLoginModal(true);
+  };
+  const handleCloseLoginModal = () => {
+    setShowLoginModal(false);
+    // Restore scroll position after modal closes
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollPositionRef.current);
+    });
+  };
 
   return (
-    <main className="min-h-screen relative overflow-hidden bg-stone-50 dark:bg-slate-900">
+    <main className={`min-h-screen relative ${isDarkMode ? 'homepage-dark' : ''}`} style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#f1f5f9' }}>
       {/* Only load analytics if user accepted cookies */}
       {analyticsEnabled && <Analytics />}
       {viewMode === "home" && (
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen flex flex-col" style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#f1f5f9', color: isDarkMode ? '#e2e8f0' : '#0f172a' }}>
+          {/* Background gradient effects - Soft blue accent */}
+          <div className="fixed inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[120px]" />
+          </div>
 
-          {/* Top Navigation */}
-          <nav className="px-4 py-4 flex justify-between items-center border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md sticky top-0 z-50 shadow-lg">
-            <div className="flex items-center gap-2">
-              <div className="text-3xl font-black text-slate-900 dark:text-white">
-                StudyMaxx
+          {/* Top Navigation - NotebookLM Style */}
+          <nav className="relative z-50 px-6 py-4 flex justify-between items-center border-b" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0' }}>
+            <div className="flex items-center gap-8">
+              <div className="text-2xl font-bold tracking-tight" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>
+                <span style={{ color: '#1a73e8' }}>Study</span>Maxx
+              </div>
+              <div className="hidden md:flex items-center gap-6">
+                <a href="/pricing" style={{ color: '#5f6368' }} className="text-sm hover:text-blue-600 transition-colors">Pricing</a>
               </div>
             </div>
             
             <div className="flex items-center gap-3">
-              {/* Pricing Tab */}
-              <a
-                href="/pricing"
-                className="px-4 py-2 rounded-md font-bold text-sm bg-gradient-to-r from-amber-500 to-yellow-500 text-white hover:from-amber-600 hover:to-yellow-600 transition-all flex items-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5"
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
-                </svg>
-                Pricing
-              </a>
-              
               {user ? (
                 <>
                   <button
                     onClick={handleViewSettings}
-                    className="px-4 py-2 rounded-md font-bold text-sm bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center gap-2"
+                    style={{ color: '#5f6368' }}
+                    className="px-4 py-2 text-sm hover:text-blue-600 transition-colors"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
                     Settings
+                  </button>
+                  <button
+                    onClick={handleCreateNew}
+                    className="px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-200 hover:shadow-md"
+                    style={{ 
+                      backgroundColor: '#1a73e8', 
+                      color: '#ffffff',
+                    }}
+                  >
+                    Dashboard
                   </button>
                   <UserProfileDropdown 
                     user={user} 
@@ -361,272 +593,383 @@ export default function Home() {
                   />
                 </>
               ) : (
-                <button
-                  onClick={() => setShowLoginModal(true)}
-                  className="px-5 py-2.5 rounded-md font-bold text-sm bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white shadow-lg shadow-purple-500/30 border-2 border-purple-400/50 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 hover:shadow-xl hover:-translate-y-0.5 transition-all"
-                >
-                  Sign In
-                </button>
+                <>
+                  <button
+                    onClick={() => handleOpenLoginModal()}
+                    className="px-4 py-2 text-sm transition-all duration-200 rounded-lg hover:bg-black/5 dark:hover:bg-white/10"
+                    style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}
+                  >
+                    Sign in
+                  </button>
+                  <button
+                    onClick={handleCreateNew}
+                    className="px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-200 hover:shadow-md hover:brightness-110"
+                    style={{ 
+                      backgroundColor: '#1a73e8', 
+                      color: '#ffffff',
+                    }}
+                  >
+                    Get Started Free
+                  </button>
+                </>
               )}
             </div>
           </nav>
           
-          {/* Hero Section */}
-          <div className="flex-1 flex flex-col px-4 py-6 max-w-3xl mx-auto w-full bg-slate-900 dark:bg-transparent rounded-b-3xl">
+          {/* Hero Section - NotebookLM Style */}
+          <div className="relative flex-1 flex flex-col items-center justify-center px-6 py-16 md:py-24">
+            {/* Animated Background Blobs */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div 
+                className="absolute w-72 h-72 rounded-full morphing-blob opacity-30 blur-3xl animate-float"
+                style={{ backgroundColor: 'rgba(26, 115, 232, 0.3)', top: '10%', left: '10%' }}
+              />
+              <div 
+                className="absolute w-96 h-96 rounded-full morphing-blob opacity-20 blur-3xl animate-float animation-delay-2000"
+                style={{ backgroundColor: 'rgba(52, 168, 83, 0.3)', top: '50%', right: '5%' }}
+              />
+              <div 
+                className="absolute w-64 h-64 rounded-full morphing-blob opacity-25 blur-3xl animate-float animation-delay-4000"
+                style={{ backgroundColor: 'rgba(234, 67, 53, 0.2)', bottom: '10%', left: '30%' }}
+              />
+            </div>
+
+            {/* Main Headline */}
+            <h1 className="text-5xl md:text-7xl font-bold text-center max-w-4xl mb-6 leading-[1.1] animate-fade-in-up animation-delay-100">
+              <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>Stop re-reading.</span>
+              <br />
+              <span 
+                className="bg-clip-text text-transparent animate-gradient"
+                style={{ 
+                  backgroundImage: 'linear-gradient(135deg, #1a73e8, #34a853, #1a73e8)',
+                  backgroundSize: '200% 200%'
+                }}
+              >
+                Start remembering.
+              </span>
+            </h1>
             
-            {/* Main Hero - Punchy & Direct */}
-            <div className="text-center mb-6">
-              {/* Live visitors counter */}
-              <div className="flex justify-center mb-4">
-                <LiveVisitorsCounter />
-              </div>
+            {/* Subheadline */}
+            <p className="text-lg md:text-xl text-center max-w-2xl mb-10 animate-fade-in-up animation-delay-200" style={{ color: '#5f6368' }}>
+              Paste your notes, upload a PDF, or drop a YouTube link — get flashcards and quizzes in seconds. Free.
+            </p>
+
+            {/* Primary CTA - NotebookLM Style */}
+            <div className="flex flex-col items-center gap-4 mb-8 animate-fade-in-up animation-delay-300">
+              <button
+                onClick={handleCreateNew}
+                className="group px-10 py-5 rounded-full text-lg font-medium transition-all duration-300 hover:shadow-2xl hover:scale-105 active:scale-100 flex items-center gap-3"
+                style={{ 
+                  backgroundColor: '#1a73e8',
+                  color: '#ffffff',
+                }}
+              >
+                <span>Create Your First Study Set</span>
+                <svg className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </button>
               
-              {/* Micro social proof */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 mb-6 shadow-lg shadow-emerald-500/20">
-                <span className="flex -space-x-2">
-                  <span className="w-8 h-8 rounded-full ring-2 ring-slate-800 flex items-center justify-center text-xs font-bold" style={{backgroundColor: '#3b82f6', color: 'white'}}>J</span>
-                  <span className="w-8 h-8 rounded-full ring-2 ring-slate-800 flex items-center justify-center text-xs font-bold" style={{backgroundColor: '#a855f7', color: 'white'}}>A</span>
-                  <span className="w-8 h-8 rounded-full ring-2 ring-slate-800 flex items-center justify-center text-xs font-bold" style={{backgroundColor: '#ec4899', color: 'white'}}>M</span>
-                  <span className="w-8 h-8 rounded-full ring-2 ring-slate-800 flex items-center justify-center text-xs font-bold" style={{backgroundColor: '#f97316', color: 'white'}}>S</span>
-                </span>
-                <span className="text-sm font-black text-emerald-400">1000+ students acing exams</span>
-              </div>
-              
-              <h1 className="text-5xl md:text-6xl font-black mb-4 leading-[1.1]">
-                <span className="text-white">Turn Your Notes Into</span>
-                <br/>
-                <span className="inline-block mt-2 text-white">
-                  Perfect Flashcards
-                </span>
-              </h1>
-              
-              <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto font-semibold leading-relaxed drop-shadow-md">
-                Paste your notes. Get smart flashcards with quiz mode. <span className="font-black text-emerald-400">Instant results.</span>
+              <p className="text-sm flex items-center gap-2 animate-fade-in-up animation-delay-400" style={{ color: '#5f6368' }}>
+                <svg className="w-4 h-4" style={{ color: '#34a853' }} fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span>No credit card required · 2 free sets per day</span>
               </p>
-
-              {/* CTAs - Side by side, no overlap */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-                {/* Primary CTA */}
-                <button
-                  onClick={handleCreateNew}
-                  className="group relative inline-flex items-center justify-center gap-3 px-12 py-6 rounded-md text-xl font-black bg-white dark:bg-slate-800 text-slate-900 dark:text-white hover:-translate-y-1 active:translate-y-0 transition-all duration-200 w-full sm:w-auto shadow-xl hover:shadow-2xl border-2 border-slate-200 dark:border-slate-700"
-                >
-                  <span>{user ? "Create study set" : "Create study set"}</span>
-                  {/* Shine effect */}
-                  <div className="absolute inset-0 rounded-md overflow-hidden">
-                    <div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
-                  </div>
-                </button>
-
-                {/* My Sets button for logged in users */}
-                {user && savedSets.length > 0 && (
-                  <button
-                    onClick={handleViewSavedSets}
-                    className="px-8 py-6 rounded-md text-lg font-bold bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white shadow-lg hover:bg-slate-200 dark:hover:bg-slate-700 hover:shadow-xl hover:-translate-y-1 active:translate-y-0 transition-all duration-200 w-full sm:w-auto border-2 border-slate-200 dark:border-slate-700"
-                  >
-                    My study sets ({savedSets.length})
-                  </button>
-                )}
-              </div>
-              
-              {!user && (
-                <p className="text-base text-emerald-400 font-bold flex items-center justify-center gap-2 drop-shadow-md">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                  3 free study sets · No credit card · No signup required
-                </p>
-              )}
             </div>
 
-            {/* Powerful Benefits - What users get */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-              <div className="p-4 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-md shadow-lg hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all hover:-translate-y-1">
-                <h3 className="text-lg font-black text-white mb-1">Lightning Fast</h3>
-                <p className="text-emerald-100 text-sm">Auto-generate perfect flashcards</p>
-              </div>
-              
-              <div className="p-4 bg-gradient-to-br from-violet-600 to-purple-600 rounded-md shadow-lg hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition-all hover:-translate-y-1">
-                <h3 className="text-lg font-black text-white mb-1">Quiz Mode</h3>
-                <p className="text-violet-100 text-sm">Smart quizzes, track progress</p>
-              </div>
-              
-              <div className="p-4 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-md shadow-lg hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] transition-all hover:-translate-y-1">
-                <h3 className="text-lg font-black text-white mb-1">Any Subject</h3>
-                <p className="text-blue-100 text-sm">Math, Science, Languages & more</p>
-              </div>
-            </div>
+            {/* Secondary CTA for logged in users */}
+            {user && savedSets.length > 0 && (
+              <button
+                onClick={handleViewSavedSets}
+                className="px-6 py-3 rounded-full font-medium transition-all duration-300 hover:shadow-md hover:scale-105 active:scale-100 animate-fade-in-up animation-delay-500"
+                style={{ 
+                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#ffffff', 
+                  color: isDarkMode ? '#e2e8f0' : '#000000', 
+                  border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0' 
+                }}
+              >
+                My Study Sets ({savedSets.length})
+              </button>
+            )}
 
-            {/* Social Proof & Trust */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-              <div className="text-center p-3 bg-slate-800/50 rounded-md hover:bg-emerald-500/10 transition-all hover:shadow-lg hover:shadow-emerald-500/20">
-                <div className="text-2xl font-black text-white mb-0.5">
-                  <AnimatedCounter end={1000} suffix="+" duration={2000} />
-                </div>
-                <span className="text-xs font-bold text-slate-400">Active Students</span>
-              </div>
-              <div className="text-center p-3 bg-slate-800/50 rounded-md hover:bg-violet-500/10 transition-all hover:shadow-lg hover:shadow-violet-500/20">
-                <div className="text-2xl font-black text-white mb-0.5">
-                  <AnimatedCounter end={50} suffix="k+" duration={2000} />
-                </div>
-                <span className="text-xs font-bold text-slate-400">Flashcards Made</span>
-              </div>
-              <div className="text-center p-3 bg-slate-800/50 rounded-md hover:bg-blue-500/10 transition-all hover:shadow-lg hover:shadow-blue-500/20">
-                <div className="text-2xl font-black text-white mb-0.5">
-                  <AnimatedCounter end={4.9} suffix="/5" duration={2000} decimals={1} />
-                </div>
-                <span className="text-xs font-bold text-slate-400">Student Rating</span>
-              </div>
-              <div className="text-center p-3 bg-slate-800/50 rounded-md hover:bg-pink-500/10 transition-all hover:shadow-lg hover:shadow-pink-500/20">
-                <div className="text-2xl font-black text-white mb-0.5">AI</div>
-                <span className="text-xs font-bold text-slate-400">Powered Learning</span>
-              </div>
-            </div>
-
-            {/* Premium Pricing Cards */}
-            <div className="mt-16 mb-8">
-              <div className="text-center mb-8">
-                {isPremium && user ? (
-                  <>
-                    <div className="inline-block px-4 py-2 rounded-full border border-emerald-500 bg-emerald-500/20 mb-4">
-                      <span className="text-sm font-bold text-emerald-300">Premium Active</span>
-                    </div>
-                    <h2 className="text-3xl font-black text-white mb-2">You have Premium</h2>
-                    <p className="text-slate-400">Unlimited study sets and all features unlocked</p>
-                  </>
-                ) : (
-                  <>
-                    <div className="inline-block px-4 py-2 rounded-full border border-red-500 bg-red-500/20 mb-4 animate-pulse">
-                      <span className="text-sm font-bold text-red-300">⚠️ EARLY BIRD - ENDS FEB 10</span>
-                    </div>
-                    <h2 className="text-3xl font-black text-white mb-2">Premium Early Bird - Special Launch Pricing</h2>
-                    <p className="text-slate-400">Keep this price as long as you stay subscribed. Prices increase on Feb 10</p>
-                  </>
-                )}
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                {/* Free Plan */}
-                <div className="p-8 bg-slate-800/30 rounded-md border border-slate-700/50">
-                  <h3 className="text-2xl font-bold text-white mb-6">Free</h3>
-                  <ul className="space-y-4">
-                    <li className="flex items-start gap-3 text-slate-400">
-                      <svg className="w-5 h-5 text-slate-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-                      <span>3 study sets per day</span>
-                    </li>
-                    <li className="flex items-start gap-3 text-slate-400">
-                      <svg className="w-5 h-5 text-slate-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-                      <span>Paste notes</span>
-                    </li>
-                    <li className="flex items-start gap-3 text-slate-400">
-                      <svg className="w-5 h-5 text-slate-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-                      <span>All study modes</span>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Premium Early Bird Plan */}
-                <div className="p-6 rounded-md border-2 border-emerald-500 relative" style={{background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(19, 78, 74, 0.4) 100%)', boxShadow: '0 25px 50px -12px rgba(16, 185, 129, 0.2)'}}>
-                  <div className="absolute top-4 right-4">
-                    <span className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-md animate-pulse">EARLY BIRD</span>
-                  </div>
-                  {isPremium && user && (
-                    <div className="absolute top-14 right-4">
-                      <span className="px-3 py-1 bg-emerald-500 text-white text-xs font-bold rounded-md">Active</span>
-                    </div>
-                  )}
-                  <h3 className="text-2xl font-bold text-emerald-300 mb-1">Premium Early Bird</h3>
-                  <p className="text-xs text-red-300 font-bold mb-3">Prices increase on Feb 10 - Lock in now!</p>
-                  <div className="mb-4">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-3xl font-bold text-white">$2.99</span>
-                      <span className="text-slate-400">/month</span>
-                    </div>
-                  </div>
-                  <ul className="space-y-3 mb-6">
-                    <li className="flex items-start gap-3 text-slate-300">
-                      <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-                      <span><span className="font-bold text-white">Unlimited</span> study sets</span>
-                    </li>
-                    <li className="flex items-start gap-3 text-slate-300">
-                      <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-                      <span>Image uploads with OCR</span>
-                    </li>
-                    <li className="flex items-start gap-3 text-slate-300">
-                      <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-                      <span>Word document uploads</span>
-                    </li>
-                    <li className="flex items-start gap-3 text-slate-300">
-                      <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-                      <span>Priority AI processing</span>
-                    </li>
-                    <li className="flex items-start gap-3 text-slate-300">
-                      <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-                      <span>Multi-device sync</span>
-                    </li>
-                    <li className="flex items-start gap-3 text-slate-300">
-                      <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-                      <span>Share study sets</span>
-                    </li>
-                    <li className="flex items-start gap-3 text-emerald-300">
-                      <svg className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-                      <span className="font-bold">Access to all premium features</span>
-                    </li>
-                  </ul>
-                  <button
-                    onClick={async () => {
-                      if (!user) {
-                        setShowLoginModal(true);
-                      } else if (isPremium) {
-                        try {
-                          const res = await fetch('/api/stripe/portal', { method: 'POST' });
-                          const data = await res.json();
-                          if (data.url) {
-                            window.location.href = data.url;
-                          }
-                        } catch (error) {
-                          console.error('Error redirecting to portal:', error);
-                        }
-                      } else {
-                        window.location.href = '/pricing';
-                      }
+            {/* Social Proof */}
+            <div className="flex items-center gap-4 mt-12 mb-16 animate-fade-in-up animation-delay-500">
+              <div className="flex -space-x-3">
+                {[
+                  { color: '#1a73e8', letter: 'J' },
+                  { color: '#ea4335', letter: 'M' },
+                  { color: '#fbbc04', letter: 'S' },
+                  { color: '#34a853', letter: 'K' },
+                  { color: '#ff6d01', letter: 'R' }
+                ].map((avatar, i) => (
+                  <div 
+                    key={i}
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-transform duration-300 hover:scale-110 hover:z-10"
+                    style={{ 
+                      backgroundColor: avatar.color, 
+                      color: '#ffffff', 
+                      border: `3px solid ${isDarkMode ? '#1a1a2e' : '#f1f5f9'}`,
+                      animationDelay: `${i * 0.1}s`
                     }}
-                    className="w-full py-3 px-6 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-md transition-all hover:scale-[1.02] active:scale-95"
                   >
-                    {isPremium && user ? 'Manage Subscription' : 'Lock In Early Bird Price'}
-                  </button>
-                  <p className="text-center text-xs text-slate-400 mt-2">Keep this price as long as you stay subscribed - Cancel anytime</p>
-                </div>
+                    {avatar.letter}
+                  </div>
+                ))}
+              </div>
+              <div className="text-sm">
+                <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }} className="font-bold">1,000+</span>
+                <span style={{ color: '#5f6368' }}> students studying smarter</span>
               </div>
             </div>
 
-            {/* Trust badges */}
-            <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-slate-700 dark:text-slate-300 border-t border-slate-200 dark:border-slate-800 pt-4">
-              <span className="flex items-center gap-1.5">
-                <svg className="w-4 h-4 text-teal-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                Works instantly
-              </span>
-              <span className="flex items-center gap-1.5">
-                <svg className="w-4 h-4 text-teal-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                Secure & private
-              </span>
-              <span className="flex items-center gap-1.5">
-                <svg className="w-4 h-4 text-teal-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                Loved by students
-              </span>
+            {/* How It Works - NotebookLM Style */}
+            <div className="w-full max-w-4xl animate-fade-in-up animation-delay-600">
+              <h3 className="text-center text-sm font-medium uppercase tracking-wider mb-8" style={{ color: '#5f6368' }}>
+                How it works
+              </h3>
+              <div className="grid md:grid-cols-3 gap-6">
+                {/* Step 1 */}
+                <div className="text-center p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-xl card-3d animate-fade-in-up animation-delay-700" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#ffffff', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0' }}>
+                  <div className="w-14 h-14 mx-auto mb-4 rounded-xl flex items-center justify-center transition-transform duration-300 hover:scale-105" style={{ backgroundColor: 'rgba(26, 115, 232, 0.1)', color: '#1a73e8' }}>
+                    <EditNoteIcon />
+                  </div>
+                  <div className="text-xs font-bold mb-2 px-2 py-1 rounded-full inline-block" style={{ backgroundColor: 'rgba(26, 115, 232, 0.1)', color: '#1a73e8' }}>
+                    STEP 1
+                  </div>
+                  <h4 className="font-medium mb-2" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>Add Your Content</h4>
+                  <p className="text-sm" style={{ color: '#5f6368' }}>Take notes, paste text, upload PDFs, or link YouTube videos</p>
+                </div>
+                
+                {/* Step 2 */}
+                <div className="text-center p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-xl card-3d animate-fade-in-up animation-delay-800" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#ffffff', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0' }}>
+                  <div className="w-14 h-14 mx-auto mb-4 rounded-xl flex items-center justify-center transition-transform duration-300 hover:scale-105" style={{ backgroundColor: 'rgba(234, 67, 53, 0.1)', color: '#ea4335' }}>
+                    <BoltIcon />
+                  </div>
+                  <div className="text-xs font-bold mb-2 px-2 py-1 rounded-full inline-block" style={{ backgroundColor: 'rgba(234, 67, 53, 0.1)', color: '#ea4335' }}>
+                    STEP 2
+                  </div>
+                  <h4 className="font-medium mb-2" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>AI Creates Study Material</h4>
+                  <p className="text-sm" style={{ color: '#5f6368' }}>Generate flashcards, quizzes & notes instantly</p>
+                </div>
+                
+                {/* Step 3 */}
+                <div className="text-center p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-xl card-3d animate-fade-in-up" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#ffffff', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0', animationDelay: '0.9s' }}>
+                  <div className="w-14 h-14 mx-auto mb-4 rounded-xl flex items-center justify-center transition-transform duration-300 hover:scale-105" style={{ backgroundColor: 'rgba(52, 168, 83, 0.1)', color: '#34a853' }}>
+                    <TargetIcon />
+                  </div>
+                  <div className="text-xs font-bold mb-2 px-2 py-1 rounded-full inline-block" style={{ backgroundColor: 'rgba(52, 168, 83, 0.1)', color: '#34a853' }}>
+                    STEP 3
+                  </div>
+                  <h4 className="font-semibold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Study & Ace Exams</h4>
+                  <p className="text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Test yourself with cards, quizzes & track progress</p>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Footer - Minimal */}
-          <footer className="mt-16 pt-8 border-t border-slate-700/50 pb-8">
-            <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-slate-400">
-              <a href="/pricing" className="hover:text-emerald-400 transition-colors font-medium">💎 Pricing</a>
-              <span className="text-slate-600">·</span>
-              <a href="mailto:studymaxxer@gmail.com" className="hover:text-emerald-400 transition-colors">Contact</a>
-              <span className="text-slate-600">·</span>
-              <a href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy</a>
-              <span className="text-slate-600">·</span>
-              <a href="/terms" className="hover:text-emerald-400 transition-colors">Terms</a>
-              <span className="text-slate-600">·</span>
-              <span>© 2026 StudyMaxx</span>
+          {/* Features Section */}
+          <div className="relative px-6 py-20" style={{ borderTop: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}>
+            <div className="max-w-6xl mx-auto">
+              <h2 className="text-3xl md:text-4xl font-bold text-center mb-4" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                Everything you need to <span style={{ color: '#1a73e8' }}>ace your exams</span>
+              </h2>
+              <p className="text-center mb-12 max-w-2xl mx-auto" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
+                Powerful features designed by students, for students.
+              </p>
+              
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-xl card-3d" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(26, 115, 232, 0.05)', border: isDarkMode ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(26, 115, 232, 0.2)' }}>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 hover:scale-105" style={{ backgroundColor: 'rgba(26, 115, 232, 0.15)' }}>
+                    <svg className="w-6 h-6" style={{ color: '#1a73e8' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Lightning Fast</h3>
+                  <p className="text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Generate flashcards from any content in seconds. No manual work required.</p>
+                </div>
+                
+                <div className="p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-xl card-3d" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 hover:scale-105" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+                    <svg className="w-6 h-6" style={{ color: isDarkMode ? '#ffffff' : '#000000' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Smart Quizzes</h3>
+                  <p className="text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Test yourself with auto-generated multiple choice questions and track progress.</p>
+                </div>
+                
+                <div className="p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-xl card-3d" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 hover:scale-105" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+                    <svg className="w-6 h-6" style={{ color: isDarkMode ? '#ffffff' : '#000000' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Any Format</h3>
+                  <p className="text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Upload PDFs, images, paste text, or link YouTube videos. We handle it all.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing Section */}
+          <div className="relative px-6 py-20" style={{ borderTop: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}>
+            <div className="max-w-4xl mx-auto">
+              {isPremium && user ? (
+                <div className="text-center">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 animate-bounce-in" style={{ backgroundColor: 'rgba(26, 115, 232, 0.1)', border: '2px solid #1a73e8' }}>
+                    <svg className="w-5 h-5" style={{ color: '#1a73e8' }} fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span style={{ color: '#1a73e8' }} className="font-medium">Premium Active</span>
+                  </div>
+                  <h2 className="text-3xl font-bold mb-4" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>You're all set!</h2>
+                  <p className="mb-8" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Enjoy unlimited study sets and all premium features.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="text-center mb-12">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6" style={{ backgroundColor: 'rgba(26, 115, 232, 0.1)', border: '2px solid #1a73e8' }}>
+                      <span style={{ color: '#1a73e8' }} className="font-medium">🎓 Premium Plan</span>
+                    </div>
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                      Unlock <span style={{ color: '#1a73e8' }}>everything</span> for $8.99/mo
+                    </h2>
+                    <p style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Or save 26% with the annual plan at $79.99/year.</p>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Free Plan */}
+                    <div className="p-8 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-xl card-3d" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: isDarkMode ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.1)' }}>
+                      <h3 className="text-xl font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Free</h3>
+                      <p className="text-sm mb-6" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Perfect for trying out</p>
+                      <div className="text-4xl font-bold mb-6" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>$0</div>
+                      <ul className="space-y-3 mb-8">
+                        <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }} fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          <span>2 study sets per day</span>
+                        </li>
+                        <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }} fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          <span>Paste notes</span>
+                        </li>
+                        <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }} fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          <span>All study modes</span>
+                        </li>
+                      </ul>
+                      <button
+                        onClick={handleCreateNew}
+                        className="w-full py-3 px-6 font-medium rounded-xl transition-all duration-300 hover:scale-105 active:scale-100"
+                        style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', color: isDarkMode ? '#ffffff' : '#000000', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}
+                      >
+                        Get Started Free
+                      </button>
+                    </div>
+
+                    {/* Premium Plan */}
+                    <div className="p-8 rounded-2xl relative transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl card-3d" style={{ backgroundColor: isDarkMode ? 'rgba(26, 115, 232, 0.05)' : 'rgba(26, 115, 232, 0.05)', border: '2px solid #1a73e8' }}>
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                        <span className="px-3 py-1 text-xs font-bold rounded-full" style={{ backgroundColor: '#1a73e8', color: '#ffffff' }}>
+                          MOST POPULAR
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Premium</h3>
+                      <p className="text-sm mb-6" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>For serious students</p>
+                      <div className="mb-6">
+                        <span className="text-4xl font-bold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>$8.99</span>
+                        <span style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>/month</span>
+                      </div>
+                      <ul className="space-y-3 mb-8">
+                        <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: '#1a73e8' }} fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          <span><strong style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Unlimited</strong> study sets</span>
+                        </li>
+                        <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: '#1a73e8' }} fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          <span>PDF & image uploads</span>
+                        </li>
+                        <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: '#1a73e8' }} fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          <span>Priority AI processing</span>
+                        </li>
+                        <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: '#1a73e8' }} fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          <span>Cross-device sync</span>
+                        </li>
+                      </ul>
+                      <button
+                        onClick={() => {
+                          if (!user) {
+                            handleOpenLoginModal();
+                          } else {
+                            window.location.href = '/pricing';
+                          }
+                        }}
+                        className="w-full py-3 px-6 font-semibold rounded-xl transition-all duration-300 hover:opacity-90 hover:scale-105 active:scale-100"
+                        style={{ backgroundColor: '#1a73e8', color: '#ffffff' }}
+                      >
+                        Get Premium
+                      </button>
+                      <p className="text-center text-xs mt-3" style={{ color: '#5f6368' }}>Cancel anytime · No commitment</p>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Final CTA Section */}
+          {!isPremium && (
+            <div className="relative px-6 py-20" style={{ borderTop: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}>
+              <div className="max-w-2xl mx-auto text-center">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                  Your next exam is closer than you think.
+                </h2>
+                <p className="text-lg mb-8" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
+                  Students using active recall score 50% higher. Start studying smarter now — it takes 30 seconds.
+                </p>
+                <button
+                  onClick={handleCreateNew}
+                  className="group px-10 py-5 rounded-2xl text-lg font-bold transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-100"
+                  style={{ 
+                    backgroundColor: '#1a73e8', 
+                    color: '#ffffff'
+                  }}
+                >
+                  <span>Get Started — It's Free</span>
+                  <svg className="w-6 h-6 inline-block ml-2 group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          <footer className="relative px-6 py-8" style={{ borderTop: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}>
+            <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>© 2026 StudyMaxx</div>
+              <div className="flex items-center gap-6 text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
+                <a href="/pricing" className="hover:text-blue-500 transition-colors">Pricing</a>
+                <a href="/help" className="hover:text-blue-500 transition-colors">Help</a>
+                <a href="/privacy" className="hover:text-blue-500 transition-colors">Privacy</a>
+                <a href="/terms" className="hover:text-blue-500 transition-colors">Terms</a>
+              </div>
             </div>
           </footer>
         </div>
@@ -639,37 +982,360 @@ export default function Home() {
           onBack={handleBackToHome}
         />
       )}
+      {viewMode === "dashboard" && (
+        <>
+          <Sidebar
+            currentView="dashboard"
+            onNavigate={(view) => {
+              if (view === 'dashboard') {
+                setViewMode('dashboard');
+                window.history.pushState({}, '', '/dashboard');
+              } else if (view === 'settings') {
+                setViewMode('settings');
+                window.history.pushState({}, '', '/settings');
+              } else if (view === 'pricing') {
+                window.location.href = '/pricing';
+              } else if (view === 'tips' || view === 'about') {
+                // These are now handled via external pages or modals
+                window.location.href = `/${view}`;
+              }
+            }}
+            onSignOut={async () => {
+              if (supabase) {
+                await supabase.auth.signOut();
+                setUser(null);
+                setIsPremium(false);
+                setViewMode('home');
+                window.history.replaceState({}, '', '/');
+              }
+            }}
+            isPremium={isPremium}
+            userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+            userEmail={user?.email}
+          />
+          <DashboardView
+            onSelectOption={handleGoToCreate}
+            onCreateFlashcards={() => handleGoToCreate("notes")}
+            onLoadSet={handleLoadSet}
+            isPremium={isPremium}
+            userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+            user={user}
+            onBack={goBack}
+            onSettings={handleViewSettings}
+            savedSets={savedSets}
+          />
+        </>
+      )}
       {viewMode === "createFlow" && (
-        <CreateFlowView
-          onGenerateFlashcards={handleGenerateFlashcards}
-          onBack={handleBackToHome}
-          onRequestLogin={() => setShowLoginModal(true)}
-        />
+        <>
+          <Sidebar
+            currentView="dashboard"
+            onNavigate={(view) => {
+              if (view === 'dashboard') {
+                setViewMode('dashboard');
+                window.history.pushState({}, '', '/dashboard');
+              } else if (view === 'settings') {
+                setViewMode('settings');
+                window.history.pushState({}, '', '/settings');
+              } else if (view === 'pricing') {
+                window.location.href = '/pricing';
+              }
+            }}
+            onSignOut={async () => {
+              if (supabase) {
+                await supabase.auth.signOut();
+                setUser(null);
+                setIsPremium(false);
+                setViewMode('home');
+                window.history.replaceState({}, '', '/');
+              }
+            }}
+            isPremium={isPremium}
+            userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+            userEmail={user?.email}
+          />
+          <CreateFlowView
+            onGenerateFlashcards={handleGenerateFlashcards}
+            onBack={goBack}
+            onRequestLogin={() => handleOpenLoginModal()}
+            initialMaterialType={selectedMaterialType}
+            initialText={pendingTranscription?.text || pendingExtraction?.text}
+            initialSubject={pendingTranscription?.subject || pendingExtraction?.subject}
+          />
+        </>
       )}
       {viewMode === "studying" && (
         <StudyView 
           flashcards={flashcards}
           currentSetId={currentSetId}
-          onBack={handleBackToHome}
+          onBack={goBack}
+          isPremium={isPremium}
         />
+      )}
+      {viewMode === "audio" && (
+        <>
+          <Sidebar
+            currentView="dashboard"
+            onNavigate={(view) => {
+              if (view === 'dashboard') {
+                setViewMode('dashboard');
+                window.history.pushState({}, '', '/dashboard');
+              } else if (view === 'settings') {
+                setViewMode('settings');
+                window.history.pushState({}, '', '/settings');
+              } else if (view === 'pricing') {
+                window.location.href = '/pricing';
+              }
+            }}
+            onSignOut={async () => {
+              if (supabase) {
+                await supabase.auth.signOut();
+                setUser(null);
+                setIsPremium(false);
+                setViewMode('home');
+                window.history.replaceState({}, '', '/');
+              }
+            }}
+            isPremium={isPremium}
+            userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+            userEmail={user?.email}
+          />
+          <AudioRecordingView
+            onBack={goBack}
+            onTranscriptionComplete={(text, subject) => {
+              setPendingTranscription({ text, subject });
+              setViewMode('notes');
+              window.history.pushState({}, '', '/notes');
+            }}
+            onGenerateFlashcards={handleGenerateFlashcards}
+            onGenerateQuiz={(questions, subject) => {
+              setQuizQuestions(questions);
+              setCurrentSubject(subject);
+              setViewMode('quiz');
+              window.history.pushState({}, '', '/quiz');
+            }}
+            onGenerateMatch={(terms, definitions, subject) => {
+              setMatchTerms(terms);
+              setMatchDefinitions(definitions);
+              setCurrentSubject(subject);
+              setViewMode('match');
+              window.history.pushState({}, '', '/match');
+            }}
+            isPremium={isPremium}
+            user={user}
+            initialSubject={initialSubject}
+          />
+        </>
+      )}
+      {viewMode === "youtube" && (
+        <>
+          <Sidebar
+            currentView="dashboard"
+            onNavigate={(view) => {
+              if (view === 'dashboard') {
+                setViewMode('dashboard');
+                window.history.pushState({}, '', '/dashboard');
+              } else if (view === 'settings') {
+                setViewMode('settings');
+                window.history.pushState({}, '', '/settings');
+              } else if (view === 'pricing') {
+                window.location.href = '/pricing';
+              }
+            }}
+            onSignOut={async () => {
+              if (supabase) {
+                await supabase.auth.signOut();
+                setUser(null);
+                setIsPremium(false);
+                setViewMode('home');
+                window.history.replaceState({}, '', '/');
+              }
+            }}
+            isPremium={isPremium}
+            userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+            userEmail={user?.email}
+          />
+          <YouTubeView
+            onBack={goBack}
+            onContentExtracted={(text, subject, title) => {
+              setPendingExtraction({ text, subject, title });
+              setSelectedMaterialType('notes');
+              setViewMode('createFlow');
+              window.history.pushState({}, '', '/create');
+            }}
+            onGenerateFlashcards={handleGenerateFlashcards}
+            onGenerateQuiz={(questions, subject) => {
+              setQuizQuestions(questions);
+              setCurrentSubject(subject);
+              setViewMode('quiz');
+              window.history.pushState({}, '', '/quiz');
+            }}
+            onGenerateMatch={(terms, definitions, subject) => {
+              setMatchTerms(terms);
+              setMatchDefinitions(definitions);
+              setCurrentSubject(subject);
+              setViewMode('match');
+              window.history.pushState({}, '', '/match');
+            }}
+            isPremium={isPremium}
+            user={user}
+            initialSubject={initialSubject}
+          />
+        </>
+      )}
+      {viewMode === "document" && (
+        <>
+          <Sidebar
+            currentView="dashboard"
+            onNavigate={(view) => {
+              if (view === 'dashboard') {
+                setViewMode('dashboard');
+                window.history.pushState({}, '', '/dashboard');
+              } else if (view === 'settings') {
+                setViewMode('settings');
+                window.history.pushState({}, '', '/settings');
+              } else if (view === 'pricing') {
+                window.location.href = '/pricing';
+              }
+            }}
+            onSignOut={async () => {
+              if (supabase) {
+                await supabase.auth.signOut();
+                setUser(null);
+                setIsPremium(false);
+                setViewMode('home');
+                window.history.replaceState({}, '', '/');
+              }
+            }}
+            isPremium={isPremium}
+            userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+            userEmail={user?.email}
+          />
+          <DocumentView
+            onBack={goBack}
+            onGenerateFlashcards={handleGenerateFlashcards}
+            isPremium={isPremium}
+            user={user}
+            initialSubject={initialSubject}
+          />
+        </>
+      )}
+      {viewMode === "notes" && (
+        <>
+          <Sidebar
+            currentView="dashboard"
+            onNavigate={(view) => {
+              if (view === 'dashboard') {
+                setViewMode('dashboard');
+                window.history.pushState({}, '', '/dashboard');
+              } else if (view === 'settings') {
+                setViewMode('settings');
+                window.history.pushState({}, '', '/settings');
+              } else if (view === 'pricing') {
+                window.location.href = '/pricing';
+              }
+            }}
+            onSignOut={async () => {
+              if (supabase) {
+                await supabase.auth.signOut();
+                setUser(null);
+                setIsPremium(false);
+                setViewMode('home');
+                window.history.replaceState({}, '', '/');
+              }
+            }}
+            isPremium={isPremium}
+            userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+            userEmail={user?.email}
+          />
+          <NotesEditorView
+            onBack={goBack}
+            onGenerateFlashcards={handleGenerateFlashcards}
+            onGenerateQuiz={(questions, subject) => {
+              setQuizQuestions(questions);
+              setQuizSubject(subject);
+              setViewMode("quiz");
+            }}
+            onGenerateMatch={(terms, definitions, subject) => {
+              setMatchTerms(terms);
+              setMatchDefinitions(definitions);
+              setQuizSubject(subject);
+              setViewMode("match");
+            }}
+            isPremium={isPremium}
+            user={user}
+            initialText={pendingTranscription?.text || pendingExtraction?.text || ""}
+            initialSubject={pendingTranscription?.subject || pendingExtraction?.subject || initialSubject || ""}
+          />
+        </>
       )}
       {viewMode === "saved" && (
         <SavedSetsView 
           onLoadSet={handleLoadSet}
-          onBack={handleBackToHome}
+          onBack={goBack}
         />
       )}
       {viewMode === "settings" && (
-        <SettingsView 
-          onBack={handleBackToHome}
+        <>
+          <Sidebar
+            currentView="settings"
+            onNavigate={(view) => {
+              if (view === 'dashboard') {
+                setViewMode('dashboard');
+                window.history.pushState({}, '', '/dashboard');
+              } else if (view === 'settings') {
+                setViewMode('settings');
+                window.history.pushState({}, '', '/settings');
+              } else if (view === 'pricing') {
+                window.location.href = '/pricing';
+              }
+            }}
+            onSignOut={async () => {
+              if (supabase) {
+                await supabase.auth.signOut();
+                setUser(null);
+                setIsPremium(false);
+                setViewMode('home');
+                window.history.replaceState({}, '', '/');
+              }
+            }}
+            isPremium={isPremium}
+            userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+            userEmail={user?.email}
+          />
+          <SettingsView 
+            onBack={() => {
+              setViewMode('dashboard');
+              window.history.pushState({}, '', '/dashboard');
+            }}
+          />
+        </>
+      )}
+
+      {/* Quiz View */}
+      {viewMode === "quiz" && quizQuestions.length > 0 && (
+        <QuizView
+          questions={quizQuestions}
+          subject={quizSubject}
+          onBack={() => setViewMode("notes")}
+        />
+      )}
+
+      {/* Match Game */}
+      {viewMode === "match" && matchTerms.length > 0 && (
+        <MatchGame
+          terms={matchTerms}
+          definitions={matchDefinitions}
+          subject={quizSubject}
+          onBack={() => setViewMode("notes")}
         />
       )}
 
       {/* Modals - rendered at all times, not just in home view */}
       {showLoginModal && (
         <LoginModal 
-          onClose={() => setShowLoginModal(false)}
-          onSkip={() => setShowLoginModal(false)}
+          onClose={handleCloseLoginModal}
+          onSkip={handleCloseLoginModal}
         />
       )}
 
@@ -683,22 +1349,37 @@ export default function Home() {
         />
       )}
 
-      {/* Floating Feedback Button */}
-      <button
-        onClick={() => setShowFeedbackModal(true)}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/40 hover:scale-110 active:scale-95 transition-all duration-200 flex items-center justify-center"
-        title={settings.language === "no" ? "Send tilbakemelding" : "Send Feedback"}
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
-      </button>
-
       {/* Feedback Modal */}
       <FeedbackModal 
         isOpen={showFeedbackModal}
         onClose={() => setShowFeedbackModal(false)}
       />
+
+      {/* Subject Prompt Modal */}
+      <SubjectPromptModal
+        isOpen={showSubjectPrompt}
+        onClose={() => {
+          setShowSubjectPrompt(false);
+          setPendingView(null);
+        }}
+        onSubmit={(subject) => {
+          setInitialSubject(subject);
+          setShowSubjectPrompt(false);
+          
+          // Navigate to the pending view
+          if (pendingView === "audio") {
+            navigateTo("audio", "/audio");
+          } else if (pendingView === "youtube") {
+            navigateTo("youtube", "/youtube");
+          } else if (pendingView === "document") {
+            navigateTo("document", "/document");
+          } else if (pendingView === "notes") {
+            navigateTo("notes", "/notes");
+          }
+          setPendingView(null);
+        }}
+      />
     </main>
   );
 }
+

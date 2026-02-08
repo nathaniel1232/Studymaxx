@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSettings } from "../contexts/SettingsContext";
 
 const COOKIE_CONSENT_KEY = "studymaxx-cookie-consent";
 
@@ -21,6 +22,9 @@ export function isTrackingAllowed(): boolean {
 
 export default function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false);
+  const { settings } = useSettings();
+  const isDarkMode = settings.theme === 'dark' || 
+    (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   useEffect(() => {
     // Check if user has already consented
@@ -53,95 +57,58 @@ export default function CookieConsent() {
   if (!showBanner) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[9999] p-2 sm:p-4">
+    <div className="fixed bottom-0 left-0 right-0 z-[9999] p-2 sm:p-3">
       <div 
-        className="max-w-4xl mx-auto rounded-xl shadow-2xl p-4 sm:p-6"
+        className="max-w-md mx-auto rounded-xl shadow-lg p-3 sm:p-4"
         style={{
-          backgroundColor: '#ffffff',
-          border: '2px solid #e2e8f0',
-          boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.15)'
+          backgroundColor: isDarkMode ? '#1e1e38' : '#ffffff',
+          border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0',
+          boxShadow: isDarkMode ? '0 -4px 20px rgba(0, 0, 0, 0.4)' : '0 -4px 20px rgba(0, 0, 0, 0.1)'
         }}
       >
-        <div className="flex flex-col gap-4">
-          {/* Top row: Icon and Message */}
-          <div className="flex items-start gap-3">
-            {/* Cookie Icon */}
-            <div 
-              className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: '#fef3c7' }}
-            >
-              <span className="text-xl sm:text-2xl">🍪</span>
-            </div>
-            
-            {/* Message */}
-            <div className="flex-1 min-w-0">
-              <h3 
-                className="text-base sm:text-lg font-bold mb-1"
-                style={{ color: '#1e293b' }}
+        {/* Compact single row on mobile, two rows on very small screens */}
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          {/* Message - compact */}
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <span className="text-lg flex-shrink-0">🍪</span>
+            <p className="text-xs sm:text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
+              We use cookies for a better experience.
+              <a 
+                href="/privacy" 
+                className="ml-1 underline hover:no-underline"
+                style={{ color: '#1a73e8' }}
               >
-                We use cookies
-              </h3>
-              <p 
-                className="text-xs sm:text-sm"
-                style={{ color: '#64748b' }}
-              >
-                We use cookies to save your preferences and improve your experience.
-              </p>
-            </div>
+                Learn more
+              </a>
+            </p>
           </div>
           
-          {/* Buttons - Stack on mobile */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          {/* Buttons - inline */}
+          <div className="flex gap-2 flex-shrink-0 w-full sm:w-auto">
             <button
               onClick={handleDecline}
-              className="w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-lg text-sm font-bold transition-all"
+              className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:opacity-80 active:scale-95"
               style={{
-                backgroundColor: '#f1f5f9',
-                color: '#475569',
-                border: '2px solid #cbd5e1'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#e2e8f0';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#f1f5f9';
+                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : '#f1f5f9',
+                color: isDarkMode ? '#9aa0a6' : '#64748b',
               }}
             >
               Decline
             </button>
             <button
               onClick={handleAccept}
-              className="w-full sm:w-auto px-5 sm:px-6 py-2.5 rounded-lg text-sm font-bold transition-all"
+              className="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-medium transition-all hover:brightness-110 active:scale-95"
               style={{
-                backgroundColor: '#0f172a',
+                backgroundColor: '#1a73e8',
                 color: '#ffffff',
-                border: '2px solid #0f172a'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#1e293b';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#0f172a';
               }}
             >
-              Accept Cookies
+              Accept
             </button>
           </div>
-        </div>
-        
-        {/* Privacy Link */}
-        <div className="mt-3 text-center">
-          <a 
-            href="/privacy" 
-            className="text-xs underline transition-colors"
-            style={{ color: '#64748b' }}
-            onMouseEnter={(e) => e.currentTarget.style.color = '#0f172a'}
-            onMouseLeave={(e) => e.currentTarget.style.color = '#64748b'}
-          >
-            Privacy Policy
-          </a>
         </div>
       </div>
     </div>
   );
 }
+

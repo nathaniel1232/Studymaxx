@@ -213,3 +213,4 @@ export function FeatureComparison({ onUpgrade }: FeatureComparisonProps) {
     </div>
   );
 }
+

@@ -125,8 +125,8 @@ export function checkRateLimit(
  */
 export function getRateLimitForUser(isPremium: boolean, isAnonymous: boolean = false): number {
   if (isPremium) return 999; // Premium: essentially unlimited (999/day)
-  if (isAnonymous) return 3; // Anonymous: very limited to prevent abuse
-  return 3; // Free logged-in users: 3 per day
+  if (isAnonymous) return 2; // Anonymous: very limited to prevent abuse
+  return 2; // Free logged-in users: 2 per day
 }
 
 /**

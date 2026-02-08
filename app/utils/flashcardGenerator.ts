@@ -1,4 +1,4 @@
-interface Flashcard {
+export interface Flashcard {
   id: string;
   question: string;
   answer: string;
@@ -26,7 +26,7 @@ export async function generateFlashcards(
   targetGrade?: string,
   userId?: string,
   materialType: string = "notes",
-  outputLanguage: "auto" | "en" = "auto",
+  outputLanguage: string = "auto",
   difficulty: string = "Medium",
   includeMath: boolean = false,
   knownLanguage?: string,

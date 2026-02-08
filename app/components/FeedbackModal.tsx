@@ -207,7 +207,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                   rows={4}
                   className="w-full px-4 py-3 rounded-lg resize-none transition-all focus:outline-none"
                   style={{ 
-                    backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                    backgroundColor: isDark ? '#0f172a' : '#f1f5f9',
                     border: isDark ? '2px solid #334155' : '2px solid #e2e8f0',
                     color: isDark ? '#f1f5f9' : '#1e293b'
                   }}
@@ -231,7 +231,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                     : "For follow-up"}
                   className="w-full px-4 py-3 rounded-lg transition-all focus:outline-none"
                   style={{ 
-                    backgroundColor: isDark ? '#0f172a' : '#f8fafc',
+                    backgroundColor: isDark ? '#0f172a' : '#f1f5f9',
                     border: isDark ? '2px solid #334155' : '2px solid #e2e8f0',
                     color: isDark ? '#f1f5f9' : '#1e293b'
                   }}
@@ -281,3 +281,4 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     </div>
   );
 }
+

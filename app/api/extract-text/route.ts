@@ -1,8 +1,7 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import Tesseract from "tesseract.js";
-import mammoth from "mammoth";
+import { VertexAI } from '@google-cloud/vertexai';
 import {
   validateExtractedText,
   cleanText,
@@ -133,7 +132,9 @@ export async function POST(req: Request) {
 
       try {
         console.log("📑 Extracting from PDF...");
-        const pdfParse = require("pdf-parse");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pdfParseModule: any = await import('pdf-parse');
+        const pdfParse = pdfParseModule.default || pdfParseModule;
         const data = await pdfParse(buffer);
         extractedText = data.text;
         extractionMethod = "PDF Parser";
@@ -142,14 +143,59 @@ export async function POST(req: Request) {
           console.log(`📄 PDF has ${data.numpages} pages`);
         }
 
-        // If PDF text extraction yields poor results, suggest OCR
+        // If PDF text extraction yields poor results, use Gemini OCR
         if (extractedText.trim().length < 100 && data.numpages > 0) {
-          warnings.push("PDF appears to be scanned or image-based. Text extraction may be incomplete. Try converting to images for better results.");
+          console.log("📸 PDF appears to be image-based, using Gemini 2.5 Flash OCR...");
+          
+          try {
+            // Initialize Vertex AI
+            const vertexAI = new VertexAI({
+              project: process.env.VERTEX_AI_PROJECT_ID || '',
+              location: 'us-central1',
+            });
+            
+            const model = vertexAI.getGenerativeModel({
+              model: 'gemini-2.5-flash-001', // Using 2.5 Flash for OCR
+            });
+
+            // Convert PDF to base64 for Gemini
+            const base64Pdf = buffer.toString('base64');
+            
+            const result = await model.generateContent({
+              contents: [{
+                role: 'user',
+                parts: [
+                  {
+                    inlineData: {
+                      data: base64Pdf,
+                      mimeType: 'application/pdf'
+                    }
+                  },
+                  {
+                    text: 'Extract all text from this PDF document accurately. Return only the extracted text, maintaining the original structure and formatting where possible.'
+                  }
+                ]
+              }]
+            });
+
+            const geminiText = result.response?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            
+            if (geminiText && geminiText.trim().length > extractedText.trim().length) {
+              extractedText = geminiText;
+              extractionMethod = "Gemini 2.5 Flash OCR";
+              console.log(`✅ Gemini OCR extracted ${geminiText.length} characters`);
+            } else {
+              warnings.push("PDF appears to be scanned or image-based. Text extraction may be incomplete.");
+            }
+          } catch (geminiError) {
+            console.error("❌ Gemini OCR failed:", geminiError);
+            warnings.push("PDF text extraction was incomplete. The file may be scanned.");
+          }
         }
       } catch (pdfError) {
         console.error("❌ PDF extraction failed:", pdfError);
         return NextResponse.json(
-          { error: "Failed to extract text from PDF. The file may be corrupted or image-based." },
+          { error: "Failed to extract text from PDF. The file may be corrupted." },
           { status: 400 }
         );
       }
@@ -161,6 +207,11 @@ export async function POST(req: Request) {
     else if (fileType === 'docx' || fileType === 'doc') {
       try {
         console.log("📝 Extracting from DOCX...");
+        
+        // Dynamic import for ESM compatibility
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mammothModule: any = await import('mammoth');
+        const mammoth = mammothModule.default || mammothModule;
         
         // Extract text
         const textResult = await mammoth.extractRawText({ buffer });
@@ -229,34 +280,50 @@ export async function POST(req: Request) {
       }
 
       try {
-        console.log("🖼️ Performing OCR on image...");
-        warnings.push("OCR processing may take 10-20 seconds depending on image quality.");
+        console.log("🖼️ Performing OCR on image with Gemini 2.5 Flash...");
 
-        // Use comprehensive language set for better recognition
-        // eng+nor+swe+dan+deu+fra+spa covers most European languages
-        const result = await Tesseract.recognize(buffer, 'eng+nor+swe+dan+deu+fra+spa', {
-          logger: (m) => {
-            if (m.status === 'recognizing text') {
-              console.log(`OCR Progress: ${(m.progress * 100).toFixed(0)}%`);
-            }
-          }
+        // Initialize Vertex AI
+        const vertexAI = new VertexAI({
+          project: process.env.VERTEX_AI_PROJECT_ID || '',
+          location: 'us-central1',
+        });
+        
+        const model = vertexAI.getGenerativeModel({
+          model: 'gemini-2.5-flash-001',
         });
 
-        extractedText = result.data.text;
-        extractionMethod = "Tesseract OCR (Multi-language)";
+        // Convert image to base64
+        const base64Image = buffer.toString('base64');
+        const mimeType = fileType === 'jpg' || fileType === 'jpeg' ? 'image/jpeg' 
+          : fileType === 'png' ? 'image/png'
+          : fileType === 'gif' ? 'image/gif'
+          : fileType === 'bmp' ? 'image/bmp'
+          : 'image/jpeg';
         
-        console.log(`📊 OCR Stats: ${extractedText.length} chars, ${result.data.confidence.toFixed(1)}% confidence`);
+        const result = await model.generateContent({
+          contents: [{
+            role: 'user',
+            parts: [
+              {
+                inlineData: {
+                  data: base64Image,
+                  mimeType: mimeType
+                }
+              },
+              {
+                text: 'Extract all text from this image accurately. Return only the text content, maintaining the original structure. Support multiple languages including English, Norwegian, Swedish, Danish, German, French, and Spanish.'
+              }
+            ]
+          }]
+        });
 
-        // OCR confidence check
-        if (result.data.confidence < 50) {
-          warnings.push("Low OCR confidence. Image quality may be poor. Consider using a clearer image or higher resolution.");
-        } else if (result.data.confidence < 70) {
-          warnings.push("Moderate OCR confidence. Some text may be inaccurate.");
-        }
+        extractedText = result.response?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        extractionMethod = "Gemini 2.5 Flash Vision OCR";
+        
+        console.log(`✅ Gemini OCR complete: ${extractedText.length} characters extracted`);
 
-        console.log(`✅ OCR complete. Confidence: ${result.data.confidence.toFixed(1)}%`);
       } catch (ocrError) {
-        console.error("❌ OCR failed:", ocrError);
+        console.error("❌ Gemini OCR failed:", ocrError);
         return NextResponse.json(
           { error: "Failed to perform OCR on image. The image may be too complex or low quality." },
           { status: 400 }

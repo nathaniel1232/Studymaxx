@@ -58,12 +58,27 @@ export const validateEmailForAuth = (email: string): { valid: boolean; error?: s
 export const signInWithEmail = async (email: string, password: string) => {
   if (!supabase) throw new Error('Supabase not configured');
   
+  // Log current origin for debugging network host issues
+  if (typeof window !== 'undefined') {
+    console.log('[Auth] Sign in attempt from:', window.location.origin);
+  }
+  
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
   
-  if (error) throw error;
+  if (error) {
+    console.error('[Auth] Sign in error:', error.message);
+    // Handle rate limit errors with friendly message
+    if (error.message?.toLowerCase().includes('rate limit') || 
+        error.message?.toLowerCase().includes('too many requests')) {
+      throw new Error('Too many login attempts. Please try again in a few minutes or use Google Sign-In.');
+    }
+    throw error;
+  }
+  
+  console.log('[Auth] Sign in successful');
   return data;
 };
 
@@ -87,7 +102,14 @@ export const signUpWithEmail = async (email: string, password: string) => {
     },
   });
   
-  if (error) throw error;
+  if (error) {
+    // Handle rate limit errors with friendly message
+    if (error.message?.toLowerCase().includes('rate limit') || 
+        error.message?.toLowerCase().includes('too many requests')) {
+      throw new Error('Too many signup attempts. Please try again in a few minutes or use Google Sign-In.');
+    }
+    throw error;
+  }
   return data;
 };
 
@@ -127,7 +149,17 @@ export const signInWithGoogle = async () => {
     ? `${window.location.origin}/auth/callback`
     : `${process.env.NEXT_PUBLIC_SITE_URL || 'https://studymaxx.net'}/auth/callback`;
   
-  console.log('[Auth] Google OAuth redirect URL:', redirectUrl);
+  console.log('[Auth] Google OAuth starting...');
+  console.log('[Auth] Current origin:', typeof window !== 'undefined' ? window.location.origin : 'server');
+  console.log('[Auth] Redirect URL:', redirectUrl);
+  
+  // Check if using network host
+  if (typeof window !== 'undefined' && /^\d+\.\d+\.\d+\.\d+/.test(window.location.hostname)) {
+    console.warn('[Auth] ⚠️ Network host detected! Make sure you added this URL to:');
+    console.warn(`[Auth] 1. Supabase Dashboard → Auth → URL Configuration → Redirect URLs: ${redirectUrl}`);
+    console.warn(`[Auth] 2. Google Cloud Console → OAuth Client → Authorized redirect URIs: ${redirectUrl}`);
+    console.warn(`[Auth] 3. Google Cloud Console → OAuth Client → Authorized JavaScript origins: ${window.location.origin}`);
+  }
   
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -136,7 +168,15 @@ export const signInWithGoogle = async () => {
     },
   });
   
-  if (error) throw error;
+  if (error) {
+    console.error('[Auth] Google OAuth error:', error);
+    if (error.message?.includes('redirect') || error.message?.includes('origin')) {
+      throw new Error(`Google OAuth configuration error. If on network host, add ${redirectUrl} to Google Cloud Console. See NETWORK_AUTH_FIX.md`);
+    }
+    throw error;
+  }
+  
+  console.log('[Auth] Google OAuth redirect initiated');
 };
 
 /**
@@ -146,6 +186,18 @@ export const signOut = async () => {
   if (!supabase) throw new Error('Supabase not configured');
   
   const { error } = await supabase.auth.signOut();
+  if (error) throw error;
+};
+
+/**
+ * Reset password - sends reset email
+ */
+export const resetPassword = async (email: string) => {
+  if (!supabase) throw new Error('Supabase not configured');
+  
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/auth/callback?type=recovery`,
+  });
   if (error) throw error;
 };
 

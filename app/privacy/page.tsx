@@ -1,14 +1,16 @@
 "use client";
 
-import { useTranslation } from "../contexts/SettingsContext";
+import { useTranslation, useSettings } from "../contexts/SettingsContext";
 import ArrowIcon from "../components/icons/ArrowIcon";
 import Link from "next/link";
 
 export default function PrivacyPage() {
   const t = useTranslation();
+  const { settings } = useSettings();
+  const isDarkMode = settings.theme === 'dark' || (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   return (
-    <main className="min-h-screen px-4 py-8" style={{ background: 'var(--background)' }}>
+    <main className="min-h-screen px-4 py-8" style={{ background: isDarkMode ? '#0a1628' : '#fafaf9' }}>
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -22,7 +24,7 @@ export default function PrivacyPage() {
         </div>
 
         {/* Content */}
-        <div className="bg-white dark:bg-gray-800 rounded-md shadow-xl p-8 md:p-12" style={{ border: '1px solid var(--border)' }}>
+        <div className="bg-white dark:bg-gray-800 rounded-md shadow-xl p-8 md:p-12" style={{ border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)' }}>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
             Privacy Policy
           </h1>

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./design-tokens.css";
 
 /* Tailwind v4 configuration */
 @theme {
@@ -7,15 +8,16 @@
 }
 
 /* ========================================
-   SEMANTIC COLOR SYSTEM
+   LEGACY SEMANTIC COLORS (for backwards compatibility)
+   Use design-tokens.css for new code
    ======================================== */
 
 :root {
-  /* Background & Base - Fresh modern palette */
-  --background: #fafaf9; /* stone-50 */
-  --background-elevated: #ffffff;
-  --foreground: #18181b; /* zinc-900 */
-  --foreground-muted: #71717a; /* zinc-500 */
+  /* Background & Base - Maps to new tokens */
+  --background: var(--bg-page);
+  --background-elevated: var(--bg-surface);
+  --foreground: var(--text-primary);
+  --foreground-muted: var(--text-secondary);
   
   /* Surface (Cards, Panels) - Clean elevation */
   --surface: #ffffff;
@@ -158,11 +160,90 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-outfit), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  transition: background-color 0.2s ease, color 0.2s ease;
 }
+
+/* Placeholder text styling for inputs and textareas */
+::placeholder {
+  color: #71717a; /* zinc-500 - visible in light mode */
+  opacity: 0.8;
+}
+
+html.dark ::placeholder {
+  color: #94a3b8; /* slate-400 - visible in dark mode */
+  opacity: 0.8;
+}
+
+/* Ensure textarea placeholder is visible */
+textarea::placeholder {
+  color: #71717a;
+  opacity: 0.8;
+}
+
+html.dark textarea::placeholder {
+  color: #94a3b8;
+  opacity: 0.8;
+}
+
+/* ========================================
+   HOMEPAGE DARK THEME
+   StudyMaxx Brand Colors: Dark Blue (#0a1628) + Cyan (#22d3ee)
+   ======================================== */
+
+.homepage-dark {
+  background-color: #0a1628 !important;
+  color: #ffffff !important;
+}
+
+/* Don't force color inheritance - let inline styles work */
+
+/* Explicit text colors */
+.homepage-dark .text-white { color: #ffffff !important; }
+.homepage-dark .text-slate-100 { color: #f1f5f9 !important; }
+.homepage-dark .text-slate-200 { color: #e2e8f0 !important; }
+.homepage-dark .text-slate-300 { color: #cbd5e1 !important; }
+.homepage-dark .text-slate-400 { color: #94a3b8 !important; }
+.homepage-dark .text-slate-500 { color: #64748b !important; }
+.homepage-dark .text-slate-600 { color: #475569 !important; }
+.homepage-dark .text-cyan-300 { color: #67e8f9 !important; }
+.homepage-dark .text-cyan-400 { color: #22d3ee !important; }
+.homepage-dark .text-cyan-500 { color: #06b6d4 !important; }
+.homepage-dark .text-blue-400 { color: #60a5fa !important; }
+.homepage-dark .text-blue-500 { color: #3b82f6 !important; }
+.homepage-dark .text-emerald-400 { color: #34d399 !important; }
+.homepage-dark .text-emerald-500 { color: #10b981 !important; }
+.homepage-dark .text-red-400 { color: #f87171 !important; }
+.homepage-dark .text-red-500 { color: #ef4444 !important; }
+.homepage-dark .text-yellow-500 { color: #eab308 !important; }
+.homepage-dark .text-green-500 { color: #22c55e !important; }
+
+/* Background colors */
+.homepage-dark .bg-cyan-500 { background-color: #06b6d4 !important; }
+.homepage-dark .bg-cyan-600 { background-color: #0891b2 !important; }
+.homepage-dark .bg-blue-600 { background-color: #2563eb !important; }
+.homepage-dark .bg-blue-500 { background-color: #3b82f6 !important; }
+.homepage-dark .bg-red-500 { background-color: #ef4444 !important; }
+.homepage-dark .bg-emerald-500 { background-color: #10b981 !important; }
+.homepage-dark .bg-yellow-500 { background-color: #eab308 !important; }
+.homepage-dark .bg-green-500 { background-color: #22c55e !important; }
+
+/* Border colors */
+.homepage-dark .border-white\/5 { border-color: rgba(255, 255, 255, 0.05) !important; }
+.homepage-dark .border-white\/10 { border-color: rgba(255, 255, 255, 0.1) !important; }
+.homepage-dark .border-white\/20 { border-color: rgba(255, 255, 255, 0.2) !important; }
+.homepage-dark .border-cyan-500\/20 { border-color: rgba(6, 182, 212, 0.2) !important; }
+.homepage-dark .border-cyan-500\/30 { border-color: rgba(6, 182, 212, 0.3) !important; }
 
 * {
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Fix for input text visibility */
+.input-text-fix {
+  color: #000000 !important;
+}
+
+html.dark .input-text-fix {
+  color: #ffffff !important;
 }
 
 /* ========================================
@@ -952,4 +1033,300 @@ input[type="range"].slider:disabled::-moz-range-thumb {
 
 .animation-delay-4000 {
   animation-delay: 4s;
+}
+
+/* Animated gradient for hero text */
+@keyframes gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
+}
+
+/* ========================================
+   LANDING PAGE ANIMATIONS
+   Cool modern animations for buttons and elements
+   ======================================== */
+
+/* Button Pulse Animation */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 8px 4px rgba(26, 115, 232, 0.12);
+  }
+}
+
+.btn-pulse {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Float Animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Fade In Up Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.animation-delay-100 { animation-delay: 0.1s; }
+.animation-delay-200 { animation-delay: 0.2s; }
+.animation-delay-300 { animation-delay: 0.3s; }
+.animation-delay-400 { animation-delay: 0.4s; }
+.animation-delay-500 { animation-delay: 0.5s; }
+.animation-delay-600 { animation-delay: 0.6s; }
+.animation-delay-700 { animation-delay: 0.7s; }
+.animation-delay-800 { animation-delay: 0.8s; }
+
+/* Scale In Animation */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s ease-out forwards;
+}
+
+/* Slide In Left */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.6s ease-out forwards;
+}
+
+/* Slide In Right */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.6s ease-out forwards;
+}
+
+/* Bounce Animation */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-bounce-in {
+  animation: bounceIn 0.6s ease-out forwards;
+}
+
+/* Shimmer effect for buttons */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* Rotating gradient border */
+@keyframes rotateBorder {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.gradient-border {
+  position: relative;
+  background: linear-gradient(var(--background), var(--background)) padding-box,
+              linear-gradient(135deg, #1a73e8, #34a853, #ea4335, #1a73e8) border-box;
+  border: 2px solid transparent;
+}
+
+/* Glowing text animation */
+@keyframes glow-text {
+  0%, 100% {
+    text-shadow: 0 0 6px rgba(26, 115, 232, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 12px rgba(26, 115, 232, 0.5);
+  }
+}
+
+.text-glow {
+  animation: glow-text 2s ease-in-out infinite;
+}
+
+/* Typing animation for text */
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent; }
+  50% { border-color: #1a73e8; }
+}
+
+.typing-effect {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid #1a73e8;
+  animation: typing 2s steps(30, end), blink-caret 0.75s step-end infinite;
+}
+
+/* Particle float animation for background */
+@keyframes particle-float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-8px) rotate(45deg);
+    opacity: 0.7;
+  }
+}
+
+.particle {
+  animation: particle-float 6s ease-in-out infinite;
+}
+
+/* Button hover lift effect */
+.btn-lift {
+  transition: all 0.2s ease-out;
+}
+
+.btn-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px -4px rgba(26, 115, 232, 0.25);
+}
+
+.btn-lift:active {
+  transform: translateY(-1px);
+}
+
+/* Card 3D hover effect */
+.card-3d {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+.card-3d:hover {
+  transform: perspective(1000px) rotateX(1deg) rotateY(-1deg) translateY(-2px);
+  box-shadow: 0 10px 24px -6px rgba(0, 0, 0, 0.12);
+}
+
+/* Underline animation */
+.underline-grow {
+  position: relative;
+}
+
+.underline-grow::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #1a73e8, #34a853);
+  transition: width 0.3s ease;
+}
+
+.underline-grow:hover::after {
+  width: 100%;
+}
+
+/* Morphing blob for hero section */
+@keyframes morph {
+  0%, 100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+  50% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+  }
+}
+
+.morphing-blob {
+  animation: morph 8s ease-in-out infinite;
 }

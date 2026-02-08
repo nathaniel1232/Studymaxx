@@ -3,7 +3,7 @@
  * Centralized tier management and feature checks
  */
 
-export type TierName = 'free' | 'student' | 'pro' | 'team';
+export type TierName = 'free' | 'premium' | 'pro' | 'team';
 export type BillingInterval = 'monthly' | 'yearly';
 
 export interface TierFeatures {
@@ -53,32 +53,32 @@ export const TIERS: Record<TierName, SubscriptionTier> = {
       priority_support: false,
     },
   },
-  student: {
-    tier_name: 'student',
-    display_name: 'Student',
-    monthly_price_cents: 499, // $4.99
-    yearly_price_cents: 4900, // $49 (save $10)
-    max_daily_sets: 20,
-    max_cards_per_set: 25,
-    max_folders: 10,
+  premium: {
+    tier_name: 'premium',
+    display_name: 'Premium',
+    monthly_price_cents: 899, // $8.99/mo
+    yearly_price_cents: 7999, // $79.99/yr ($6.67/mo, save 26%)
+    max_daily_sets: -1, // unlimited
+    max_cards_per_set: 50,
+    max_folders: -1, // unlimited
     features: {
       pdf: true,
-      youtube: false,
-      ocr_images: 3,
+      youtube: true,
+      ocr_images: -1, // unlimited images
       export: true,
       analytics: true,
-      srs: false,
+      srs: true,
       collaboration: false,
-      priority_support: false,
+      priority_support: true,
     },
   },
   pro: {
     tier_name: 'pro',
     display_name: 'Pro',
-    monthly_price_cents: 999, // $9.99
-    yearly_price_cents: 9900, // $99 (save $20)
+    monthly_price_cents: 1499, // $14.99 - Overpriced but has extras
+    yearly_price_cents: 14900, // $149 (save $30)
     max_daily_sets: -1, // unlimited
-    max_cards_per_set: 50,
+    max_cards_per_set: 60,
     max_folders: -1, // unlimited
     features: {
       pdf: true,
@@ -248,7 +248,7 @@ export function suggestTierForFeature(
   feature: keyof TierFeatures
 ): TierName | null {
   // Find cheapest tier with this feature
-  const tierOptions: TierName[] = ['student', 'pro', 'team'];
+  const tierOptions: TierName[] = ['premium', 'pro', 'team'];
   
   for (const tierName of tierOptions) {
     if (canUseFeature(tierName, feature)) {

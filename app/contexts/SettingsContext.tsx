@@ -456,7 +456,7 @@ export function useTranslation() {
       // "account": { en: "Account", no: "Konto" },
       // "sign_out": { en: "Sign out", no: "Logg ut" },
       
-      "premium_includes": { en: "Premium Early Bird includes", no: "Premium Early Bird inkluderer" },
+      "premium_includes": { en: "Premium includes", no: "Premium inkluderer" },
       "unlimited_study_sets": { en: "Unlimited Study Sets", no: "Ubegrensede Studiesett" },
       "create_as_many": { en: "Create as many sets as you want", no: "Lag så mange sett du vil" },
       "pdf_support": { en: "Early Access", no: "Tidlig tilgang" },
@@ -467,7 +467,7 @@ export function useTranslation() {
       "scan_photos": { en: "Scan photos of notes and textbooks", no: "Skann bilder av notater og lærebøker" },
       "why_premium": { en: "Why Premium?", no: "Hvorfor Premium?" },
       "ai_costs_money": { en: "Premium helps us build the future of StudyMaxx while keeping the basic tier available for everyone.", no: "Premium hjelper oss med å bygge fremtiden til StudyMaxx mens vi holder gratisversjonen tilgjengelig for alle." },
-      "ai_costs_explanation": { en: "Your support allows us to use more advanced AI models and develop new features faster. Early Birds lock in the lowest price possible as we grow.", no: "Din støtte lar oss bruke mer avanserte AI-modeller og utvikle nye funksjoner raskere. Early Birds låser inn den laveste mulige prisen mens vi vokser." },
+      "ai_costs_explanation": { en: "Your support allows us to use more advanced AI models and develop new features faster. Premium members get priority access to all new features.", no: "Din støtte lar oss bruke mer avanserte AI-modeller og utvikle nye funksjoner raskere. Premium-medlemmer får prioritert tilgang til alle nye funksjoner." },
       "coming_soon": { en: "Coming Soon", no: "Kommer snart" },
       "payment_coming_soon": { en: "Payment integration coming soon!", no: "Betalingsintegrasjon kommer snart!" },
       "premium_feature": { en: "Premium Feature", no: "Premium-funksjon" },

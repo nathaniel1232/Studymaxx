@@ -11,6 +11,8 @@ interface StudyFactBadgeProps {
 
 export default function StudyFactBadge({ context, position = "inline" }: StudyFactBadgeProps) {
   const { settings } = useSettings();
+  const isDarkMode = settings.theme === 'dark' || 
+    (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const [fact, setFact] = useState<StudyFact | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -41,9 +43,9 @@ export default function StudyFactBadge({ context, position = "inline" }: StudyFa
         className="rounded-md p-4 cursor-pointer transition-all hover:scale-105"
         style={{ 
           background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)',
-          border: '2px solid var(--border)',
+          border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
           backdropFilter: 'blur(10px)',
-          boxShadow: 'var(--shadow-lg)'
+          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
         }}
         onClick={() => setIsExpanded(!isExpanded)}
       >
@@ -53,12 +55,12 @@ export default function StudyFactBadge({ context, position = "inline" }: StudyFa
             <div className="text-xs font-bold mb-1 text-indigo-600 dark:text-indigo-400">
               {settings.language === "no" ? "Visste du?" : "Did you know?"}
             </div>
-            <p className="text-sm font-medium leading-relaxed" style={{ color: 'var(--foreground)' }}>
+            <p className="text-sm font-medium leading-relaxed" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
               {fact.text[settings.language]}
             </p>
             {isExpanded && (
-              <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
-                <p className="text-xs italic" style={{ color: 'var(--foreground-muted)' }}>
+              <div className="mt-3 pt-3 border-t" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+                <p className="text-xs italic" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
                   📚 {fact.source[settings.language]}
                 </p>
               </div>
@@ -69,7 +71,7 @@ export default function StudyFactBadge({ context, position = "inline" }: StudyFa
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
-            style={{ color: 'var(--foreground-muted)' }}
+            style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
@@ -78,3 +80,4 @@ export default function StudyFactBadge({ context, position = "inline" }: StudyFa
     </div>
   );
 }
+

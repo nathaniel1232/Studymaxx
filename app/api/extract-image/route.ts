@@ -7,13 +7,42 @@ export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   try {
-    const { images } = await request.json();
+    const contentType = request.headers.get('content-type') || '';
+    let images: string[] = [];
 
-    if (!images || !Array.isArray(images) || images.length === 0) {
-      return NextResponse.json(
-        { error: 'No images provided' },
-        { status: 400 }
-      );
+    // Handle both FormData (file upload) and JSON (base64 images) formats
+    if (contentType.includes('multipart/form-data')) {
+      // File upload via FormData
+      const formData = await request.formData();
+      const file = formData.get('file') as File;
+
+      if (!file) {
+        return NextResponse.json(
+          { error: 'No file provided' },
+          { status: 400 }
+        );
+      }
+
+      // Convert file to base64
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const base64 = buffer.toString('base64');
+      const mimeType = file.type || 'image/jpeg';
+      const dataUrl = `data:${mimeType};base64,${base64}`;
+      images = [dataUrl];
+      
+      console.log(`[Extract Image] Processing uploaded file: ${file.name} (${file.type})`);
+    } else {
+      // JSON format with base64 images
+      const body = await request.json();
+      images = body.images;
+
+      if (!images || !Array.isArray(images) || images.length === 0) {
+        return NextResponse.json(
+          { error: 'No images provided' },
+          { status: 400 }
+        );
+      }
     }
 
     console.log(`[Extract Image] Processing ${images.length} images with GPT-4 Vision`);

@@ -103,7 +103,7 @@ export default function UpdatesModal({ isOpen, onClose }: UpdatesModalProps) {
     >
       <div 
         className="card-elevated w-full max-w-3xl max-h-[90vh] flex flex-col"
-        style={{ borderRadius: 'var(--radius-xl)' }}
+        style={{ borderRadius: '1rem' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -180,3 +180,4 @@ export default function UpdatesModal({ isOpen, onClose }: UpdatesModalProps) {
     </div>
   );
 }
+

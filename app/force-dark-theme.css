@@ -1,0 +1,101 @@
+/* Force Dark Blue + Cyan Theme Everywhere */
+
+/* Override CSS variables */
+:root {
+  --background: #0a1628 !important;
+  --foreground: #ffffff !important;
+  --card: rgba(255,255,255,0.03) !important;
+  --card-foreground: #ffffff !important;
+  --surface: rgba(255,255,255,0.05) !important;
+  --surface-elevated: rgba(255,255,255,0.08) !important;
+  --surface-hover: rgba(6, 182, 212, 0.1) !important;
+  --border: rgba(255,255,255,0.08) !important;
+  --muted: #64748b !important;
+  --muted-foreground: #94a3b8 !important;
+  --accent: #06b6d4 !important;
+  --accent-foreground: #ffffff !important;
+}
+
+/* Force dark mode classes */
+.dark {
+  background-color: #0a1628 !important;
+  color: #ffffff !important;
+}
+
+/* Force all backgrounds to dark */
+[class*="bg-white"], 
+[class*="bg-gray-50"],
+[class*="bg-slate-50"],
+[class*="bg-gray-100"] {
+  background-color: rgba(255,255,255,0.03) !important;
+  color: #ffffff !important;
+}
+
+/* Force all text to be visible */
+[class*="text-gray-900"],
+[class*="text-gray-800"],
+[class*="text-slate-900"],
+[class*="text-slate-800"],
+[class*="text-black"] {
+  color: #ffffff !important;
+}
+
+[class*="text-gray-700"],
+[class*="text-slate-700"] {
+  color: #e2e8f0 !important;
+}
+
+[class*="text-gray-600"],
+[class*="text-slate-600"],
+[class*="text-gray-500"],
+[class*="text-slate-500"] {
+  color: #94a3b8 !important;
+}
+
+/* Force card/surface backgrounds */
+[class*="Card"],
+[class*="card"] {
+  background-color: rgba(255,255,255,0.03) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  color: #ffffff !important;
+}
+
+/* Button fixes */
+button {
+  color: inherit;
+}
+
+/* Input fields */
+input, textarea, select {
+  background-color: rgba(255,255,255,0.05) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: #ffffff !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Modal overlays */
+[role="dialog"], .modal {
+  background-color: rgba(10, 22, 40, 0.95) !important;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.03);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(6, 182, 212, 0.3);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 182, 212, 0.5);
+}

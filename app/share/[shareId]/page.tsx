@@ -5,6 +5,27 @@ import { useParams, useRouter } from "next/navigation";
 import { getFlashcardSetByShareId, copySharedSet, FlashcardSet } from "../../utils/storage";
 import StudyView from "../../components/StudyView";
 
+// Custom SVG Icons
+const LinkIcon = () => (
+  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+  </svg>
+);
+
+const CopyIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20,6 9,17 4,12"/>
+  </svg>
+);
+
 export default function SharePage() {
   const params = useParams();
   const router = useRouter();
@@ -95,7 +116,7 @@ export default function SharePage() {
           <div className="flex items-center justify-between flex-wrap gap-6">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-3xl">🔗</span>
+                <span className="text-cyan-500 dark:text-cyan-400"><LinkIcon /></span>
                 <span className="px-4 py-2 bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 text-sm font-black rounded-full">
                   Shared Study Set
                 </span>
@@ -110,13 +131,13 @@ export default function SharePage() {
             <button
               onClick={handleCopyToMyCollection}
               disabled={isCopied}
-              className={`px-8 py-4 font-black text-lg rounded-md transition-all transform hover:scale-105 ${
+              className={`px-8 py-4 font-black text-lg rounded-md transition-all transform hover:scale-105 flex items-center gap-2 ${
                 isCopied
                   ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
                   : "bg-gradient-to-r from-cyan-500 to-teal-600 text-white hover:shadow-xl hover:shadow-cyan-400/50"
               }`}
             >
-              {isCopied ? "✓ Copied!" : "📋 Copy to Collection"}
+              {isCopied ? <><CheckIcon /> Copied!</> : <><CopyIcon /> Copy to Collection</>}
             </button>
           </div>
         </div>

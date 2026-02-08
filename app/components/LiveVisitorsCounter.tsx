@@ -6,3 +6,4 @@ export default function LiveVisitorsCounter() {
   // Return null to not render anything
   return null;
 }
+

@@ -3,11 +3,94 @@
 import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { generateFlashcards } from "../utils/flashcardGenerator";
 import { Flashcard } from "../utils/storage";
-import { useTranslation } from "../contexts/SettingsContext";
+import { useTranslation, useSettings } from "../contexts/SettingsContext";
 import ArrowIcon from "./icons/ArrowIcon";
 import { canUseFeature, FREE_LIMITS, getUserLimits } from "../utils/premium";
 import { supabase } from "../utils/supabase";
 import { messages } from "../utils/messages";
+
+// Custom SVG Icons to replace emojis
+const BookStackIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+    <path d="M8 7h6"/>
+    <path d="M8 11h8"/>
+  </svg>
+);
+
+const NotepadIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+    <polyline points="14,2 14,8 20,8"/>
+    <line x1="8" y1="13" x2="16" y2="13"/>
+    <line x1="8" y1="17" x2="14" y2="17"/>
+  </svg>
+);
+
+const RocketIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
+    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+  </svg>
+);
+
+const StarBadgeIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9"/>
+  </svg>
+);
+
+const AlertTriangleIcon = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+    <line x1="12" y1="9" x2="12" y2="13"/>
+    <line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+);
+
+const PaperclipIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+  </svg>
+);
+
+const GearIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </svg>
+);
+
+const CheckCircleIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+    <polyline points="22,4 12,14.01 9,11.01"/>
+  </svg>
+);
+
+const DocumentExtractIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+    <polyline points="14,2 14,8 20,8"/>
+  </svg>
+);
+
+const HourglassIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 22h14"/>
+    <path d="M5 2h14"/>
+    <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/>
+    <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>
+  </svg>
+);
+
+const BoltIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin">
+    <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/>
+  </svg>
+);
 
 interface InputViewProps {
   onGenerateFlashcards: (cards: Flashcard[]) => void;
@@ -19,6 +102,9 @@ type MaterialType = "notes" | "pdf" | "youtube" | "image" | null;
 
 export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBack }: InputViewProps) {
   const t = useTranslation();
+  const { settings } = useSettings();
+  const isDarkMode = settings.theme === 'dark' || 
+    (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const [selectedMaterial, setSelectedMaterial] = useState<MaterialType>(null);
   const [textInput, setTextInput] = useState("");
   const [isPremium, setIsPremium] = useState(false);
@@ -398,6 +484,38 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
             const fileInfo = metadata ? ` (${metadata.wordCount} words)` : '';
             allText = allText ? `${allText}\n\n--- From ${file.name}${fileInfo} ---\n${extractedText}` : extractedText;
           }
+          // Handle PowerPoint files - send to server
+          else if (fileType === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+                   fileType === "application/vnd.ms-powerpoint" ||
+                   fileName.endsWith(".pptx") ||
+                   fileName.endsWith(".ppt")) {
+            
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const res = await fetch("/api/extract-pptx", {
+              method: "POST",
+              body: formData,
+            });
+
+            if (!res.ok) {
+              const data = await res.json();
+              errors.push(`${file.name}: ${data.error || "Failed to extract"}`);
+              continue;
+            }
+
+            const { text: extractedText } = await res.json();
+            
+            if (!extractedText || extractedText.trim().length === 0) {
+              errors.push(`${file.name}: No text found`);
+              continue;
+            }
+            
+            const newFile = { name: file.name, text: extractedText };
+            newUploadedFiles.push(newFile);
+            
+            allText = allText ? `${allText}\n\n--- From ${file.name} ---\n${extractedText}` : extractedText;
+          }
           // Handle images with Tesseract OCR
           else if (fileType.startsWith("image/")) {
             console.log(`🖼️ Processing image ${fileIndex + 1}/${files.length}...`);
@@ -565,7 +683,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen px-4 py-8" style={{ background: 'var(--background)' }}>
+    <div className="flex items-center justify-center min-h-screen px-4 py-8" style={{ background: isDarkMode ? '#1a1a2e' : '#f1f5f9' }}>
       <div className="w-full max-w-3xl">
         {/* Header */}
         <div className="text-center mb-16">
@@ -595,16 +713,16 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
           <div className="flex justify-center mb-8">
             <button
               onClick={onViewSavedSets}
-              className="px-6 py-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium rounded-full border border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 transition-all"
+              className="px-6 py-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium rounded-full border border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600 transition-all flex items-center gap-2"
             >
-              📚 My Sets
+              <BookStackIcon /> My Sets
             </button>
           </div>
         )}
 
         {/* Material Selection Screen */}
         {!selectedMaterial ? (
-          <div className="card-elevated p-20" style={{ borderRadius: 'var(--radius-xl)' }}>
+          <div className="card-elevated p-20" style={{ borderRadius: '1rem' }}>
             <div className="mb-10">
               <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-3">
                 Paste your notes
@@ -623,7 +741,9 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                 <div className="absolute -top-3 right-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md">
                   Start here
                 </div>
-                <div className="text-5xl mb-4">📝</div>
+                <div className="mb-4 text-emerald-600 dark:text-emerald-400">
+                  <NotepadIcon />
+                </div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Paste notes</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Fastest way to get flashcards
@@ -637,10 +757,12 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                 }}
                 className="group relative p-8 border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-md hover:border-blue-300 hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
               >
-                <div className="absolute -top-3 right-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
-                  ⭐ Early Bird
+                <div className="absolute -top-3 right-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+                  <StarBadgeIcon /> Premium
                 </div>
-                <div className="text-5xl mb-4">🚀</div>
+                <div className="mb-4 text-blue-600 dark:text-blue-400">
+                  <RocketIcon />
+                </div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Premium Access</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Unlock all current & upcoming features
@@ -649,7 +771,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="card-elevated p-20" style={{ borderRadius: 'var(--radius-xl)' }}>
+          <form onSubmit={handleSubmit} className="card-elevated p-20" style={{ borderRadius: '1rem' }}>
             {/* Back Button */}
             <button
               type="button"
@@ -781,8 +903,8 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                       </>
                     )}
                   </p>
-                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-                    ⚠️ Processing multiple images may take 30-60 seconds
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 flex items-center gap-1">
+                    <AlertTriangleIcon size={14} /> Processing multiple images may take 30-60 seconds
                   </p>
                 </div>
 
@@ -815,7 +937,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                       {selectedImages.map((image, index) => (
                         <div key={index} className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-900/20 rounded-md border border-amber-200 dark:border-amber-800">
                           <span className="text-sm text-amber-800 dark:text-amber-200 flex items-center gap-2">
-                            <span>📎</span>
+                            <PaperclipIcon />
                             <span>{image.name}</span>
                             <span className="text-xs text-amber-600 dark:text-amber-400">
                               ({(image.size / 1024).toFixed(1)} KB)
@@ -849,17 +971,17 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                     >
                       {isLoading ? (
                         <>
-                          <span className="animate-spin">⚙️</span>
+                          <GearIcon />
                           <span>Extracting text...</span>
                         </>
                       ) : isImageExtractionComplete ? (
                         <>
-                          <span>✅</span>
+                          <CheckCircleIcon />
                           <span>Text ready to use</span>
                         </>
                       ) : (
                         <>
-                          <span>📄</span>
+                          <DocumentExtractIcon />
                           <span>Extract text from {selectedImages.length} image{selectedImages.length !== 1 ? 's' : ''}</span>
                         </>
                       )}
@@ -869,8 +991,8 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                     <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
                       {isLoading && (
                         <div className="space-y-2">
-                          <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                            ⏳ Reading your images...
+                          <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                            <HourglassIcon /> Reading your images...
                           </p>
                           <p className="text-xs text-blue-600 dark:text-blue-400">
                             {imageProcessingProgress}
@@ -885,8 +1007,8 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                       )}
                       {!isLoading && isImageExtractionComplete && (
                         <div className="space-y-2">
-                          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">
-                            ✅ {imageProcessingProgress}
+                          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                            <CheckCircleIcon /> {imageProcessingProgress}
                           </p>
                           <p className="text-xs text-emerald-600 dark:text-emerald-400">
                             Ready to proceed! The extracted text has been added to your notes.
@@ -929,7 +1051,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                 <input
                   id="pdf-input"
                   type="file"
-                  accept="application/pdf,.pdf,.docx,.doc,.txt,image/*"
+                  accept="application/pdf,.pdf,.docx,.doc,.ppt,.pptx,.txt,image/*"
                   {...(isPremium && { multiple: true })}
                   onChange={handleImageUpload}
                   disabled={isLoading}
@@ -975,28 +1097,42 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                   Difficulty
                 </label>
                 <div className="grid grid-cols-3 gap-3">
-                  {(["Easy", "Medium", "Hard"] as const).map((level) => (
-                    <button
-                      key={level}
-                      type="button"
-                      onClick={() => setDifficulty(level)}
-                      className={`px-4 py-3 rounded-md font-medium transition-all ${
-                        difficulty === level
-                          ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                          : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                      }`}
-                    >
-                      {level}
-                    </button>
-                  ))}
+                  {(["Easy", "Medium", "Hard"] as const).map((level) => {
+                    const isLocked = !isPremium && level !== "Medium";
+                    return (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => {
+                          if (isLocked) return;
+                          setDifficulty(level);
+                        }}
+                        disabled={isLocked}
+                        className={`px-4 py-3 rounded-md font-medium transition-all relative ${
+                          difficulty === level
+                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                            : isLocked
+                              ? "bg-gray-100 dark:bg-gray-800/50 text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-700 cursor-not-allowed"
+                              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                        }`}
+                      >
+                        {level} {isLocked && '🔒'}
+                      </button>
+                    );
+                  })}
                 </div>
+                {!isPremium && (
+                  <p className="text-xs text-amber-500 mt-2">
+                    ⭐ Upgrade to Premium to unlock Easy and Hard modes
+                  </p>
+                )}
               </div>
 
               {/* Number of Flashcards */}
               <div>
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
                   Number of flashcards: {numberOfFlashcards}
-                  {!isPremium && numberOfFlashcards > FREE_LIMITS.maxFlashcardsPerSet && (
+                  {!isPremium && (
                     <span className="ml-2 text-xs text-amber-600 dark:text-amber-400 font-normal">
                       (Max {FREE_LIMITS.maxFlashcardsPerSet} for free users)
                     </span>
@@ -1005,8 +1141,8 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                 <input
                   type="range"
                   min="3"
-                  max={isPremium ? "20" : FREE_LIMITS.maxFlashcardsPerSet.toString()}
-                  value={Math.min(numberOfFlashcards, isPremium ? 20 : FREE_LIMITS.maxFlashcardsPerSet)}
+                  max={isPremium ? "50" : FREE_LIMITS.maxFlashcardsPerSet.toString()}
+                  value={Math.min(numberOfFlashcards, isPremium ? 50 : FREE_LIMITS.maxFlashcardsPerSet)}
                   onChange={(e) => {
                     const value = parseInt(e.target.value);
                     if (!isPremium && value > FREE_LIMITS.maxFlashcardsPerSet) {
@@ -1019,11 +1155,11 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                 />
                 <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
                   <span>3</span>
-                  <span>{isPremium ? '20' : FREE_LIMITS.maxFlashcardsPerSet}</span>
+                  <span>{isPremium ? '50' : FREE_LIMITS.maxFlashcardsPerSet}</span>
                 </div>
                 {!isPremium && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    ⭐ Premium users can create up to 20 flashcards
+                  <p className="text-xs text-amber-500 mt-2">
+                    ⭐ Premium users can create up to 50 flashcards per set
                   </p>
                 )}
               </div>
@@ -1056,7 +1192,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
               {isLoading ? (
                 <span className="flex flex-col items-center justify-center gap-2">
                   <span className="flex items-center gap-2">
-                    <span className="animate-spin">⚡</span>
+                    <BoltIcon />
                     {loadingStage === "processing" && "Reading your notes..."}
                     {loadingStage === "analyzing" && "Understanding the content..."}
                     {loadingStage === "generating" && "Creating flashcards..."}
@@ -1075,3 +1211,4 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
     </div>
   );
 }
+

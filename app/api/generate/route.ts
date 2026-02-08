@@ -14,6 +14,7 @@
  */
 
 import OpenAI from "openai";
+import { VertexAI } from '@google-cloud/vertexai';
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/app/utils/supabase";
 import {
@@ -35,6 +36,12 @@ export const maxDuration = 300;
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// Initialize Vertex AI for Gemini 2.5 Flash
+const vertexAI = new VertexAI({
+  project: process.env.VERTEX_AI_PROJECT_ID || '',
+  location: 'us-central1',
+});
+
 interface GenerateRequest {
   userId: string;
   text: string;
@@ -44,7 +51,7 @@ interface GenerateRequest {
   difficulty?: string;
   language?: string;
   materialType?: string;
-  outputLanguage?: "auto" | "en";
+  outputLanguage?: string;
   includeMath?: boolean;
   knownLanguage?: string;
   learningLanguage?: string;
@@ -87,16 +94,55 @@ async function getOrCreateUser(userId: string): Promise<UserStatus | null> {
 
   try {
     // Try to get existing user
+    console.log(`[API /generate] Fetching user from database: ${userId}`);
     const { data, error } = await supabase
       .from("users")
       .select("*")
       .eq("id", userId)
       .single();
 
+    console.log(`[API /generate] Database query result:`, { 
+      found: !!data, 
+      isPremium: data?.is_premium,
+      error: error?.message,
+      errorCode: error?.code 
+    });
+
     if (data) {
+      console.log(`[API /generate] User found - Premium status: ${data.is_premium}`);
+      
+      // Owner user always has premium
+      const isOwnerUser = data.email === 'studymaxxer@gmail.com';
+      
+      // Check if premium has expired
+      let isPremium = data.is_premium || isOwnerUser;
+      if (data.premium_expires_at && !isOwnerUser) {
+        const expirationDate = new Date(data.premium_expires_at);
+        const now = new Date();
+        
+        if (now > expirationDate) {
+          console.log(`[API /generate] Premium expired on ${expirationDate.toISOString()}`);
+          isPremium = false;
+          
+          // Update database to mark as expired (fire and forget)
+          supabase
+            .from("users")
+            .update({ is_premium: false })
+            .eq("id", userId)
+            .then(({ error: updateErr }) => {
+              if (updateErr) console.error("[API /generate] Failed to mark user as expired:", updateErr);
+              else console.log(`[API /generate] Marked user ${userId} as expired`);
+            });
+        } else {
+          console.log(`[API /generate] Premium active until ${expirationDate.toISOString()}`);
+        }
+      }
+      
+      console.log(`[API /generate] Final premium status: ${isPremium} (isOwner: ${isOwnerUser})`);
+      
       return {
         id: data.id,
-        isPremium: data.is_premium || false,
+        isPremium: isPremium,
         studySetCount: data.study_set_count || 0,
         dailyAiCount: data.daily_ai_count || 0,
         lastAiReset: new Date(data.last_ai_reset || new Date()),
@@ -242,7 +288,7 @@ async function generateWithAIFast(
   targetGrade?: string,
   subject?: string,
   materialType?: string,
-  outputLanguage: "auto" | "en" = "auto",
+  outputLanguage: string = "auto",
   difficulty?: string,
   includeMath?: boolean,
   knownLanguage?: string,
@@ -333,7 +379,7 @@ async function generateWithAI(
   targetGrade?: string,
   subject?: string,
   materialType?: string,
-  outputLanguage: "auto" | "en" = "auto",
+  outputLanguage: string = "auto",
   difficulty?: string,
   includeMath?: boolean,
   knownLanguage?: string,
@@ -352,8 +398,8 @@ async function generateWithAI(
   exampleAnswer = "";
 
   // Calculate buffer for count enforcement
-  // Fast mode: NO BUFFER - generate exact count only
-  const bufferedCount = numberOfFlashcards; // Exact count for speed
+  // Add 20% buffer to account for validation dropping some cards
+  const bufferedCount = Math.min(Math.ceil(numberOfFlashcards * 1.2), 50);
 
   // Build material-specific instructions
   let materialInstructions = "";
@@ -593,7 +639,7 @@ CORE RULES:
    - Example: If notes are about "Photosynthesis", add related facts like chloroplasts, light reactions, Calvin cycle, etc.
    - All added information MUST be factually accurate and directly related to the main topic.
    - ALWAYS deliver the full ${bufferedCount} flashcards requested.
-3. LANGUAGE (CRITICAL - SEE ABOVE): ${outputLanguage === 'auto' ? (language && language !== 'Unknown' ? `ALL questions, answers, and distractors MUST be in ${language}. DO NOT use any other language.` : 'Match the exact language of the input text. DO NOT translate or switch languages.') : 'Strictly output in English'}.
+3. LANGUAGE (CRITICAL - SEE ABOVE): ${outputLanguage === 'auto' ? (language && language !== 'Unknown' ? `ALL questions, answers, and distractors MUST be in ${language}. DO NOT use any other language.` : 'Match the exact language of the input text. DO NOT translate or switch languages.') : `ALL questions, answers, and distractors MUST be in ${language}. DO NOT use any other language.`}.
 
 ${difficultyInstructions}
 
@@ -602,35 +648,59 @@ ${mathInstructions}
 ${materialInstructions}
 
 LEARNING QUALITY (High Priority):
-- QUESTIONS should test UNDERSTANDING, not just memorization. Use "Why", "How", "What happens if".
-- QUESTIONS must be CLEAR and SPECIFIC. No vague or ambiguous wording.
-- ANSWERS must be BRIEF (5-15 words), PRECISE, and ACTIONABLE.
+- FLASHCARD QUESTIONS MUST have a SINGLE, SPECIFIC, FACTUAL ANSWER.
+- 🚫 FORBIDDEN question types (these DO NOT work for flashcards):
+  * "Explain..." / "Discuss..." / "Describe in detail..." / "Analyze..."
+  * "Compare and contrast..." / "Evaluate..." / "What are the advantages..."
+  * Any question requiring a paragraph or essay to answer
+  * Any question with multiple valid answers
+- ✅ GOOD question types for flashcards:
+  * "What is..." / "What does...mean?" / "Define..."
+  * "Which...?" / "Who...?" / "When...?" / "Where...?"
+  * "What is the function of...?" / "What causes...?"
+  * "Name the..." / "What is the term for...?"
+  * "How many...?" / "What type of...?"
+- QUESTIONS must be CLEAR and SPECIFIC with ONE correct answer.
+- ANSWERS must be BRIEF (5-15 words), PRECISE, and FACTUAL.
 - CUT ALL FLUFF: No "The answer is", no "Because", no "This means that".
-- ANSWERS should be complete statements that directly answer the question.
-- Focus on KEY CONCEPTS and relationships between ideas, not trivial details.
+- ANSWERS should be direct facts, not explanations or discussions.
+- Focus on KEY CONCEPTS, definitions, and specific facts.
+- A flashcard should test RECALL of a specific piece of knowledge.
 
 CRITICAL: ANSWER LENGTH MATCHING (HIGHEST PRIORITY)
-- ALL 4 OPTIONS MUST BE THE EXACT SAME LENGTH (within 3-5 words of each other).
-- Count the words in your correct answer. Each distractor MUST have the same word count ±2.
-- If the correct answer is 8 words, ALL distractors must be 6-10 words.
+- ALL 4 OPTIONS MUST BE THE EXACT SAME LENGTH (within 1-3 words of each other).
+- Count the words in your correct answer. Each distractor MUST have the same word count ±1.
+- If the correct answer is 8 words, ALL distractors must be 7-9 words.
 - NEVER make the correct answer longer than distractors - students will guess it.
 - Target: 5-12 words per answer. If you need more detail, split into two flashcards.
 
-DISTRACTOR QUALITY (CRITICAL):
-- Distractors must be PLAUSIBLE and could genuinely confuse someone who hasn't studied.
-- Use REAL concepts from the same topic that sound correct but aren't the right answer.
-- If the answer is a date, ALL distractors must be dates from the same era.
-- If the answer is a name, ALL distractors must be similar names from the same field.
-- If the answer is a definition, ALL distractors must be definitions of RELATED concepts.
-- Distractors must represent "close calls" that a student might actually confuse.
-- AVOID obviously wrong answers that no student would ever pick.
+DISTRACTOR QUALITY (CRITICAL - MAKE THEM VERY SIMILAR):
+- Distractors must be EXTREMELY similar to the correct answer - only slightly different.
+- They should look almost identical at first glance - same structure, same style.
+- Use the SAME key terms but in slightly wrong combinations or contexts.
+- For definitions: Keep the same format, just swap one key word or detail.
+- For dates/names: Use very close alternatives (adjacent years, similar names).
+- For processes: Same steps but one small error in order or detail.
+- AVOID obviously wrong answers - every option should seem plausible.
+- Make students REALLY need to know the material to spot the difference.
 
-DISTRACTOR EXAMPLES (Optimized):
+DISTRACTOR EXAMPLES (Ultra-Similar - Correct Way):
 Question: "What is the primary function of mitochondria?"
-- ✅ "Generates ATP energy for the cell" (Correct, Short)
-- ✅ "Synthesizes proteins for structure" (Similar length/style)
-- ✅ "Regulates DNA replication cycles" (Similar length/style)
-- ✅ "Breaks down cellular waste" (Similar length/style)
+- ✅ "Produces ATP energy for cellular processes" (CORRECT - 6 words)
+- ✅ "Produces ATP energy for protein synthesis" (Similar, wrong detail - 6 words)
+- ✅ "Stores ATP energy for cellular processes" (Similar, wrong action - 6 words)  
+- ✅ "Produces ADP energy for cellular processes" (Similar, wrong molecule - 6 words)
+
+Question: "When did World War II end?"
+- ✅ "1945" (CORRECT)
+- ✅ "1944" (Very close, plausible)
+- ✅ "1946" (Very close, plausible)
+- ✅ "1943" (Close enough to be confusing)
+
+❌ BAD EXAMPLES (Too Obviously Different):
+- "Photosynthesis in plant leaves" (Completely unrelated)
+- "2001" (Too far from correct date)
+- "Makes the cell blue" (Absurd answer)
 
 REQUIRED JSON OUTPUT FORMAT:
 {
@@ -660,24 +730,33 @@ Generate ${bufferedCount} educational flashcards now. Output ONLY the JSON above
       setTimeout(() => reject(new Error("Generation timeout - please try again with fewer cards or shorter text")), timeoutMs);
     });
 
-    const completionPromise = openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: text },
-      ],
-      temperature: 0.7,
-      max_tokens: 6000, // Higher limit for single request with 30 cards
-      response_format: { type: "json_object" },
+    // Use Vertex AI Gemini 2.5 Flash (best price-performance)
+    const model = vertexAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+    });
+
+    const completionPromise = model.generateContent({
+      contents: [{
+        role: 'user',
+        parts: [{
+          text: systemPrompt + "\n\n" + text
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 16384,
+        responseMimeType: 'application/json',
+      },
     });
 
     const completion = await Promise.race([completionPromise, timeoutPromise]) as any;
     
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
-    console.log(`[API /generate] OpenAI responded in ${elapsed}s`);
+    console.log(`[API /generate] Gemini 2.5 Flash responded in ${elapsed}s`);
 
-    const content = completion.choices[0]?.message?.content;
-    const finishReason = completion.choices[0]?.finish_reason;
+    const response = completion.response;
+    const content = response?.candidates?.[0]?.content?.parts?.[0]?.text;
+    const finishReason = response?.candidates?.[0]?.finishReason;
     
     if (!content) {
       throw new Error("No content in AI response");
@@ -729,14 +808,13 @@ Generate ${bufferedCount} educational flashcards now. Output ONLY the JSON above
 
     console.log("[API /generate] Response finish reason:", finishReason);
     console.log("[API /generate] Raw AI response length:", content.length, "characters");
-    console.log("[API /generate] RAW AI CONTENT:", content); // TEMPORARY DEBUG
 
     // Parse response
     let parsed;
     try {
       parsed = JSON.parse(content);
       console.log("[API /generate] ✅ Parsed JSON structure:", Object.keys(parsed));
-      console.log("[API /generate] Number of flashcards in response:", Array.isArray(parsed) ? parsed.length : (parsed.flashcards?.length || parsed.cards?.length || 0)); // TEMPORARY DEBUG
+      console.log("[API /generate] Number of flashcards in response:", Array.isArray(parsed) ? parsed.length : (parsed.flashcards?.length || parsed.cards?.length || 0));
     } catch (e) {
       console.error("[API /generate] ❌ JSON parse failed:", e);
       console.log("[API /generate] Attempting to repair JSON...");
@@ -780,8 +858,7 @@ Generate ${bufferedCount} educational flashcards now. Output ONLY the JSON above
         console.log("[API /generate] ✅ Successfully repaired and parsed JSON");
       } catch (e2) {
         console.error("[API /generate] ❌ JSON repair failed:", e2);
-        console.log("[API /generate] First 500 chars:", content.substring(0, 500));
-        console.log("[API /generate] Last 500 chars:", content.substring(Math.max(0, content.length - 500)));
+        console.log("[API /generate] JSON repair failed, content length:", content.length);
         throw new Error("Could not parse AI response as JSON. The AI may have returned incomplete or malformed data. Please try again.");
       }
     }
@@ -847,12 +924,12 @@ Generate ${bufferedCount} educational flashcards now. Output ONLY the JSON above
         }
 
         // Standard validation for non-language cards
-        if (!question || question.length < 10) {
+        if (!question || question.length < 5) {
           console.warn(`[API /generate] Card ${index + 1} has too short question: "${question}"`);
           return null;
         }
         
-        if (!answer || answer.length < 10) {
+        if (!answer || answer.length < 3) {
           console.warn(`[API /generate] Card ${index + 1} has too short answer: "${answer}"`);
           return null;
         }
@@ -944,17 +1021,37 @@ export async function POST(req: NextRequest) {
     console.log("[API /generate POST] ========== NEW REQUEST ==========");
     console.log("[API /generate POST] numberOfFlashcards requested:", numberOfFlashcards);
     console.log("[API /generate POST] subject:", subject);
+    console.log("[API /generate POST] materialType:", materialType);
     console.log("[API /generate POST] detectedLanguage:", detectedLanguage);
     console.log("[API /generate POST] outputLanguage:", outputLanguage);
     console.log("[API /generate POST] knownLanguage:", knownLanguage);
     console.log("[API /generate POST] learningLanguage:", learningLanguage);
     console.log("[API /generate POST] text length:", text?.length);
-    console.log("[API /generate POST] text preview:", text?.substring(0, 200));
+    
+    // Check API keys
+    if (!process.env.VERTEX_AI_PROJECT_ID) {
+      console.error("[API /generate POST] ❌ VERTEX_AI_PROJECT_ID not configured!");
+      return NextResponse.json(
+        { error: "AI service not configured. Please contact support." },
+        { status: 500 }
+      );
+    }
+    
     console.log("[API /generate POST] =====================================");
 
     // Determine the actual output language
+    // If outputLanguage is a specific language name (e.g. "Norwegian", "English"), use it directly
     // If outputLanguage is "en", force English; if "auto", use the detected language from input text
-    let language = outputLanguage === "en" ? "English" : (detectedLanguage || "Unknown");
+    let language: string;
+    if (outputLanguage && outputLanguage !== "auto" && outputLanguage !== "en" && outputLanguage.length > 2) {
+      // Specific language requested (e.g. "Norwegian", "Spanish", "French")
+      language = outputLanguage;
+      console.log("[API /generate POST] Using user-selected output language:", language);
+    } else if (outputLanguage === "en") {
+      language = "English";
+    } else {
+      language = detectedLanguage || "Unknown";
+    }
     
     // If language is Unknown or empty, try to detect from text sample
     if (!language || language === "Unknown" || language === "") {
@@ -998,26 +1095,29 @@ export async function POST(req: NextRequest) {
     }
 
     // ANTI-ABUSE: Rate limit by USER ID (not IP - prevents one user blocking everyone on same network)
-    const maxRequests = getRateLimitForUser(userStatus.isPremium, userId.startsWith('anon_') || userId.startsWith('anon-'));
-    const rateCheck = checkRateLimit(userId, maxRequests);
+    // BUT SKIP RATE LIMIT FOR PREMIUM USERS
+    if (!userStatus.isPremium) {
+      const maxRequests = getRateLimitForUser(userStatus.isPremium, userId.startsWith('anon_') || userId.startsWith('anon-'));
+      const rateCheck = checkRateLimit(userId, maxRequests);
 
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        {
-          error: `You've reached your daily generation limit. Try again in ${formatResetTime(rateCheck.resetAt)}.`,
-          code: "RATE_LIMIT_EXCEEDED",
-          resetAt: rateCheck.resetAt,
-          isPremium: userStatus.isPremium,
-        },
-        { 
-          status: 429,
-          headers: {
-            "X-RateLimit-Limit": maxRequests.toString(),
-            "X-RateLimit-Remaining": "0",
-            "X-RateLimit-Reset": rateCheck.resetAt.toString(),
+      if (!rateCheck.allowed) {
+        return NextResponse.json(
+          {
+            error: `You've reached your daily generation limit. Try again in ${formatResetTime(rateCheck.resetAt)}.`,
+            code: "RATE_LIMIT_EXCEEDED",
+            resetAt: rateCheck.resetAt,
+            isPremium: userStatus.isPremium,
+          },
+          { 
+            status: 429,
+            headers: {
+              "X-RateLimit-Limit": maxRequests.toString(),
+              "X-RateLimit-Remaining": "0",
+              "X-RateLimit-Reset": rateCheck.resetAt.toString(),
+            }
           }
-        }
-      );
+        );
+      }
     }
 
     // STEP 1: Reset daily counter if new day
@@ -1086,9 +1186,52 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("Generate API error:", error);
+    
+    // Provide user-friendly error messages
+    let errorMessage = error.message || "Failed to generate flashcards";
+    let statusCode = 500;
+    
+    switch (error.message) {
+      case "AI_RATE_LIMITED":
+        errorMessage = "The AI service is currently experiencing high demand. Please wait a moment and try again.";
+        statusCode = 429;
+        break;
+      case "AI_TIMEOUT":
+        errorMessage = "The AI took too long to respond. Please try with a shorter text or fewer flashcards.";
+        statusCode = 504;
+        break;
+      case "AI_GENERATION_FAILED":
+        errorMessage = "Failed to generate flashcards. Please try again or rephrase your content.";
+        statusCode = 500;
+        break;
+      case "AI_CONNECTION_ERROR":
+        errorMessage = "Could not connect to the AI service. Please check your internet connection and try again.";
+        statusCode = 503;
+        break;
+      case "AI_SERVICE_UNAVAILABLE":
+        errorMessage = "The AI service is temporarily unavailable. Please try again in a few minutes.";
+        statusCode = 503;
+        break;
+      case "AI_AUTH_ERROR":
+        errorMessage = "AI service authentication failed. Please contact support.";
+        statusCode = 500;
+        break;
+      case "AI_PARSE_ERROR":
+        errorMessage = "Failed to process AI response. Please try again.";
+        statusCode = 500;
+        break;
+      case "AI_EMPTY_RESPONSE":
+        errorMessage = "The AI didn't generate any flashcards. Please try with more detailed content.";
+        statusCode = 500;
+        break;
+    }
+    
     return NextResponse.json(
-      { error: error.message || "Failed to generate flashcards" },
-      { status: 500 }
+      { 
+        error: errorMessage,
+        code: error.message || "UNKNOWN_ERROR"
+      },
+      { status: statusCode }
     );
   }
 }
