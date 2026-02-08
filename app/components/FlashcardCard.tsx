@@ -79,7 +79,7 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
             {isFlipped ? t("answer") : t("question")}
           </p>
           <p 
-            className="text-2xl md:text-4xl lg:text-5xl font-black text-white leading-relaxed drop-shadow-xl"
+            className="text-base md:text-lg lg:text-xl font-black text-white leading-relaxed drop-shadow-xl"
             dangerouslySetInnerHTML={{ 
               __html: (isFlipped ? card.answer : card.question)
                 .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')

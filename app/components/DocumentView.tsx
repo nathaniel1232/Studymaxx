@@ -779,9 +779,9 @@ export default function DocumentView({
         </div>
       </div>
 
-      {/* Side Panel - Matching NotesEditorView layout */}
+      {/* Side Panel - Desktop only */}
       <aside 
-        className="w-80 border-l flex flex-col"
+        className="hidden lg:flex w-80 border-l flex-col"
         style={{ 
           borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)', 
           backgroundColor: isDarkMode ? 'rgba(15, 29, 50, 0.5)' : 'rgba(241, 245, 249, 0.95)' 
@@ -936,6 +936,31 @@ export default function DocumentView({
           </div>
         </div>
       </aside>
+
+      {/* Mobile: Fixed bottom Create button */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 p-3 backdrop-blur-md" style={{ 
+        backgroundColor: isDarkMode ? 'rgba(15, 29, 50, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+        borderTop: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'}` 
+      }}>
+        <button
+          onClick={() => openCustomizeModal("flashcards")}
+          disabled={isGenerating}
+          className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
+          style={{
+            background: "linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)",
+            color: "#ffffff",
+            opacity: isGenerating ? 0.7 : 1,
+            boxShadow: '0 4px 14px rgba(6, 182, 212, 0.3)',
+          }}
+        >
+          {isGenerating ? <SpinnerIcon /> : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74L12 2z" />
+            </svg>
+          )}
+          Create Study Set
+        </button>
+      </div>
 
       {/* Customization Modal */}
       <CustomizeGenerationModal

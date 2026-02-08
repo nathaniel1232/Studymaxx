@@ -557,341 +557,397 @@ export default function AudioRecordingView({
   };
 
   const showSidebar = !!transcription;
+  const [showAIChat, setShowAIChat] = useState(true);
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: isDarkMode ? "#0f1419" : "#f1f5f9" }}>
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col" style={{ backgroundColor: isDarkMode ? "#1a1f2e" : "#ffffff" }}>
-        
-        {/* Top Bar */}
-        <div
-          className="sticky top-0 z-30 px-6 py-4 flex items-center justify-between"
-          style={{
-            backgroundColor: isDarkMode ? "rgba(26, 31, 46, 0.95)" : "rgba(255, 255, 255, 0.95)",
-            backdropFilter: "blur(20px)",
-            borderBottom: isDarkMode ? "none" : "1px solid rgba(0,0,0,0.1)",
-          }}
-        >
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onBack}
-              className="p-2 rounded-full transition-all hover:bg-opacity-80"
-              style={{
-                backgroundColor: "transparent",
-                color: isDarkMode ? "#9aa0a6" : "#475569",
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-            </button>
-            
-            <h1 className="text-lg font-normal" style={{ color: isDarkMode ? "#e2e8f0" : "#1e293b" }}>
-              Audio Notes
-            </h1>
-          </div>
-
-          {transcription && (
-            <button
-              onClick={handleContinue}
-              disabled={!subject}
-              className="px-5 py-2 rounded-full font-normal text-sm flex items-center gap-2 transition-all hover:opacity-80 disabled:opacity-40"
-              style={{
-                backgroundColor: isDarkMode ? "#3b82f6" : "#2563eb",
-                color: "#ffffff",
-              }}
-            >
-              Continue →
-            </button>
-          )}
+    <>
+      <div className="min-h-screen relative" style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#f1f5f9' }}>
+        {/* Background gradients - matching CreateFlowView */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full blur-[120px]" style={{ backgroundColor: isDarkMode ? 'rgba(6, 182, 212, 0.15)' : 'rgba(6, 182, 212, 0.08)' }} />
+          <div className="absolute top-1/2 -left-40 w-[500px] h-[500px] rounded-full blur-[100px]" style={{ backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.05)' }} />
         </div>
 
-        {/* Subject Input */}
-        {transcription && (
-          <div className="px-6 py-3" style={{ borderBottom: isDarkMode ? "none" : "1px solid rgba(0,0,0,0.1)" }}>
-            <input
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="Add subject..."
-              className="w-full bg-transparent border-none outline-none text-sm font-normal placeholder:text-gray-400"
-              style={{ color: isDarkMode ? "#cbd5e1" : "#475569" }}
-            />
-          </div>
-        )}
-
-        {/* Main Recording/Content Area */}
-        <div className="flex-1 px-8 py-6 overflow-y-auto">
-          {error && (
-            <div className="max-w-2xl mx-auto p-4 rounded-2xl mb-6" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-              {error}
+        {/* Top bar with logo - matching CreateFlowView */}
+        <div className="sticky top-0 z-50 px-4 py-3 backdrop-blur-sm" style={{ backgroundColor: isDarkMode ? 'rgba(15, 29, 50, 0.8)' : 'rgba(255, 255, 255, 0.8)', borderBottom: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)' }}>
+          <div className="max-w-2xl mx-auto flex items-center justify-between">
+            <div className="text-2xl font-black" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <span style={{ color: '#22d3ee' }}>Study</span>Maxx
             </div>
-          )}
+          </div>
+        </div>
 
-          {/* Recording Section */}
-          {!audioBlob && !transcription && (
-            <div className="max-w-2xl mx-auto space-y-8">
-              <div className="text-center mb-12">
-                <p className="text-base" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
-                  Record a lecture or upload an audio file
+        <div className="px-3 sm:px-4 py-4 sm:py-6 max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="mb-4">
+            <button
+              onClick={onBack}
+              className="mb-2 px-4 py-2 text-sm font-bold rounded-md transition-all flex items-center gap-2 shadow-md hover:-translate-y-0.5 active:translate-y-0 hover:shadow-lg"
+              style={{
+                background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#ffffff',
+                color: isDarkMode ? '#ffffff' : '#000000',
+                border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              <span>Back</span>
+            </button>
+
+            <h1 className="text-2xl md:text-3xl font-bold text-center mb-1" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              Audio Notes
+            </h1>
+            <p className="text-center text-sm" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>Record a lecture or upload an audio file</p>
+          </div>
+
+          {/* Main content card - matching CreateFlowView card-elevated */}
+          <div className="card-elevated p-3 sm:p-4">
+            {/* Error message */}
+            {error && (
+              <div className="mb-3 p-3 rounded-lg" style={{ 
+                background: isDarkMode ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid #ef4444',
+                color: '#ef4444'
+              }}>
+                <p className="text-sm font-medium">{error}</p>
+              </div>
+            )}
+
+            {/* Subject Input - always visible when transcription exists */}
+            {transcription && (
+              <div className="mb-4 p-3 rounded-lg" style={{ 
+                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)', 
+                border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` 
+              }}>
+                <label className="text-xs font-semibold mb-1 block" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>Subject</label>
+                <input
+                  type="text"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  placeholder="Add subject..."
+                  className="w-full bg-transparent border-none outline-none text-sm font-medium placeholder:text-gray-400"
+                  style={{ color: isDarkMode ? '#ffffff' : '#000000' }}
+                />
+              </div>
+            )}
+
+            {/* Recording Section */}
+            {!audioBlob && !transcription && (
+              <div className="space-y-6">
+                <div 
+                  className="p-8 sm:p-10 rounded-2xl text-center"
+                  style={{ 
+                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(6, 182, 212, 0.03)', 
+                    border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(6, 182, 212, 0.15)'}`,
+                  }}
+                >
+                  {!isRecording ? (
+                    <>
+                      <button
+                        onClick={startRecording}
+                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-4 transition-all hover:scale-105"
+                        style={{ 
+                          background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
+                          boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)' 
+                        }}
+                      >
+                        <svg className="w-7 h-7 sm:w-9 sm:h-9" fill="white" viewBox="0 0 24 24">
+                          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                          <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                        </svg>
+                      </button>
+                      <p className="font-semibold text-sm mb-1" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Start recording</p>
+                      <p className="text-xs" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Your microphone must be enabled</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-center gap-3 mb-4">
+                        <div className="w-3 h-3 rounded-full animate-pulse" style={{ backgroundColor: '#ef4444' }} />
+                        <span className="text-xl font-mono" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                          {formatTime(recordingTime)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center justify-center gap-3">
+                        {isPaused ? (
+                          <button onClick={resumeRecording} className="w-12 h-12 rounded-full flex items-center justify-center transition-all hover:scale-110" style={{ backgroundColor: '#22c55e' }}>
+                            <svg className="w-5 h-5" fill="white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                          </button>
+                        ) : (
+                          <button onClick={pauseRecording} className="w-12 h-12 rounded-full flex items-center justify-center transition-all hover:scale-110" style={{ backgroundColor: '#f59e0b' }}>
+                            <svg className="w-5 h-5" fill="white" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                          </button>
+                        )}
+                        <button onClick={stopRecording} className="w-12 h-12 rounded-full flex items-center justify-center transition-all hover:scale-110" style={{ backgroundColor: '#ef4444' }}>
+                          <svg className="w-5 h-5" fill="white" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+                        </button>
+                      </div>
+                      
+                      <p className="text-xs mt-3" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
+                        {isPaused ? 'Recording paused' : 'Recording in progress...'}
+                      </p>
+                      
+                      <div className="mt-4 flex items-center justify-center gap-0.5 h-12">
+                        {Array.from({ length: 40 }).map((_, i) => {
+                          const barHeight = Math.max(4, audioLevel * 60 * (0.5 + Math.random() * 0.5));
+                          return (
+                            <div key={i} className="w-1 rounded-full transition-all duration-100"
+                              style={{ height: `${isPaused ? 4 : barHeight}px`, backgroundColor: isPaused ? '#5f6368' : '#06b6d4', opacity: 0.7 + (audioLevel * 0.3) }}
+                            />
+                          );
+                        })}
+                      </div>
+                      <p className="text-xs mt-1" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
+                        {audioLevel > 0.1 ? '🎤 Audio detected' : '🔇 Waiting for audio...'}
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex-1 h-px" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)' }} />
+                  <span className="text-xs font-medium" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>or</span>
+                  <div className="flex-1 h-px" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)' }} />
+                </div>
+
+                <label className="block p-6 sm:p-8 rounded-2xl text-center cursor-pointer transition-all hover:scale-[1.01]"
+                  style={{ 
+                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(6, 182, 212, 0.03)', 
+                    border: `2px dashed ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(6, 182, 212, 0.2)'}`,
+                  }}
+                >
+                  <input type="file" accept="audio/*" onChange={handleFileUpload} className="hidden" />
+                  <svg className="w-8 h-8 mx-auto mb-3" style={{ color: '#06b6d4' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <p className="font-semibold text-sm mb-1" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Upload audio file</p>
+                  <p className="text-xs" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>MP3, WAV, M4A • Max 25MB</p>
+                </label>
+              </div>
+            )}
+
+            {/* Audio Preview & Transcribe */}
+            {audioBlob && !transcription && (
+              <div className="space-y-4">
+                <div className="p-4 sm:p-6 rounded-2xl" style={{ 
+                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(6, 182, 212, 0.03)', 
+                  border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(6, 182, 212, 0.15)'}`,
+                }}>
+                  <p className="text-xs font-semibold mb-3" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>Preview</p>
+                  {audioUrl && <audio controls src={audioUrl} className="w-full mb-4" style={{ filter: isDarkMode ? 'invert(1)' : 'none' }} />}
+                  <div className="flex gap-2">
+                    <button onClick={resetRecording} className="flex-1 px-4 py-2.5 rounded-md font-semibold text-sm transition-all duration-200"
+                      style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)', color: isDarkMode ? '#94a3b8' : '#5f6368', border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` }}
+                    >Record again</button>
+                    <button onClick={transcribeAudio} disabled={isTranscribing} className="flex-1 px-4 py-2.5 rounded-md font-semibold text-sm transition-all duration-200 disabled:opacity-50 hover:opacity-90"
+                      style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)', color: '#ffffff', boxShadow: '0 4px 14px rgba(6, 182, 212, 0.3)' }}
+                    >{isTranscribing ? (<span className="flex items-center justify-center gap-2"><SpinnerIcon />Transcribing...</span>) : 'Create notes'}</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Transcription Display */}
+            {transcription && (
+              <div className="space-y-4">
+                {audioUrl && (
+                  <div className="p-3 rounded-lg" style={{ 
+                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', 
+                    border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`
+                  }}>
+                    <audio controls src={audioUrl} className="w-full" style={{ filter: isDarkMode ? 'invert(1)' : 'none' }} />
+                  </div>
+                )}
+
+                <div className="p-4 sm:p-6 rounded-2xl" style={{ 
+                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', 
+                  border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                }}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                      {summary ? (useSummary ? 'Summary' : 'Transcription') : 'Transcription'}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      {summary && (
+                        <button onClick={() => setUseSummary(!useSummary)} className="text-xs px-3 py-1.5 rounded-md transition-all font-semibold"
+                          style={{ 
+                            backgroundColor: isDarkMode ? 'rgba(6, 182, 212, 0.15)' : 'rgba(6, 182, 212, 0.08)', 
+                            color: '#06b6d4',
+                            border: '1px solid rgba(6, 182, 212, 0.2)'
+                          }}
+                        >{useSummary ? 'Full text' : 'Summary'}</button>
+                      )}
+                      <button onClick={resetRecording} className="text-xs px-3 py-1.5 rounded-md font-semibold"
+                        style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: isDarkMode ? '#94a3b8' : '#5f6368', border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` }}
+                      >New</button>
+                    </div>
+                  </div>
+                  <div className="max-h-[40vh] overflow-y-auto text-sm leading-7"
+                    style={{ color: isDarkMode ? '#cbd5e1' : '#334155' }}
+                    dangerouslySetInnerHTML={{ __html: (useSummary && summary ? summary : transcription).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\*(.*?)\*/g, '<i>$1</i>') }}
+                  />
+                </div>
+
+                {/* Create Study Set Button - matching CreateFlowView style */}
+                <button 
+                  onClick={() => handleGenerate("flashcards")} 
+                  disabled={isGenerating || !subject.trim()}
+                  className="w-full py-3 rounded-md text-sm font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  style={{ 
+                    background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)', 
+                    color: '#ffffff',
+                    boxShadow: '0 4px 20px rgba(6, 182, 212, 0.3)'
+                  }}
+                >
+                  {isGenerating && generationType === "flashcards" ? <SpinnerIcon /> : <FlashcardIcon />}
+                  <span>Create Study Set</span>
+                </button>
+
+                {/* Continue to full editor button */}
+                <button
+                  onClick={handleContinue}
+                  disabled={!subject.trim()}
+                  className="w-full py-3 rounded-md text-sm font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  style={{ 
+                    background: isDarkMode ? 'rgba(255,255,255,0.03)' : '#ffffff', 
+                    color: isDarkMode ? '#ffffff' : '#000000', 
+                    border: `2px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` 
+                  }}
+                >
+                  <span>Continue to Editor</span>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* StudyMaxx AI Chat - floating widget matching DashboardView style */}
+        {transcription && (
+          showAIChat ? (
+            <div 
+              className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-72 sm:w-80 rounded-2xl overflow-hidden shadow-2xl z-50"
+              style={{ 
+                backgroundColor: isDarkMode ? 'rgba(15, 29, 50, 0.95)' : 'rgba(255, 255, 255, 0.95)', 
+                border: '1px solid rgba(6, 182, 212, 0.2)',
+                backdropFilter: 'blur(20px)'
+              }}
+            >
+              <div className="p-3 border-b" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>StudyMaxx AI</h4>
+                  <button 
+                    onClick={() => setShowAIChat(false)}
+                    className="text-xs hover:text-cyan-500 transition-colors"
+                    style={{ color: '#64748b' }}
+                  >
+                    Hide →
+                  </button>
+                </div>
+                <p className="text-xs mt-0.5" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
+                  Ask about your recording
                 </p>
               </div>
-
-              <div 
-                className="p-12 rounded-3xl text-center"
-                style={{ 
-                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : '#ffffff', 
-                  border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'}`,
-                }}
-              >
-                {!isRecording ? (
-                  <>
-                    <button
-                      onClick={startRecording}
-                      className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 transition-all hover:opacity-90"
-                      style={{ 
-                        backgroundColor: isDarkMode ? '#2563eb' : '#3b82f6',
-                        boxShadow: isDarkMode ? 'none' : '0 4px 12px rgba(59, 130, 246, 0.15)' 
-                      }}
+              <div className="p-3 flex-1 overflow-y-auto max-h-72">
+                {chatMessages.length === 0 ? (
+                  <div 
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+                    style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)' }}
+                  >
+                    <input
+                      type="text"
+                      placeholder="Ask me anything..."
+                      value={chatMessage}
+                      onChange={(e) => setChatMessage(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleChatSubmit()}
+                      className="flex-1 outline-none text-sm bg-transparent"
+                      style={{ color: isDarkMode ? '#ffffff' : '#000000' }}
+                    />
+                    <button 
+                      onClick={handleChatSubmit}
+                      disabled={isChatLoading || !chatMessage.trim()}
+                      className="p-1.5 rounded-lg transition-all duration-200 hover:bg-cyan-500/20 hover:scale-110 disabled:opacity-50"
+                      style={{ color: '#06b6d4' }}
                     >
-                      <svg className="w-9 h-9" fill="white" viewBox="0 0 24 24">
-                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-                      </svg>
+                      {isChatLoading ? <SpinnerIcon /> : <SendIcon />}
                     </button>
-                    <p className="font-normal text-base mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Start recording</p>
-                    <p className="text-sm font-normal" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Your microphone must be enabled</p>
-                  </>
+                  </div>
                 ) : (
                   <>
-                    <div className="flex items-center justify-center gap-3 mb-4">
-                      <div className="w-4 h-4 rounded-full animate-pulse" style={{ backgroundColor: '#ef4444' }} />
-                      <span className="text-2xl font-mono" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-                        {formatTime(recordingTime)}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center justify-center gap-4">
-                      {isPaused ? (
-                        <button onClick={resumeRecording} className="w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110" style={{ backgroundColor: '#22c55e' }}>
-                          <svg className="w-6 h-6" fill="white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                        </button>
-                      ) : (
-                        <button onClick={pauseRecording} className="w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110" style={{ backgroundColor: '#f59e0b' }}>
-                          <svg className="w-6 h-6" fill="white" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                        </button>
+                    <div className="space-y-2 mb-3">
+                      {chatMessages.map((msg, i) => (
+                        <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                          <div 
+                            className="max-w-[80%] px-3 py-2 rounded-lg text-xs"
+                            style={{
+                              backgroundColor: msg.role === 'user' 
+                                ? '#06b6d4' 
+                                : isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                              color: msg.role === 'user' ? '#ffffff' : isDarkMode ? '#ffffff' : '#000000'
+                            }}
+                          >
+                            {msg.text}
+                          </div>
+                        </div>
+                      ))}
+                      {isChatLoading && chatMessages[chatMessages.length - 1]?.text === "" && (
+                        <div className="flex justify-start">
+                          <div className="px-3 py-2 rounded-lg" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}>
+                            <div className="flex gap-1">
+                              <div className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: '#06b6d4', animationDelay: "0ms" }} />
+                              <div className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: '#06b6d4', animationDelay: "150ms" }} />
+                              <div className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: '#06b6d4', animationDelay: "300ms" }} />
+                            </div>
+                          </div>
+                        </div>
                       )}
-                      <button onClick={stopRecording} className="w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110" style={{ backgroundColor: '#ef4444' }}>
-                        <svg className="w-6 h-6" fill="white" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+                    </div>
+                    <div 
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl sticky bottom-0"
+                      style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)' }}
+                    >
+                      <input
+                        type="text"
+                        placeholder="Ask me anything..."
+                        value={chatMessage}
+                        onChange={(e) => setChatMessage(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleChatSubmit()}
+                        className="flex-1 outline-none text-sm bg-transparent"
+                        style={{ color: isDarkMode ? '#ffffff' : '#000000' }}
+                      />
+                      <button 
+                        onClick={handleChatSubmit}
+                        disabled={isChatLoading || !chatMessage.trim()}
+                        className="p-1.5 rounded-lg transition-all duration-200 hover:bg-cyan-500/20 hover:scale-110 disabled:opacity-50"
+                        style={{ color: '#06b6d4' }}
+                      >
+                        {isChatLoading ? <SpinnerIcon /> : <SendIcon />}
                       </button>
                     </div>
-                    
-                    <p className="text-sm mt-4" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
-                      {isPaused ? 'Recording paused' : 'Recording in progress...'}
-                    </p>
-                    
-                    <div className="mt-6 flex items-center justify-center gap-1 h-16">
-                      {Array.from({ length: 40 }).map((_, i) => {
-                        const barHeight = Math.max(4, audioLevel * 60 * (0.5 + Math.random() * 0.5));
-                        return (
-                          <div key={i} className="w-1 rounded-full transition-all duration-100"
-                            style={{ height: `${isPaused ? 4 : barHeight}px`, backgroundColor: isPaused ? '#5f6368' : '#1a73e8', opacity: 0.7 + (audioLevel * 0.3) }}
-                          />
-                        );
-                      })}
-                    </div>
-                    <p className="text-xs mt-2" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
-                      {audioLevel > 0.1 ? '🎤 Audio detected' : '🔇 Waiting for audio...'}
-                    </p>
                   </>
                 )}
               </div>
-
-              <div className="flex items-center gap-4 my-8">
-                <div className="flex-1 h-px" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)' }} />
-                <span className="text-sm font-normal" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>or</span>
-                <div className="flex-1 h-px" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)' }} />
-              </div>
-
-              <label className="block p-10 rounded-3xl text-center cursor-pointer transition-all hover:bg-opacity-80"
-                style={{ 
-                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : '#ffffff', 
-                  border: `2px dashed ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'}`,
-                }}
-              >
-                <input type="file" accept="audio/*" onChange={handleFileUpload} className="hidden" />
-                <svg className="w-10 h-10 mx-auto mb-5" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                <p className="font-normal text-base mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Upload file</p>
-                <p className="text-sm font-normal" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>MP3, WAV, M4A • Max 25MB</p>
-              </label>
-            </div>
-          )}
-
-          {/* Audio Preview & Transcribe */}
-          {audioBlob && !transcription && (
-            <div className="max-w-2xl mx-auto space-y-6">
-              <div className="p-8 rounded-3xl" style={{ 
-                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : '#ffffff', 
-                border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'}`,
-              }}>
-                <p className="text-sm mb-5 font-normal" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Preview</p>
-                {audioUrl && <audio controls src={audioUrl} className="w-full mb-6" style={{ filter: isDarkMode ? 'invert(1)' : 'none' }} />}
-                <div className="flex gap-3">
-                  <button onClick={resetRecording} className="flex-1 px-5 py-3 rounded-full font-normal text-sm transition-all duration-200"
-                    style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4', color: isDarkMode ? '#9aa0a6' : '#5f6368' }}
-                  >Record again</button>
-                  <button onClick={transcribeAudio} disabled={isTranscribing} className="flex-1 px-5 py-3 rounded-full font-normal text-sm transition-all duration-200 disabled:opacity-50 hover:opacity-90"
-                    style={{ backgroundColor: isDarkMode ? '#2563eb' : '#3b82f6', color: '#ffffff' }}
-                  >{isTranscribing ? (<span className="flex items-center justify-center gap-2"><SpinnerIcon />Transcribing...</span>) : 'Create notes'}</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Transcription Display */}
-          {transcription && (
-            <div className="max-w-3xl mx-auto space-y-4">
-              {audioUrl && (
-                <div className="p-4 rounded-2xl" style={{ 
-                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.02)' : '#f1f5f9', 
-                  border: isDarkMode ? 'none' : '1px solid rgba(0,0,0,0.1)'
-                }}>
-                  <audio controls src={audioUrl} className="w-full" style={{ filter: isDarkMode ? 'invert(1)' : 'none' }} />
-                </div>
-              )}
-
-              <div className="p-8 rounded-3xl" style={{ 
-                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.02)' : '#ffffff', 
-                border: isDarkMode ? 'none' : '1px solid rgba(0,0,0,0.1)',
-                boxShadow: isDarkMode ? 'none' : '0 1px 2px rgba(0,0,0,0.03)'
-              }}>
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-normal text-base" style={{ color: isDarkMode ? '#cbd5e1' : '#1e293b' }}>
-                    {summary ? (useSummary ? 'Summary' : 'Transcription') : 'Transcription'}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    {summary && (
-                      <button onClick={() => setUseSummary(!useSummary)} className="text-sm px-4 py-1.5 rounded-full transition-all font-normal"
-                        style={{ 
-                          backgroundColor: isDarkMode ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)', 
-                          color: isDarkMode ? '#60a5fa' : '#3b82f6',
-                          border: isDarkMode ? 'none' : '1px solid rgba(59, 130, 246, 0.15)'
-                        }}
-                      >{useSummary ? 'Full text' : 'Summary'}</button>
-                    )}
-                    <button onClick={resetRecording} className="text-sm px-4 py-1.5 rounded-full font-normal"
-                      style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.04)', color: isDarkMode ? '#9aa0a6' : '#5f6368' }}
-                    >New</button>
-                  </div>
-                </div>
-                <div className="max-h-[65vh] overflow-y-auto px-1 text-sm leading-7"
-                  style={{ 
-                    color: isDarkMode ? '#cbd5e1' : '#334155'
-                  }}
-                  dangerouslySetInnerHTML={{ __html: (useSummary && summary ? summary : transcription).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\*(.*?)\*/g, '<i>$1</i>') }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Right Sidebar */}
-      {showSidebar && (
-        <div className="w-96 border-l flex flex-col"
-          style={{ 
-            backgroundColor: isDarkMode ? "rgba(26, 31, 46, 0.6)" : "#f1f5f9", 
-            borderColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
-            backdropFilter: "blur(10px)"
-          }}
-        >
-          <div className="p-6 border-b" style={{ borderColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }}>
-            <h3 className="text-sm font-normal mb-4" style={{ color: isDarkMode ? "#94a3b8" : "#64748b" }}>Actions</h3>
-            
-            <div className="space-y-2">
-              <button onClick={() => handleGenerate("flashcards")} disabled={isGenerating} className="w-full px-4 py-3.5 rounded-2xl font-semibold text-sm flex items-center justify-center gap-3 transition-all hover:opacity-90"
-                style={{ 
-                  background: "linear-gradient(135deg, #1a73e8 0%, #06b6d4 100%)",
-                  color: "#ffffff",
-                  boxShadow: "0 4px 14px rgba(26, 115, 232, 0.3)",
-                  opacity: isGenerating && generationType === "flashcards" ? 0.8 : 1 
-                }}
-              >{isGenerating && generationType === "flashcards" ? <SpinnerIcon /> : <FlashcardIcon />}Create Study Set</button>
-            </div>
-          </div>
-
-          <div className="flex-1 flex flex-col">
-            <div className="p-6 border-b" style={{ borderColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }}>
-              <h3 className="text-base font-normal" style={{ color: isDarkMode ? "#cbd5e1" : "#1e293b" }}>Chat</h3>
-              <p className="text-xs font-normal" style={{ color: isDarkMode ? "#64748b" : "#94a3b8" }}>Ask about your recording</p>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {chatMessages.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-14 h-14 mx-auto mb-5 rounded-2xl flex items-center justify-center" style={{ backgroundColor: isDarkMode ? "rgba(59, 130, 246, 0.1)" : "rgba(59, 130, 246, 0.08)" }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isDarkMode ? "#60a5fa" : "#3b82f6"} strokeWidth="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-                  </div>
-                  <p className="font-normal mb-2 text-sm" style={{ color: isDarkMode ? "#cbd5e1" : "#1e293b" }}>Ask about your recording</p>
-                  <p className="text-xs font-normal" style={{ color: isDarkMode ? "#64748b" : "#94a3b8" }}>Get summaries, explanations, and more</p>
-                </div>
-              ) : (
-                chatMessages.map((msg, i) => (
-                  <div key={i} className="flex gap-3 items-start">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-normal"
-                      style={{ 
-                        backgroundColor: msg.role === "user" 
-                          ? (isDarkMode ? "rgba(59, 130, 246, 0.15)" : "rgba(59, 130, 246, 0.1)") 
-                          : (isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)"), 
-                        color: msg.role === "user" 
-                          ? (isDarkMode ? "#60a5fa" : "#3b82f6")
-                          : (isDarkMode ? "#94a3b8" : "#64748b")
-                      }}
-                    >{msg.role === "user" ? "You" : "AI"}</div>
-                    <div className="flex-1 space-y-1">
-                      <div className="text-sm font-normal leading-6" style={{ color: isDarkMode ? '#cbd5e1' : '#334155' }}>{msg.text}</div>
-                    </div>
-                  </div>
-                ))
-              )}
-              {isChatLoading && chatMessages[chatMessages.length - 1]?.text === "" && (
-                <div className="flex gap-3 items-start">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold" style={{ backgroundColor: isDarkMode ? "rgba(26, 115, 232, 0.15)" : "rgba(26, 115, 232, 0.1)", color: "#1a73e8" }}>AI</div>
-                  <div className="flex-1 space-y-1">
-                    <div className="text-xs font-medium" style={{ color: isDarkMode ? "#9aa0a6" : "#5f6368" }}>StudyMaxx AI</div>
-                    <div className="flex gap-1 py-1">
-                      <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#1a73e8', animationDelay: "0ms" }} />
-                      <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#1a73e8', animationDelay: "150ms" }} />
-                      <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#1a73e8', animationDelay: "300ms" }} />
-                    </div>
-                  </div>
-                </div>
-              )}
               <div ref={chatEndRef} />
             </div>
-
-            <div className="p-6 border-t" style={{ borderColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }}>
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl"
-                style={{ 
-                  backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "#ffffff", 
-                  border: isDarkMode ? "none" : "1px solid rgba(0,0,0,0.1)" 
-                }}
-              >
-                <input type="text" value={chatMessage} onChange={(e) => setChatMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleChatSubmit()}
-                  placeholder="Ask a question..." 
-                  className="flex-1 bg-transparent outline-none text-sm font-normal placeholder:text-gray-400" 
-                  style={{ color: isDarkMode ? "#cbd5e1" : "#1e293b" }}
-                />
-                <button onClick={handleChatSubmit} disabled={isChatLoading || !chatMessage.trim()} className="p-1.5 rounded-lg transition-all hover:opacity-70 disabled:opacity-30" style={{ color: isDarkMode ? "#60a5fa" : "#3b82f6" }}>
-                  {isChatLoading ? <SpinnerIcon /> : <SendIcon />}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+          ) : (
+            <button
+              onClick={() => setShowAIChat(true)}
+              className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl transition-all hover:scale-110 z-50"
+              style={{ 
+                backgroundColor: '#06b6d4',
+                boxShadow: '0 10px 30px rgba(6, 182, 212, 0.3)'
+              }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="white" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </button>
+          )
+        )}
+      </div>
 
       {/* Customization Modal */}
       <CustomizeGenerationModal
@@ -903,7 +959,7 @@ export default function AudioRecordingView({
         isPremium={isPremium}
         isDarkMode={isDarkMode}
       />
-    </div>
+    </>
   );
 }
 

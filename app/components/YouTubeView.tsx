@@ -717,9 +717,9 @@ export default function YouTubeView({
         </div>
       </div>
 
-      {/* Right Sidebar */}
+      {/* Right Sidebar - hidden on mobile */}
       {showSidebar && (
-        <div className="w-96 border-l flex flex-col"
+        <div className="hidden lg:flex w-96 border-l flex-col"
           style={{ backgroundColor: isDarkMode ? "rgba(15, 29, 50, 0.5)" : "rgba(241, 245, 249, 0.95)", borderColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)" }}
         >
           {/* Action Buttons */}
@@ -791,6 +791,17 @@ export default function YouTubeView({
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Mobile Create Button - fixed bottom */}
+      {showSidebar && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 p-4 border-t"
+          style={{ backgroundColor: isDarkMode ? "rgba(15, 29, 50, 0.95)" : "rgba(255,255,255,0.95)", borderColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)", backdropFilter: "blur(12px)" }}
+        >
+          <button onClick={() => handleGenerate("flashcards")} disabled={isGenerating} className="w-full px-4 py-3.5 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all duration-200 hover:opacity-90"
+            style={{ background: "linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)", color: "#ffffff", boxShadow: "0 4px 14px rgba(6, 182, 212, 0.3)", opacity: isGenerating ? 0.8 : 1 }}
+          >{isGenerating ? <SpinnerIcon /> : <FlashcardIcon />}Create Study Set</button>
         </div>
       )}
 

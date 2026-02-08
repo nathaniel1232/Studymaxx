@@ -206,11 +206,11 @@ export default function DashboardView({
         {/* Header */}
         <div className="mb-8">
           {userName && (
-            <p className="text-xl md:text-2xl mb-1" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
+            <p className="text-sm md:text-base mb-1" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
               Welcome back, <span style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>{userName}</span>
             </p>
           )}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+          <h1 className="text-xl md:text-2xl font-semibold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
             What would you like to create?
           </h1>
         </div>
@@ -331,13 +331,13 @@ export default function DashboardView({
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-xl md:text-2xl lg:text-3xl font-medium mb-1 flex items-center gap-2" style={{ color: isDarkMode ? '#e2e8f0' : '#0f172a' }}>
+                    <h3 className="text-sm md:text-base font-medium mb-1 flex items-center gap-2" style={{ color: isDarkMode ? '#e2e8f0' : '#0f172a' }}>
                       {option.title}
                       <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" style={{ color: option.color }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </h3>
-                    <p className="text-lg md:text-xl lg:text-2xl" style={{ color: isDarkMode ? '#9ca3af' : '#475569' }}>{option.subtitle}</p>
+                    <p className="text-xs md:text-sm" style={{ color: isDarkMode ? '#9ca3af' : '#475569' }}>{option.subtitle}</p>
                   </div>
                 </div>
               </button>
