@@ -320,7 +320,7 @@ export default function MatchGame({ terms, definitions, subject, onBack }: Match
               style={getCardStyle(card)}
             >
               <span 
-                className="text-base md:text-lg font-semibold"
+                className="text-xl md:text-2xl lg:text-3xl font-semibold"
                 dangerouslySetInnerHTML={{ 
                   __html: card.content
                     .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')

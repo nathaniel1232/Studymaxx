@@ -211,10 +211,10 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
                 <polyline points="22,6 12,13 2,6" />
               </svg>
             </div>
-            <h2 className="text-lg font-semibold mb-2" style={{ color: isDarkMode ? '#f1f5f9' : '#0f172a' }}>
+            <h2 className="text-xl md:text-2xl font-semibold mb-2" style={{ color: isDarkMode ? '#f1f5f9' : '#0f172a' }}>
               Check your email
             </h2>
-            <p className="text-sm mb-5 leading-relaxed" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
+            <p className="text-base md:text-lg mb-5 leading-relaxed" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
               We sent a login link to <strong style={{ color: isDarkMode ? '#e2e8f0' : '#334155' }}>{email}</strong>
             </p>
             <button
@@ -243,10 +243,10 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
           <>
             {/* Header */}
             <div className="text-center mb-6">
-              <div className="text-2xl font-bold mb-1" style={{ color: isDarkMode ? '#f1f5f9' : '#0f172a' }}>
+              <div className="text-3xl md:text-4xl font-bold mb-1" style={{ color: isDarkMode ? '#f1f5f9' : '#0f172a' }}>
                 StudyMaxx
               </div>
-              <p className="text-sm" style={{ color: isDarkMode ? '#64748b' : '#94a3b8' }}>
+              <p className="text-base md:text-lg" style={{ color: isDarkMode ? '#64748b' : '#94a3b8' }}>
                 {isSignUp ? 'Create your account' : 'Sign in to your account'}
               </p>
             </div>
