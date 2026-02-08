@@ -32,7 +32,7 @@ export interface UsageLimits {
 // Free tier limits - HARD LIMITS enforced server-side
 export const FREE_LIMITS: UsageLimits = {
   maxStudySets: 2, // 2 study sets per 24 hours via notes
-  maxFlashcardsPerSet: 10, // Only 10 cards for free
+  maxFlashcardsPerSet: 20, // Up to 20 cards for free
   maxAIGenerationsPerDay: 2, // 2 AI generations per day
   maxChatMessagesPerDay: 10, // 10 AI chat messages per day
   canUploadPDF: false, // One-time trial only

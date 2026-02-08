@@ -246,7 +246,7 @@ export default function PricingPage() {
               <div className="space-y-3 mb-8">
                 {[
                   "1 study set to try it out",
-                  "Up to 10 cards per set",
+                  "Up to 20 cards per set",
                   "Basic flashcard & quiz modes",
                   "Paste notes only (no file upload)",
                 ].map((feature, i) => (

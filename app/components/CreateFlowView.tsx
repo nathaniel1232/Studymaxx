@@ -706,13 +706,13 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
   // Map grade to difficulty settings
   const getGenerationSettings = (grade: Grade) => {
-    // Free users can use up to 20 cards (C, D, E), Premium gets up to 50
+    // Free users can use up to 20 cards (C grade max), Premium gets up to 50
     const maxCards = isPremium ? 50 : 20;
     
     const settings = {
       A: { cardCount: Math.min(50, maxCards), difficulty: "comprehensive", quizStrictness: "strict" },
       B: { cardCount: Math.min(35, maxCards), difficulty: "thorough", quizStrictness: "moderate" },
-      C: { cardCount: Math.min(25, maxCards), difficulty: "standard", quizStrictness: "moderate" },
+      C: { cardCount: Math.min(20, maxCards), difficulty: "standard", quizStrictness: "moderate" },
       D: { cardCount: Math.min(15, maxCards), difficulty: "focused", quizStrictness: "lenient" },
       E: { cardCount: Math.min(10, maxCards), difficulty: "essential", quizStrictness: "lenient" }
     };
@@ -724,7 +724,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     const counts = {
       A: 50,
       B: 35,
-      C: 25,
+      C: 20,
       D: 15,
       E: 10
     };
@@ -2277,13 +2277,13 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                 <div className="grid grid-cols-1 gap-2 mt-2">
                   {[
                     { count: 10, label: "10 cards", grade: "Pass", locked: false, desc: null },
-                    { count: 15, label: "15 cards", grade: "Good", locked: !isPremium, desc: !isPremium ? "Premium" : null },
-                    { count: 25, label: "25 cards", grade: "Very Good", locked: !isPremium, desc: !isPremium ? "Premium" : null },
+                    { count: 15, label: "15 cards", grade: "Good", locked: false, desc: null },
+                    { count: 20, label: "20 cards", grade: "Very Good", locked: false, desc: null },
                     { count: 35, label: "35 cards", grade: "Excellent", locked: !isPremium, desc: !isPremium ? "Premium" : "Better grades" },
                     { count: 50, label: "50 cards", grade: "Top Grade", locked: !isPremium, desc: !isPremium ? "Premium" : "Top results" }
                   ].map(({ count, label, grade: gradeText, locked, desc }) => {
                     // Map count to grade letter for backend
-                    const gradeMap: Record<number, Grade> = { 10: "E", 15: "D", 25: "C", 35: "B", 50: "A" };
+                    const gradeMap: Record<number, Grade> = { 10: "E", 15: "D", 20: "C", 35: "B", 50: "A" };
                     const gradeValue = gradeMap[count];
                     const isSelected = targetGrade === gradeValue;
                     

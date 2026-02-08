@@ -78,7 +78,7 @@ export default function CustomizeGenerationModal({
   // Free users get restricted count options
   const countOptions = generationType === "match" 
     ? (isPremium ? [4, 6, 8, 10, 12, 15] : [6, 8])
-    : (isPremium ? [10, 15, 20, 25, 30, 40, 50] : [10]);
+    : (isPremium ? [10, 15, 20, 25, 30, 40, 50] : [10, 15, 20]);
 
   const currentCount = generationType === "match" ? settings.matchPairs : settings.count;
   const premiumLimit = generationType === "match" ? 10 : 20;
