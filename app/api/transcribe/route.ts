@@ -3,21 +3,46 @@ import { VertexAI } from '@google-cloud/vertexai';
 import { createClient } from '@deepgram/sdk';
 import OpenAI from 'openai';
 
-// Initialize Vertex AI for Gemini 2.5 Flash
-const vertexAI = new VertexAI({
-  project: process.env.VERTEX_AI_PROJECT_ID || '',
-  location: 'us-central1',
-});
+// Lazy initialization to avoid build-time errors
+let vertexAI: VertexAI | null = null;
+let deepgram: any = null;
+let openai: OpenAI | null = null;
 
-// Initialize Deepgram as primary transcription service
-const deepgram = process.env.DEEPGRAM_API_KEY ? createClient(process.env.DEEPGRAM_API_KEY) : null;
-
-// Initialize OpenAI Whisper as fallback
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '',
-});
+function initializeClients() {
+  if (!vertexAI && process.env.VERTEX_AI_PROJECT_ID) {
+    try {
+      vertexAI = new VertexAI({
+        project: process.env.VERTEX_AI_PROJECT_ID,
+        location: 'us-central1',
+      });
+    } catch (e) {
+      console.warn('[Transcribe] Vertex AI init failed:', e);
+    }
+  }
+  
+  if (!deepgram && process.env.DEEPGRAM_API_KEY) {
+    try {
+      deepgram = createClient(process.env.DEEPGRAM_API_KEY);
+    } catch (e) {
+      console.warn('[Transcribe] Deepgram init failed:', e);
+    }
+  }
+  
+  if (!openai && process.env.OPENAI_API_KEY) {
+    try {
+      openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+    } catch (e) {
+      console.warn('[Transcribe] OpenAI init failed:', e);
+    }
+  }
+}
 
 export async function POST(request: NextRequest) {
+  // Initialize clients on first request
+  initializeClients();
+  
   try {
     const formData = await request.formData();
     const audioFile = formData.get('audio') as File;
@@ -60,34 +85,37 @@ export async function POST(request: NextRequest) {
     let detectedLanguage = 'unknown';
 
     // Try OpenAI Whisper first (primary)
-    try {
-      console.log('[Transcribe] Attempting transcription with OpenAI Whisper...');
-      
-      // Convert buffer to File object for OpenAI
-      const whisperFile = new File([buffer], 'audio.webm', { type: audioFile.type || 'audio/webm' });
-      
-      const whisperResponse = await openai.audio.transcriptions.create({
-        file: whisperFile,
-        model: 'whisper-1',
-        language: 'no', // Norwegian Bokmål
-        response_format: 'verbose_json',
-        temperature: 0.2, // Lower temperature for more accurate transcription
-      });
+    if (openai) {
+      try {
+        console.log('[Transcribe] Attempting transcription with OpenAI Whisper...');
+        
+        // Convert buffer to File object for OpenAI
+        const whisperFile = new File([buffer], 'audio.webm', { type: audioFile.type || 'audio/webm' });
+        
+        const whisperResponse = await openai.audio.transcriptions.create({
+          file: whisperFile,
+          model: 'whisper-1',
+          language: 'no', // Norwegian Bokmål
+          response_format: 'verbose_json',
+          temperature: 0.2, // Lower temperature for more accurate transcription
+        });
 
-      transcription = whisperResponse.text || '';
-      detectedLanguage = whisperResponse.language || 'unknown';
+        transcription = whisperResponse.text || '';
+        detectedLanguage = whisperResponse.language || 'unknown';
 
-      console.log(`[Transcribe] ✅ Whisper success: ${transcription.length} characters in ${detectedLanguage}`);
+        console.log(`[Transcribe] ✅ Whisper success: ${transcription.length} characters in ${detectedLanguage}`);
 
-    } catch (whisperError: any) {
-      console.error('[Transcribe] Whisper failed, falling back to Deepgram:', whisperError.message);
-      
-      // Fallback to Deepgram if available
-      if (deepgram) {
-        try {
-          console.log('[Transcribe] Attempting transcription with Deepgram Nova-2...');
+      } catch (whisperError: any) {
+        console.error('[Transcribe] Whisper failed, falling back to Deepgram:', whisperError.message);
+      }
+    }
+    
+    // Fallback to Deepgram if Whisper failed or isn't available
+    if (!transcription && deepgram) {
+      try {
+        console.log('[Transcribe] Attempting transcription with Deepgram Nova-2...');
 
-          const { result, error } = await deepgram.listen.prerecorded.transcribeFile(
+        const { result, error } = await deepgram.listen.prerecorded.transcribeFile(
             buffer,
             {
               model: 'nova-2',
@@ -103,7 +131,7 @@ export async function POST(request: NextRequest) {
               endpointing: false,
             }
           );
-
+          
           if (error) {
             throw new Error('Deepgram failed: ' + error.message);
           }
@@ -114,22 +142,18 @@ export async function POST(request: NextRequest) {
           
           detectedLanguage = result.results?.channels?.[0]?.detected_language || 'unknown';
           
-          console.log(`[Transcribe] ✅ Deepgram fallback success: ${transcription.length} characters`);
+          console.log(`[Transcribe] ✅ Deepgram success: ${transcription.length} characters`);
 
         } catch (deepgramError: any) {
-          console.error('[Transcribe] Both Whisper and Deepgram failed');
-          throw new Error('Both transcription services failed');
+          console.error('[Transcribe] Deepgram transcription failed:', deepgramError.message);
         }
-      } else {
-        throw new Error('Whisper failed and no fallback available');
-      }
     }
 
     if (!transcription || transcription.trim().length === 0) {
       console.error('[Transcribe] No transcription text after all attempts');
       return NextResponse.json(
-        { error: 'Could not transcribe audio. The audio may be too quiet, corrupted, or contain no speech.' },
-        { status: 400 }
+        { error: 'Could not transcribe audio. Transcription services may not be configured.' },
+        { status: 500 }
       );
     }
 
@@ -137,6 +161,13 @@ export async function POST(request: NextRequest) {
 
     // Generate summary using Gemini 2.0 Flash with retry logic
     console.log('[Transcribe] Generating summary with Gemini...');
+    
+    if (!vertexAI) {
+      return NextResponse.json(
+        { error: 'Vertex AI not configured' },
+        { status: 500 }
+      );
+    }
     
     const model = vertexAI.getGenerativeModel({
       model: 'gemini-2.0-flash-exp',
