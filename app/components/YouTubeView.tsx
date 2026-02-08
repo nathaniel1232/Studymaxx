@@ -529,9 +529,14 @@ export default function YouTubeView({
               </div>
             )}
             
-            {extractedContent && (
+            {extractedContent && onGenerateFlashcards && (
               <button
-                onClick={handleContinue}
+                onClick={() => {
+                  // Generate flashcards directly instead of notes editor
+                  if (extractedContent && subject) {
+                    handleContinue();
+                  }
+                }}
                 disabled={!subject}
                 className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50"
                 style={{
@@ -539,7 +544,7 @@ export default function YouTubeView({
                   color: "#ffffff",
                 }}
               >
-                Open in Notes Editor →
+                Create Study Set →
               </button>
             )}
           </div>

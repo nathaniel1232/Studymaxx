@@ -149,11 +149,8 @@ export default function PricingPage() {
           </h1>
           <button
             onClick={() => {
-              if (window.history.length > 1) {
-                router.back();
-              } else {
-                router.push('/');
-              }
+              // Always go to dashboard if logged in, otherwise home
+              router.push('/');
             }}
             className="px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 inline-flex items-center gap-2 border"
             style={{ 

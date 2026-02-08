@@ -103,7 +103,7 @@ export default function Sidebar({
     : [
         NAV_ITEMS_BASE[0], // Dashboard
         NAV_ITEMS_BASE[1], // Settings
-        { id: "pricing" as const, label: "Upgrade to Pro", Icon: DiamondIcon },
+        { id: "pricing" as const, label: "Upgrade to Premium", Icon: DiamondIcon },
         ...NAV_ITEMS_BASE.slice(2), // Tips, About
       ];
 

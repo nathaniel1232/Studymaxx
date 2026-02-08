@@ -95,8 +95,8 @@ export async function GET(request: NextRequest) {
     console.log('[/api/premium/check] ================================');
     
     // Limits
-    const MAX_FREE_SETS = 3;
-    const MAX_FREE_DAILY = 5;
+    const MAX_FREE_SETS = 2;
+    const MAX_FREE_DAILY = 2;
     
     // Determine if user can create more sets
     const canCreateMore = isPremium ? true : (setsCreated < MAX_FREE_SETS);

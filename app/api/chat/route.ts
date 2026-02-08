@@ -1,11 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { VertexAI } from '@google-cloud/vertexai';
 
-// Initialize Vertex AI with Gemini 2.5 Flash
-const vertexAI = new VertexAI({
-  project: process.env.VERTEX_AI_PROJECT_ID || 'studymaxx-486118',
-  location: 'us-central1',
-});
+// Lazy-initialize Vertex AI at runtime (not build time)
+let vertexAI: VertexAI | null = null;
+
+function getVertexAI() {
+  if (!vertexAI) {
+    const projectId = process.env.VERTEX_AI_PROJECT_ID;
+    if (!projectId) {
+      throw new Error('VERTEX_AI_PROJECT_ID not configured');
+    }
+    
+    // Check for GOOGLE_APPLICATION_CREDENTIALS JSON in env var
+    const credJson = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    if (credJson && credJson.startsWith('{')) {
+      try {
+        const creds = JSON.parse(credJson);
+        vertexAI = new VertexAI({
+          project: projectId,
+          location: 'us-central1',
+          googleAuthOptions: {
+            credentials: creds,
+          },
+        });
+      } catch (e) {
+        console.error('[Chat] Failed to parse GOOGLE_APPLICATION_CREDENTIALS JSON:', e);
+        vertexAI = new VertexAI({
+          project: projectId,
+          location: 'us-central1',
+        });
+      }
+    } else {
+      vertexAI = new VertexAI({
+        project: projectId,
+        location: 'us-central1',
+      });
+    }
+  }
+  return vertexAI;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -63,7 +96,7 @@ ${context ? `\nSTUDY MATERIAL:\n${context.substring(0, 2000)}` : ''}`;
     // Add current message
     contents.push({ role: 'user', parts: [{ text: message }] });
 
-    const model = vertexAI.getGenerativeModel({
+    const model = getVertexAI().getGenerativeModel({
       model: 'gemini-2.5-flash',
     });
 

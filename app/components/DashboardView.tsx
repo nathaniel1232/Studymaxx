@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { FlashcardSet } from "../utils/storage";
 import { useSettings } from "../contexts/SettingsContext";
 import { getStreakStatus, getWeeklyActivity, getStreaksAtRisk } from "../utils/streak";
-import WelcomeCard from "./WelcomeCard";
+// WelcomeCard removed - personalization disabled
 
 interface DashboardViewProps {
   onSelectOption: (option: "notes" | "audio" | "document" | "youtube") => void;
@@ -215,11 +215,10 @@ export default function DashboardView({
           </h1>
         </div>
 
-        {/* Welcome & Personalization Card - shown until completed or skipped */}
-        <WelcomeCard userName={userName} />
+        {/* Welcome & Personalization Card removed */}
 
-        {/* Study Streak Banner */}
-        {streakData && (
+        {/* Study Streak Banner - only show after user has created at least one study set */}
+        {streakData && savedSets.length > 0 && (
           <div 
             className="mb-8 p-5 rounded-2xl transition-all duration-300"
             style={{
@@ -399,7 +398,7 @@ export default function DashboardView({
         </div>
 
         {/* Tabs - NotebookLM Style */}
-        <div className="flex gap-1 mb-6 p-1 rounded-xl" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f1ede8' }}>
+        <div className="flex gap-1 mb-6 p-1 rounded-xl" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : '#e8eef5' }}>
           <button
             onClick={() => setActiveTab("my-notes")}
             className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
@@ -536,9 +535,8 @@ export default function DashboardView({
                     value={chatMessage}
                     onChange={(e) => setChatMessage(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleChatSubmit()}
-                  className="flex-1 outline-none text-sm px-2 py-1 rounded"
+                  className="flex-1 outline-none text-sm bg-transparent"
                   style={{ 
-                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
                     color: isDarkMode ? '#ffffff' : '#000000'
                   }}
                   />
@@ -589,9 +587,8 @@ export default function DashboardView({
                       value={chatMessage}
                       onChange={(e) => setChatMessage(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleChatSubmit()}
-                      className="flex-1 outline-none text-sm px-2 py-1 rounded"
+                      className="flex-1 outline-none text-sm bg-transparent"
                       style={{ 
-                        backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
                         color: isDarkMode ? '#ffffff' : '#000000'
                       }}
                     />

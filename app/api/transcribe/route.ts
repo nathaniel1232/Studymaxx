@@ -11,10 +11,22 @@ let openai: OpenAI | null = null;
 function initializeClients() {
   if (!vertexAI && process.env.VERTEX_AI_PROJECT_ID) {
     try {
-      vertexAI = new VertexAI({
-        project: process.env.VERTEX_AI_PROJECT_ID,
-        location: 'us-central1',
-      });
+      const credJson = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      if (credJson && credJson.startsWith('{')) {
+        const creds = JSON.parse(credJson);
+        vertexAI = new VertexAI({
+          project: process.env.VERTEX_AI_PROJECT_ID,
+          location: 'us-central1',
+          googleAuthOptions: {
+            credentials: creds,
+          },
+        });
+      } else {
+        vertexAI = new VertexAI({
+          project: process.env.VERTEX_AI_PROJECT_ID,
+          location: 'us-central1',
+        });
+      }
     } catch (e) {
       console.warn('[Transcribe] Vertex AI init failed:', e);
     }

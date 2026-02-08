@@ -22,6 +22,7 @@
     "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "google-auth-library": "^10.5.0",
     "lucide-react": "^0.562.0",
     "mammoth": "^1.11.0",
     "next": "16.0.10",

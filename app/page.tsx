@@ -160,14 +160,13 @@ export default function Home() {
     }
   }, [user]);
 
-  // Auto-redirect logged in users to dashboard - REMOVED
-  // Logged in users should see the same landing page with dashboard button
-  // useEffect(() => {
-  //   if (user && viewMode === 'home') {
-  //     setViewMode('dashboard');
-  //     window.history.replaceState({}, '', '/dashboard');
-  //   }
-  // }, [user, viewMode]);
+  // Auto-redirect logged in users to dashboard
+  useEffect(() => {
+    if (user && viewMode === 'home') {
+      setViewMode('dashboard');
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, [user]);
 
   // Onboarding redirect removed - users see landing page first
   // Personalization is handled inline on the dashboard instead
@@ -194,7 +193,7 @@ export default function Home() {
       
       // Update remaining study sets for free users
       if (!isPremium) {
-        const MAX_STUDY_SETS = 3;
+        const MAX_STUDY_SETS = 2;
         const remaining = Math.max(0, MAX_STUDY_SETS - sets.length);
         setRemainingStudySets(remaining);
       }
@@ -560,7 +559,7 @@ export default function Home() {
                 <span style={{ color: '#1a73e8' }}>Study</span>Maxx
               </div>
               <div className="hidden md:flex items-center gap-6">
-                <a href="/pricing" style={{ color: '#5f6368' }} className="text-sm hover:text-blue-600 transition-colors">Pricing</a>
+                <a href="/pricing" style={{ color: '#5f6368' }} className="text-sm hover:text-blue-600 transition-colors">Upgrade to Premium</a>
               </div>
             </div>
             
@@ -621,16 +620,16 @@ export default function Home() {
             {/* Animated Background Blobs */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <div 
-                className="absolute w-72 h-72 rounded-full morphing-blob opacity-30 blur-3xl animate-float"
-                style={{ backgroundColor: 'rgba(26, 115, 232, 0.3)', top: '10%', left: '10%' }}
+                className="absolute w-72 h-72 rounded-full morphing-blob opacity-20 blur-3xl animate-float"
+                style={{ backgroundColor: 'rgba(26, 115, 232, 0.25)', top: '10%', left: '10%' }}
               />
               <div 
-                className="absolute w-96 h-96 rounded-full morphing-blob opacity-20 blur-3xl animate-float animation-delay-2000"
-                style={{ backgroundColor: 'rgba(52, 168, 83, 0.3)', top: '50%', right: '5%' }}
+                className="absolute w-96 h-96 rounded-full morphing-blob opacity-15 blur-3xl animate-float animation-delay-2000"
+                style={{ backgroundColor: 'rgba(37, 99, 235, 0.2)', top: '50%', right: '5%' }}
               />
               <div 
-                className="absolute w-64 h-64 rounded-full morphing-blob opacity-25 blur-3xl animate-float animation-delay-4000"
-                style={{ backgroundColor: 'rgba(234, 67, 53, 0.2)', bottom: '10%', left: '30%' }}
+                className="absolute w-64 h-64 rounded-full morphing-blob opacity-15 blur-3xl animate-float animation-delay-4000"
+                style={{ backgroundColor: 'rgba(6, 182, 212, 0.2)', bottom: '10%', left: '30%' }}
               />
             </div>
 
@@ -639,10 +638,10 @@ export default function Home() {
               <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>Stop re-reading.</span>
               <br />
               <span 
-                className="bg-clip-text text-transparent animate-gradient"
+                className="bg-clip-text text-transparent"
                 style={{ 
-                  backgroundImage: 'linear-gradient(135deg, #1a73e8, #34a853, #1a73e8)',
-                  backgroundSize: '200% 200%'
+                  backgroundImage: 'linear-gradient(135deg, #1a73e8, #2563eb, #1a73e8)',
+                  backgroundSize: '100% 100%'
                 }}
               >
                 Start remembering.
@@ -874,7 +873,7 @@ export default function Home() {
                     </div>
 
                     {/* Premium Plan */}
-                    <div className="p-8 rounded-2xl relative transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl card-3d" style={{ backgroundColor: isDarkMode ? 'rgba(26, 115, 232, 0.05)' : 'rgba(26, 115, 232, 0.05)', border: '2px solid #1a73e8' }}>
+                    <div className="p-8 rounded-2xl relative transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl card-3d" style={{ backgroundColor: isDarkMode ? 'rgba(26, 115, 232, 0.05)' : 'rgba(26, 115, 232, 0.05)', border: '2px solid #1a73e8', zIndex: 10 }}>
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                         <span className="px-3 py-1 text-xs font-bold rounded-full" style={{ backgroundColor: '#1a73e8', color: '#ffffff' }}>
                           MOST POPULAR
@@ -965,7 +964,7 @@ export default function Home() {
             <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>© 2026 StudyMaxx</div>
               <div className="flex items-center gap-6 text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
-                <a href="/pricing" className="hover:text-blue-500 transition-colors">Pricing</a>
+                <a href="/pricing" className="hover:text-blue-500 transition-colors">Upgrade to Premium</a>
                 <a href="/help" className="hover:text-blue-500 transition-colors">Help</a>
                 <a href="/privacy" className="hover:text-blue-500 transition-colors">Privacy</a>
                 <a href="/terms" className="hover:text-blue-500 transition-colors">Terms</a>
