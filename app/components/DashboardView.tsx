@@ -202,7 +202,7 @@ export default function DashboardView({
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#f1f5f9' }}>
-      <div className="relative z-10 max-w-5xl mx-auto px-6 py-10 ml-16">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
         <div className="mb-8">
           {userName && (
