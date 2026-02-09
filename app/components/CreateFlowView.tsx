@@ -786,6 +786,17 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       return;
     }
     
+    // Detect languages from text for language override in Step 3
+    if (textInput.trim().length > 50 && !languagesFromImage) {
+      // Only run client-side detection if GPT didn't already detect from image
+      const langs = detectLanguages(textInput);
+      if (langs.length > 0) {
+        setDetectedLanguages(langs);
+        setDetectedLanguage(langs[0]);
+        console.log('[CreateFlowView] Detected languages from text:', langs);
+      }
+    }
+    
     // Validate language selection for Languages subject ONLY if vocabulary pairs detected
     if (isLanguageSubject) {
       // Check if text looks like vocabulary pairs (word-word format with hyphen, arrow, or dash)

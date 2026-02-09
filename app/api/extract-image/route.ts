@@ -129,6 +129,15 @@ Examples:
         if (extractedText.length > 10) {
           console.log(`[Extract Image] ✅ Image ${i + 1}: Extracted ${extractedText.length} characters`);
           console.log(`[Extract Image] Preview: ${extractedText.substring(0, 150)}...`);
+          
+          // Log detected languages if present
+          const langMatch = extractedText.match(/DETECTED_LANGUAGES:\s*(.+?)$/m);
+          if (langMatch) {
+            console.log(`[Extract Image] 🌍 Detected languages: ${langMatch[1]}`);
+          } else {
+            console.warn(`[Extract Image] ⚠️ No DETECTED_LANGUAGES tag found in response`);
+          }
+          
           extractedTexts.push(extractedText);
         } else {
           console.warn(`[Extract Image] ⚠️ Image ${i + 1}: Very little text found`);
