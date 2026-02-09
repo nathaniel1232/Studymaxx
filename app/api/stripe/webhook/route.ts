@@ -106,97 +106,149 @@ export async function POST(request: NextRequest) {
  * Set user to Premium with expiration tracking
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  console.log('[Webhook] ========================================');
+  console.log('[Webhook] CHECKOUT SESSION COMPLETED');
+  console.log('[Webhook] ========================================');
+  
   // Get userId from metadata OR client_reference_id (fallback)
   const userId = session.metadata?.userId || session.client_reference_id;
 
+  // ENHANCED LOGGING
+  console.log('[Webhook] Session Details:');
+  console.log('[Webhook] - ID:', session.id);
+  console.log('[Webhook] - Customer Email:', session.customer_email);
+  console.log('[Webhook] - Customer ID:', session.customer);
+  console.log('[Webhook] - Subscription ID:', session.subscription);
+  console.log('[Webhook] - Metadata userId:', session.metadata?.userId);
+  console.log('[Webhook] - client_reference_id:', session.client_reference_id);
+  console.log('[Webhook] - RESOLVED_USER_ID:', userId);
+  console.log('[Webhook] ========================================');
+
   if (!userId || typeof userId !== 'string' || userId.length === 0) {
-    console.error("[Webhook] ❌ Cannot identify user - no userId in metadata or client_reference_id");
+    console.error("[Webhook] ❌❌❌ CRITICAL: Cannot identify user - no userId in metadata or client_reference_id");
     console.error("[Webhook] Session data:", {
       customer_email: session.customer_email,
       id: session.id,
-      metadata: session.metadata,
+      metadata: JSON.stringify(session.metadata),
       client_reference_id: session.client_reference_id,
     });
+    console.error('[Webhook] ❌ ABORTING - No user will be upgraded to premium');
     return;
   }
 
+  console.log(`[Webhook] ✅ User identified: ${userId}`);
   console.log(`[Webhook] Processing checkout for user: ${userId}`);
 
   try {
     // Get the subscription to find the period end date
     let premiumExpiresAt = null;
+    let subscriptionId = null;
     
     if (session.subscription) {
       try {
-        const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+        subscriptionId = session.subscription as string;
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         const subData = subscription as any;
         premiumExpiresAt = subData.current_period_end 
           ? new Date(subData.current_period_end * 1000).toISOString()
           : null;
+        console.log(`[Webhook] ✅ Subscription retrieved: ${subscriptionId}`);
         console.log(`[Webhook] Premium expires at: ${premiumExpiresAt}`);
       } catch (subError: any) {
-        console.warn(`[Webhook] Could not retrieve subscription: ${subError.message}`);
+        console.warn(`[Webhook] ⚠️  Could not retrieve subscription: ${subError.message}`);
       }
+    } else {
+      console.warn('[Webhook] ⚠️  No subscription ID in session');
     }
 
+    const customerId = session.customer as string;
+    console.log(`[Webhook] Customer ID: ${customerId}`);
+    console.log(`[Webhook] Subscription ID: ${subscriptionId}`);
+
     // Check if user exists
+    console.log(`[Webhook] Checking if user ${userId} exists in Supabase...`);
     const { data: existingUser, error: selectError } = await supabase
       .from("users")
-      .select("id, is_grandfathered, grandfathered_price_cents")
+      .select("id, is_grandfathered, grandfathered_price_cents, email")
       .eq("id", userId)
       .single();
 
     if (selectError && selectError.code !== 'PGRST116') {
       // PGRST116 means no rows found (which is expected for new users)
-      console.error("[Webhook] Error checking existing user:", selectError);
+      console.error("[Webhook] ❌ Error checking existing user:", selectError);
     }
 
     if (existingUser) {
+      console.log(`[Webhook] ✅ User exists in Supabase: ${existingUser.email}`);
+      
       // Update existing user to Premium
       const updateData: any = {
         is_premium: true,
         premium_expires_at: premiumExpiresAt,
         email: session.customer_email,
-        stripe_customer_id: session.customer as string,
-        stripe_subscription_id: session.subscription as string,
+        stripe_customer_id: customerId,
+        stripe_subscription_id: subscriptionId,
         subscription_tier: 'premium',
       };
 
-      const { error: updateError } = await supabase
+      console.log('[Webhook] 📝 Updating user with data:', JSON.stringify(updateData, null, 2));
+
+      const { error: updateError, data: updateResult } = await supabase
         .from("users")
         .update(updateData)
-        .eq("id", userId);
+        .eq("id", userId)
+        .select();
 
       if (updateError) {
-        console.error("[Webhook] ❌ Failed to update user to premium:", updateError);
+        console.error("[Webhook] ❌❌❌ FAILED to update user to premium:", updateError);
+        console.error("[Webhook] Error details:", JSON.stringify(updateError, null, 2));
         throw updateError;
       } else {
-        console.log(`[Webhook] ✅ User ${userId} upgraded to Premium until ${premiumExpiresAt}`);
+        console.log(`[Webhook] ✅✅✅ SUCCESS! User ${userId} upgraded to Premium`);
+        console.log(`[Webhook] Premium expires: ${premiumExpiresAt}`);
+        console.log(`[Webhook] Stripe Customer ID: ${customerId}`);
+        console.log(`[Webhook] Stripe Subscription ID: ${subscriptionId}`);
+        console.log('[Webhook] Updated data:', JSON.stringify(updateResult, null, 2));
       }
     } else {
+      console.log(`[Webhook] ℹ️  User does not exist - creating new premium user`);
+      
       // Create new user as Premium
-      const { error: insertError } = await supabase
+      const insertData = {
+        id: userId,
+        email: session.customer_email,
+        is_premium: true,
+        premium_expires_at: premiumExpiresAt,
+        stripe_customer_id: customerId,
+        stripe_subscription_id: subscriptionId,
+        subscription_tier: 'premium',
+        is_grandfathered: false,
+      };
+
+      console.log('[Webhook] 📝 Inserting new user:', JSON.stringify(insertData, null, 2));
+
+      const { error: insertError, data: insertResult } = await supabase
         .from("users")
-        .insert({
-          id: userId,
-          email: session.customer_email,
-          is_premium: true,
-          premium_expires_at: premiumExpiresAt,
-          stripe_customer_id: session.customer as string,
-          stripe_subscription_id: session.subscription as string,
-          subscription_tier: 'premium',
-          is_grandfathered: false,
-        });
+        .insert(insertData)
+        .select();
 
       if (insertError) {
-        console.error("[Webhook] ❌ Failed to create premium user:", insertError);
+        console.error("[Webhook] ❌❌❌ FAILED to create premium user:", insertError);
+        console.error("[Webhook] Error details:", JSON.stringify(insertError, null, 2));
         throw insertError;
       } else {
-        console.log(`[Webhook] ✅ New user ${userId} created as Premium until ${premiumExpiresAt}`);
+        console.log(`[Webhook] ✅✅✅ SUCCESS! New user ${userId} created as Premium`);
+        console.log('[Webhook] Inserted data:', JSON.stringify(insertResult, null, 2));
       }
     }
+    
+    console.log('[Webhook] ========================================');
+    console.log('[Webhook] CHECKOUT COMPLETED SUCCESSFULLY');
+    console.log('[Webhook] ========================================');
+    
   } catch (error: any) {
-    console.error("[Webhook] ❌ Error in handleCheckoutCompleted:", error.message);
+    console.error("[Webhook] ❌❌❌ FATAL ERROR in handleCheckoutCompleted:", error.message);
+    console.error("[Webhook] Stack trace:", error.stack);
     // Still return success to Stripe - retries could cause double-charging
   }
 }
