@@ -93,6 +93,9 @@ export default function Sidebar({
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
+  
+  // Debug logging for premium status
+  console.log('[Sidebar] 🔍 isPremium:', isPremium, '| type:', typeof isPremium, '| email:', userEmail);
 
   const NAV_ITEMS = isPremium 
     ? [

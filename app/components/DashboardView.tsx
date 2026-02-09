@@ -104,10 +104,19 @@ export default function DashboardView({
   const [uploadTrialUsed, setUploadTrialUsed] = useState(false);
 
   useEffect(() => {
+    console.log('[DashboardView] isPremium prop received:', isPremium);
+    console.log('[DashboardView] isPremium type:', typeof isPremium);
+    console.log('[DashboardView] User:', user?.email);
+    
     if (!isPremium) {
       // Combined trial key for both document and audio uploads
       const uploadKey = `upload_trial_used_${user?.id || 'anon'}`;
-      setUploadTrialUsed(localStorage.getItem(uploadKey) === 'true');
+      const trialUsed = localStorage.getItem(uploadKey) === 'true';
+      setUploadTrialUsed(trialUsed);
+      console.log('[DashboardView] Free user - trial used:', trialUsed);
+    } else {
+      console.log('[DashboardView] ✅ PREMIUM USER - No upload restrictions');
+      setUploadTrialUsed(false); // Reset for premium users
     }
   }, [isPremium, user]);
 
@@ -331,6 +340,11 @@ export default function DashboardView({
               (option.id === 'document' || option.id === 'audio') && uploadTrialUsed
             );
             const isFreeTrial = !isPremium && !isLocked && (option.id === 'document' || option.id === 'audio');
+            
+            // Debug logging for each option
+            if (option.id === 'document' || option.id === 'audio') {
+              console.log(`[DashboardView] ${option.id}: isPremium=${isPremium}, isLocked=${isLocked}, isFreeTrial=${isFreeTrial}`);
+            }
             return (
               <button
                 key={option.id}

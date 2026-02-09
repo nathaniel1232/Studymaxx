@@ -208,11 +208,13 @@ export default function Home() {
   useEffect(() => {
     if (viewMode === 'dashboard' && user) {
       console.log('[Premium] Dashboard loaded - refreshing premium status...');
-      setTimeout(() => {
-        forceRefreshPremium();
+      console.log('[Premium] Current isPremium state:', isPremium);
+      setTimeout(async () => {
+        const changed = await forceRefreshPremium();
+        console.log('[Premium] Force refresh completed. Changed:', changed);
       }, 500);
     }
-  }, [viewMode]);
+  }, [viewMode, user, isPremium]);
 
   // Check for Premium purchase success and activate
   useEffect(() => {
