@@ -84,13 +84,20 @@ You MUST identify the language(s) with EXTREME PRECISION. Look for these clues:
 Spanish: ñ, ¿, ¡, words like: y, el, la, de, que, es, por, con
 French: à, è, é, ê, ç, words like: le, la, de, et, un, est, pour, avec
 German: ü, ö, ä, ß, words like: der, die, das, und, ist, zu, den, mit
-Finnish: Many double vowels (aa, oo, ee), long compound words, words like: ja, on, ei, että, se
+Finnish: MANY double vowels (aa, oo, ee, ii, uu, yy, ää, öö), VERY long compound words, words like: ja, on, ei, että, se, tämä, hän, mikä
 Norwegian: å, ø, æ, words like: og, er, det, som, en, av, på, til
 Swedish: å, ä, ö, words like: och, är, det, som, en, av, för, att
 Danish: Similar to Norwegian but uses "af" instead of "av"
 Dutch: ij, words like: de, het, en, van, een, is, op, te
 Italian: No special chars, words like: di, e, il, la, che, in, per, un
 Portuguese: ã, õ, ç, words like: de, a, o, que, e, do, em, para
+
+🚨 CRITICAL DISTINCTIONS:
+- **Finnish vs German MUST BE DISTINGUISHED**: Finnish has MANY double vowels (aa, oo, ii), German has ß (German ONLY)
+- If text has ß character = DEFINITELY German, NOT Finnish
+- If text has many double vowels (aa, oo, uu, yy) = LIKELY Finnish
+- If text has ñ character = DEFINITELY Spanish, NOT Finnish or German
+- Finnish words are extremely long with many vowels, German words are shorter
 
 At the END of your response, add a line with the detected language(s):
 DETECTED_LANGUAGES: [Exact Language Name]

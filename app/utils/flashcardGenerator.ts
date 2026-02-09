@@ -18,6 +18,7 @@ export interface Flashcard {
  * @param includeMath - Whether to use math problem mode
  * @param knownLanguage - Language the student knows (for language learning)
  * @param learningLanguage - Language the student is learning (for language learning)
+ * @param inputLanguage - Manual override for input language detection (for user-correction)
  */
 export async function generateFlashcards(
   text: string,
@@ -30,7 +31,8 @@ export async function generateFlashcards(
   difficulty: string = "Medium",
   includeMath: boolean = false,
   knownLanguage?: string,
-  learningLanguage?: string
+  learningLanguage?: string,
+  inputLanguage?: string
 ): Promise<Flashcard[]> {
   // Get or generate userId
   const effectiveUserId = userId || (typeof window !== 'undefined' 
@@ -50,6 +52,7 @@ export async function generateFlashcards(
       userId: effectiveUserId,
       materialType: materialType,
       outputLanguage: outputLanguage,
+      inputLanguage: inputLanguage,
       knownLanguage,
       learningLanguage,
     }),

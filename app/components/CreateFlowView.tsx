@@ -90,6 +90,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
   const [detectedLanguages, setDetectedLanguages] = useState<string[]>([]);
   const [languagesFromImage, setLanguagesFromImage] = useState(false); // Flag: GPT detected from image
+  const [manualLanguageOverride, setManualLanguageOverride] = useState<string | null>(null); // Manual language selection for safety
 
   // Difficulty
   const [difficulty, setDifficulty] = useState<string>("Medium");
@@ -328,12 +329,14 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                 "καλός", "κακός", "μεγάλος", "μικρός", "εύκολος", "δύσκολος", "είμαι", "πηγαίνω", "κάνω",
                 "τρώω", "πίνω", "ένα", "δύο", "τρία", "τέσσερα", "πέντε", "έξι", "επτά", "οκτώ", "εννέα", "δέκα",
                 "τι", "σημαίνει", "γεια", "ευχαριστώ", "ναι", "όχι"],
-      // Finnish - NEW
+      // Finnish - NEW - VERY IMPORTANT: Distinguish from German!
       "Finnish": ["ja", "on", "ei", "se", "että", "niin", "kun", "mutta", "tai", "joka",
                   "koira", "kissa", "talo", "vesi", "ruoka", "kirja", "koulu", "opettaja", "oppilas", "läksy",
                   "hyvä", "huono", "iso", "pieni", "helppo", "vaikea", "olla", "mennä", "tehdä",
                   "syödä", "juoda", "yksi", "kaksi", "kolme", "neljä", "viisi", "kuusi", "seitsemän", "kahdeksan", "yhdeksän", "kymmenen",
-                  "mitä", "tarkoittaa", "hei", "moi", "kiitos", "kyllä", "ei"],
+                  "mitä", "tarkoittaa", "hei", "moi", "kiitos", "kyllä", "ei", "vaan", "kaikki", "tämä", "siis",
+                  "mielessä", "juttu", "sana", "teksti", "puhuu", "keskusta", "minä", "sinä", "hän", "me", "te",
+                  "mukaan", "kanssa", "sisällä", "ulkona", "yli", "alle", "edessä", "takana", "vieressä"],
       // Czech - NEW
       "Czech": ["a", "je", "v", "na", "se", "to", "že", "s", "z", "do",
                 "pes", "kočka", "dům", "voda", "jídlo", "kniha", "škola", "učitel", "student", "úkol",
@@ -376,6 +379,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       if (lang === "Swedish" && /[äöå]/.test(textLower)) score += 8;
       if (lang === "Danish" && /[æøå]/.test(textLower)) score += 5;
       if (lang === "German" && /[üöäß]/.test(textLower)) score += 8;
+      // CRITICAL: If it has ß, it's DEFINITELY German, NOT Finnish (ß doesn't exist in Finnish)
+      if (lang === "German" && /ß/.test(textLower)) score += 15;
       if (lang === "Spanish" && /[ñ¿¡áéíóú]/.test(textLower)) score += 10;
       if (lang === "French" && /[àâçéèêëïîôùûü]/.test(textLower)) score += 8;
       if (lang === "Portuguese" && /[ãõçáéíóúâêô]/.test(textLower)) score += 8;
@@ -384,10 +389,18 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       if (lang === "Czech" && /[áčďéěíňóřšťúůýž]/.test(textLower)) score += 10;
       if (lang === "Hungarian" && /[áéíóöőúüű]/.test(textLower)) score += 8;
       if (lang === "Turkish" && /[çğıöşü]/.test(textLower)) score += 10;
-      // Finnish-specific: Double vowels are VERY characteristic
+      // Finnish-specific: Double vowels are VERY characteristic - distinguish from German
       if (lang === "Finnish") {
+        // MOST IMPORTANT: These combinations are SUPER Finnish
+        if (/ää|yy|öö/.test(textLower)) score += 20; // ää, yy, öö are VERY Finnish
+        if (/(aa|oo|ee|ii|uu|yy)/.test(textLower)) score += 15; // Double vowels = strong Finnish indicator
         if (/[äö]/.test(textLower)) score += 5;
-        if (/(aa|ee|ii|oo|uu|yy|ää|öö)/.test(textLower)) score += 15; // Double vowels = strong Finnish indicator
+        // Finnish words with ä/ö/y but NO German ß
+        if (/ä|ö|y/.test(textLower) && !/ß/.test(textLower)) score += 5;
+        // PENALTY: If there's ß, it's NOT Finnish - it's German
+        if (/ß/.test(textLower)) score -= 100; // Deadly penalty for ß
+        // PENALTY: German-specific patterns reduce Finnish score
+        if (!/ä|ö|y/.test(textLower)) score -= 10; // No ä/ö/y = less likely Finnish
         if (/[ñ¿¡]/.test(textLower)) score -= 50; // If Spanish chars exist, NOT Finnish!
       }
       if (lang === "Vietnamese" && /[àảãáạăằẳẵắặâầẩẫấậèẻẽéẹêềểễếệìỉĩíịòỏõóọôồổỗốộơờởỡớợùủũúụưừửữứựỳỷỹýỵđ]/.test(textLower)) score += 15;
@@ -1187,7 +1200,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         difficulty,
         includeMathProblems && isMathSubject,
         isLanguageSubject ? knownLanguage : undefined,
-        isLanguageSubject ? learningLanguage : undefined
+        isLanguageSubject ? learningLanguage : undefined,
+        manualLanguageOverride || undefined
       );
 
       // Increment rate limit counter AFTER successful generation
@@ -2415,6 +2429,46 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       </button>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* Language Selection Override - For safety against misdetection */}
+              {detectedLanguages.length > 0 && (
+                <div 
+                  className="p-4 rounded-md border-2" 
+                  style={{ 
+                    background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(22, 163, 74, 0.04) 100%)',
+                    borderColor: 'rgba(34, 197, 94, 0.3)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">🌍</span>
+                    <label className="text-sm font-semibold" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
+                      Confirm Input Language
+                    </label>
+                  </div>
+                  <p className="text-xs mb-3" style={{ color: (isDarkMode ? '#9aa0a6' : '#5f6368') }}>
+                    We detected: <span className="font-semibold text-green-400">{detectedLanguages.join(", ")}</span>. Change it if needed:
+                  </p>
+                  <select
+                    value={manualLanguageOverride || ""}
+                    onChange={(e) => setManualLanguageOverride(e.target.value || null)}
+                    className="w-full px-3 py-2 rounded-md border text-sm font-medium transition-all"
+                    style={{
+                      background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#f5f5f4',
+                      color: isDarkMode ? '#ffffff' : '#000000',
+                      borderColor: manualLanguageOverride ? '#22c55e' : 'rgba(6, 182, 212, 0.3)',
+                      boxShadow: manualLanguageOverride ? '0 0 8px rgba(34, 197, 94, 0.3)' : 'none'
+                    }}
+                  >
+                    <option value="">{settings.language === "no" ? "Bruk oppdaget språk" : "Use detected language"}</option>
+                    {["Finnish", "German", "Norwegian", "Swedish", "English", "Spanish", "French", "Italian", 
+                      "Dutch", "Danish", "Portuguese", "Polish", "Russian", "Turkish", "Greek", "Japanese", 
+                      "Chinese", "Korean", "Arabic", "Hindi", "Vietnamese", "Thai", "Indonesian"].map(lang => (
+                      <option key={lang} value={lang}>{lang}</option>
+                    ))}
+                  </select>
                 </div>
               )}
 

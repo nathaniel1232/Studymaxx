@@ -22,6 +22,7 @@ interface FlashcardRequest {
   userId?: string;
   materialType?: string;
   outputLanguage?: "auto" | "en";
+  inputLanguage?: string; // Manual language override for user-correction
   includeMath?: boolean;
   knownLanguage?: string;
   learningLanguage?: string;
@@ -34,7 +35,7 @@ interface FlashcardRequest {
 export async function POST(req: NextRequest) {
   try {
     const body: FlashcardRequest = await req.json();
-    const { text, numberOfFlashcards, subject, targetGrade, difficulty, userId, materialType, outputLanguage, includeMath, knownLanguage, learningLanguage } = body;
+    const { text, numberOfFlashcards, subject, targetGrade, difficulty, userId, materialType, outputLanguage, inputLanguage, includeMath, knownLanguage, learningLanguage } = body;
 
     // Validate required fields
     if (!text || !numberOfFlashcards) {
@@ -47,8 +48,11 @@ export async function POST(req: NextRequest) {
     // Get userId from body or generate anonymous ID
     const effectiveUserId = userId || `anon-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    // Detect language from text using AI
-    const language = await detectLanguage(text);
+    // Use inputLanguage if provided (user override), otherwise detect language from text
+    let language = inputLanguage;
+    if (!language) {
+      language = await detectLanguage(text);
+    }
 
     // Call /api/generate (the real AI gateway with premium enforcement)
     const generateUrl = new URL("/api/generate", req.url);
