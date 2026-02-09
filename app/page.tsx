@@ -75,6 +75,7 @@ export default function Home() {
   const [isPremium, setIsPremium] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [remainingStudySets, setRemainingStudySets] = useState(3);
+  const [premiumCheckCount, setPremiumCheckCount] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning" } | null>(null);
@@ -203,6 +204,16 @@ export default function Home() {
     loadSavedSets();
   }, [viewMode, isPremium]); // Reload when view changes or premium status changes
 
+  // Refresh premium status when navigating to dashboard
+  useEffect(() => {
+    if (viewMode === 'dashboard' && user) {
+      console.log('[Premium] Dashboard loaded - refreshing premium status...');
+      setTimeout(() => {
+        forceRefreshPremium();
+      }, 500);
+    }
+  }, [viewMode]);
+
   // Check for Premium purchase success and activate
   useEffect(() => {
     const checkPremiumSuccess = async () => {
@@ -330,6 +341,66 @@ export default function Home() {
     }
   }, []);
 
+  // Force refresh premium status function
+  const forceRefreshPremium = async () => {
+    if (!user || !supabase) {
+      console.log('[Premium Refresh] No user or supabase');
+      return false;
+    }
+
+    try {
+      console.log(`[Premium Refresh] Forcing premium check... (attempt ${premiumCheckCount + 1})`);
+      setPremiumCheckCount(c => c + 1);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error('[Premium Refresh] No session');
+        return false;
+      }
+
+      const response = await fetch('/api/premium/check', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const newIsPremium = data.isPremium || isOwner;
+        console.log(`[Premium Refresh] Result: ${newIsPremium} (was: ${isPremium})`);
+        
+        if (newIsPremium !== isPremium) {
+          console.log('[Premium Refresh] 🔄 Premium status changed!');
+          setIsPremium(newIsPremium);
+          
+          // Notify all components
+          const event = new CustomEvent('premiumStatusChanged', { detail: { isPremium: newIsPremium } });
+          window.dispatchEvent(event);
+          
+          return true;
+        }
+        return false;
+      } else {
+        console.error('[Premium Refresh] API returned error:', response.status);
+        return false;
+      }
+    } catch (error) {
+      console.error('[Premium Refresh] Error:', error);
+      return false;
+    }
+  };
+
+  // Listen for force refresh events from anywhere
+  useEffect(() => {
+    const handleForceRefresh = () => {
+      console.log('[Premium] Force refresh requested');
+      forceRefreshPremium();
+    };
+    
+    window.addEventListener('forceRefreshPremium', handleForceRefresh);
+    return () => window.removeEventListener('forceRefreshPremium', handleForceRefresh);
+  }, [user, isPremium]);
+
   // Check auth status
   useEffect(() => {
     const loadUser = async () => {
@@ -367,7 +438,14 @@ export default function Home() {
             const premiumData = await premiumResponse.json();
             const isPremium = premiumData.isPremium || isOwnerUser;
             console.log('[Page] Premium status from API (initial load):', isPremium);
+            console.log('[Page] Full premium data:', premiumData);
             setIsPremium(isPremium);
+            
+            // Also refresh premium every time user navigates to dashboard
+            // This ensures premium is always up-to-date
+            setTimeout(() => {
+              forceRefreshPremium();
+            }, 2000);
           }
         } catch (error) {
           console.error('[Page] Error checking premium:', error);

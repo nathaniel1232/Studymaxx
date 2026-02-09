@@ -89,10 +89,15 @@ export async function GET(request: NextRequest) {
     const setsCreated = setsCount || 0;
     
     console.log('[/api/premium/check] ================================');
+    console.log('[/api/premium/check] USER:', userId);
+    console.log('[/api/premium/check] EMAIL:', userData?.email || 'N/A');
     console.log('[/api/premium/check] PREMIUM CHECK RESULT:');
     console.log('[/api/premium/check] isPremium:', isPremium, '(type:', typeof isPremium, ')');
+    console.log('[/api/premium/check] isGrandfathered:', isGrandfathered);
     console.log('[/api/premium/check] subscriptionTier:', subscriptionTier);
     console.log('[/api/premium/check] setsCreated:', setsCreated);
+    console.log('[/api/premium/check] stripe_customer_id:', userData?.stripe_customer_id || 'none');
+    console.log('[/api/premium/check] stripe_subscription_id:', userData?.stripe_subscription_id || 'none');
     console.log('[/api/premium/check] ================================');
     
     // Limits
