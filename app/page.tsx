@@ -327,35 +327,24 @@ export default function Home() {
           console.error('Failed to sync user:', error);
         }
 
-        // Get premium status
-        const { data } = await supabase
-          .from('users')
-          .select('is_premium, premium_expires_at')
-          .eq('id', currentUser.id)
-          .single();
-        
-        // Check if premium has expired
-        let isPremium = data?.is_premium || isOwnerUser;
-        if (data?.premium_expires_at && !isOwnerUser) {
-          const expirationDate = new Date(data.premium_expires_at);
-          const now = new Date();
-          
-          if (now > expirationDate) {
-            console.log('[Page] Premium expired on', expirationDate);
-            isPremium = false;
-            
-            // Update database to mark as expired (fire and forget)
-            supabase
-              .from('users')
-              .update({ is_premium: false })
-              .eq('id', currentUser.id)
-              .then(({ error: updateErr }) => { if (updateErr) console.error(updateErr); });
-          } else {
-            console.log('[Page] Premium active until', expirationDate);
+        // Get premium status using API (bypasses RLS with service role key)
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            const premiumResponse = await fetch('/api/premium/check', {
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`
+              }
+            });
+            const premiumData = await premiumResponse.json();
+            const isPremium = premiumData.isPremium || isOwnerUser;
+            console.log('[Page] Premium status from API (initial load):', isPremium);
+            setIsPremium(isPremium);
           }
+        } catch (error) {
+          console.error('[Page] Error checking premium:', error);
+          setIsPremium(isOwnerUser);
         }
-        
-        setIsPremium(isPremium);
       }
     };
     
@@ -375,34 +364,26 @@ export default function Home() {
           }),
         }).catch(console.error);
 
-        // Get premium status
-        supabase
-          .from('users')
-          .select('is_premium, premium_expires_at')
-          .eq('id', newUser.id)
-          .single()
-          .then(({ data }) => {
-            // Check if premium has expired
-            let isPremium = data?.is_premium || isOwnerUser;
-            if (data?.premium_expires_at && !isOwnerUser) {
-              const expirationDate = new Date(data.premium_expires_at);
-              const now = new Date();
-              
-              if (now > expirationDate) {
-                console.log('[Page] Premium expired on', expirationDate);
-                isPremium = false;
-                
-                // Update database to mark as expired (fire and forget)
-                supabase!
-                  .from('users')
-                  .update({ is_premium: false })
-                  .eq('id', newUser.id)
-                  .then(({ error: updateErr }) => { if (updateErr) console.error(updateErr); });
+        // Get premium status using API (bypasses RLS with service role key)
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) {
+            fetch('/api/premium/check', {
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`
               }
-            }
-            
-            setIsPremium(isPremium);
-          });
+            })
+              .then(res => res.json())
+              .then(data => {
+                const isPremium = data.isPremium || isOwnerUser;
+                console.log('[Page] Premium status from API:', isPremium);
+                setIsPremium(isPremium);
+              })
+              .catch(err => {
+                console.error('[Page] Error checking premium:', err);
+                setIsPremium(isOwnerUser);
+              });
+          }
+        });
       } else {
         setIsPremium(false);
       }
