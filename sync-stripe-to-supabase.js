@@ -13,7 +13,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 // Initialize clients
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2025-12-15',
+  apiVersion: '2024-12-18.acacia',
 });
 
 const supabase = createClient(

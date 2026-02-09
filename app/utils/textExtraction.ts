@@ -206,38 +206,45 @@ export async function detectLanguage(text: string): Promise<string> {
     
     // For Latin-script languages, use AI detection with enhanced prompt
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       messages: [
         {
           role: 'system',
-          content: `You are an expert linguist. Analyze the text and respond with ONLY the language name in English.
+          content: `You are an expert linguist specializing in precise language identification. Analyze the text and respond with ONLY the language name in English.
 
-KEY DISTINCTIONS:
+🚨 CRITICAL DISTINCTIONS FOR COMMONLY CONFUSED LANGUAGES:
+
+**Finnish vs Spanish vs Other Romance:**
+- **Finnish**: MANY double vowels (aa, oo, ee, ii, uu), extremely long compound words, words like: "ja", "on", "ei", "että", "se", "hän", "mikä", "kaikki", "suomalainen". NO ñ, NO ¿/¡, NO accents.
+- **Spanish**: ñ character, ¿/¡, words like: "el", "la", "que", "de", "y", "es", "más", "qué"
 
 **Nordic Languages:**
-- **Norwegian**: "ikke", "også", "være", "eller", "gjennom", "mennesker". Uses æ, ø, å (NO ð or þ).
+- **Norwegian**: "ikke", "også", "være", "eller", "gjennom", "mennesker", "har". Uses æ, ø, å (NO ð or þ).
 - **Icelandic**: "að", "ekki", "þetta", "fyrir", "með". ALWAYS has ð AND þ.
-- **Swedish**: "jag", "och", "till", "från", "är". Uses å, ä, ö.
-- **Danish**: "jeg", "af", "blev", "alle", "gennem". Uses æ, ø, å.
+- **Swedish**: "jag", "och", "till", "från", "är", "även", "har". Uses å, ä, ö.
+- **Danish**: "jeg", "af", "blev", "alle", "gennem", "har". Uses æ, ø, å.
+- **Finnish**: Double vowels (aa, oo, uu), words: "ja", "on", "että", "se", "ei". Uses ä, ö (but NO å).
 
 **Romance Languages:**
-- **Romanian**: "și", "este", "sunt", "pentru", "acest", "către". Has UNIQUE letters ă, â, î, ș, ț (with comma below).
-- **Italian**: "il", "la", "di", "che", "non", "sono"
-- **Spanish**: "el", "la", "que", "de", "y", "más"
-- **Portuguese**: "o", "a", "de", "que", "não", "é"
-- **French**: "le", "la", "de", "et", "est", "dans"
+- **Romanian**: "și", "este", "sunt", "pentru", "acest", "către", "cu". Has UNIQUE letters ă, â, î, ș, ț (with comma below).
+- **Italian**: "il", "la", "di", "che", "non", "sono", "della"
+- **Spanish**: "el", "la", "que", "de", "y", "más", "qué". Has ñ and inverted punctuation ¿¡
+- **Portuguese**: "o", "a", "de", "que", "não", "é", "para". Has ã, õ, ç
+- **French**: "le", "la", "de", "et", "est", "dans", "les". Has é, è, ê, à, ç
 
 **Asian Languages:**
-- **Vietnamese**: "không", "và", "của", "là", "có", "này", "được". Has MANY tone marks on vowels (à, á, ả, ã, ạ, ă, ằ, etc).
+- **Vietnamese**: "không", "và", "của", "là", "có", "này", "được". Has MANY tone marks (à, á, ả, ã, ạ, ă, ằ, etc).
 
 **Other:**
-- **English**: "the", "this", "that", "which", "where"
-- **German**: "der", "die", "das", "und", "nicht". Has ä, ö, ü, ß.
-- **Polish**: Has ł. Words: "w", "na", "się", "że"
-- **Czech**: Has ř. Words: "je", "se", "v", "že"
-- **Turkish**: Has ğ and ı. Words: "için", "değil"
+- **English**: "the", "this", "that", "which", "where", "their", "there"
+- **German**: "der", "die", "das", "und", "nicht", "auch". Has ä, ö, ü, ß.
+- **Polish**: "w", "na", "się", "że", "jest". Has ł, ą, ę, ć, ń, ó, ś, ź, ż
+- **Czech**: "je", "se", "v", "že", "na". Has ř, č, ě, š, ž, ů
+- **Turkish**: "için", "değil", "bir", "bu", "ve". Has ğ, ı, ş, ü, ö, ç
+- **Estonian**: Similar to Finnish but uses "on", "ja", "ei" more. Has õ, ä, ö, ü
+- **Hungarian**: "és", "az", "egy", "van". Has ő, ű, á, é, í, ó, ú
 
-CRITICAL: Romanian (ț/ș with comma below) vs Vietnamese (tone marks) - completely different scripts.
+🚨 KEY RULE: If you see double vowels (aa, oo, ii) and long compound words but NO Spanish characters (ñ, ¿, ¡), it's DEFINITELY Finnish, NOT Spanish!
 
 Respond with ONE word only - the language name.`
         },

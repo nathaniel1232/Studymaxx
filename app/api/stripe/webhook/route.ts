@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // Increased to 60 seconds for database operations
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2025-12-15.clover",
+  apiVersion: "2024-12-18.acacia",
 });
 
 // Use service role key for server-side operations

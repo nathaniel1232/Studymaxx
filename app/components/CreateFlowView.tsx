@@ -384,7 +384,12 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       if (lang === "Czech" && /[áčďéěíňóřšťúůýž]/.test(textLower)) score += 10;
       if (lang === "Hungarian" && /[áéíóöőúüű]/.test(textLower)) score += 8;
       if (lang === "Turkish" && /[çğıöşü]/.test(textLower)) score += 10;
-      if (lang === "Finnish" && /[äö]/.test(textLower)) score += 5;
+      // Finnish-specific: Double vowels are VERY characteristic
+      if (lang === "Finnish") {
+        if (/[äö]/.test(textLower)) score += 5;
+        if (/(aa|ee|ii|oo|uu|yy|ää|öö)/.test(textLower)) score += 15; // Double vowels = strong Finnish indicator
+        if (/[ñ¿¡]/.test(textLower)) score -= 50; // If Spanish chars exist, NOT Finnish!
+      }
       if (lang === "Vietnamese" && /[àảãáạăằẳẵắặâầẩẫấậèẻẽéẹêềểễếệìỉĩíịòỏõóọôồổỗốộơờởỡớợùủũúụưừửữứựỳỷỹýỵđ]/.test(textLower)) score += 15;
       if (lang === "Icelandic" && /[ðþæö]/.test(textLower)) score += 10;
       // Script-based detection (very reliable)

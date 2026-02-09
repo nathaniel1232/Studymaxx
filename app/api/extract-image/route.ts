@@ -57,30 +57,51 @@ export async function POST(request: NextRequest) {
 
       try {
         const response = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
+          model: 'gpt-4o',
           messages: [
             {
               role: 'user',
               content: [
                 {
                   type: 'text',
-                  text: `Transcribe all text from this image exactly as written.
-                  
-IMPORTANT RULES:
-1. Keep text in original languages - do NOT translate anything
-2. For vocabulary lists (word pairs), format as: word1 → translation1
-3. Preserve all special characters and accents (é, ñ, ü, etc.)
+                  text: `You are an expert OCR and language detection system. Transcribe all text from this image with PERFECT ACCURACY.
+
+🚨 CRITICAL RULES (FOLLOW EXACTLY):
+1. Keep text in ORIGINAL languages - NEVER translate
+2. Preserve ALL special characters and accents (é, ñ, ü, å, ø, æ, ä, ö, etc.)
+3. For vocabulary lists with word pairs, format as: word → translation
 4. Ignore dates, page numbers, and non-educational content
-5. If this is a vocabulary list between two languages, preserve BOTH languages exactly
+5. If multiple languages exist, preserve them ALL exactly as shown
 
-Output format for vocabulary:
-word → translation
-word → translation
+🌍 LANGUAGE DETECTION (MOST IMPORTANT):
+You MUST identify the language(s) with EXTREME PRECISION. Look for these clues:
+- Special characters: å,ø,æ = Norwegian/Danish, ü,ö,ä,ß = German, ñ,¿,¡ = Spanish, à,è,é,ê,ç = French
+- Common words: "og","det","som","en" = Norwegian, "und","der","die" = German, "y","el","la" = Spanish
+- Word patterns: Finnish has lots of vowels and long words (Suomi, hyvää, tervetuloa)
+- Text structure: Check headers, labels, and consistent patterns
 
-At the END of your response, add a line:
-DETECTED_LANGUAGES: [Language1], [Language2]
+🚨 ULTRA-SPECIFIC LANGUAGE IDENTIFICATION:
+Spanish: ñ, ¿, ¡, words like: y, el, la, de, que, es, por, con
+French: à, è, é, ê, ç, words like: le, la, de, et, un, est, pour, avec
+German: ü, ö, ä, ß, words like: der, die, das, und, ist, zu, den, mit
+Finnish: Many double vowels (aa, oo, ee), long compound words, words like: ja, on, ei, että, se
+Norwegian: å, ø, æ, words like: og, er, det, som, en, av, på, til
+Swedish: å, ä, ö, words like: och, är, det, som, en, av, för, att
+Danish: Similar to Norwegian but uses "af" instead of "av"
+Dutch: ij, words like: de, het, en, van, een, is, op, te
+Italian: No special chars, words like: di, e, il, la, che, in, per, un
+Portuguese: ã, õ, ç, words like: de, a, o, que, e, do, em, para
 
-Example: DETECTED_LANGUAGES: French, English`,
+At the END of your response, add a line with the detected language(s):
+DETECTED_LANGUAGES: [Exact Language Name]
+
+Examples:
+- If text is in Finnish → DETECTED_LANGUAGES: Finnish
+- If text is in Spanish → DETECTED_LANGUAGES: Spanish
+- If text is bilingual Finnish-English → DETECTED_LANGUAGES: Finnish, English
+- If text is in German → DETECTED_LANGUAGES: German
+
+🚨 CRITICAL: Do NOT guess! Use the character and word patterns above to make an ACCURATE identification.`,
                 },
                 {
                   type: 'image_url',
