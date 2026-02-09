@@ -258,11 +258,44 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
  * Set expiration date to end of billing period (don't immediately remove premium)
  */
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  const userId = subscription.metadata?.userId;
+  let userId = subscription.metadata?.userId;
   const subData = subscription as any;
+  const customerId = subscription.customer as string;
+
+  console.log("[Webhook] subscription.deleted event received");
+  console.log("[Webhook] - Subscription ID:", subscription.id);
+  console.log("[Webhook] - Customer ID:", customerId);
+
+  // If no userId in metadata, look it up using customer_id
+  if (!userId || typeof userId !== 'string' || userId.length === 0) {
+    console.log("[Webhook] No userId in metadata, looking up by customer_id...");
+    try {
+      const { data: user, error } = await supabase
+        .from("users")
+        .select("id")
+        .eq("stripe_customer_id", customerId)
+        .single();
+
+      if (error) {
+        console.error("[Webhook] ❌ Cannot find user by customer_id:", customerId, error);
+        return;
+      }
+
+      if (user) {
+        userId = user.id;
+        console.log("[Webhook] ✅ Found userId by customer_id:", userId);
+      } else {
+        console.error("[Webhook] ❌ No user found with customer_id:", customerId);
+        return;
+      }
+    } catch (lookupError: any) {
+      console.error("[Webhook] ❌ Error looking up user by customer_id:", lookupError.message);
+      return;
+    }
+  }
 
   if (!userId || typeof userId !== 'string' || userId.length === 0) {
-    console.error("[Webhook] ❌ Cannot process subscription.deleted - no userId in metadata");
+    console.error("[Webhook] ❌ Cannot process subscription.deleted - no userId found");
     console.error("[Webhook] Subscription ID:", subscription.id);
     return;
   }
@@ -298,11 +331,45 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
  * This handles both renewal (extends expiration) and cancellation (sets expiration)
  */
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  const userId = subscription.metadata?.userId;
+  let userId = subscription.metadata?.userId;
   const subData = subscription as any;
-  
+  const customerId = subscription.customer as string;
+
+  console.log("[Webhook] subscription.updated event received");
+  console.log("[Webhook] - Subscription ID:", subscription.id);
+  console.log("[Webhook] - Customer ID:", customerId);
+  console.log("[Webhook] - Metadata userId:", userId);
+
+  // If no userId in metadata, look it up using customer_id
   if (!userId || typeof userId !== 'string' || userId.length === 0) {
-    console.error("[Webhook] ❌ Cannot process subscription.updated - no userId in metadata");
+    console.log("[Webhook] No userId in metadata, looking up by customer_id...");
+    try {
+      const { data: user, error } = await supabase
+        .from("users")
+        .select("id")
+        .eq("stripe_customer_id", customerId)
+        .single();
+
+      if (error) {
+        console.error("[Webhook] ❌ Cannot find user by customer_id:", customerId, error);
+        return;
+      }
+
+      if (user) {
+        userId = user.id;
+        console.log("[Webhook] ✅ Found userId by customer_id:", userId);
+      } else {
+        console.error("[Webhook] ❌ No user found with customer_id:", customerId);
+        return;
+      }
+    } catch (lookupError: any) {
+      console.error("[Webhook] ❌ Error looking up user by customer_id:", lookupError.message);
+      return;
+    }
+  }
+
+  if (!userId || typeof userId !== 'string' || userId.length === 0) {
+    console.error("[Webhook] ❌ Cannot process subscription.updated - no userId found");
     console.error("[Webhook] Subscription ID:", subscription.id);
     return;
   }
