@@ -328,8 +328,7 @@ export default function DashboardView({
           {INPUT_OPTIONS.map((option) => {
             const IconComponent = option.Icon;
             const isLocked = !isPremium && (
-              (option.id === 'document' && documentTrialUsed) ||
-              (option.id === 'audio' && audioTrialUsed)
+              (option.id === 'document' || option.id === 'audio') && uploadTrialUsed
             );
             const isFreeTrial = !isPremium && !isLocked && (option.id === 'document' || option.id === 'audio');
             return (
