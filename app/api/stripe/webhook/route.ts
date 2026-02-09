@@ -301,25 +301,36 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   }
 
   // Get the period end date - user keeps premium until then
-  const periodEnd = subData.current_period_end 
-    ? new Date(subData.current_period_end * 1000)
+  let periodEnd = null;
+  
+  // Try to get current_period_end from subscription items
+  if (subData.items?.data?.[0]?.current_period_end) {
+    periodEnd = subData.items.data[0].current_period_end;
+  }
+  // Fallback to subscription level
+  else if (subData.current_period_end) {
+    periodEnd = subData.current_period_end;
+  }
+  
+  const periodEndDate = periodEnd 
+    ? new Date(periodEnd * 1000)
     : new Date();
 
   console.log(`[Webhook] Processing subscription cancellation for user: ${userId}`);
-  console.log(`[Webhook] User will lose Premium on: ${periodEnd.toISOString()}`);
+  console.log(`[Webhook] User will lose Premium on: ${periodEndDate.toISOString()}`);
 
   try {
     const { error } = await supabase
       .from("users")
       .update({ 
-        premium_expires_at: periodEnd.toISOString(),
+        premium_expires_at: periodEndDate.toISOString(),
       })
       .eq("id", userId);
 
     if (error) {
       console.error("[Webhook] ❌ Failed to set premium expiration:", error);
     } else {
-      console.log(`[Webhook] ✅ Subscription cancelled - user ${userId} expires on ${periodEnd.toISOString()}`);
+      console.log(`[Webhook] ✅ Subscription cancelled - user ${userId} expires on ${periodEndDate.toISOString()}`);
     }
   } catch (error: any) {
     console.error("[Webhook] ❌ Error in handleSubscriptionDeleted:", error.message);
@@ -377,11 +388,24 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const isActive = subscription.status === "active" || subscription.status === "trialing";
   const isCanceled = subscription.cancel_at_period_end;
   
-  // Calculate expiration date
+  // Calculate expiration date - check multiple sources
   let premiumExpiresAt = null;
-  if (subData.current_period_end) {
-    premiumExpiresAt = new Date(subData.current_period_end * 1000).toISOString();
+  let periodEnd = null;
+  
+  // Try to get current_period_end from subscription items (most reliable)
+  if (subData.items?.data?.[0]?.current_period_end) {
+    periodEnd = subData.items.data[0].current_period_end;
   }
+  // Fallback to subscription level
+  else if (subData.current_period_end) {
+    periodEnd = subData.current_period_end;
+  }
+  
+  if (periodEnd) {
+    premiumExpiresAt = new Date(periodEnd * 1000).toISOString();
+  }
+  
+  console.log(`[Webhook] Period end timestamp: ${periodEnd}, expires at: ${premiumExpiresAt}`);
 
   console.log(`[Webhook] Processing subscription update for user: ${userId}`, {
     subscriptionStatus: subscription.status,
