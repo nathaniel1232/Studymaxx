@@ -210,7 +210,10 @@ export default function Home() {
       const premiumStatus = urlParams.get('premium');
       
       if (premiumStatus === 'success' && user && supabase) {
-        console.log('[Premium] Payment success detected - activating Premium...');
+        console.log('[Premium] Payment success detected - forcing premium refresh...');
+        
+        // Remove the URL parameter immediately
+        window.history.replaceState({}, '', '/');
         
         try {
           // Get session token
@@ -220,48 +223,73 @@ export default function Home() {
             return;
           }
 
-          // Call activation endpoint
-          const response = await fetch('/api/premium/activate', {
+          // Try activation endpoint first (fast path)
+          const activateResponse = await fetch('/api/premium/activate', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${session.access_token}`
             }
           });
 
-          if (response.ok) {
-            const data = await response.json();
-            console.log('[Premium] ✅ Premium activated:', data);
-            setIsPremium(true);
-            
-            // Remove the URL parameter
-            window.history.replaceState({}, '', '/');
-            
-            // CRITICAL: Notify CreateFlowView to re-check premium status immediately
-            const event = new CustomEvent('premiumStatusChanged', { detail: { isPremium: true } });
-            window.dispatchEvent(event);
-            console.log('[Premium] 📢 Dispatched premiumStatusChanged event');
-            
-            // Show success toast
-            setToast({ 
-              message: 'Premium activated! All features are now unlocked.',
-              type: 'success' 
-            });
-            
-            // Refresh the page after a short delay
-            setTimeout(() => {
-              window.location.reload();
-            }, 2000);
+          if (activateResponse.ok) {
+            console.log('[Premium] ✅ Activation endpoint succeeded');
           } else {
-            console.error('[Premium] Activation failed:', await response.text());
-            // Webhook might still activate, show info toast
+            console.warn('[Premium] Activation endpoint failed, will check status instead');
+          }
+
+          // ALWAYS check premium status from API (most reliable)
+          const checkResponse = await fetch('/api/premium/check', {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          });
+
+          if (checkResponse.ok) {
+            const data = await checkResponse.json();
+            console.log('[Premium] Premium check result:', data.isPremium);
+            
+            if (data.isPremium) {
+              setIsPremium(true);
+              
+              // Notify all components
+              const event = new CustomEvent('premiumStatusChanged', { detail: { isPremium: true } });
+              window.dispatchEvent(event);
+              
+              // Show success toast
+              setToast({ 
+                message: '🎉 Premium activated! All features unlocked.',
+                type: 'success' 
+              });
+              
+              // Force full reload to refresh all components
+              setTimeout(() => {
+                window.location.href = '/dashboard';
+              }, 1500);
+            } else {
+              // Premium not active yet, show waiting message
+              setToast({ 
+                message: 'Payment received! Activating premium... (refresh in 10 seconds)',
+                type: 'info' 
+              });
+              
+              // Retry after 10 seconds
+              setTimeout(() => {
+                window.location.reload();
+              }, 10000);
+            }
+          } else {
+            console.error('[Premium] Check failed');
             setToast({ 
-              message: 'Payment received! Your premium account will be activated shortly.',
+              message: 'Payment received! Please refresh the page in a moment.',
               type: 'info' 
             });
           }
         } catch (error) {
-          console.error('[Premium] Activation error:', error);
-          // Don't show error - webhook will handle it
+          console.error('[Premium] Error:', error);
+          setToast({ 
+            message: 'Payment successful! Please refresh the page.',
+            type: 'info' 
+          });
         }
       }
     };
