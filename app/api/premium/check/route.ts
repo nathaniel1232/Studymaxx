@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     // 1. Get user data (premium status + grandfathered status)
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('is_premium, stripe_subscription_id, is_grandfathered')
+      .select('is_premium, stripe_subscription_id, stripe_customer_id, is_grandfathered, email')
       .eq('id', userId)
       .single();
 
