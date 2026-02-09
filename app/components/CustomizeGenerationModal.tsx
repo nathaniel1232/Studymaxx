@@ -36,7 +36,6 @@ const SpinnerIcon = () => (
 const LANGUAGE_OPTIONS = [
   { value: "auto", label: "Same as input" },
   { value: "en", label: "English" },
-  { value: "Norwegian", label: "Norwegian" },
   { value: "Swedish", label: "Swedish" },
   { value: "Danish", label: "Danish" },
   { value: "German", label: "German" },

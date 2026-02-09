@@ -100,16 +100,14 @@ export default function DashboardView({
   const [chatMessages, setChatMessages] = useState<Array<{role: 'user' | 'ai', text: string}>>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
 
-  // Track whether free trials have been used
-  const [documentTrialUsed, setDocumentTrialUsed] = useState(false);
-  const [audioTrialUsed, setAudioTrialUsed] = useState(false);
+  // Track whether free trial has been used (1 upload trial for files OR audio)
+  const [uploadTrialUsed, setUploadTrialUsed] = useState(false);
 
   useEffect(() => {
     if (!isPremium) {
-      const docKey = `document_generation_count_${user?.id || 'anon'}`;
-      const audioKey = `audio_transcription_count_${user?.id || 'anon'}`;
-      setDocumentTrialUsed(parseInt(localStorage.getItem(docKey) || '0', 10) >= 1);
-      setAudioTrialUsed(parseInt(localStorage.getItem(audioKey) || '0', 10) >= 1);
+      // Combined trial key for both document and audio uploads
+      const uploadKey = `upload_trial_used_${user?.id || 'anon'}`;
+      setUploadTrialUsed(localStorage.getItem(uploadKey) === 'true');
     }
   }, [isPremium, user]);
 
@@ -118,13 +116,9 @@ export default function DashboardView({
     (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   const handleOptionClick = (option: typeof INPUT_OPTIONS[0]) => {
-    // If trial is used for locked features, redirect to pricing
-    if (!isPremium) {
-      if (option.id === 'document' && documentTrialUsed) {
-        window.location.href = '/pricing';
-        return;
-      }
-      if (option.id === 'audio' && audioTrialUsed) {
+    // If trial is used for upload features, redirect to pricing
+    if (!isPremium && uploadTrialUsed) {
+      if (option.id === 'document' || option.id === 'audio') {
         window.location.href = '/pricing';
         return;
       }

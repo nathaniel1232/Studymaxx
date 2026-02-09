@@ -107,9 +107,8 @@ export async function POST(request: NextRequest) {
         const whisperResponse = await openai.audio.transcriptions.create({
           file: whisperFile,
           model: 'whisper-1',
-          language: 'no', // Norwegian Bokmål
           response_format: 'verbose_json',
-          temperature: 0.2, // Lower temperature for more accurate transcription
+          temperature: 0.0, // Most accurate transcription (not guessing words)
         });
 
         transcription = whisperResponse.text || '';

@@ -779,13 +779,13 @@ export default function YouTubeView({
             </div>
 
             <div className="p-4 border-t" style={{ borderColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)" }}>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl"
-                style={{ backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)", border: isDarkMode ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.1)" }}
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
+                style={{ backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)", border: isDarkMode ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(0,0,0,0.1)", maxWidth: "100%" }}
               >
-                <input type="text" value={chatMessage} onChange={(e) => setChatMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleChatSubmit()}
-                  placeholder="Ask about the video..." className="flex-1 bg-transparent outline-none text-sm" style={{ color: isDarkMode ? "#ffffff" : "#000000" }}
+                <input type="text" value={chatMessage} onChange={(e) => setChatMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleChatSubmit()}
+                  placeholder="Ask about the video..." className="flex-1 bg-transparent outline-none text-sm min-w-0" style={{ color: isDarkMode ? "#ffffff" : "#000000", width: "auto" }}
                 />
-                <button onClick={handleChatSubmit} disabled={isChatLoading || !chatMessage.trim()} className="p-2 rounded-lg transition-all hover:scale-110 disabled:opacity-50" style={{ color: "#1a73e8" }}>
+                <button onClick={handleChatSubmit} disabled={isChatLoading || !chatMessage.trim()} className="p-1.5 rounded-lg transition-all hover:scale-110 disabled:opacity-50 flex-shrink-0" style={{ color: "#1a73e8" }}>
                   {isChatLoading ? <SpinnerIcon /> : <SendIcon />}
                 </button>
               </div>

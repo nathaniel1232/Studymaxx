@@ -324,7 +324,6 @@ export function useTranslation() {
       "system": { en: "System", no: "System" },
       "language": { en: "Language", no: "Språk" },
       "english": { en: "English", no: "Engelsk" },
-      "norwegian": { en: "Norwegian", no: "Norsk" },
       "personalize": { en: "Personalize your study experience", no: "Tilpass din studieopplevelse" },
       "settings_saved": { en: "Settings saved", no: "Innstillinger lagret" },
       

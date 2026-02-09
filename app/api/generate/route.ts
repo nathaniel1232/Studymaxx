@@ -1099,18 +1099,24 @@ export async function POST(req: NextRequest) {
     // If language is Unknown or empty, try to detect from text sample
     if (!language || language === "Unknown" || language === "") {
       console.log("[API /generate POST] WARNING: No language detected, analyzing text...");
-      const textSample = text.substring(0, 300).toLowerCase();
-      // Quick check for common language patterns
-      if (/\b(the|is|are|was|were|have|has|been)\b/g.test(textSample)) {
+      const textSample = text.substring(0, 500).toLowerCase();
+      // Improved language detection with pattern matching
+      if (/\b(the|is|are|was|were|have|has|been|this|that|with|from)\b/g.test(textSample) && textSample.match(/\b(the|is|are|was|were|have|has|been|this|that|with|from)\b/g)!.length > 3) {
         language = "English";
-      } else if (/\b(de|het|een|en|van|zijn)\b/g.test(textSample)) {
+      } else if (/\b(og|er|det|en|at|har|med|til|av|som|ikke|for)\b/g.test(textSample) && textSample.match(/\b(og|er|det|en|at|har|med|til|av|som|ikke|for)\b/g)!.length > 3) {
+        language = "Norwegian";
+      } else if (/\b(de|het|een|en|van|zijn|is|dat|met|voor)\b/g.test(textSample)) {
         language = "Dutch";
-      } else if (/\b(der|die|das|und|ist|sind)\b/g.test(textSample)) {
+      } else if (/\b(der|die|das|und|ist|sind|mit|von|zu)\b/g.test(textSample)) {
         language = "German";
+      } else if (/\b(le|la|les|un|une|est|sont|et|de|dans)\b/g.test(textSample)) {
+        language = "French";
+      } else if (/\b(el|la|los|las|un|una|es|son|de|en)\b/g.test(textSample)) {
+        language = "Spanish";
       } else {
-        // If still unknown, default to English but log warning
-        console.error("[API /generate POST] ⚠️ Could not detect language! Defaulting to English");
-        language = "English";
+        // If still unknown, leave it unknown so AI matches input language automatically
+        console.log("[API /generate POST] ⚠️ Could not detect language! AI will match input language automatically");
+        language = "Unknown"; // Don't force English - let AI detect from input
       }
     }
     

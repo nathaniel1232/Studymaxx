@@ -57,10 +57,10 @@ export async function GET(request: NextRequest) {
 
     const userId = user.id;
 
-    // 1. Get user data (premium status)
+    // 1. Get user data (premium status + grandfathered status)
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('is_premium, stripe_subscription_id')
+      .select('is_premium, stripe_subscription_id, is_grandfathered')
       .eq('id', userId)
       .single();
 
@@ -84,6 +84,7 @@ export async function GET(request: NextRequest) {
     }
 
     const isPremium = userData?.is_premium || false;
+    const isGrandfathered = userData?.is_grandfathered || false;
     const subscriptionTier = isPremium ? 'pro' : 'free';
     const setsCreated = setsCount || 0;
     
@@ -104,6 +105,7 @@ export async function GET(request: NextRequest) {
     console.log(`[/api/premium/check] User ${userId} | Premium: ${isPremium} | Tier: ${subscriptionTier} | Sets: ${setsCreated}/${isPremium ? 'unlimited' : MAX_FREE_SETS}`);
 
     return NextResponse.json({
+      isGrandfathered: isGrandfathered,
       isPremium: isPremium,
       subscriptionTier: subscriptionTier,
       setsCreated: setsCreated,

@@ -32,6 +32,7 @@ export default function PricingPage() {
   const isDarkMode = settings.theme === 'dark' || 
     (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const [isPremium, setIsPremium] = useState(false);
+  const [isGrandfathered, setIsGrandfathered] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
 
@@ -61,6 +62,7 @@ export default function PricingPage() {
       if (response.ok) {
         const data = await response.json();
         setIsPremium(data.isPremium);
+        setIsGrandfathered(data.isGrandfathered || false);
       }
     } catch (error) {
       console.error('[PricingPage] Error checking premium:', error);
@@ -182,12 +184,24 @@ export default function PricingPage() {
         {!isLoading && isPremium && (
           <div className="mb-8 text-center">
             <div 
-              className="inline-block px-8 py-4 rounded-xl shadow-xl"
-              style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)' }}
+              className="inline-bloisGrandfathered 
+                ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' 
+                : 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)' 
+              }}
             >
               <div className="flex items-center gap-3">
                 <div className="text-left">
-                  <div className="font-bold text-lg" style={{ color: '#ffffff' }}>You&apos;re a Premium Member!</div>
+                  <div className="font-bold text-lg flex items-center gap-2" style={{ color: '#ffffff' }}>
+                    {isGrandfathered && (
+                      <span className="text-2xl">🏆</span>
+                    )}
+                    {isGrandfathered ? "Early Bird Premium Member!" : "You're a Premium Member!"}
+                  </div>
+                  <div className="text-sm" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                    {isGrandfathered 
+                      ? "You have lifetime access at the early bird price — thank you for being an original supporter!" 
+                      : "You have full access to all StudyMaxx features"}
+                  
                   <div className="text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>You have full access to all StudyMaxx features</div>
                 </div>
               </div>

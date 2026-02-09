@@ -293,12 +293,12 @@ export default function DocumentView({
       return;
     }
 
-    // Free trial check: allow 1 free document generation, then require premium
+    // Free trial check: allow 1 free upload (file OR audio), then require premium
     if (!isPremium) {
-      const key = `document_generation_count_${user?.id || 'anon'}`;
-      const useCount = parseInt(localStorage.getItem(key) || '0', 10);
-      if (useCount >= 1) {
-        setError("You've used your free file upload. Upgrade to Premium for unlimited document uploads!");
+      const key = `upload_trial_used_${user?.id || 'anon'}`;
+      const trialUsed = localStorage.getItem(key) === 'true';
+      if (trialUsed) {
+        setError("You've used your free upload trial. Upgrade to Premium for unlimited file uploads!");
         return;
       }
     }
@@ -485,11 +485,10 @@ export default function DocumentView({
         onGenerateMatch?.(terms, definitions, subject);
       }
 
-      // Increment free trial counter after successful generation
+      // Mark upload trial as used after successful generation
       if (!isPremium) {
-        const key = `document_generation_count_${user?.id || 'anon'}`;
-        const count = parseInt(localStorage.getItem(key) || '0', 10);
-        localStorage.setItem(key, String(count + 1));
+        const key = `upload_trial_used_${user?.id || 'anon'}`;
+        localStorage.setItem(key, 'true');
       }
     } catch (err: any) {
       console.error("[DocumentView] Generation error details:", {

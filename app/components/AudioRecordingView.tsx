@@ -318,11 +318,11 @@ export default function AudioRecordingView({
   const transcribeAudio = async () => {
     if (!audioBlob) return;
     
-    // Paywall: free users only get 1 audio transcription
+    // Paywall: free users only get 1 upload trial (shared with file uploads)
     if (!isPremium) {
-      const audioUseCount = parseInt(localStorage.getItem(`audio_transcription_count_${user?.id || 'anon'}`) || '0', 10);
-      if (audioUseCount >= 1) {
-        setError("You've used your free audio transcription. Upgrade to Premium for unlimited recordings!");
+      const trialUsed = localStorage.getItem(`upload_trial_used_${user?.id || 'anon'}`) === 'true';
+      if (trialUsed) {
+        setError("You've used your free upload trial. Upgrade to Premium for unlimited audio recordings!");
         return;
       }
     }
@@ -344,7 +344,7 @@ export default function AudioRecordingView({
         
         // Handle rate limiting error specifically
         if (response.status === 429) {
-          throw new Error('AI service is busy. Please wait a few seconds and try again.');
+          throw new Error('AI service is temporarily busy. Please wait 5-10 seconds and try again.');
         }
         
         throw new Error(errorData.error || 'Transcription failed');
@@ -356,11 +356,10 @@ export default function AudioRecordingView({
         setSummary(data.summary);
       }
       
-      // Track usage for free tier paywall
+      // Mark upload trial as used
       if (!isPremium) {
-        const key = `audio_transcription_count_${user?.id || 'anon'}`;
-        const count = parseInt(localStorage.getItem(key) || '0', 10);
-        localStorage.setItem(key, String(count + 1));
+        const key = `upload_trial_used_${user?.id || 'anon'}`;
+        localStorage.setItem(key, 'true');
       }
     } catch (err: any) {
       console.error('Transcription error:', err);
