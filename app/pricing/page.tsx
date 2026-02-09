@@ -184,9 +184,11 @@ export default function PricingPage() {
         {!isLoading && isPremium && (
           <div className="mb-8 text-center">
             <div 
-              className="inline-bloisGrandfathered 
-                ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' 
-                : 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)' 
+              className="inline-block px-6 py-4 rounded-2xl shadow-lg"
+              style={{
+                background: isGrandfathered
+                  ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                  : 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)'
               }}
             >
               <div className="flex items-center gap-3">
@@ -201,8 +203,7 @@ export default function PricingPage() {
                     {isGrandfathered 
                       ? "You have lifetime access at the early bird price — thank you for being an original supporter!" 
                       : "You have full access to all StudyMaxx features"}
-                  
-                  <div className="text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>You have full access to all StudyMaxx features</div>
+                  </div>
                 </div>
               </div>
             </div>
