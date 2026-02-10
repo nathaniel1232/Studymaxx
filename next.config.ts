@@ -3,9 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
+  serverExternalPackages: ['canvas', 'pdfjs-dist'],
   experimental: {
     turbopackUseSystemTlsCerts: true, // Fix TLS certificate errors on corporate/school networks
-    serverComponentsExternalPackages: ['canvas', 'pdfjs-dist'],
   },
   webpack: (config, { isServer }) => {
     if (isServer) {
