@@ -5,6 +5,13 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   experimental: {
     turbopackUseSystemTlsCerts: true, // Fix TLS certificate errors on corporate/school networks
+    serverComponentsExternalPackages: ['canvas', 'pdfjs-dist'],
+  },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = [...(config.externals || []), 'canvas'];
+    }
+    return config;
   },
   // Fix 404 errors on page refresh - treat as SPA fallback
   async rewrites() {
