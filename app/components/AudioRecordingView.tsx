@@ -120,6 +120,18 @@ export default function AudioRecordingView({
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
   
+  // Helper function to strip HTML tags
+  const stripHtmlTags = (html: string): string => {
+    return html
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .trim();
+  };
+  
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -760,9 +772,9 @@ export default function AudioRecordingView({
 
               {/* ============= NOTES TAB ============= */}
               {activeTab === "notes" && (transcription || selectedNote) && (
-                <div className="flex gap-6">
+                <div className="flex gap-6" style={{ height: 'calc(100vh - 114px)' }}>
                   {/* Left side - Notes Editor */}
-                  <div className="flex-1 space-y-4">
+                  <div className="flex-1 space-y-4 overflow-y-auto pr-2">
                     {/* Subject bar */}
                     <div className="rounded-xl p-3 flex items-center gap-3" style={{ background: colors.card, border: `1px solid ${colors.cardBorder}` }}>
                       <input
@@ -796,36 +808,109 @@ export default function AudioRecordingView({
                     {/* Notes content editor */}
                     <div className="rounded-2xl overflow-hidden" style={{ background: colors.card, border: `1px solid ${colors.cardBorder}` }}>
                       {/* Toolbar */}
-                      <div className="flex items-center justify-between px-4 py-2.5 border-b" style={{ borderColor: colors.cardBorder }}>
-                        <div className="flex items-center gap-2">
-                          {summary && transcription && (
-                            <div className="flex rounded-lg overflow-hidden" style={{ border: `1px solid ${colors.cardBorder}` }}>
-                              <button
-                                onClick={() => { setIsEditing(false); setEditContent(summary); }}
-                                className="px-3 py-1.5 text-xs font-semibold transition-all"
-                                style={{ background: !isEditing ? colors.accent : 'transparent', color: !isEditing ? '#fff' : colors.textSecondary }}
-                              >Summary</button>
-                              <button
-                                onClick={() => { setIsEditing(false); setEditContent(transcription); }}
-                                className="px-3 py-1.5 text-xs font-semibold transition-all"
-                                style={{ color: colors.textSecondary }}
-                              >Full Text</button>
-                            </div>
-                          )}
+                      <div className="px-4 py-2.5 border-b space-y-2" style={{ borderColor: colors.cardBorder }}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {summary && transcription && (
+                              <div className="flex rounded-lg overflow-hidden" style={{ border: `1px solid ${colors.cardBorder}` }}>
+                                <button
+                                  onClick={() => { setIsEditing(false); setEditContent(stripHtmlTags(summary)); }}
+                                  className="px-3 py-1.5 text-xs font-semibold transition-all"
+                                  style={{ background: !isEditing ? colors.accent : 'transparent', color: !isEditing ? '#fff' : colors.textSecondary }}
+                                >Summary</button>
+                                <button
+                                  onClick={() => { setIsEditing(false); setEditContent(stripHtmlTags(transcription)); }}
+                                  className="px-3 py-1.5 text-xs font-semibold transition-all"
+                                  style={{ color: colors.textSecondary }}
+                                >Full Text</button>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => { setIsEditing(!isEditing); if (!isEditing) setEditContent(stripHtmlTags(summary || transcription)); }}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-105"
+                              style={{ background: isEditing ? 'rgba(6, 182, 212, 0.15)' : colors.hoverBg, color: isEditing ? colors.accent : colors.textSecondary }}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                              {isEditing ? 'Editing' : 'Edit'}
+                            </button>
+                            <button onClick={resetRecording} className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-105" style={{ background: colors.hoverBg, color: colors.textSecondary }}>
+                              New
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => { setIsEditing(!isEditing); if (!isEditing) setEditContent(summary || transcription); }}
-                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-105"
-                            style={{ background: isEditing ? 'rgba(6, 182, 212, 0.15)' : colors.hoverBg, color: isEditing ? colors.accent : colors.textSecondary }}
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
-                            {isEditing ? 'Editing' : 'Edit'}
-                          </button>
-                          <button onClick={resetRecording} className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-105" style={{ background: colors.hoverBg, color: colors.textSecondary }}>
-                            New
-                          </button>
-                        </div>
+                        {/* Text Formatting Toolbar - only show when editing */}
+                        {isEditing && (
+                          <div className="flex items-center gap-1 py-2 border-t" style={{ borderColor: colors.cardBorder }}>
+                            <button
+                              onClick={() => {
+                                const textarea = editorRef.current;
+                                if (textarea) {
+                                  const start = textarea.selectionStart;
+                                  const end = textarea.selectionEnd;
+                                  const selectedText = editContent.substring(start, end);
+                                  if (selectedText) {
+                                    const newText = editContent.substring(0, start) + `**${selectedText}**` + editContent.substring(end);
+                                    setEditContent(newText);
+                                  }
+                                }
+                              }}
+                              className="p-2 rounded hover:bg-opacity-80 transition-all" 
+                              style={{ background: colors.hoverBg }}
+                              title="Bold"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/>
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => {
+                                const textarea = editorRef.current;
+                                if (textarea) {
+                                  const start = textarea.selectionStart;
+                                  const end = textarea.selectionEnd;
+                                  const selectedText = editContent.substring(start, end);
+                                  if (selectedText) {
+                                    const newText = editContent.substring(0, start) + `*${selectedText}*` + editContent.substring(end);
+                                    setEditContent(newText);
+                                  }
+                                }
+                              }}
+                              className="p-2 rounded hover:bg-opacity-80 transition-all"
+                              style={{ background: colors.hoverBg }}
+                              title="Italic"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/>
+                              </svg>
+                            </button>
+                            <div className="w-px h-6 mx-1" style={{ background: colors.cardBorder }} />
+                            <select
+                              onChange={(e) => {
+                                const textarea = editorRef.current;
+                                if (textarea && textarea.selectionStart !== textarea.selectionEnd) {
+                                  const start = textarea.selectionStart;
+                                  const end = textarea.selectionEnd;
+                                  const selectedText = editContent.substring(start, end);
+                                  const heading = e.target.value;
+                                  if (selectedText && heading) {
+                                    const newText = editContent.substring(0, start) + `<${heading}>${selectedText}</${heading}>` + editContent.substring(end);
+                                    setEditContent(newText);
+                                  }
+                                }
+                                e.target.value = '';
+                              }}
+                              className="px-2 py-1 rounded text-xs" 
+                              style={{ background: colors.hoverBg, color: colors.text, border: 'none', outline: 'none' }}
+                            >
+                              <option value="">Heading</option>
+                              <option value="h2">H2</option>
+                              <option value="h3">H3</option>
+                            </select>
+                            <span className="text-xs ml-auto" style={{ color: colors.textMuted }}>Select text to format</span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Content */}
@@ -855,63 +940,92 @@ export default function AudioRecordingView({
                   </div>
 
                   {/* Right sidebar - Actions & AI Chat */}
-                  <div className="hidden lg:block w-[340px] space-y-4">
-                    {/* Generate Study Set button */}
-                    <button 
-                      onClick={() => handleGenerate("flashcards")} 
-                      disabled={isGenerating || !subject.trim()}
-                      className="w-full p-5 rounded-xl text-left transition-all hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
-                      style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)', boxShadow: '0 4px 20px rgba(6, 182, 212, 0.25)' }}
-                    >
-                      {isGenerating && (
-                        <div className="absolute inset-0 bg-white/20" style={{ width: `${generateProgress}%`, transition: 'width 0.3s ease' }} />
-                      )}
-                      <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            {isGenerating ? <SpinnerIcon /> : <FlashcardIcon />}
-                            <span className="font-bold text-base text-white">Generate Study Set</span>
-                          </div>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-white/20 text-white font-semibold">Popular</span>
-                        </div>
-                        <p className="text-xs text-white/90 mb-3">Create flashcards, quizzes & games from your notes</p>
-                        <div className="flex items-center gap-2 text-xs text-white/80">
-                          <span>📚 Flashcards</span>
-                          <span>•</span>
-                          <span>❓ Quiz</span>
-                          <span>•</span>
-                          <span>🎮 Match</span>
-                        </div>
-                      </div>
-                    </button>
-
-                    {/* AI Chat */}
-                    <div className="rounded-2xl overflow-hidden flex flex-col" style={{ background: colors.card, border: `1px solid ${colors.cardBorder}`, height: '400px' }}>
-                      <div className="p-4 border-b" style={{ borderColor: colors.cardBorder }}>
-                        <h4 className="font-bold text-sm mb-1" style={{ color: colors.text }}>Hey, I'm StudyMaxx AI</h4>
-                        <p className="text-xs" style={{ color: colors.textSecondary }}>I can work with you on your notes and answer any questions!</p>
-                      </div>
-                      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                        {chatMessages.length === 0 && (
-                          <div className="text-center py-8">
-                            <div className="text-3xl mb-3">💬</div>
-                            <p className="text-xs" style={{ color: colors.textMuted }}>Type a question to get started</p>
-                          </div>
+                  <div className="hidden lg:flex w-80 flex-col sticky top-0 h-full" style={{ borderLeft: `1px solid ${colors.cardBorder}`, backgroundColor: isDarkMode ? 'rgba(15, 29, 50, 0.5)' : 'rgba(241, 245, 249, 0.95)' }}>
+                    {/* Create Section */}
+                    <div className="p-4 border-b" style={{ borderColor: colors.cardBorder }}>
+                      <h3 className="text-sm font-semibold mb-3" style={{ color: colors.text }}>
+                        Create from Notes
+                      </h3>
+                      
+                      <button
+                        onClick={() => handleGenerate("flashcards")}
+                        disabled={isGenerating || !subject.trim()}
+                        className="w-full px-4 py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] disabled:opacity-50"
+                        style={{
+                          background: "linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)",
+                          color: "#ffffff",
+                          boxShadow: '0 4px 14px rgba(6, 182, 212, 0.3)',
+                        }}
+                      >
+                        {isGenerating ? <SpinnerIcon /> : (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74L12 2z" />
+                          </svg>
                         )}
-                        {chatMessages.map((msg, i) => (
-                          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className="max-w-[85%] px-3.5 py-2.5 rounded-xl text-xs leading-5"
-                              style={{
-                                background: msg.role === 'user' ? colors.accent : colors.hoverBg,
-                                color: msg.role === 'user' ? '#fff' : colors.text,
-                                borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                              }}
-                            >{msg.text || '...'}</div>
+                        Create Study Set
+                      </button>
+                      
+                      <p className="text-xs mt-3 text-center" style={{ color: isDarkMode ? "#9aa0a6" : "#475569" }}>
+                        Generates flashcards, quiz & match in one set
+                      </p>
+                    </div>
+
+                    {/* AI Chat Section */}
+                    <div className="flex-1 flex flex-col">
+                      <div className="p-4 border-b" style={{ borderColor: colors.cardBorder }}>
+                        <h3 className="text-base font-bold" style={{ color: colors.text }}>
+                          StudyMaxx AI
+                        </h3>
+                        <p className="text-xs" style={{ color: colors.textSecondary }}>
+                          Ask questions about your notes
+                        </p>
+                      </div>
+                      
+                      {/* Chat Messages */}
+                      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                        {chatMessages.length === 0 ? (
+                          <div className="text-center py-8">
+                            <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgba(26, 115, 232, 0.1)" }}>
+                              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                              </svg>
+                            </div>
+                            <p className="font-medium mb-1" style={{ color: colors.text }}>
+                              Ask me anything about your notes!
+                            </p>
+                            <p className="text-xs" style={{ color: colors.textSecondary }}>
+                              "Summarize this" • "Explain the main points"
+                            </p>
                           </div>
-                        ))}
+                        ) : (
+                          chatMessages.map((msg, i) => (
+                            <div key={i} className="flex gap-3 items-start">
+                              <div 
+                                className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
+                                style={{
+                                  backgroundColor: msg.role === "user" ? "#1a73e8" : isDarkMode ? "rgba(26, 115, 232, 0.15)" : "rgba(26, 115, 232, 0.1)",
+                                  color: msg.role === "user" ? "#ffffff" : "#1a73e8"
+                                }}
+                              >
+                                {msg.role === "user" ? "You" : "AI"}
+                              </div>
+                              
+                              <div className="flex-1 space-y-1">
+                                <div className="text-xs font-medium" style={{ color: colors.textSecondary }}>
+                                  {msg.role === "user" ? "You" : "StudyMaxx AI"}
+                                </div>
+                                <div className="text-sm leading-relaxed" style={{ color: colors.text }}>
+                                  {msg.text || '...'}
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
                         <div ref={chatEndRef} />
                       </div>
-                      <div className="p-3 border-t" style={{ borderColor: colors.cardBorder }}>
+                      
+                      {/* Chat Input */}
+                      <div className="p-4 border-t" style={{ borderColor: colors.cardBorder }}>
                         <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl" style={{ background: colors.inputBg, border: `1px solid ${colors.cardBorder}` }}>
                           <input
                             type="text"
