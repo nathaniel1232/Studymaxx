@@ -233,52 +233,74 @@ export async function POST(request: NextRequest) {
     });
 
     // Determine language instruction
-    const languageInstruction = detectedLanguage && detectedLanguage !== 'unknown' && detectedLanguage !== 'en'
-      ? `IMPORTANT: The transcription is in ${detectedLanguage}. You MUST write the summary in ${detectedLanguage}. Do NOT translate to English.`
-      : '';
+    let languageCode = detectedLanguage || 'unknown';
+    let languageName = detectedLanguage || 'unknown';
+    
+    // Map common language codes to full names
+    const languageMap: Record<string, string> = {
+      'no': 'Norwegian',
+      'nb': 'Norwegian Bokmål', 
+      'nn': 'Norwegian Nynorsk',
+      'en': 'English',
+      'es': 'Spanish',
+      'fr': 'French',
+      'de': 'German',
+      'it': 'Italian',
+      'pt': 'Portuguese',
+      'sv': 'Swedish',
+      'da': 'Danish',
+      'fi': 'Finnish',
+    };
+    
+    if (languageCode in languageMap) {
+      languageName = languageMap[languageCode];
+    }
 
     const summaryPrompt = `You are an expert at creating beautifully formatted study summaries from audio transcriptions.
 
-${languageInstruction}
+${languageCode !== 'unknown' && languageCode !== 'en' ? `
+🌍 CRITICAL LANGUAGE REQUIREMENT 🌍
+The transcription is in ${languageName} (${languageCode}).
+YOU MUST WRITE THE ENTIRE SUMMARY IN ${languageName.toUpperCase()}.
+DO NOT translate to English. DO NOT mix languages.
+All text, headers, descriptions, and content MUST be in ${languageName}.
+` : ''}
 
-Analyze the following transcription and create a well-structured, visually appealing summary that captures all important information worth writing down for studying.
+Analyze the following transcription and create a well-structured, visually appealing summary that captures all important information worth studying.
 
 TRANSCRIPTION:
 ${transcription}
 
-IMPORTANT: Output ONLY the formatted HTML content. Do NOT include any introductory text like "OK, here is..." or "Here's the summary...". Start directly with the first <h2> tag.
+CRITICAL OUTPUT FORMAT:
+- Start IMMEDIATELY with the first <h2> tag  
+- DO NOT write "html" or code fence markers (three backticks with html)
+- DO NOT write introductory text like "Here is..." or "OK, here's..."
+- Your first characters must be: <h2>📚
+
+${languageCode !== 'unknown' && languageCode !== 'en' ? `LANGUAGE: Write EVERYTHING in ${languageName}. Use ${languageName} for ALL headings, descriptions, and content.` : ''}
 
 Create a comprehensive summary with BEAUTIFUL FORMATTING:
 
 FORMATTING REQUIREMENTS:
-- Use emojis to make sections visually distinct and engaging (📚 for main topics, 💡 for key concepts, ✨ for examples, 🎯 for conclusions, etc.)
-- Use HTML tags for structure: <h2> for main sections, <h3> for subsections
+- Use emojis to make sections visually distinct (📚 for main topics, 💡 for key concepts, ✨ for examples, 🎯 for conclusions)
+- Use HTML tags: <h2> for main sections, <h3> for subsections
 - Use <b> for important terms and definitions
 - Use <ul> and <li> for lists
 - Use <p> for paragraphs with proper spacing
-- Add subtle dividers with <hr style="border: 1px solid rgba(6, 182, 212, 0.2); margin: 1.5rem 0;">
+- Add dividers: <hr style="border: 1px solid rgba(6, 182, 212, 0.2); margin: 1.5rem 0;">
 
 STRUCTURE:
 1. 📚 Main Topics - Section header with emoji + key topics covered
 2. 💡 Key Concepts - Important definitions and core ideas
 3. ✨ Examples & Details - Concrete examples and explanations  
 4. 📝 Important Facts - Dates, names, formulas, processes
-5. 🎯 Key Takeaways - Main conclusions and what to remember
+5. 🎯 Key Takeaways - Main conclusions
 
-EXAMPLE FORMAT:
+EXAMPLE START (use this format):
 <h2>📚 Main Topics</h2>
-<p>This lecture covered <b>three main areas</b>: topic 1, topic 2, and topic 3.</p>
+<p>This section covered...</p>
 
-<hr style="border: 1px solid rgba(6, 182, 212, 0.2); margin: 1.5rem 0;">
-
-<h2>💡 Key Concepts</h2>
-<ul>
-<li><b>Concept 1:</b> Definition here</li>
-<li><b>Concept 2:</b> Definition here</li>
-</ul>
-
-${languageInstruction ? `Write EVERYTHING in ${detectedLanguage}. Preserve the original language.` : ''}
-Make it study-friendly, visually organized, and easy to review later.`;
+${languageCode !== 'unknown' && languageCode !== 'en' ? `\nREMEMBER: ALL text in ${languageName}, NO English.` : ''}`;
 
     // Retry logic with exponential backoff for rate limiting
     let summary = '';
@@ -313,6 +335,15 @@ Make it study-friendly, visually organized, and easy to review later.`;
     }
 
     console.log(`[Transcribe] Summary generated: ${summary.length} characters`);
+    
+    // Clean up summary output - remove code block markers and unwanted prefixes
+    summary = summary
+      .replace(/^```html\s*/i, '')  // Remove opening ```html
+      .replace(/\s*```\s*$/i, '')    // Remove closing ```
+      .replace(/^html\s*/i, '')      // Remove "html" prefix
+      .replace(/^Here(?:'s| is) (?:the |your )?summary[:\s]*/i, '') // Remove "Here's the summary:" etc
+      .replace(/^OK,?\s*/i, '')      // Remove "OK," prefix
+      .trim();
 
     console.log('[Transcribe] Transcription complete, length:', transcription.length);
 

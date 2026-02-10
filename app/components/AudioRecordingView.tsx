@@ -535,11 +535,6 @@ export default function AudioRecordingView({
     }
   };
 
-  const handleContinue = () => {
-    const textToUse = isEditing ? editContent : (summary || transcription);
-    if (textToUse && subject) onTranscriptionComplete(textToUse, subject);
-  };
-
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -594,18 +589,6 @@ export default function AudioRecordingView({
                 <p className="text-xs" style={{ color: colors.textSecondary }}>Record, transcribe, study</p>
               </div>
             </div>
-            <div className="flex items-center gap-1">
-              {transcription && (
-                <button
-                  onClick={() => setShowAIChat(!showAIChat)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-105"
-                  style={{ background: showAIChat ? colors.accent : colors.accentBg, color: showAIChat ? '#fff' : colors.accent }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
-                  AI Chat
-                </button>
-              )}
-            </div>
           </div>
         </div>
 
@@ -634,13 +617,9 @@ export default function AudioRecordingView({
           </div>
         </div>
 
-        <div className="px-4 py-6 max-w-5xl mx-auto relative">
-          <div className="flex gap-6">
-            {/* Main content area */}
-            <div className={`flex-1 min-w-0 ${showAIChat && transcription ? 'lg:mr-[340px]' : ''}`}>
-
-              {/* Error message */}
-              {error && (
+        <div className="px-4 py-6 max-w-7xl mx-auto relative">
+          {/* Error message */}
+          {error && (
                 <div className="mb-4 p-3 rounded-xl flex items-center gap-2" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
                   <p className="text-sm font-medium" style={{ color: '#ef4444' }}>{error}</p>
@@ -781,153 +760,206 @@ export default function AudioRecordingView({
 
               {/* ============= NOTES TAB ============= */}
               {activeTab === "notes" && (transcription || selectedNote) && (
-                <div className="space-y-4">
-                  {/* Subject bar */}
-                  <div className="rounded-xl p-3 flex items-center gap-3" style={{ background: colors.card, border: `1px solid ${colors.cardBorder}` }}>
-                    <input
-                      type="text"
-                      value={subject}
-                      onChange={(e) => setSubject(e.target.value)}
-                      placeholder="Add subject..."
-                      className="flex-1 bg-transparent border-none outline-none text-base font-bold placeholder:opacity-40"
-                      style={{ color: colors.text }}
-                    />
-                    <div className="flex items-center gap-2">
-                      {noteSaved && (
-                        <span className="text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20,6 9,17 4,12" /></svg>
-                          Saved
-                        </span>
-                      )}
-                      <button onClick={saveNote} className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all hover:scale-105" style={{ background: colors.accentBg, color: colors.accent }}>
-                        Save
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Audio player */}
-                  {audioUrl && (
-                    <div className="rounded-xl p-3" style={{ background: colors.card, border: `1px solid ${colors.cardBorder}` }}>
-                      <audio controls src={audioUrl} className="w-full" style={{ filter: isDarkMode ? 'invert(0.85) hue-rotate(180deg)' : 'none', height: '36px' }} />
-                    </div>
-                  )}
-
-                  {/* Notes content editor */}
-                  <div className="rounded-2xl overflow-hidden" style={{ background: colors.card, border: `1px solid ${colors.cardBorder}` }}>
-                    {/* Toolbar */}
-                    <div className="flex items-center justify-between px-4 py-2.5 border-b" style={{ borderColor: colors.cardBorder }}>
+                <div className="flex gap-6">
+                  {/* Left side - Notes Editor */}
+                  <div className="flex-1 space-y-4">
+                    {/* Subject bar */}
+                    <div className="rounded-xl p-3 flex items-center gap-3" style={{ background: colors.card, border: `1px solid ${colors.cardBorder}` }}>
+                      <input
+                        type="text"
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        placeholder="Add subject..."
+                        className="flex-1 bg-transparent border-none outline-none text-base font-bold placeholder:opacity-40"
+                        style={{ color: colors.text }}
+                      />
                       <div className="flex items-center gap-2">
-                        {summary && transcription && (
-                          <div className="flex rounded-lg overflow-hidden" style={{ border: `1px solid ${colors.cardBorder}` }}>
-                            <button
-                              onClick={() => { setIsEditing(false); setEditContent(summary); }}
-                              className="px-3 py-1.5 text-xs font-semibold transition-all"
-                              style={{ background: !isEditing ? colors.accent : 'transparent', color: !isEditing ? '#fff' : colors.textSecondary }}
-                            >Summary</button>
-                            <button
-                              onClick={() => { setIsEditing(false); setEditContent(transcription); }}
-                              className="px-3 py-1.5 text-xs font-semibold transition-all"
-                              style={{ color: colors.textSecondary }}
-                            >Full Text</button>
-                          </div>
+                        {noteSaved && (
+                          <span className="text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1" style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20,6 9,17 4,12" /></svg>
+                            Saved
+                          </span>
+                        )}
+                        <button onClick={saveNote} className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-all hover:scale-105" style={{ background: colors.accentBg, color: colors.accent }}>
+                          Save
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Audio player */}
+                    {audioUrl && (
+                      <div className="rounded-xl p-3" style={{ background: colors.card, border: `1px solid ${colors.cardBorder}` }}>
+                        <audio controls src={audioUrl} className="w-full" style={{ filter: isDarkMode ? 'invert(0.85) hue-rotate(180deg)' : 'none', height: '36px' }} />
+                      </div>
+                    )}
+
+                    {/* Notes content editor */}
+                    <div className="rounded-2xl overflow-hidden" style={{ background: colors.card, border: `1px solid ${colors.cardBorder}` }}>
+                      {/* Toolbar */}
+                      <div className="flex items-center justify-between px-4 py-2.5 border-b" style={{ borderColor: colors.cardBorder }}>
+                        <div className="flex items-center gap-2">
+                          {summary && transcription && (
+                            <div className="flex rounded-lg overflow-hidden" style={{ border: `1px solid ${colors.cardBorder}` }}>
+                              <button
+                                onClick={() => { setIsEditing(false); setEditContent(summary); }}
+                                className="px-3 py-1.5 text-xs font-semibold transition-all"
+                                style={{ background: !isEditing ? colors.accent : 'transparent', color: !isEditing ? '#fff' : colors.textSecondary }}
+                              >Summary</button>
+                              <button
+                                onClick={() => { setIsEditing(false); setEditContent(transcription); }}
+                                className="px-3 py-1.5 text-xs font-semibold transition-all"
+                                style={{ color: colors.textSecondary }}
+                              >Full Text</button>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => { setIsEditing(!isEditing); if (!isEditing) setEditContent(summary || transcription); }}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-105"
+                            style={{ background: isEditing ? 'rgba(6, 182, 212, 0.15)' : colors.hoverBg, color: isEditing ? colors.accent : colors.textSecondary }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                            {isEditing ? 'Editing' : 'Edit'}
+                          </button>
+                          <button onClick={resetRecording} className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-105" style={{ background: colors.hoverBg, color: colors.textSecondary }}>
+                            New
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-5 sm:p-6">
+                        {isEditing ? (
+                          <textarea
+                            ref={editorRef}
+                            value={editContent}
+                            onChange={(e) => setEditContent(e.target.value)}
+                            className="w-full min-h-[500px] bg-transparent border-none outline-none resize-y text-sm leading-7"
+                            style={{ color: colors.text }}
+                            placeholder="Edit your notes here..."
+                          />
+                        ) : (
+                          <div
+                            className="prose prose-sm max-w-none min-h-[400px] text-sm leading-7"
+                            style={{ color: isDarkMode ? '#cbd5e1' : '#334155' }}
+                            dangerouslySetInnerHTML={{ 
+                              __html: (summary || transcription)
+                                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                            }}
+                          />
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => { setIsEditing(!isEditing); if (!isEditing) setEditContent(summary || transcription); }}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-105"
-                          style={{ background: isEditing ? 'rgba(6, 182, 212, 0.15)' : colors.hoverBg, color: isEditing ? colors.accent : colors.textSecondary }}
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
-                          {isEditing ? 'Editing' : 'Edit'}
-                        </button>
-                        <button onClick={resetRecording} className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-105" style={{ background: colors.hoverBg, color: colors.textSecondary }}>
-                          New
-                        </button>
+                    </div>
+                  </div>
+
+                  {/* Right sidebar - Actions & AI Chat */}
+                  <div className="hidden lg:block w-[340px] space-y-4">
+                    {/* Action buttons */}
+                    <div className="space-y-3">
+                      <button 
+                        onClick={() => handleGenerate("flashcards")} 
+                        disabled={isGenerating || !subject.trim()}
+                        className="w-full p-4 rounded-xl text-left transition-all hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
+                        style={{ background: colors.card, border: `2px solid ${colors.cardBorder}` }}
+                      >
+                        {isGenerating && generationType === "flashcards" && (
+                          <div className="absolute inset-0 bg-cyan-500/10" style={{ width: `${generateProgress}%`, transition: 'width 0.3s ease' }} />
+                        )}
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {isGenerating && generationType === "flashcards" ? <SpinnerIcon /> : <FlashcardIcon />}
+                              <span className="font-bold text-sm" style={{ color: colors.text }}>Flashcards</span>
+                            </div>
+                            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: isDarkMode ? 'rgba(6, 182, 212, 0.15)' : 'rgba(6, 182, 212, 0.1)', color: '#06b6d4' }}>Popular</span>
+                          </div>
+                          <p className="text-xs" style={{ color: colors.textSecondary }}>Study with active recall</p>
+                        </div>
+                      </button>
+
+                      <button 
+                        onClick={() => handleGenerate("quiz")} 
+                        disabled={isGenerating || !subject.trim()}
+                        className="w-full p-4 rounded-xl text-left transition-all hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
+                        style={{ background: colors.card, border: `2px solid ${colors.cardBorder}` }}
+                      >
+                        {isGenerating && generationType === "quiz" && (
+                          <div className="absolute inset-0 bg-purple-500/10" style={{ width: `${generateProgress}%`, transition: 'width 0.3s ease' }} />
+                        )}
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-2 mb-2">
+                            {isGenerating && generationType === "quiz" ? <SpinnerIcon /> : <QuizIcon />}
+                            <span className="font-bold text-sm" style={{ color: colors.text }}>Quizzes</span>
+                          </div>
+                          <p className="text-xs" style={{ color: colors.textSecondary }}>Test your knowledge</p>
+                        </div>
+                      </button>
+
+                      <button 
+                        onClick={() => handleGenerate("match")} 
+                        disabled={isGenerating || !subject.trim()}
+                        className="w-full p-4 rounded-xl text-left transition-all hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
+                        style={{ background: colors.card, border: `2px solid ${colors.cardBorder}` }}
+                      >
+                        {isGenerating && generationType === "match" && (
+                          <div className="absolute inset-0 bg-green-500/10" style={{ width: `${generateProgress}%`, transition: 'width 0.3s ease' }} />
+                        )}
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-2 mb-2">
+                            {isGenerating && generationType === "match" ? <SpinnerIcon /> : <MatchIcon />}
+                            <span className="font-bold text-sm" style={{ color: colors.text }}>Match Game</span>
+                          </div>
+                          <p className="text-xs" style={{ color: colors.textSecondary }}>Fun learning experience</p>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* AI Chat */}
+                    <div className="rounded-2xl overflow-hidden flex flex-col" style={{ background: colors.card, border: `1px solid ${colors.cardBorder}`, height: '400px' }}>
+                      <div className="p-4 border-b" style={{ borderColor: colors.cardBorder }}>
+                        <h4 className="font-bold text-sm mb-1" style={{ color: colors.text }}>Hey, I'm StudyMaxx AI</h4>
+                        <p className="text-xs" style={{ color: colors.textSecondary }}>I can work with you on your notes and answer any questions!</p>
+                      </div>
+                      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                        {chatMessages.length === 0 && (
+                          <div className="text-center py-8">
+                            <div className="text-3xl mb-3">💬</div>
+                            <p className="text-xs" style={{ color: colors.textMuted }}>Type a question to get started</p>
+                          </div>
+                        )}
+                        {chatMessages.map((msg, i) => (
+                          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div className="max-w-[85%] px-3.5 py-2.5 rounded-xl text-xs leading-5"
+                              style={{
+                                background: msg.role === 'user' ? colors.accent : colors.hoverBg,
+                                color: msg.role === 'user' ? '#fff' : colors.text,
+                                borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                              }}
+                            >{msg.text || '...'}</div>
+                          </div>
+                        ))}
+                        <div ref={chatEndRef} />
+                      </div>
+                      <div className="p-3 border-t" style={{ borderColor: colors.cardBorder }}>
+                        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl" style={{ background: colors.inputBg, border: `1px solid ${colors.cardBorder}` }}>
+                          <input
+                            type="text"
+                            placeholder="Type a question here or type '@' to reference documents..."
+                            value={chatMessage}
+                            onChange={(e) => setChatMessage(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleChatSubmit()}
+                            className="flex-1 outline-none text-xs bg-transparent"
+                            style={{ color: colors.text }}
+                          />
+                          <button onClick={handleChatSubmit} disabled={isChatLoading || !chatMessage.trim()} className="p-1.5 rounded-lg transition-all hover:scale-110 disabled:opacity-40" style={{ color: colors.accent }}>
+                            {isChatLoading ? <SpinnerIcon /> : <SendIcon />}
+                          </button>
+                        </div>
                       </div>
                     </div>
-
-                    {/* Content */}
-                    <div className="p-5 sm:p-6">
-                      {isEditing ? (
-                        <textarea
-                          ref={editorRef}
-                          value={editContent}
-                          onChange={(e) => setEditContent(e.target.value)}
-                          className="w-full min-h-[400px] bg-transparent border-none outline-none resize-y text-sm leading-7"
-                          style={{ color: colors.text }}
-                          placeholder="Edit your notes here..."
-                        />
-                      ) : (
-                        <div
-                          className="prose prose-sm max-w-none min-h-[300px] text-sm leading-7"
-                          style={{ color: isDarkMode ? '#cbd5e1' : '#334155' }}
-                          dangerouslySetInnerHTML={{ 
-                            __html: (summary || transcription)
-                              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                              .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                          }}
-                        />
-                      )}
-                    </div>
                   </div>
-
-                  {/* Action buttons */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <button 
-                      onClick={() => handleGenerate("flashcards")} 
-                      disabled={isGenerating || !subject.trim()}
-                      className="py-3.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
-                      style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)', color: '#fff', boxShadow: '0 4px 20px rgba(6, 182, 212, 0.25)' }}
-                    >
-                      {isGenerating && generationType === "flashcards" && (
-                        <div className="absolute inset-0 bg-white/20" style={{ width: `${generateProgress}%`, transition: 'width 0.3s ease' }} />
-                      )}
-                      <span className="relative z-10 flex items-center justify-center gap-2">
-                        {isGenerating && generationType === "flashcards" ? <SpinnerIcon /> : <FlashcardIcon />}
-                        Flashcards
-                      </span>
-                    </button>
-                    <button 
-                      onClick={() => handleGenerate("quiz")} 
-                      disabled={isGenerating || !subject.trim()}
-                      className="py-3.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
-                      style={{ background: isDarkMode ? 'rgba(168, 85, 247, 0.15)' : 'rgba(168, 85, 247, 0.1)', color: '#a855f7', border: '1px solid rgba(168, 85, 247, 0.3)' }}
-                    >
-                      {isGenerating && generationType === "quiz" && (
-                        <div className="absolute inset-0 bg-current opacity-10" style={{ width: `${generateProgress}%`, transition: 'width 0.3s ease' }} />
-                      )}
-                      <span className="relative z-10 flex items-center justify-center gap-2">
-                        {isGenerating && generationType === "quiz" ? <SpinnerIcon /> : <QuizIcon />}
-                        Quiz
-                      </span>
-                    </button>
-                    <button 
-                      onClick={() => handleGenerate("match")} 
-                      disabled={isGenerating || !subject.trim()}
-                      className="py-3.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
-                      style={{ background: isDarkMode ? 'rgba(34, 197, 94, 0.15)' : 'rgba(34, 197, 94, 0.1)', color: '#22c55e', border: '1px solid rgba(34, 197, 94, 0.3)' }}
-                    >
-                      {isGenerating && generationType === "match" && (
-                        <div className="absolute inset-0 bg-current opacity-10" style={{ width: `${generateProgress}%`, transition: 'width 0.3s ease' }} />
-                      )}
-                      <span className="relative z-10 flex items-center justify-center gap-2">
-                        {isGenerating && generationType === "match" ? <SpinnerIcon /> : <MatchIcon />}
-                        Match
-                      </span>
-                    </button>
-                  </div>
-
-                  {/* Continue to full editor */}
-                  <button
-                    onClick={handleContinue}
-                    disabled={!subject.trim()}
-                    className="w-full py-3 rounded-xl text-sm font-bold transition-all hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    style={{ background: colors.card, color: colors.text, border: `2px solid ${colors.cardBorder}` }}
-                  >
-                    Continue to Full Editor
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-                  </button>
                 </div>
               )}
 
@@ -981,66 +1013,17 @@ export default function AudioRecordingView({
                   )}
                 </div>
               )}
-            </div>
-
-            {/* AI Chat sidebar - desktop */}
-            {showAIChat && transcription && (
-              <div className="hidden lg:flex fixed right-4 top-[120px] bottom-4 w-[320px] rounded-2xl overflow-hidden shadow-2xl z-40 flex-col" style={{ background: isDarkMode ? 'rgba(15, 29, 50, 0.97)' : 'rgba(255, 255, 255, 0.97)', border: `1px solid ${colors.cardBorder}`, backdropFilter: 'blur(20px)' }}>
-                <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: colors.cardBorder }}>
-                  <div>
-                    <h4 className="font-bold text-sm" style={{ color: colors.text }}>StudyMaxx AI</h4>
-                    <p className="text-xs" style={{ color: colors.textSecondary }}>Ask about your notes</p>
-                  </div>
-                  <button onClick={() => setShowAIChat(false)} className="p-1.5 rounded-lg transition-all hover:scale-110" style={{ background: colors.hoverBg }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.textSecondary} strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                  </button>
-                </div>
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                  {chatMessages.length === 0 && (
-                    <div className="text-center py-8">
-                      <div className="text-3xl mb-3">🤖</div>
-                      <p className="text-sm font-medium" style={{ color: colors.text }}>Ask me anything</p>
-                      <p className="text-xs mt-1" style={{ color: colors.textMuted }}>about your notes</p>
-                    </div>
-                  )}
-                  {chatMessages.map((msg, i) => (
-                    <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className="max-w-[85%] px-3.5 py-2.5 rounded-xl text-xs leading-5"
-                        style={{
-                          background: msg.role === 'user' ? colors.accent : colors.hoverBg,
-                          color: msg.role === 'user' ? '#fff' : colors.text,
-                          borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                        }}
-                      >{msg.text || '...'}</div>
-                    </div>
-                  ))}
-                  <div ref={chatEndRef} />
-                </div>
-                <div className="p-3 border-t" style={{ borderColor: colors.cardBorder }}>
-                  <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl" style={{ background: colors.inputBg, border: `1px solid ${colors.cardBorder}` }}>
-                    <input
-                      type="text"
-                      placeholder="Ask about your notes..."
-                      value={chatMessage}
-                      onChange={(e) => setChatMessage(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleChatSubmit()}
-                      className="flex-1 outline-none text-sm bg-transparent"
-                      style={{ color: colors.text }}
-                    />
-                    <button onClick={handleChatSubmit} disabled={isChatLoading || !chatMessage.trim()} className="p-1.5 rounded-lg transition-all hover:scale-110 disabled:opacity-40" style={{ color: colors.accent }}>
-                      {isChatLoading ? <SpinnerIcon /> : <SendIcon />}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Mobile AI Chat */}
-        {transcription && (
+        {transcription && activeTab === "notes" && (
           <div className="lg:hidden">
-            {showAIChat ? (
+            <button onClick={() => setShowAIChat(true)} className="fixed bottom-4 right-4 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl transition-all hover:scale-110 z-50" style={{ backgroundColor: colors.accent, boxShadow: '0 8px 30px rgba(6, 182, 212, 0.35)' }}>
+              <svg className="w-5 h-5" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </button>
+            {showAIChat && (
               <div className="fixed bottom-4 right-4 left-4 sm:left-auto sm:w-80 max-h-[60vh] rounded-2xl overflow-hidden shadow-2xl z-50 flex flex-col" style={{ background: isDarkMode ? 'rgba(15, 29, 50, 0.97)' : 'rgba(255,255,255,0.97)', border: `1px solid ${colors.cardBorder}`, backdropFilter: 'blur(20px)' }}>
                 <div className="p-3 border-b flex items-center justify-between" style={{ borderColor: colors.cardBorder }}>
                   <h4 className="font-bold text-sm" style={{ color: colors.text }}>StudyMaxx AI</h4>
@@ -1072,12 +1055,6 @@ export default function AudioRecordingView({
                   </div>
                 </div>
               </div>
-            ) : (
-              <button onClick={() => setShowAIChat(true)} className="fixed bottom-4 right-4 w-12 h-12 rounded-full flex items-center justify-center shadow-2xl transition-all hover:scale-110 z-50" style={{ backgroundColor: colors.accent, boxShadow: '0 8px 30px rgba(6, 182, 212, 0.35)' }}>
-                <svg className="w-5 h-5" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-              </button>
             )}
           </div>
         )}
