@@ -7,10 +7,18 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export const maxDuration = 120;
 
 async function pdfToImages(pdfBuffer: Buffer): Promise<string[]> {
+  // Try to use canvas if available (works locally but may not work on Vercel)
   try {
     const { getDocument } = await import('pdfjs-dist/legacy/build/pdf.mjs');
     // @ts-expect-error - canvas is a native module without types
-    const { createCanvas } = await import('canvas');
+    const canvas = await import('canvas').catch(() => null);
+    
+    if (!canvas) {
+      console.log('[PDF to Images] Canvas not available, falling back to text extraction');
+      return [];
+    }
+    
+    const { createCanvas } = canvas;
     
     // Load PDF with pdfjs-dist
     const loadingTask = getDocument({
@@ -97,6 +105,15 @@ export async function POST(request: NextRequest) {
 
     try {
       const images = await pdfToImages(buffer);
+      
+      if (images.length === 0) {
+        console.log('[Extract PDF] ⚠️  Canvas not available, falling back to text-only mode');
+        return NextResponse.json({ 
+          text: text || 'Unable to extract text from this PDF. Canvas/OCR not available.',
+          method: 'fallbacktext'
+        });
+      }
+      
       console.log(`[Extract PDF] ${images.length} images ready for OCR`);
 
       const ocrTexts: string[] = [];
