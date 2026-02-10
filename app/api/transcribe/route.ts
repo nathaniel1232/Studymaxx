@@ -12,31 +12,52 @@ function initializeClients() {
   if (!vertexAI && process.env.VERTEX_AI_PROJECT_ID) {
     try {
       const credJson = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      if (credJson && credJson.startsWith('{')) {
-        const creds = JSON.parse(credJson);
+      
+      if (!credJson) {
+        console.warn('[Transcribe] GOOGLE_APPLICATION_CREDENTIALS not set');
+        // Try without credentials (uses default Application Default Credentials)
         vertexAI = new VertexAI({
           project: process.env.VERTEX_AI_PROJECT_ID,
           location: 'us-central1',
-          googleAuthOptions: {
-            credentials: creds,
-          },
         });
+      } else if (credJson.startsWith('{')) {
+        try {
+          const creds = JSON.parse(credJson);
+          console.log('[Transcribe] Successfully parsed Google credentials');
+          vertexAI = new VertexAI({
+            project: process.env.VERTEX_AI_PROJECT_ID,
+            location: 'us-central1',
+            googleAuthOptions: {
+              credentials: creds,
+            },
+          });
+        } catch (parseError: any) {
+          console.error('[Transcribe] Failed to parse GOOGLE_APPLICATION_CREDENTIALS:', parseError.message);
+          console.error('[Transcribe] Trying without explicit credentials...');
+          vertexAI = new VertexAI({
+            project: process.env.VERTEX_AI_PROJECT_ID,
+            location: 'us-central1',
+          });
+        }
       } else {
+        // It's a file path, use it directly
+        console.log('[Transcribe] Using GOOGLE_APPLICATION_CREDENTIALS as file path');
         vertexAI = new VertexAI({
           project: process.env.VERTEX_AI_PROJECT_ID,
           location: 'us-central1',
         });
       }
-    } catch (e) {
-      console.warn('[Transcribe] Vertex AI init failed:', e);
+    } catch (e: any) {
+      console.warn('[Transcribe] Vertex AI init failed:', e.message);
     }
   }
   
   if (!deepgram && process.env.DEEPGRAM_API_KEY) {
     try {
       deepgram = createClient(process.env.DEEPGRAM_API_KEY);
-    } catch (e) {
-      console.warn('[Transcribe] Deepgram init failed:', e);
+      console.log('[Transcribe] Deepgram initialized successfully');
+    } catch (e: any) {
+      console.warn('[Transcribe] Deepgram init failed:', e.message);
     }
   }
   
@@ -45,10 +66,17 @@ function initializeClients() {
       openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
       });
-    } catch (e) {
-      console.warn('[Transcribe] OpenAI init failed:', e);
+      console.log('[Transcribe] OpenAI initialized successfully');
+    } catch (e: any) {
+      console.warn('[Transcribe] OpenAI init failed:', e.message);
     }
   }
+  
+  console.log('[Transcribe] Client initialization complete:', {
+    hasVertexAI: !!vertexAI,
+    hasDeepgram: !!deepgram,
+    hasOpenAI: !!openai,
+  });
 }
 
 export async function POST(request: NextRequest) {
