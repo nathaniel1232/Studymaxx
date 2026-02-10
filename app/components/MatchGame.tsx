@@ -310,7 +310,7 @@ export default function MatchGame({ terms, definitions, subject, onBack }: Match
         </div>
 
         {/* Game Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className={`grid gap-4 ${cards.length <= 16 ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : cards.length <= 24 ? 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5' : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6'}`}>
           {cards.map((card) => (
             <button
               key={card.id}

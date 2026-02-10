@@ -124,28 +124,48 @@ export async function POST(request: NextRequest) {
     let transcription = '';
     let detectedLanguage = 'unknown';
 
-    // Try OpenAI Whisper first (primary)
+    // Try OpenAI Whisper first (primary) with retry logic
     if (openai) {
-      try {
-        console.log('[Transcribe] Attempting transcription with OpenAI Whisper...');
-        
-        // Convert buffer to File object for OpenAI
-        const whisperFile = new File([buffer], 'audio.webm', { type: audioFile.type || 'audio/webm' });
-        
-        const whisperResponse = await openai.audio.transcriptions.create({
-          file: whisperFile,
-          model: 'whisper-1',
-          response_format: 'verbose_json',
-          temperature: 0.0, // Most accurate transcription (not guessing words)
-        });
+      let whisperRetries = 0;
+      const maxWhisperRetries = 3;
+      const whisperBaseDelay = 1000; // Start with 1 second
 
-        transcription = whisperResponse.text || '';
-        detectedLanguage = whisperResponse.language || 'unknown';
+      while (whisperRetries < maxWhisperRetries && !transcription) {
+        try {
+          console.log(`[Transcribe] Attempting transcription with OpenAI Whisper... (attempt ${whisperRetries + 1}/${maxWhisperRetries})`);
+          
+          // Convert buffer to File object for OpenAI
+          const whisperFile = new File([buffer], 'audio.webm', { type: audioFile.type || 'audio/webm' });
+          
+          const whisperResponse = await openai.audio.transcriptions.create({
+            file: whisperFile,
+            model: 'whisper-1',
+            response_format: 'verbose_json',
+            temperature: 0.0, // Most accurate transcription (not guessing words)
+          });
 
-        console.log(`[Transcribe] ✅ Whisper success: ${transcription.length} characters in ${detectedLanguage}`);
+          transcription = whisperResponse.text || '';
+          detectedLanguage = whisperResponse.language || 'unknown';
 
-      } catch (whisperError: any) {
-        console.error('[Transcribe] Whisper failed, falling back to Deepgram:', whisperError.message);
+          console.log(`[Transcribe] ✅ Whisper success: ${transcription.length} characters in ${detectedLanguage}`);
+          break; // Success, exit retry loop
+
+        } catch (whisperError: any) {
+          const isRateLimitError = whisperError.status === 429 || 
+                                    whisperError.code === 429 ||
+                                    whisperError.message?.includes('429') ||
+                                    whisperError.message?.includes('rate limit');
+
+          if (isRateLimitError && whisperRetries < maxWhisperRetries - 1) {
+            whisperRetries++;
+            const delay = whisperBaseDelay * Math.pow(2, whisperRetries - 1); // Exponential backoff: 1s, 2s, 4s
+            console.log(`[Transcribe] Whisper rate limit hit, retrying in ${delay}ms (attempt ${whisperRetries}/${maxWhisperRetries})...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          } else {
+            console.error('[Transcribe] Whisper failed after retries, falling back to Deepgram:', whisperError.message);
+            whisperRetries = maxWhisperRetries; // Exit loop
+          }
+        }
       }
     }
     
@@ -263,27 +283,30 @@ Make it study-friendly, visually organized, and easy to review later.`;
     // Retry logic with exponential backoff for rate limiting
     let summary = '';
     let retryCount = 0;
-    const maxRetries = 3;
-    const baseDelay = 2000; // Start with 2 seconds
+    const maxRetries = 5; // Increased from 3 to 5
+    const baseDelay = 1000; // Start with 1 second (reduced from 2)
 
     while (retryCount < maxRetries) {
       try {
         const summaryResult = await model.generateContent(summaryPrompt);
         summary = summaryResult.response.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        console.log(`[Transcribe] ✅ Gemini summary generated successfully on attempt ${retryCount + 1}`);
         break; // Success, exit retry loop
       } catch (geminiError: any) {
         const isRateLimitError = geminiError.message?.includes('429') || 
                                   geminiError.message?.includes('RESOURCE_EXHAUSTED') ||
                                   geminiError.message?.includes('Too Many Requests') ||
+                                  geminiError.message?.includes('quota') ||
                                   geminiError.code === 429;
 
         if (isRateLimitError && retryCount < maxRetries - 1) {
           retryCount++;
-          const delay = baseDelay * Math.pow(2, retryCount - 1); // Exponential backoff: 2s, 4s, 8s
-          console.log(`[Transcribe] Rate limit hit, retrying in ${delay}ms (attempt ${retryCount}/${maxRetries})...`);
+          const delay = baseDelay * Math.pow(2, retryCount - 1); // Exponential backoff: 1s, 2s, 4s, 8s, 16s
+          console.log(`[Transcribe] Gemini rate limit hit, retrying in ${delay}ms (attempt ${retryCount}/${maxRetries})...`);
           await new Promise(resolve => setTimeout(resolve, delay));
         } else {
           // Either not a rate limit error, or we've exhausted retries
+          console.error(`[Transcribe] Gemini failed after ${retryCount + 1} attempts:`, geminiError.message);
           throw geminiError;
         }
       }
@@ -322,11 +345,24 @@ Make it study-friendly, visually organized, and easy to review later.`;
     const isRateLimitError = error.message?.includes('429') || 
                               error.message?.includes('RESOURCE_EXHAUSTED') ||
                               error.message?.includes('Too Many Requests') ||
+                              error.message?.includes('rate limit') ||
                               error.code === 429;
     
     if (isRateLimitError) {
+      // Determine which service hit the rate limit
+      let serviceName = 'AI service';
+      if (error.message?.includes('Whisper') || error.message?.includes('OpenAI')) {
+        serviceName = 'OpenAI Whisper';
+      } else if (error.message?.includes('Gemini') || error.message?.includes('Vertex')) {
+        serviceName = 'Vertex AI Gemini';
+      } else if (error.message?.includes('Deepgram')) {
+        serviceName = 'Deepgram';
+      }
+
+      console.error(`[Transcribe] Rate limit error from ${serviceName}:`, error.message);
+      
       return NextResponse.json(
-        { error: 'AI service is temporarily overloaded. Please wait a few seconds and try again.' },
+        { error: `${serviceName} is temporarily rate limited. Please wait 30-60 seconds and try again. If this persists, check your API quotas.` },
         { status: 429 }
       );
     }

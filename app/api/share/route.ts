@@ -5,6 +5,9 @@ import { supabase } from '@/app/utils/supabase';
  * Create or update a shared study set
  * POST /api/share - Create/update a shared set
  * GET /api/share?shareId=xxx - Get a shared set by ID
+ * 
+ * Uses the `flashcard_sets` table (same as /api/flashcard-sets).
+ * Sets `share_id` and `is_shared = true` on the existing row.
  */
 
 export async function POST(request: NextRequest) {
@@ -15,7 +18,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Study set required' }, { status: 400 });
     }
 
-    // If no Supabase, use localStorage (handled client-side)
     if (!supabase) {
       return NextResponse.json({ 
         success: true, 
@@ -27,34 +29,45 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Share API] Sharing study set: ${studySet.id} with shareId: ${studySet.shareId}`);
 
-    // Upsert to database - ensure is_shared is explicitly true
+    // Update the existing row in flashcard_sets to mark it as shared
     const { data, error } = await supabase
-      .from('study_sets')
-      .upsert({
-        id: studySet.id,
-        user_id: studySet.userId,
-        name: studySet.name,
-        subject: studySet.subject || null,
-        grade: studySet.grade || null,
-        flashcards: studySet.flashcards,
+      .from('flashcard_sets')
+      .update({
         share_id: studySet.shareId,
-        is_shared: true, // CRITICAL: Must be true for sharing
-        created_at: studySet.createdAt,
-        last_studied: studySet.lastStudied || null
-      }, { 
-        onConflict: 'id' 
+        is_shared: true,
       })
+      .eq('id', studySet.id)
       .select()
       .single();
 
     if (error) {
       console.error(`[Share API] Error sharing study set ${studySet.id}:`, error);
-      return NextResponse.json({ error: 'Failed to share study set' }, { status: 500 });
-    }
+      
+      // If update fails (row doesn't exist in DB), try upsert as fallback
+      const { data: upsertData, error: upsertError } = await supabase
+        .from('flashcard_sets')
+        .upsert({
+          id: studySet.id,
+          user_id: studySet.userId,
+          name: studySet.name,
+          subject: studySet.subject || null,
+          grade: studySet.grade || null,
+          cards: studySet.flashcards,
+          share_id: studySet.shareId,
+          is_shared: true,
+          created_at: studySet.createdAt,
+          last_studied: studySet.lastStudied || null
+        }, { onConflict: 'id' })
+        .select()
+        .single();
 
-    if (!data) {
-      console.error(`[Share API] No data returned after upsert for ${studySet.id}`);
-      return NextResponse.json({ error: 'Failed to share study set - no data returned' }, { status: 500 });
+      if (upsertError) {
+        console.error(`[Share API] Upsert fallback also failed:`, upsertError);
+        return NextResponse.json({ error: 'Failed to share study set' }, { status: 500 });
+      }
+
+      const shareUrl = `${process.env.NEXT_PUBLIC_APP_URL || request.headers.get('origin') || 'http://localhost:3000'}/share/${upsertData.share_id}`;
+      return NextResponse.json({ success: true, shareId: upsertData.share_id, shareUrl });
     }
 
     console.log(`[Share API] Successfully shared set ${data.id} with shareId: ${data.share_id}`);
@@ -82,7 +95,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Share ID required' }, { status: 400 });
     }
 
-    // If no Supabase, return error (client will use localStorage)
     if (!supabase) {
       return NextResponse.json({ 
         error: 'Database not configured',
@@ -92,71 +104,34 @@ export async function GET(request: NextRequest) {
 
     console.log(`[Share API] Fetching shared set with shareId: ${shareId}`);
 
-    // Fetch from database - first try the exact query
+    // Query flashcard_sets table by share_id
     const { data, error } = await supabase
-      .from('study_sets')
+      .from('flashcard_sets')
       .select('*')
       .eq('share_id', shareId)
       .single();
 
     if (error) {
       console.error(`[Share API] Query error for shareId ${shareId}:`, error);
-      
-      // If we get a PGRST116 error (no rows), try a more lenient query
-      if (error.code === 'PGRST116') {
-        console.log(`[Share API] No shared set found with shareId: ${shareId}, trying alternative query...`);
-        
-        // Try fetching without any filters - just match the share_id
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from('study_sets')
-          .select('*')
-          .eq('share_id', shareId)
-          .single();
-        
-        if (fallbackError || !fallbackData) {
-          console.error(`[Share API] Fallback query also failed:`, fallbackError);
-          return NextResponse.json({ error: 'Study set not found' }, { status: 404 });
-        }
-        
-        // Found it! Return regardless of is_shared status
-        console.log(`[Share API] Found set via fallback query: ${fallbackData.id}`);
-        
-        const flashcardSet = {
-          id: fallbackData.id,
-          name: fallbackData.name,
-          flashcards: fallbackData.flashcards,
-          createdAt: fallbackData.created_at,
-          lastStudied: fallbackData.last_studied,
-          shareId: fallbackData.share_id,
-          userId: fallbackData.user_id,
-          isShared: true,
-          subject: fallbackData.subject,
-          grade: fallbackData.grade
-        };
-
-        return NextResponse.json({ studySet: flashcardSet });
-      }
-      
       return NextResponse.json({ error: 'Study set not found' }, { status: 404 });
     }
 
     if (!data) {
-      console.error(`[Share API] No data returned for shareId: ${shareId}`);
       return NextResponse.json({ error: 'Study set not found' }, { status: 404 });
     }
 
     console.log(`[Share API] Successfully found shared set: ${data.id}`);
 
-    // Convert to FlashcardSet format
+    // Convert to FlashcardSet format (table uses `cards`, client expects `flashcards`)
     const flashcardSet = {
       id: data.id,
       name: data.name,
-      flashcards: data.flashcards,
+      flashcards: data.cards,
       createdAt: data.created_at,
       lastStudied: data.last_studied,
       shareId: data.share_id,
       userId: data.user_id,
-      isShared: data.is_shared || true,
+      isShared: data.is_shared ?? true,
       subject: data.subject,
       grade: data.grade
     };

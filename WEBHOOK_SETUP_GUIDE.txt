@@ -1,0 +1,133 @@
+═══════════════════════════════════════════════════════════
+🚨 AUTOMATISK PREMIUM AKTIVERING - KOMPLETT GUIDE
+═══════════════════════════════════════════════════════════
+
+## STEG 1: KONFIGURER STRIPE WEBHOOK
+
+1. Gå til: https://dashboard.stripe.com/webhooks
+
+2. Klikk "Add endpoint" (eller "Legg til endepunkt")
+
+3. Fyll inn:
+   - Endpoint URL: https://studymaxx.vercel.app/api/stripe/webhook
+   - Description: Premium Activation
+   
+4. Velg events to send - VIKTIGT! Velg disse 3:
+   ✅ checkout.session.completed
+   ✅ customer.subscription.updated  
+   ✅ customer.subscription.deleted
+
+5. Klikk "Add endpoint"
+
+6. På neste side - KOPIER "Signing secret"
+   - Starter med "whsec_..."
+   - Du trenger denne i neste steg!
+
+═══════════════════════════════════════════════════════════
+
+## STEG 2: LEGG TIL WEBHOOK SECRET I VERCEL
+
+1. Gå til: https://vercel.com/dashboard
+
+2. Velg prosjektet ditt (studymaxx)
+
+3. Gå til "Settings" → "Environment Variables"
+
+4. Legg til NY variabel:
+   - Name: STRIPE_WEBHOOK_SECRET
+   - Value: whsec_... (fra Stripe steg 6)
+   - Environments: ✅ Production ✅ Preview ✅ Development
+   - Klikk "Save"
+
+5. **VIKTIG**: Redeploy appen
+   - Gå til "Deployments"
+   - Finn siste deployment
+   - Klikk "..." menyen → "Redeploy"
+   - Vent til deployment er ferdig (grønn checkmark)
+
+═══════════════════════════════════════════════════════════
+
+## STEG 3: TEST AT DET FUNKER
+
+### Metode 1: Test webhook i Stripe (anbefalt)
+
+1. Gå til: https://dashboard.stripe.com/webhooks
+2. Klikk på webhook du opprettet
+3. Klikk "Send test webhook"
+4. Velg "checkout.session.completed"
+5. Klikk "Send test webhook"
+
+### Sjekk Vercel logs:
+1. Gå til Vercel dashboard
+2. Klikk "Logs" (eller "Functions")
+3. Søk etter "/api/stripe/webhook"
+4. Du skal se:
+   ✅ "[Webhook] ✅ Event signature verified"
+   ✅ "[Webhook] Checkout completed"
+   ✅ "[Webhook] ✅✅✅ SUCCESS! User upgraded to Premium"
+
+### Metode 2: Kjøp en test subscription
+
+1. Bruk Stripe test mode
+2. Test card: 4242 4242 4242 4242
+3. Kjøp premium
+4. Sjekk Vercel logs (samme som over)
+
+═══════════════════════════════════════════════════════════
+
+## VANLIGE PROBLEMER
+
+### Problem: "No stripe-signature header"
+**Løsning:** Webhook URL er feil i Stripe. Sjekk at det er:
+https://studymaxx.vercel.app/api/stripe/webhook
+
+### Problem: "Webhook signature verification failed"
+**Løsning:** 
+- Webhook secret er feil i Vercel
+- Kopier NØYAKTIG fra Stripe (inkluder whsec_)
+- Redeploy Vercel etter endring
+
+### Problem: "Cannot identify user - no userId"
+**Dette er IKKE problemet** - koden sender userId korrekt
+
+### Problem: Ingen logs i Vercel
+**Løsning:** Webhook er ikke konfigurert eller sender ikke events
+- Sjekk at webhook er "Enabled" i Stripe
+- Sjekk at URL er riktig
+- Test med "Send test webhook"
+
+═══════════════════════════════════════════════════════════
+
+## BEKREFT AT DET FUNKER
+
+Etter du har gjort alt over:
+
+1. Gå til Stripe webhook dashboard
+2. Klikk på webhook
+3. Se "Recent events" - skal se events med ✅ grønn checkmark
+4. Hvis rød X → klikk på event → se error message
+5. Fix error og test på nytt
+
+## EMERGENCY BACKUP
+
+Hvis webhook fortsatt ikke funker etter 24 timer:
+- Bruk fix-single-user.js for nye brukere midlertidig
+- Send meg error logs fra Vercel
+- Sjekk Stripe webhook logs for error messages
+
+═══════════════════════════════════════════════════════════
+
+## NÅR DET FUNKER
+
+Du vil se i Vercel logs ved hver kjøp:
+```
+[Webhook] ✅ Event signature verified: checkout.session.completed
+[Webhook] CHECKOUT SESSION COMPLETED
+[Webhook] ✅ User identified: xxx-xxx-xxx
+[Webhook] ✅✅✅ SUCCESS! User xxx upgraded to Premium
+[Webhook] CHECKOUT COMPLETED SUCCESSFULLY
+```
+
+Og brukeren får premium UMIDDELBART uten å logge ut/inn!
+
+═══════════════════════════════════════════════════════════

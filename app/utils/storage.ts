@@ -481,23 +481,35 @@ export const copySharedSet = async (shareId: string): Promise<FlashcardSet | nul
   const sharedSet = await getFlashcardSetByShareId(shareId);
   if (!sharedSet) return null;
 
-  const userId = getOrCreateUserId();
-  const copiedSet: FlashcardSet = {
-    id: Date.now().toString(),
-    name: `${sharedSet.name} (Copy)`,
-    flashcards: sharedSet.flashcards,
-    createdAt: new Date().toISOString(),
-    userId,
-    shareId: undefined,
-    isShared: false,
-    lastStudied: undefined
-  };
+  // Use saveFlashcardSet to properly save to both Supabase and localStorage
+  try {
+    const copiedSet = await saveFlashcardSet(
+      `${sharedSet.name} (Copy)`,
+      sharedSet.flashcards,
+      sharedSet.subject,
+      sharedSet.grade
+    );
+    return copiedSet;
+  } catch (err) {
+    console.error('[Storage] Failed to copy shared set via saveFlashcardSet, falling back to localStorage:', err);
+    // Fallback to localStorage only
+    const userId = getOrCreateUserId();
+    const copiedSet: FlashcardSet = {
+      id: Date.now().toString(),
+      name: `${sharedSet.name} (Copy)`,
+      flashcards: sharedSet.flashcards,
+      createdAt: new Date().toISOString(),
+      userId,
+      shareId: undefined,
+      isShared: false,
+      lastStudied: undefined
+    };
 
-  const savedSets = await getSavedFlashcardSets();
-  savedSets.push(copiedSet);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(savedSets));
-
-  return copiedSet;
+    const savedSets = await getSavedFlashcardSets();
+    savedSets.push(copiedSet);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedSets));
+    return copiedSet;
+  }
 };
 
 export const getUserAge = (): number | null => {

@@ -24,8 +24,8 @@ import { supabase } from "@/app/utils/supabase";
  */
 
 // Limits
-const MAX_IMAGES_FREE = 1;
-const MAX_IMAGES_PREMIUM = 5;
+const MAX_IMAGES_FREE = 3;
+const MAX_IMAGES_PREMIUM = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB per image
 
 // Allowed image MIME types

@@ -74,10 +74,12 @@ export default function CustomizeGenerationModal({
     onGenerate(settings);
   };
 
-  // Free users get restricted count options
-  const countOptions = generationType === "match" 
-    ? (isPremium ? [4, 6, 8, 10, 12, 15] : [6, 8])
-    : (isPremium ? [10, 15, 20, 25, 30, 40, 50] : [10, 15, 20]);
+  // Free users get max count limits, premium gets higher
+  const maxCount = generationType === "match" 
+    ? (isPremium ? 25 : 10)
+    : (isPremium ? 100 : 20);
+  const minCount = generationType === "match" ? 4 : 5;
+  const step = generationType === "match" ? 1 : 5;
 
   const currentCount = generationType === "match" ? settings.matchPairs : settings.count;
   const premiumLimit = generationType === "match" ? 10 : 20;
@@ -121,35 +123,33 @@ export default function CustomizeGenerationModal({
               className="block text-sm font-semibold mb-3"
               style={{ color: isDarkMode ? "#ffffff" : "#000000" }}
             >
-              {generationType === "match" ? "Number of Pairs" : "Number of Cards"}
+              {generationType === "match" ? "Number of Pairs" : "Number of Cards"}: <span style={{ color: "#1a73e8" }}>{currentCount}</span>
             </label>
-            <div className="grid grid-cols-4 gap-2">
-              {countOptions.map((num) => (
-                <button
-                  key={num}
-                  onClick={() => {
-                    if (generationType === "match") {
-                      setSettings(s => ({ ...s, matchPairs: num }));
-                    } else {
-                      setSettings(s => ({ ...s, count: num }));
-                    }
-                  }}
-                  className="px-2 py-2.5 rounded-xl font-bold text-base transition-all hover:scale-105"
-                  style={{
-                    backgroundColor: currentCount === num
-                      ? "#1a73e8"
-                      : isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
-                    color: currentCount === num
-                      ? "#ffffff"
-                      : isDarkMode ? "#ffffff" : "#000000",
-                    border: currentCount === num
-                      ? "2px solid #1a73e8"
-                      : `2px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
-                  }}
-                >
-                  {num}
-                </button>
-              ))}
+            <div className="space-y-3">
+              <input
+                type="range"
+                min={minCount}
+                max={maxCount}
+                step={step}
+                value={currentCount}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  if (generationType === "match") {
+                    setSettings(s => ({ ...s, matchPairs: val }));
+                  } else {
+                    setSettings(s => ({ ...s, count: val }));
+                  }
+                }}
+                className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, #1a73e8 0%, #1a73e8 ${((currentCount - minCount) / (maxCount - minCount)) * 100}%, ${isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'} ${((currentCount - minCount) / (maxCount - minCount)) * 100}%, ${isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'} 100%)`,
+                  accentColor: "#1a73e8",
+                }}
+              />
+              <div className="flex justify-between text-xs" style={{ color: isDarkMode ? "#5f6368" : "#94a3b8" }}>
+                <span>{minCount}</span>
+                <span>{maxCount}{isPremium ? '' : ' (Free limit)'}</span>
+              </div>
             </div>
             {!isPremium && currentCount > premiumLimit && (
               <p className="text-xs mt-2 text-amber-500">

@@ -374,10 +374,10 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
     }
 
     // Enforce file limits based on plan
-    if (!isPremium && files.length > 1) {
-      setError(messages.errors.premiumMultiImage);
-      window.location.href = '/pricing';
-      e.target.value = ''; // Clear the input
+    const maxFiles = isPremium ? 10 : 3;
+    if (files.length > maxFiles) {
+      setError(isPremium ? messages.errors.tooManyImages : `You can upload up to ${maxFiles} images on the free plan. Upgrade to Premium for up to 10!`);
+      e.target.value = '';
       return;
     }
 
@@ -840,14 +840,14 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                       {isPremium ? (
                         <span className="ml-2 text-xs text-teal-600 dark:text-teal-400">✓ Premium: up to 10 images</span>
                       ) : (
-                        <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">Free: 1 image only</span>
+                        <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">Free: up to 3 images</span>
                       )}
                     </label>
                     <input
                       id="notes-file-input"
                       type="file"
                       accept="image/*"
-                      {...(isPremium && { multiple: true })}
+                      multiple
                       onChange={handleImageUpload}
                       disabled={isLoading}
                       className="w-full px-4 py-3 border border-dashed border-gray-300 dark:border-gray-700 rounded-md cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50 dark:bg-gray-900 text-sm"
@@ -895,11 +895,11 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                   <p className="text-xs text-blue-700 dark:text-blue-300">
                     {isPremium ? (
                       <>
-                        ✓ <strong>Premium:</strong> Select up to 5 images at once for faster processing
+                        ✓ <strong>Premium:</strong> Select up to 10 images at once for faster processing
                       </>
                     ) : (
                       <>
-                        Free plan: 1 image at a time. <button type="button" onClick={() => { window.location.href = '/pricing'; }} className="underline font-semibold">Upgrade to Premium</button> to upload up to 5 images at once.
+                        Free plan: up to 3 images. <button type="button" onClick={() => { window.location.href = '/pricing'; }} className="underline font-semibold">Upgrade to Premium</button> for up to 10 images at once.
                       </>
                     )}
                   </p>
@@ -912,7 +912,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                   id="multi-image-input"
                   type="file"
                   accept="image/*"
-                  multiple={isPremium}
+                  multiple
                   onChange={handleMultiImageSelect}
                   disabled={isLoading}
                   className="w-full px-5 py-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-md cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-gray-50 dark:bg-gray-900"

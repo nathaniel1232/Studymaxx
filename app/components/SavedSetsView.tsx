@@ -146,12 +146,20 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
     return date.toLocaleDateString();
   };
 
+  // Get the Unsorted folder ID for special handling
+  const unsortedFolderId = folders.find(f => f.name === 'Unsorted')?.id || null;
+
   // Filter and sort sets
   const filteredSets = savedSets
     .filter(set => {
       // Filter by folder
       if (selectedFolder) {
-        if (set.folderId !== selectedFolder) return false;
+        // "Unsorted" folder should also show sets with no folderId
+        if (selectedFolder === unsortedFolderId) {
+          if (set.folderId && set.folderId !== selectedFolder) return false;
+        } else {
+          if (set.folderId !== selectedFolder) return false;
+        }
       }
       // Filter by search
       if (searchQuery) {
@@ -168,7 +176,12 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
   // Count sets per folder
   const getSetCountForFolder = (folderId: string | null) => {
     if (!folderId) {
-      return savedSets.filter(s => !s.folderId).length;
+      // Count sets with no folder OR with the Unsorted folder
+      return savedSets.filter(s => !s.folderId || s.folderId === unsortedFolderId).length;
+    }
+    if (folderId === unsortedFolderId) {
+      // Unsorted: count sets with no folderId OR explicitly assigned to Unsorted
+      return savedSets.filter(s => !s.folderId || s.folderId === folderId).length;
     }
     return savedSets.filter(s => s.folderId === folderId).length;
   };
@@ -497,7 +510,7 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                           
                           {/* Folder dropdown */}
                           {movingSetId === set.id && (
-                            <div className="folder-dropdown absolute right-0 top-full mt-2 w-48 rounded-lg shadow-xl z-50 py-2" style={{ background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#ffffff', border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'}` }}>
+                            <div className="folder-dropdown absolute right-0 top-full mt-2 w-48 rounded-lg shadow-xl z-50 py-2" style={{ background: isDarkMode ? '#1e293b' : '#ffffff', border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'}` }}>
                               <div className="px-3 py-1.5 text-xs font-medium uppercase tracking-wider" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
                                 Move to
                               </div>

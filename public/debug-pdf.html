@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF Upload Test - StudyMaxx Debug</title>
+    <style>
+        body {
+            font-family: system-ui;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #fff;
+        }
+        .test-box {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        button {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #1557b0;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 8px;
+            width: 100%;
+        }
+        .output {
+            background: #000;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { color: #22c55e; }
+        .error { color: #ef4444; }
+        .info { color: #3b82f6; }
+    </style>
+</head>
+<body>
+    <h1>🔧 StudyMaxx PDF Upload Debugger</h1>
+    <p>This page tests if your PDF upload API is working.</p>
+
+    <div class="test-box">
+        <h2>Step 1: Check Server Status</h2>
+        <button onclick="checkServer()">Test Server Connection</button>
+        <div id="serverStatus"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Step 2: Upload PDF File</h2>
+        <input type="file" id="pdfFile" accept=".pdf" />
+        <button onclick="testPDFUpload()">Upload & Extract Text</button>
+        <div id="uploadOutput"></div>
+    </div>
+
+    <div class="test-box">
+        <h2>Step 3: Check Environment Variables</h2>
+        <button onclick="checkEnv()">Check API Keys (Client Side)</button>
+        <div id="envOutput"></div>
+    </div>
+
+    <script>
+        const log = (id, message, type = 'info') => {
+            const el = document.getElementById(id);
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            el.innerHTML += `<div class="${className}">[${new Date().toLocaleTimeString()}] ${message}</div>`;
+        };
+
+        async function checkServer() {
+            const output = document.getElementById('serverStatus');
+            output.innerHTML = '<div class="output"></div>';
+            const logEl = output.querySelector('.output');
+            
+            try {
+                logEl.innerHTML += '<div class="info">Testing server connection...</div>';
+                const response = await fetch('/api/health');
+                
+                if (response.ok) {
+                    logEl.innerHTML += '<div class="success">✅ Server is running!</div>';
+                } else {
+                    logEl.innerHTML += '<div class="error">❌ Server returned error: ' + response.status + '</div>';
+                }
+            } catch (err) {
+                logEl.innerHTML += '<div class="error">❌ Cannot connect to server: ' + err.message + '</div>';
+                logEl.innerHTML += '<div class="info">Make sure "npm run dev" is running!</div>';
+            }
+        }
+
+        async function testPDFUpload() {
+            const fileInput = document.getElementById('pdfFile');
+            const output = document.getElementById('uploadOutput');
+            output.innerHTML = '<div class="output"></div>';
+            const logEl = output.querySelector('.output');
+            
+            const file = fileInput.files[0];
+            if (!file) {
+                logEl.innerHTML = '<div class="error">❌ Please select a PDF file first!</div>';
+                return;
+            }
+
+            logEl.innerHTML += '<div class="info">📄 File: ' + file.name + '</div>';
+            logEl.innerHTML += '<div class="info">📊 Size: ' + (file.size / 1024).toFixed(2) + ' KB</div>';
+            logEl.innerHTML += '<div class="info">🔄 Uploading to /api/extract-pdf...</div>';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch('/api/extract-pdf', {
+                    method: 'POST',
+                    body: formData
+                });
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+
+                logEl.innerHTML += '<div class="info">⏱️ Response time: ' + elapsed + 's</div>';
+                logEl.innerHTML += '<div class="info">📡 Status: ' + response.status + ' ' + response.statusText + '</div>';
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    logEl.innerHTML += '<div class="error">❌ Error: ' + JSON.stringify(errorData, null, 2) + '</div>';
+                    return;
+                }
+
+                const data = await response.json();
+                logEl.innerHTML += '<div class="success">✅ Success!</div>';
+                logEl.innerHTML += '<div class="info">📝 Extracted ' + (data.text?.length || 0) + ' characters</div>';
+                logEl.innerHTML += '<div class="info">🔍 Method: ' + (data.method || 'text-extraction') + '</div>';
+                
+                if (data.text) {
+                    const preview = data.text.substring(0, 500);
+                    logEl.innerHTML += '<div class="success">Preview (first 500 chars):</div>';
+                    logEl.innerHTML += '<div style="background: rgba(255,255,255,0.05); padding: 10px; margin-top: 10px; border-radius: 5px;">' + 
+                        preview.replace(/</g, '&lt;').replace(/>/g, '&gt;') + 
+                        (data.text.length > 500 ? '...' : '') +
+                        '</div>';
+                }
+            } catch (err) {
+                logEl.innerHTML += '<div class="error">❌ Upload failed: ' + err.message + '</div>';
+                console.error('[PDF Test] Error:', err);
+            }
+        }
+
+        function checkEnv() {
+            const output = document.getElementById('envOutput');
+            output.innerHTML = '<div class="output"></div>';
+            const logEl = output.querySelector('.output');
+            
+            logEl.innerHTML += '<div class="info">Checking environment (client-side only)...</div>';
+            logEl.innerHTML += '<div class="info">NOTE: API keys are server-side only (hidden from browser)</div>';
+            
+            // Check what's available in the browser
+            const hasSupabaseUrl = !!window.location.origin;
+            logEl.innerHTML += '<div class="success">✅ App URL: ' + window.location.origin + '</div>';
+            
+            logEl.innerHTML += '<div class="info">Server-side env vars (hidden for security):</div>';
+            logEl.innerHTML += '<div class="info">  - OPENAI_API_KEY (for PDF OCR)</div>';
+            logEl.innerHTML += '<div class="info">  - VERTEX_AI_PROJECT_ID</div>';
+            logEl.innerHTML += '<div class="info">  - GOOGLE_APPLICATION_CREDENTIALS</div>';
+            logEl.innerHTML += '<div class="info">  - DEEPGRAM_API_KEY</div>';
+            
+            logEl.innerHTML += '<div class="info">To check if these are set, try uploading a PDF above.</div>';
+        }
+
+        // Auto-check server on load
+        window.addEventListener('load', () => {
+            setTimeout(checkServer, 500);
+        });
+    </script>
+</body>
+</html>

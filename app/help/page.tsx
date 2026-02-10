@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSettings } from '../contexts/SettingsContext';
 
 // FAQ data
 const faqs = [
@@ -40,23 +41,15 @@ const faqs = [
 ];
 
 export default function HelpPage() {
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const { settings } = useSettings();
+  const isDarkMode = settings.theme === 'dark' || 
+    (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [feedbackType, setFeedbackType] = useState<'general' | 'bug' | 'feature'>('general');
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [feedbackEmail, setFeedbackEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-
-  useEffect(() => {
-    // Check system preference and localStorage
-    const savedMode = localStorage.getItem('darkMode');
-    if (savedMode !== null) {
-      setIsDarkMode(savedMode === 'true');
-    } else {
-      setIsDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches);
-    }
-  }, []);
 
   const toggleFaq = (index: number) => {
     setOpenFaq(openFaq === index ? null : index);
@@ -84,13 +77,13 @@ export default function HelpPage() {
   return (
     <div 
       className="min-h-screen transition-colors duration-300"
-      style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#f1f5f9' }}
+      style={{ backgroundColor: isDarkMode ? '#0f1d32' : '#f8fafc' }}
     >
       {/* Navigation */}
       <nav className="sticky top-0 z-50 px-6 py-4" style={{ 
-        backgroundColor: isDarkMode ? 'rgba(26, 26, 46, 0.9)' : 'rgba(241, 245, 249, 0.95)',
+        backgroundColor: isDarkMode ? 'rgba(15, 29, 50, 0.9)' : 'rgba(248, 250, 252, 0.95)',
         backdropFilter: 'blur(12px)',
-        borderBottom: isDarkMode ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.08)'
+        borderBottom: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)'
       }}>
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Link 
@@ -106,34 +99,10 @@ export default function HelpPage() {
           </Link>
           
           <div className="flex items-center gap-4">
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={() => {
-                const newMode = !isDarkMode;
-                setIsDarkMode(newMode);
-                localStorage.setItem('darkMode', String(newMode));
-              }}
-              className="p-2 rounded-lg transition-colors"
-              style={{ 
-                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-                color: isDarkMode ? '#9aa0a6' : '#5f6368'
-              }}
-            >
-              {isDarkMode ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              )}
-            </button>
-            
             <Link
               href="/"
               className="px-4 py-2 text-sm font-medium rounded-full transition-all hover:shadow-md"
-              style={{ backgroundColor: '#1a73e8', color: '#ffffff' }}
+              style={{ backgroundColor: '#06b6d4', color: '#ffffff' }}
             >
               Back to App
             </Link>
@@ -145,7 +114,7 @@ export default function HelpPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>
-            Help & <span style={{ color: '#1a73e8' }}>Community</span>
+            Help & <span style={{ color: '#06b6d4' }}>Community</span>
           </h1>
           <p className="text-lg" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
             Find answers to common questions or reach out to us directly

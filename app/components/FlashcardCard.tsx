@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Flashcard } from "../utils/storage";
 import { useTranslation } from "../contexts/SettingsContext";
 
@@ -13,12 +13,40 @@ interface FlashcardCardProps {
 
 export default function FlashcardCard({ card, isMastered, onRate, currentRating }: FlashcardCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
+  const [glarePos, setGlarePos] = useState({ x: 50, y: 50 });
+  const cardRef = useRef<HTMLDivElement>(null);
   const t = useTranslation();
 
   // Reset flip state whenever the card changes
   useEffect(() => {
     setIsFlipped(false);
   }, [card.id]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    
+    // Tilt: max ±12 degrees
+    const tiltX = (y - 0.5) * -24;
+    const tiltY = (x - 0.5) * 24;
+    
+    setTilt({ x: tiltX, y: tiltY });
+    setGlarePos({ x: x * 100, y: y * 100 });
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    setIsHovering(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovering(false);
+    setTilt({ x: 0, y: 0 });
+    setGlarePos({ x: 50, y: 50 });
+  }, []);
 
   // INLINE STYLES for guaranteed visibility - SMOOTH without animation
   const getCardStyle = (): React.CSSProperties => {
@@ -53,15 +81,39 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
 
   return (
     <div
+      ref={cardRef}
       onClick={() => setIsFlipped(!isFlipped)}
-      className={`mb-6 md:mb-8 cursor-pointer transition-all duration-300 ${
-        isFlipped ? "" : ""
-      }`}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="mb-6 md:mb-8 cursor-pointer"
+      style={{
+        perspective: '1000px',
+      }}
     >
       <div
-        style={getCardStyle()}
-        className="relative w-full min-h-[280px] md:min-h-[320px] rounded-md md:rounded-4xl p-8 md:p-12 flex flex-col items-center justify-center transition-all duration-500"
+        style={{
+          ...getCardStyle(),
+          transform: isHovering 
+            ? `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(1.02)` 
+            : 'rotateX(0) rotateY(0) scale(1)',
+          transition: isHovering 
+            ? 'transform 0.1s ease-out, box-shadow 0.3s ease, background 0.4s ease' 
+            : 'transform 0.5s ease-out, box-shadow 0.4s ease, background 0.4s ease',
+          transformStyle: 'preserve-3d',
+        }}
+        className="relative w-full min-h-[280px] md:min-h-[320px] rounded-md md:rounded-4xl p-8 md:p-12 flex flex-col items-center justify-center overflow-hidden"
       >
+        {/* Glare effect on hover */}
+        {isHovering && (
+          <div 
+            className="absolute inset-0 pointer-events-none z-10 rounded-md md:rounded-4xl"
+            style={{
+              background: `radial-gradient(circle at ${glarePos.x}% ${glarePos.y}%, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 60%)`,
+              transition: 'opacity 0.3s ease',
+            }}
+          />
+        )}
         {/* Rating Badge */}
         {currentRating && (
           <div className={`absolute top-4 md:top-6 right-4 md:right-6 px-4 md:px-5 py-2 rounded-md md:rounded-md text-xs md:text-sm font-black shadow-2xl ${

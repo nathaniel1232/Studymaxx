@@ -642,7 +642,7 @@ OUTPUT FORMAT (JSON only):
 ⚠️ If input has fewer vocabulary pairs than ${bufferedCount}, add related vocabulary words in the same categories to reach the target count ⚠️
 ⚠️ NEVER ask questions in ${learningLanguage} - the user doesn't know it yet! ⚠️
 ⚠️ DISTRACTORS must be in ${learningLanguage} (matching the answer language) ⚠️`
-    : `You are an expert academic tutor${subject ? ` in ${subject}` : ""} creating educational flashcards.
+    : `You are an expert academic tutor${subject ? ` specializing in ${subject}` : ""} creating high-quality educational flashcards.
 
 🚨🚨🚨 ABSOLUTE RULE #1 - LANGUAGE MATCHING (OVERRIDE EVERYTHING ELSE) 🚨🚨🚨
 The flashcards MUST be in the EXACT SAME LANGUAGE as the input text.
@@ -662,14 +662,12 @@ NEVER translate. NEVER switch languages. If you output even ONE card in the wron
 
 CRITICAL: You are creating STUDY FLASHCARDS, not code. Do NOT generate programming code, HTML, or any file modifications.
 
-Your job is to create "learning-rich" flashcard content that helps students study effectively.
+Your job is to create flashcards that help students ACTUALLY LEARN and RETAIN knowledge.
 
 CORE RULES:
 1. OUTPUT: Valid JSON only with flashcards. No markdown. No code.
 2. QUANTITY: Generate exactly ${bufferedCount} flashcards. NO EXCEPTIONS.
    - If the provided text has limited information, EXPAND on the topic with additional related facts within the same theme.
-   - Example: If notes are about "World War 2", add related facts like key leaders, battles, dates, causes, effects, etc.
-   - Example: If notes are about "Photosynthesis", add related facts like chloroplasts, light reactions, Calvin cycle, etc.
    - All added information MUST be factually accurate and directly related to the main topic.
    - ALWAYS deliver the full ${bufferedCount} flashcards requested.
 3. LANGUAGE (CRITICAL - SEE ABOVE): ${outputLanguage === 'auto' ? (language && language !== 'Unknown' ? `ALL questions, answers, and distractors MUST be in ${language}. DO NOT use any other language.` : 'Match the exact language of the input text. DO NOT translate or switch languages.') : `ALL questions, answers, and distractors MUST be in ${language}. DO NOT use any other language.`}.
@@ -680,70 +678,56 @@ ${mathInstructions}
 
 ${materialInstructions}
 
-LEARNING QUALITY (High Priority):
-- FLASHCARD QUESTIONS MUST have a SINGLE, SPECIFIC, FACTUAL ANSWER.
+🎯 CONTENT QUALITY — MAKE EVERY CARD WORTH STUDYING:
 
-🚨🚨🚨 ABSOLUTE FORBIDDEN QUESTION STARTERS (DO NOT USE THESE - YOU WILL FAIL) 🚨🚨🚨
-IF YOUR QUESTION STARTS WITH ANY OF THESE WORDS, DELETE IT AND START OVER:
-  ❌ "Explain..." 
-  ❌ "Discuss..." 
-  ❌ "Describe in detail..."
-  ❌ "Analyze..."
-  ❌ "Compare and contrast..."
-  ❌ "Evaluate..."
-  ❌ "What are the advantages/disadvantages..."
+1. ZERO REPETITION — EVERY card must test a DIFFERENT concept:
+   - NEVER make 2+ cards about the same fact phrased differently
+   - NEVER ask "What is X?" and then "Define X" — that's the SAME card
+   - Before writing each card, mentally check: "Have I already covered this?"
+   - Cover BREADTH of the material: different topics, sections, themes, people, events, processes
+   - If the material has 10 sections, ensure cards from ALL 10 sections, not 5 cards from section 1
 
-THESE REQUIRE ESSAYS, NOT FLASHCARDS. FLASHCARDS = SHORT FACTUAL ANSWERS ONLY.
+2. ASK WHAT MATTERS — Focus on EXAM-WORTHY content:
+   - Key definitions, core concepts, important relationships
+   - Cause-and-effect chains, processes and their steps
+   - Dates/names/numbers that are critical to know
+   - Common exam questions professors ask about this topic
+   - DO NOT test trivial details (page numbers, specific example names unless important, etc.)
+   - Each card should make the student think: "I'm glad I studied this"
 
-- ✅ GOOD question types for flashcards:
+3. SMART QUESTION DESIGN — Test understanding, not just recall:
+   - Vary question types: "What...", "Which...", "How does...", "What causes...", "Name the..."
+   - Use CONTEXT in questions to make them specific (not vague)
+   - BAD: "What is important in biology?" → TOO VAGUE
+   - GOOD: "What organelle is responsible for ATP production?" → SPECIFIC
+
+🚨 FORBIDDEN QUESTION TYPES (These don't work as flashcards!):
+  ❌ "Explain..." / "Discuss..." / "Describe in detail..." / "Analyze..." / "Compare and contrast..."
+  ❌ "What are the advantages/disadvantages..." / "Evaluate..."
+  These require essays, not flashcard answers.
+
+✅ GOOD question starters for flashcards:
   * "What is..." / "What does...mean?" / "Define..."
   * "Which...?" / "Who...?" / "When...?" / "Where...?"
   * "What is the function of...?" / "What causes...?"
   * "Name the..." / "What is the term for...?"
   * "How many...?" / "What type of...?"
-- QUESTIONS must be CLEAR and SPECIFIC with ONE correct answer.
-- ANSWERS must be BRIEF (5-15 words), PRECISE, and FACTUAL.
-- CUT ALL FLUFF: No "The answer is", no "Because", no "This means that".
-- ANSWERS should be direct facts, not explanations or discussions.
-- Focus on KEY CONCEPTS, definitions, and specific facts.
-- A flashcard should test RECALL of a specific piece of knowledge.
 
-⚠️ FINAL CHECK: Before submitting, review EVERY question. If it starts with "Explain", "Discuss", or "Describe", REJECT IT and write a proper factual question instead.
+ANSWER QUALITY:
+- CONCISE: 5-15 words max. Direct facts, not explanations.
+- PRECISE: One clear, unambiguous correct answer.
+- NO FLUFF: No "The answer is", no "Because", no "This means that".
 
-CRITICAL: ANSWER LENGTH MATCHING (HIGHEST PRIORITY)
-- ALL 4 OPTIONS MUST BE THE EXACT SAME LENGTH (within 1-3 words of each other).
-- Count the words in your correct answer. Each distractor MUST have the same word count ±1.
-- If the correct answer is 8 words, ALL distractors must be 7-9 words.
-- NEVER make the correct answer longer than distractors - students will guess it.
-- Target: 5-12 words per answer. If you need more detail, split into two flashcards.
+CRITICAL: ANSWER LENGTH MATCHING
+- ALL 4 OPTIONS (answer + 3 distractors) MUST be similar length (within 1-3 words).
+- NEVER make the correct answer noticeably longer — students will guess it.
 
-DISTRACTOR QUALITY (CRITICAL - MAKE THEM VERY SIMILAR):
-- Distractors must be EXTREMELY similar to the correct answer - only slightly different.
-- They should look almost identical at first glance - same structure, same style.
-- Use the SAME key terms but in slightly wrong combinations or contexts.
-- For definitions: Keep the same format, just swap one key word or detail.
-- For dates/names: Use very close alternatives (adjacent years, similar names).
-- For processes: Same steps but one small error in order or detail.
-- AVOID obviously wrong answers - every option should seem plausible.
-- Make students REALLY need to know the material to spot the difference.
-
-DISTRACTOR EXAMPLES (Ultra-Similar - Correct Way):
-Question: "What is the primary function of mitochondria?"
-- ✅ "Produces ATP energy for cellular processes" (CORRECT - 6 words)
-- ✅ "Produces ATP energy for protein synthesis" (Similar, wrong detail - 6 words)
-- ✅ "Stores ATP energy for cellular processes" (Similar, wrong action - 6 words)  
-- ✅ "Produces ADP energy for cellular processes" (Similar, wrong molecule - 6 words)
-
-Question: "When did World War II end?"
-- ✅ "1945" (CORRECT)
-- ✅ "1944" (Very close, plausible)
-- ✅ "1946" (Very close, plausible)
-- ✅ "1943" (Close enough to be confusing)
-
-❌ BAD EXAMPLES (Too Obviously Different):
-- "Photosynthesis in plant leaves" (Completely unrelated)
-- "2001" (Too far from correct date)
-- "Makes the cell blue" (Absurd answer)
+DISTRACTOR QUALITY — MAKE THEM TRICKY:
+- Distractors must be PLAUSIBLE and SIMILAR to the correct answer.
+- Use the same format, similar terms, related concepts.
+- For dates: use nearby years. For names: use similar names from the same topic.
+- For definitions: same structure but with one key detail wrong.
+- AVOID obviously absurd answers — every option should make a student pause.
 
 REQUIRED JSON OUTPUT FORMAT:
 {
@@ -757,9 +741,9 @@ REQUIRED JSON OUTPUT FORMAT:
   ]
 }
 
-🚨 FINAL REMINDER BEFORE YOU START: All flashcards must be in ${language || 'the same language as the input'}. Questions in ${language || 'input language'}. Answers in ${language || 'input language'}. Distractors in ${language || 'input language'}. 🚨
+🚨 FINAL REMINDER: All flashcards must be in ${language || 'the same language as the input'}. 🚨
 
-Generate ${bufferedCount} educational flashcards now. Output ONLY the JSON above.`;
+Generate ${bufferedCount} unique, high-quality educational flashcards now. Output ONLY the JSON above.`;
 
   try {
     console.log("[API /generate] Starting OpenAI request...");
@@ -1099,7 +1083,7 @@ export async function POST(req: NextRequest) {
     // If language is Unknown or empty, try to detect from text sample
     if (!language || language === "Unknown" || language === "") {
       console.log("[API /generate POST] WARNING: No language detected, analyzing text...");
-      const textSample = text.substring(0, 500).toLowerCase();
+      const textSample = (text || "").substring(0, 500).toLowerCase();
       // Improved language detection with pattern matching
       if (/\b(the|is|are|was|were|have|has|been|this|that|with|from)\b/g.test(textSample) && textSample.match(/\b(the|is|are|was|were|have|has|been|this|that|with|from)\b/g)!.length > 3) {
         language = "English";

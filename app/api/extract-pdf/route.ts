@@ -1,9 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { PDFDocument } from 'pdf-lib';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export const maxDuration = 120;
+
+async function pdfToImages(pdfBuffer: Buffer): Promise<string[]> {
+  try {
+    const { getDocument } = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    // @ts-expect-error - canvas is a native module without types
+    const { createCanvas } = await import('canvas');
+    
+    // Load PDF with pdfjs-dist
+    const loadingTask = getDocument({
+      data: new Uint8Array(pdfBuffer),
+      useSystemFonts: true,
+    });
+    
+    const pdfDoc = await loadingTask.promise;
+    const numPages = Math.min(pdfDoc.numPages, 5); // Max 5 pages
+    const images: string[] = [];
+    
+    console.log(`[PDF to Images] Converting ${numPages} pages...`);
+    
+    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+      const page = await pdfDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 2.0 }); // 2x scale for better quality
+      
+      const canvas = createCanvas(viewport.width, viewport.height);
+      const context = canvas.getContext('2d');
+      
+      await page.render({
+        canvasContext: context as any,
+        viewport: viewport,
+        canvas: canvas as any,
+      }).promise;
+      
+      // Convert canvas to base64 PNG
+      const dataUrl = canvas.toDataURL('image/png');
+      images.push(dataUrl);
+      console.log(`[PDF to Images] ✅ Converted page ${pageNum}`);
+    }
+    
+    return images;
+  } catch (error: any) {
+    console.error('[PDF to Images] Conversion failed:', error.message);
+    throw error;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,6 +65,8 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    console.log(`[Extract PDF] Processing: ${file.name} (${(buffer.length / 1024).toFixed(2)} KB)`);
+
     // Step 1: Try text extraction with pdf-parse first
     let text = '';
     try {
@@ -27,105 +74,102 @@ export async function POST(request: NextRequest) {
       const pdfParse = pdfParseModule.default || pdfParseModule;
       const data = await pdfParse(buffer);
       text = data.text?.trim() || '';
-      console.log(`[Extract PDF] pdf-parse extracted ${text.length} chars`);
+      console.log(`[Extract PDF] pdf-parse: ${text.length} chars`);
     } catch (parseError: any) {
       console.log('[Extract PDF] pdf-parse failed:', parseError.message);
     }
 
-    // If text extraction succeeded with meaningful text, return it
+    // If text extraction succeeded, return it
     if (text.length >= 50) {
-      return NextResponse.json({ text });
+      console.log('[Extract PDF] ✅ Text-based PDF');
+      return NextResponse.json({ text, method: 'text' });
     }
 
-    // Step 2: Image-based PDF — use GPT-4 Vision OCR
-    console.log('[Extract PDF] Text too short, attempting OCR with GPT-4 Vision...');
+    // Step 2: Image-based PDF - Convert to images and OCR
+    console.log('[Extract PDF] Starting image OCR...');
 
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { error: 'This PDF appears to be image-based. OCR requires an OpenAI API key to be configured.' },
+        { error: 'OCR requires OpenAI API key' },
         { status: 422 }
       );
     }
 
-    // Convert PDF to base64 and send pages as images to GPT-4 Vision
-    // We use the raw PDF bytes converted to base64 — GPT-4 Vision can handle PDF pages as images
-    const base64Pdf = buffer.toString('base64');
-    const dataUrl = `data:application/pdf;base64,${base64Pdf}`;
-
-    // For image-based PDFs, we'll send the whole file as an image to GPT-4o-mini
-    // GPT-4o can actually process PDF files sent as images
     try {
-      const ocrTexts: string[] = [];
-      
-      // Send the PDF as a data URL — GPT-4o-mini can read PDFs directly  
-      // But to be safe, let's convert individual pages using a canvas approach
-      // Instead, let's use the simpler approach: send the base64 PDF directly
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `This is a scanned/image-based PDF document. Please extract ALL text content from it exactly as written. 
-                
-IMPORTANT RULES:
-1. Keep text in original languages - do NOT translate anything
-2. Preserve all formatting, paragraphs, and structure as much as possible
-3. Preserve all special characters and accents
-4. If there are multiple pages, include all of them
-5. Ignore headers/footers/page numbers unless they're part of the main content
-6. Output ONLY the extracted text, nothing else`,
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: dataUrl,
-                  detail: 'high',
-                },
-              },
-            ],
-          },
-        ],
-        max_tokens: 16000,
-        temperature: 0,
-      });
+      const images = await pdfToImages(buffer);
+      console.log(`[Extract PDF] ${images.length} images ready for OCR`);
 
-      const ocrText = response.choices[0]?.message?.content?.trim() || '';
-      
-      if (ocrText.length > 20) {
-        console.log(`[Extract PDF] GPT-4 Vision OCR extracted ${ocrText.length} chars`);
-        ocrTexts.push(ocrText);
+      const ocrTexts: string[] = [];
+
+      for (let i = 0; i < images.length; i++) {
+        console.log(`[Extract PDF] OCR page ${i + 1}/${images.length}...`);
+
+        const response = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Extract ALL text from this PDF page. Keep original language, formatting, and special characters. Output ONLY the text, nothing else. If blank, output "BLANK".',
+                },
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: images[i],
+                    detail: 'high',
+                  },
+                },
+              ],
+            },
+          ],
+          max_tokens: 4000,
+          temperature: 0,
+        });
+
+        const pageText = response.choices[0]?.message?.content?.trim() || '';
+
+        if (pageText && pageText !== 'BLANK' && pageText.length > 5) {
+          console.log(`[Extract PDF] ✅ Page ${i + 1}: ${pageText.length} chars`);
+          ocrTexts.push(`--- Page ${i + 1} ---\n${pageText}`);
+        }
+
+        // Rate limit delay
+        if (i < images.length - 1) {
+          await new Promise(r => setTimeout(r, 300));
+        }
       }
 
       const fullText = ocrTexts.join('\n\n');
-      
-      if (fullText.length < 20) {
+
+      if (fullText.length < 10) {
         return NextResponse.json(
-          { error: 'Could not extract text from this PDF. The content may not be readable.' },
+          { error: 'No readable text found in PDF' },
           { status: 422 }
         );
       }
 
-      return NextResponse.json({ text: fullText, method: 'ocr' });
+      console.log(`[Extract PDF] ✅ OCR complete: ${fullText.length} chars from ${ocrTexts.length} pages`);
+      return NextResponse.json({ text: fullText, method: 'ocr', pages: ocrTexts.length });
+
     } catch (ocrError: any) {
-      console.error('[Extract PDF] OCR failed:', ocrError.message);
-      
-      // If even OCR fails, return whatever text we got from pdf-parse (even if short)
+      console.error('[Extract PDF] OCR error:', ocrError.message);
+
+      // Return partial text if available
       if (text.length > 0) {
         return NextResponse.json({ text, method: 'partial' });
       }
-      
+
       return NextResponse.json(
-        { error: 'Failed to extract text from this PDF. It may be corrupted or encrypted.' },
+        { error: `OCR failed: ${ocrError.message}` },
         { status: 500 }
       );
     }
   } catch (error: any) {
-    console.error('[Extract PDF] Error:', error?.message);
+    console.error('[Extract PDF] Error:', error.message);
     return NextResponse.json(
-      { error: 'Failed to extract PDF text. The file may be corrupted or password-protected.' },
+      { error: `PDF processing failed: ${error.message}` },
       { status: 500 }
     );
   }

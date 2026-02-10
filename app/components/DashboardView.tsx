@@ -56,8 +56,8 @@ const INPUT_OPTIONS = [
   {
     id: "audio" as const,
     Icon: MicrophoneIcon,
-    title: "Audio Recording",
-    subtitle: "Record lectures or upload audio files",
+    title: "AI Note Taker",
+    subtitle: "Record lectures, take notes, generate study sets",
     color: "#ea4335",
     bgColor: "rgba(234, 67, 53, 0.1)",
     hoverBg: "rgba(234, 67, 53, 0.15)",
