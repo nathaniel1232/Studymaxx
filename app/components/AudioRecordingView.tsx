@@ -856,65 +856,34 @@ export default function AudioRecordingView({
 
                   {/* Right sidebar - Actions & AI Chat */}
                   <div className="hidden lg:block w-[340px] space-y-4">
-                    {/* Action buttons */}
-                    <div className="space-y-3">
-                      <button 
-                        onClick={() => handleGenerate("flashcards")} 
-                        disabled={isGenerating || !subject.trim()}
-                        className="w-full p-4 rounded-xl text-left transition-all hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
-                        style={{ background: colors.card, border: `2px solid ${colors.cardBorder}` }}
-                      >
-                        {isGenerating && generationType === "flashcards" && (
-                          <div className="absolute inset-0 bg-cyan-500/10" style={{ width: `${generateProgress}%`, transition: 'width 0.3s ease' }} />
-                        )}
-                        <div className="relative z-10">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              {isGenerating && generationType === "flashcards" ? <SpinnerIcon /> : <FlashcardIcon />}
-                              <span className="font-bold text-sm" style={{ color: colors.text }}>Flashcards</span>
-                            </div>
-                            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: isDarkMode ? 'rgba(6, 182, 212, 0.15)' : 'rgba(6, 182, 212, 0.1)', color: '#06b6d4' }}>Popular</span>
+                    {/* Generate Study Set button */}
+                    <button 
+                      onClick={() => handleGenerate("flashcards")} 
+                      disabled={isGenerating || !subject.trim()}
+                      className="w-full p-5 rounded-xl text-left transition-all hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden group"
+                      style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)', boxShadow: '0 4px 20px rgba(6, 182, 212, 0.25)' }}
+                    >
+                      {isGenerating && (
+                        <div className="absolute inset-0 bg-white/20" style={{ width: `${generateProgress}%`, transition: 'width 0.3s ease' }} />
+                      )}
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            {isGenerating ? <SpinnerIcon /> : <FlashcardIcon />}
+                            <span className="font-bold text-base text-white">Generate Study Set</span>
                           </div>
-                          <p className="text-xs" style={{ color: colors.textSecondary }}>Study with active recall</p>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-white/20 text-white font-semibold">Popular</span>
                         </div>
-                      </button>
-
-                      <button 
-                        onClick={() => handleGenerate("quiz")} 
-                        disabled={isGenerating || !subject.trim()}
-                        className="w-full p-4 rounded-xl text-left transition-all hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
-                        style={{ background: colors.card, border: `2px solid ${colors.cardBorder}` }}
-                      >
-                        {isGenerating && generationType === "quiz" && (
-                          <div className="absolute inset-0 bg-purple-500/10" style={{ width: `${generateProgress}%`, transition: 'width 0.3s ease' }} />
-                        )}
-                        <div className="relative z-10">
-                          <div className="flex items-center gap-2 mb-2">
-                            {isGenerating && generationType === "quiz" ? <SpinnerIcon /> : <QuizIcon />}
-                            <span className="font-bold text-sm" style={{ color: colors.text }}>Quizzes</span>
-                          </div>
-                          <p className="text-xs" style={{ color: colors.textSecondary }}>Test your knowledge</p>
+                        <p className="text-xs text-white/90 mb-3">Create flashcards, quizzes & games from your notes</p>
+                        <div className="flex items-center gap-2 text-xs text-white/80">
+                          <span>📚 Flashcards</span>
+                          <span>•</span>
+                          <span>❓ Quiz</span>
+                          <span>•</span>
+                          <span>🎮 Match</span>
                         </div>
-                      </button>
-
-                      <button 
-                        onClick={() => handleGenerate("match")} 
-                        disabled={isGenerating || !subject.trim()}
-                        className="w-full p-4 rounded-xl text-left transition-all hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
-                        style={{ background: colors.card, border: `2px solid ${colors.cardBorder}` }}
-                      >
-                        {isGenerating && generationType === "match" && (
-                          <div className="absolute inset-0 bg-green-500/10" style={{ width: `${generateProgress}%`, transition: 'width 0.3s ease' }} />
-                        )}
-                        <div className="relative z-10">
-                          <div className="flex items-center gap-2 mb-2">
-                            {isGenerating && generationType === "match" ? <SpinnerIcon /> : <MatchIcon />}
-                            <span className="font-bold text-sm" style={{ color: colors.text }}>Match Game</span>
-                          </div>
-                          <p className="text-xs" style={{ color: colors.textSecondary }}>Fun learning experience</p>
-                        </div>
-                      </button>
-                    </div>
+                      </div>
+                    </button>
 
                     {/* AI Chat */}
                     <div className="rounded-2xl overflow-hidden flex flex-col" style={{ background: colors.card, border: `1px solid ${colors.cardBorder}`, height: '400px' }}>
