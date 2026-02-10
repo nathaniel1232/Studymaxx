@@ -337,9 +337,10 @@ ${languageCode !== 'unknown' && languageCode !== 'en' ? `\nREMEMBER: ALL text in
     console.log(`[Transcribe] Summary generated: ${summary.length} characters`);
     
     // Clean up summary output - remove code block markers and unwanted prefixes
+    const backticks = '```';
     summary = summary
-      .replace(/^```html\s*/i, '')  // Remove opening ```html
-      .replace(/\s*```\s*$/i, '')    // Remove closing ```
+      .replace(new RegExp(`^${backticks}html\\s*`, 'i'), '')  // Remove opening ```html
+      .replace(new RegExp(`\\s*${backticks}\\s*$`, 'i'), '')  // Remove closing ```
       .replace(/^html\s*/i, '')      // Remove "html" prefix
       .replace(/^Here(?:'s| is) (?:the |your )?summary[:\s]*/i, '') // Remove "Here's the summary:" etc
       .replace(/^OK,?\s*/i, '')      // Remove "OK," prefix
