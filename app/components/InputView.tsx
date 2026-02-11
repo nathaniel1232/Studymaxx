@@ -110,6 +110,8 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
   const [isPremium, setIsPremium] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState<"processing" | "analyzing" | "generating" | "finalizing" | null>(null);
+  const [generationStartTime, setGenerationStartTime] = useState<number>(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [error, setError] = useState("");
   
   // User controls
@@ -160,6 +162,36 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
       window.removeEventListener('prefillExample', handlePrefill);
     };
   }, []);
+
+  // Timer effect for generation progress
+  useEffect(() => {
+    if (!isLoading || generationStartTime === 0) {
+      setElapsedSeconds(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - generationStartTime) / 1000);
+      setElapsedSeconds(elapsed);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [isLoading, generationStartTime]);
+
+  // Timer effect for generation progress
+  useEffect(() => {
+    if (!isLoading || generationStartTime === 0) {
+      setElapsedSeconds(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - generationStartTime) / 1000);
+      setElapsedSeconds(elapsed);
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [isLoading, generationStartTime]);
 
   const checkPremiumStatus = async () => {
     try {
@@ -630,6 +662,10 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
     setIsLoading(true);
     setLoadingStage("processing");
     setError("");
+    setGenerationStartTime(Date.now());
+    setElapsedSeconds(0);
+    setGenerationStartTime(Date.now());
+    setElapsedSeconds(0);
 
     try {
       console.log("Calling AI API...");
@@ -683,6 +719,91 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
   };
 
   return (
+    <>
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full shadow-2xl">
+            {/* Central Animation */}
+            <div className="relative w-20 h-20 mx-auto mb-6">
+              <div className="absolute inset-0 rounded-full border-4 border-gray-100 dark:border-gray-800"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+              <div className="absolute inset-3 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+                <span className="text-2xl">✨</span>
+              </div>
+            </div>
+            
+            <div className="space-y-2 mb-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center">
+                Creating your flashcards
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                Please wait...
+              </p>
+            </div>
+            
+            {/* Progress Bar with Animation */}
+            <div className="space-y-2 mb-6">
+              <div className="flex justify-between text-xs font-semibold uppercase tracking-wider text-gray-400">
+                <span>Start</span>
+                <span>{Math.round((elapsedSeconds / 75) * 100)}%</span>
+              </div>
+              <div className="h-3 w-full rounded-full overflow-hidden shadow-inner bg-gray-200 dark:bg-gray-700">
+                <div 
+                  className="h-full transition-all duration-300 ease-out animate-pulse"
+                  style={{ 
+                    width: `${Math.min((elapsedSeconds / 75) * 100, 95)}%`,
+                    background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+                  }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Dynamic Steps */}
+            <div className="grid gap-3 text-left">
+              {[
+                { label: "Analyzing content...", icon: "🔍", time: 0 },
+                { label: "Structuring flashcards...", icon: "📑", time: 25 },
+                { label: "Finalizing study set...", icon: "🚀", time: 50 },
+              ].map((step, idx) => {
+                const isActive = elapsedSeconds >= step.time && (idx === 2 || elapsedSeconds < [25, 50, 999][idx]);
+                const isDone = elapsedSeconds >= [25, 50, 999][idx];
+                
+                return (
+                  <div 
+                    key={idx} 
+                    className={`flex items-center gap-4 p-4 rounded-md border transition-all duration-500 ${
+                        isDone 
+                          ? "bg-green-50/50 border-green-100 dark:bg-green-900/10 dark:border-green-800"
+                          : isActive
+                          ? "border-indigo-200 shadow-md scale-[1.02] dark:border-indigo-900 bg-gray-50 dark:bg-gray-700/50"
+                          : "bg-transparent border-transparent opacity-50"
+                    }`}
+                  >
+                    <div 
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors ${
+                        isDone 
+                          ? "bg-green-500 text-white" 
+                          : isActive
+                          ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300 animate-pulse"
+                          : "bg-gray-200 dark:bg-gray-700 text-gray-400"
+                      }`}
+                    >
+                      {isDone ? "✓" : step.icon}
+                    </div>
+                    <span className={`font-medium ${
+                        isDone ? "text-green-700 dark:text-green-400 line-through decoration-green-300/50" : "text-gray-900 dark:text-white"
+                    }`}>
+                      {step.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    
     <div className="flex items-center justify-center min-h-screen px-4 py-8" style={{ background: isDarkMode ? '#1a1a2e' : '#f1f5f9' }}>
       <div className="w-full max-w-3xl">
         {/* Header */}
@@ -1151,7 +1272,10 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                     }
                     setNumberOfFlashcards(value);
                   }}
-                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${((numberOfFlashcards - 3) / ((isPremium ? 50 : FREE_LIMITS.maxFlashcardsPerSet) - 3)) * 100}%, rgba(203,213,225,0.5) ${((numberOfFlashcards - 3) / ((isPremium ? 50 : FREE_LIMITS.maxFlashcardsPerSet) - 3)) * 100}%, rgba(203,213,225,0.5) 100%)`
+                  }}
                 />
                 <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
                   <span>3</span>
@@ -1209,6 +1333,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
         )}
       </div>
     </div>
+    </>
   );
 }
 
