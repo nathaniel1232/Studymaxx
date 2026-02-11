@@ -149,10 +149,21 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         subscriptionId = session.subscription as string;
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         const subData = subscription as any;
-        premiumExpiresAt = subData.current_period_end 
-          ? new Date(subData.current_period_end * 1000).toISOString()
+        
+        // Get period end from items first (most reliable), fallback to subscription level
+        let periodEnd = null;
+        if (subData.items?.data?.[0]?.current_period_end) {
+          periodEnd = subData.items.data[0].current_period_end;
+        } else if (subData.current_period_end) {
+          periodEnd = subData.current_period_end;
+        }
+        
+        premiumExpiresAt = periodEnd 
+          ? new Date(periodEnd * 1000).toISOString()
           : null;
+          
         console.log(`[Webhook] ✅ Subscription retrieved: ${subscriptionId}`);
+        console.log(`[Webhook] Period end timestamp: ${periodEnd}`);
         console.log(`[Webhook] Premium expires at: ${premiumExpiresAt}`);
       } catch (subError: any) {
         console.warn(`[Webhook] ⚠️  Could not retrieve subscription: ${subError.message}`);
