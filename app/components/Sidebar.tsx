@@ -276,13 +276,13 @@ export default function Sidebar({
               const shareData = {
                 title: 'StudyMaxx - AI Study Tool',
                 text: 'Check out StudyMaxx! It turns your notes, PDFs, and YouTube videos into flashcards, quizzes, and more using AI.',
-                url: 'https://studymaxx.com',
+                url: 'https://www.studymaxx.net',
               };
               try {
                 if (typeof navigator !== 'undefined' && navigator.share) {
                   await navigator.share(shareData);
                 } else {
-                  await navigator.clipboard.writeText('Check out StudyMaxx! AI-powered flashcards from notes, PDFs & YouTube. https://studymaxx.com');
+                  await navigator.clipboard.writeText('Check out StudyMaxx! AI-powered flashcards from notes, PDFs & YouTube. https://www.studymaxx.net');
                   alert('Link copied to clipboard!');
                 }
               } catch (err) {

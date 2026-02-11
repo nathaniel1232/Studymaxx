@@ -2300,11 +2300,56 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
 
               {/* Flashcard Count Selection */}
               <div>
-                 <label className="text-sm font-medium" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
-                   {t("number_of_flashcards")}
+                 <label className="block text-sm font-semibold mb-3" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
+                   {t("number_of_flashcards")}: {targetGrade === 'A' ? 50 : targetGrade === 'B' ? 35 : targetGrade === 'C' ? 20 : targetGrade === 'D' ? 15 : 10}
+                   {!isPremium && (
+                     <span className="ml-2 text-xs text-amber-600 dark:text-amber-400 font-normal">
+                       (Max 20 for free users)
+                     </span>
+                   )}
                  </label>
+                 
+                 {/* Slider */}
+                 <div className="mb-4">
+                   <input
+                     type="range"
+                     min="10"
+                     max="50"
+                     step="5"
+                     value={targetGrade === 'A' ? 50 : targetGrade === 'B' ? 35 : targetGrade === 'C' ? 20 : targetGrade === 'D' ? 15 : 10}
+                     onChange={(e) => {
+                       const value = parseInt(e.target.value);
+                       if (!isPremium && value > 20) {
+                         window.location.href = '/pricing';
+                         return;
+                       }
+                       const gradeMap: Record<number, Grade> = { 10: "E", 15: "D", 20: "C", 35: "B", 50: "A" };
+                       // Find closest value
+                       const closest = [10, 15, 20, 35, 50].reduce((prev, curr) => 
+                         Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev
+                       );
+                       setTargetGrade(gradeMap[closest]);
+                     }}
+                     className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                     style={{
+                       background: isDarkMode 
+                         ? `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${((targetGrade === 'A' ? 50 : targetGrade === 'B' ? 35 : targetGrade === 'C' ? 20 : targetGrade === 'D' ? 15 : 10) - 10) / 40 * 100}%, rgba(100,116,139,0.3) ${((targetGrade === 'A' ? 50 : targetGrade === 'B' ? 35 : targetGrade === 'C' ? 20 : targetGrade === 'D' ? 15 : 10) - 10) / 40 * 100}%, rgba(100,116,139,0.3) 100%)`
+                         : `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${((targetGrade === 'A' ? 50 : targetGrade === 'B' ? 35 : targetGrade === 'C' ? 20 : targetGrade === 'D' ? 15 : 10) - 10) / 40 * 100}%, rgba(203,213,225,0.5) ${((targetGrade === 'A' ? 50 : targetGrade === 'B' ? 35 : targetGrade === 'C' ? 20 : targetGrade === 'D' ? 15 : 10) - 10) / 40 * 100}%, rgba(203,213,225,0.5) 100%)`
+                     }}
+                   />
+                   <div className="flex justify-between text-xs mt-2" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
+                     <span>10</span>
+                     <span>15</span>
+                     <span>20</span>
+                     {isPremium && <span>35</span>}
+                     {isPremium && <span>50</span>}
+                   </div>
+                   <p className="text-xs mt-2" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
+                     {targetGrade === 'A' ? "Top Grade (50 cards)" : targetGrade === 'B' ? "Excellent (35 cards)" : targetGrade === 'C' ? "Very Good (20 cards)" : targetGrade === 'D' ? "Good (15 cards)" : "Pass (10 cards)"}
+                   </p>
+                 </div>
 
-                <div className="grid grid-cols-1 gap-2 mt-2">
+                <div className="hidden grid-cols-1 gap-2 mt-2">
                   {[
                     { count: 10, label: "10 cards", grade: "Pass", locked: false, desc: null },
                     { count: 15, label: "15 cards", grade: "Good", locked: false, desc: null },
@@ -2528,7 +2573,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                 </div>
                 <div className="h-3 w-full rounded-full overflow-hidden shadow-inner" style={{ background: (isDarkMode ? 'rgba(255,255,255,0.08)' : '#f0f0ef') }}>
                   <div 
-                    className="h-full transition-all duration-300 ease-out"
+                    className="h-full transition-all duration-300 ease-out animate-pulse"
                     style={{ 
                       width: `${Math.min((elapsedSeconds / 75) * 100, 95)}%`,
                       background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'

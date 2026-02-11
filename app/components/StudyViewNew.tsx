@@ -143,6 +143,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
   const [matchWrong, setMatchWrong] = useState<string | null>(null);
   const [matchAttempts, setMatchAttempts] = useState(0);
   const [matchTimer, setMatchTimer] = useState(0);
+  const [matchCardCount, setMatchCardCount] = useState(8);
   const matchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Save state
@@ -233,7 +234,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
   // ─── Initialize match game ─────────────────────────────────
   useEffect(() => {
     if (activeTab !== "match") return;
-    initMatch();
+    // Don't auto-start match anymore, let user configure first
     return () => { if (matchTimerRef.current) clearInterval(matchTimerRef.current); };
   }, [activeTab]);
 
@@ -257,7 +258,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
   }, []);
 
   const initMatch = () => {
-    const pairs = flashcards.slice(0, Math.min(8, flashcards.length));
+    const pairs = flashcards.slice(0, Math.min(matchCardCount, flashcards.length));
     const cards = pairs.flatMap(card => [
       { id: `t-${card.id}`, text: card.question, type: 'term' as const, pairId: card.id },
       { id: `d-${card.id}`, text: card.answer, type: 'def' as const, pairId: card.id },
@@ -820,10 +821,10 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                   >
                     <button onClick={async () => {
                       const pct = Math.round((quizScore / flashcards.length) * 100);
-                      const text = `I just scored ${pct}% on my study quiz! 🧠⚡\n\nStudying smarter with StudyMaxx — AI-powered flashcards & quizzes from any notes.\n\nTry it free → https://studymaxx.com`;
+                      const text = `I just scored ${pct}% on my study quiz! 🧠⚡\n\nStudying smarter with StudyMaxx — AI-powered flashcards & quizzes from any notes.\n\nTry it free → https://www.studymaxx.net`;
                       try {
                         if (navigator.share) {
-                          await navigator.share({ title: `I scored ${pct}% on StudyMaxx!`, text, url: 'https://studymaxx.com' });
+                          await navigator.share({ title: `I scored ${pct}% on StudyMaxx!`, text, url: 'https://www.studymaxx.net' });
                         } else {
                           await navigator.clipboard.writeText(text);
                           setToast({ message: 'Score copied! Share it with your friends', type: 'success' });
@@ -886,7 +887,51 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
           {/* ═══ MATCH TAB (no hint tags) ═══ */}
           {activeTab === "match" && (
             <div className="w-full max-w-3xl">
-              {!matchComplete ? (
+              {matchCards.length === 0 ? (
+                /* Match setup screen */
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">🎮</div>
+                  <h2 className="text-2xl font-bold mb-2" style={{ color: textPrimary }}>Match Game</h2>
+                  <p className="text-sm mb-8" style={{ color: textSecondary }}>
+                    Match terms with their definitions as fast as you can!
+                  </p>
+
+                  {/* Card count slider */}
+                  <div className="max-w-md mx-auto mb-8 p-6 rounded-2xl" style={{ background: isDark ? 'rgba(15,23,42,0.5)' : 'rgba(241,245,249,0.95)', border: `1px solid ${cardBorder}` }}>
+                    <label className="block text-sm font-semibold mb-4" style={{ color: textPrimary }}>
+                      Number of pairs: {matchCardCount}
+                    </label>
+                    <input
+                      type="range"
+                      min="3"
+                      max={Math.min(20, flashcards.length)}
+                      value={matchCardCount}
+                      onChange={(e) => setMatchCardCount(parseInt(e.target.value))}
+                      className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: isDark 
+                          ? `linear-gradient(to right, ${accent} 0%, ${accent} ${(matchCardCount - 3) / (Math.min(20, flashcards.length) - 3) * 100}%, rgba(100,116,139,0.3) ${(matchCardCount - 3) / (Math.min(20, flashcards.length) - 3) * 100}%, rgba(100,116,139,0.3) 100%)`
+                          : `linear-gradient(to right, ${accent} 0%, ${accent} ${(matchCardCount - 3) / (Math.min(20, flashcards.length) - 3) * 100}%, rgba(203,213,225,0.5) ${(matchCardCount - 3) / (Math.min(20, flashcards.length) - 3) * 100}%, rgba(203,213,225,0.5) 100%)`
+                      }}
+                    />
+                    <div className="flex justify-between text-xs mt-2" style={{ color: textSecondary }}>
+                      <span>3</span>
+                      <span>{Math.min(20, flashcards.length)}</span>
+                    </div>
+                    <p className="text-xs mt-3" style={{ color: textSecondary }}>
+                      {matchCardCount * 2} cards total ({matchCardCount} terms + {matchCardCount} definitions)
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={initMatch}
+                    className="px-8 py-4 rounded-xl text-base font-bold transition-all hover:scale-105 text-white shadow-lg"
+                    style={{ background: `linear-gradient(135deg, ${accent}, #10b981)` }}
+                  >
+                    Start Match Game
+                  </button>
+                </div>
+              ) : !matchComplete ? (
                 <>
                   {/* Stats */}
                   <div className="flex items-center justify-between mb-6">
@@ -966,10 +1011,10 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                   >
                     <button onClick={async () => {
                       const acc = matchAttempts > 0 ? Math.round((matchedPairs.size / matchAttempts) * 100) : 100;
-                      const text = `I matched all ${matchedPairs.size} pairs in ${formatTime(matchTimer)} with ${acc}% accuracy! 🎯⚡\n\nThink you can beat me? Try StudyMaxx free → https://studymaxx.com`;
+                      const text = `I matched all ${matchedPairs.size} pairs in ${formatTime(matchTimer)} with ${acc}% accuracy! 🎯⚡\n\nThink you can beat me? Try StudyMaxx free → https://www.studymaxx.net`;
                       try {
                         if (navigator.share) {
-                          await navigator.share({ title: `Beat my match time on StudyMaxx!`, text, url: 'https://studymaxx.com' });
+                          await navigator.share({ title: `Beat my match time on StudyMaxx!`, text, url: 'https://www.studymaxx.net' });
                         } else {
                           await navigator.clipboard.writeText(text);
                           setToast({ message: 'Score copied! Challenge your friends', type: 'success' });
@@ -987,6 +1032,19 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                   </div>
 
                   <div className="flex justify-center gap-3">
+                    <button onClick={() => {
+                      setMatchCards([]);
+                      setMatchedPairs(new Set());
+                      setMatchSelected(null);
+                      setMatchWrong(null);
+                      setMatchAttempts(0);
+                      setMatchTimer(0);
+                      if (matchTimerRef.current) clearInterval(matchTimerRef.current);
+                    }}
+                      className="px-6 py-3 rounded-xl text-sm font-bold transition-all hover:scale-105"
+                      style={{ background: isDark ? '#1e293b' : '#f1f5f9', color: textSecondary, border: `1px solid ${cardBorder}` }}>
+                      Back to Setup
+                    </button>
                     <button onClick={initMatch}
                       className="px-6 py-3 rounded-xl text-sm font-bold transition-all hover:scale-105 text-white"
                       style={{ background: '#22c55e' }}>

@@ -46,7 +46,7 @@ export const emailTemplates = {
                       </p>
                       
                       <div style="text-align: center; margin: 30px 0;">
-                        <a href="https://studymaxx.com/study" 
+                        <a href="https://www.studymaxx.net/study" 
                            style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
                           Continue Your Streak →
                         </a>
@@ -63,7 +63,7 @@ export const emailTemplates = {
                     <td style="padding: 20px 40px; background-color: #f8f8f8; border-radius: 0 0 12px 12px; text-align: center; border-top: 1px solid #e5e5e5;">
                       <p style="font-size: 12px; line-height: 18px; color: #999999; margin: 0;">
                         StudyMaxx - AI-Powered Study Tools<br>
-                        <a href="https://studymaxx.com" style="color: #667eea; text-decoration: none;">studymaxx.com</a>
+                        <a href="https://www.studymaxx.net" style="color: #667eea; text-decoration: none;">studymaxx.net</a>
                       </p>
                     </td>
                   </tr>
@@ -119,14 +119,14 @@ export const emailTemplates = {
                       </ul>
                       
                       <div style="text-align: center; margin: 30px 0;">
-                        <a href="https://studymaxx.com/dashboard" 
+                        <a href="https://www.studymaxx.net/dashboard" 
                            style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
                           Get Started →
                         </a>
                       </div>
                       
                       <p style="font-size: 14px; line-height: 20px; color: #6b6b6b; margin: 30px 0 0 0; text-align: center;">
-                        Need help getting started? Check out our <a href="https://studymaxx.com/tips" style="color: #667eea; text-decoration: none;">study tips</a>.
+                        Need help getting started? Check out our <a href="https://www.studymaxx.net/tips" style="color: #667eea; text-decoration: none;">study tips</a>.
                       </p>
                     </td>
                   </tr>
@@ -135,7 +135,7 @@ export const emailTemplates = {
                     <td style="padding: 20px 40px; background-color: #f8f8f8; border-radius: 0 0 12px 12px; text-align: center; border-top: 1px solid #e5e5e5;">
                       <p style="font-size: 12px; line-height: 18px; color: #999999; margin: 0;">
                         StudyMaxx - AI-Powered Study Tools<br>
-                        <a href="https://studymaxx.com" style="color: #667eea; text-decoration: none;">studymaxx.com</a>
+                        <a href="https://www.studymaxx.net" style="color: #667eea; text-decoration: none;">studymaxx.net</a>
                       </p>
                     </td>
                   </tr>
@@ -193,14 +193,14 @@ export const emailTemplates = {
                       </ul>
                       
                       <div style="text-align: center; margin: 30px 0;">
-                        <a href="https://studymaxx.com/dashboard" 
+                        <a href="https://www.studymaxx.net/dashboard" 
                            style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
                           Start Creating →
                         </a>
                       </div>
                       
                       <p style="font-size: 14px; line-height: 20px; color: #6b6b6b; margin: 30px 0 0 0; text-align: center;">
-                        You can manage your subscription anytime from your <a href="https://studymaxx.com/settings" style="color: #667eea; text-decoration: none;">settings</a>.
+                        You can manage your subscription anytime from your <a href="https://www.studymaxx.net/settings" style="color: #667eea; text-decoration: none;">settings</a>.
                       </p>
                     </td>
                   </tr>
@@ -209,7 +209,7 @@ export const emailTemplates = {
                     <td style="padding: 20px 40px; background-color: #f8f8f8; border-radius: 0 0 12px 12px; text-align: center; border-top: 1px solid #e5e5e5;">
                       <p style="font-size: 12px; line-height: 18px; color: #999999; margin: 0;">
                         StudyMaxx - AI-Powered Study Tools<br>
-                        <a href="https://studymaxx.com" style="color: #667eea; text-decoration: none;">studymaxx.com</a>
+                        <a href="https://www.studymaxx.net" style="color: #667eea; text-decoration: none;">studymaxx.net</a>
                       </p>
                     </td>
                   </tr>
