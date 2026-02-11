@@ -664,8 +664,6 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
     setError("");
     setGenerationStartTime(Date.now());
     setElapsedSeconds(0);
-    setGenerationStartTime(Date.now());
-    setElapsedSeconds(0);
 
     try {
       console.log("Calling AI API...");
