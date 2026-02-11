@@ -180,7 +180,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     console.log(`[Webhook] Checking if user ${userId} exists in Supabase...`);
     const { data: existingUser, error: selectError } = await supabase
       .from("users")
-      .select("id, is_grandfathered, grandfathered_price_cents, email")
+      .select("id, is_grandfathered, email")
       .eq("id", userId)
       .single();
 
