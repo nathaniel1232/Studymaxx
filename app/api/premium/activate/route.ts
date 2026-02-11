@@ -111,8 +111,17 @@ export async function POST(request: NextRequest) {
 
     // Calculate expiration from subscription
     const subData = activeSubscription as any;
-    const premiumExpiresAt = subData?.current_period_end
-      ? new Date(subData.current_period_end * 1000).toISOString()
+    
+    // Get period end from items first (most reliable), fallback to subscription level
+    let periodEnd = null;
+    if (subData.items?.data?.[0]?.current_period_end) {
+      periodEnd = subData.items.data[0].current_period_end;
+    } else if (subData.current_period_end) {
+      periodEnd = subData.current_period_end;
+    }
+    
+    const premiumExpiresAt = periodEnd
+      ? new Date(periodEnd * 1000).toISOString()
       : null;
 
     // Check if user exists in users table
