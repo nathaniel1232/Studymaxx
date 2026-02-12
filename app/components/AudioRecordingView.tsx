@@ -106,6 +106,8 @@ export default function AudioRecordingView({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateProgress, setGenerateProgress] = useState(0);
   const [generationType, setGenerationType] = useState<"flashcards" | "quiz" | "match" | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [generationStartTime, setGenerationStartTime] = useState<number>(0);
   
   // Customization modal state
   const [showCustomizeModal, setShowCustomizeModal] = useState(false);
@@ -172,6 +174,20 @@ export default function AudioRecordingView({
       if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
     };
   }, [audioUrl]);
+
+  // Timer for generation progress
+  useEffect(() => {
+    if (!isGenerating || generationStartTime === 0) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - generationStartTime) / 1000);
+      setElapsedSeconds(elapsed);
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [isGenerating, generationStartTime]);
 
   const loadSavedNotes = () => {
     try {
@@ -441,6 +457,8 @@ export default function AudioRecordingView({
     setGenerateProgress(15);
     setGenerationType(type);
     setError("");
+    setGenerationStartTime(Date.now());
+    setElapsedSeconds(0);
 
     try {
       const countToGenerate = type === "match" ? genSettings.matchPairs : genSettings.count;
@@ -1142,6 +1160,74 @@ export default function AudioRecordingView({
           </div>
         )}
       </div>
+
+      {/* Loading Overlay */}
+      {isGenerating && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
+          <div className="text-center max-w-sm w-full mx-4 p-8 rounded-2xl" style={{ backgroundColor: isDarkMode ? 'rgba(15, 29, 50, 0.95)' : 'rgba(255,255,255,0.95)' }}>
+            <div className="w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' }}>
+              <svg className="animate-spin" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+              </svg>
+            </div>
+            
+            <h3 className="text-xl font-bold mb-1" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              Creating your study set...
+            </h3>
+            <p className="text-sm mb-5" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
+              This usually takes 10-30 seconds
+            </p>
+
+            {/* Progress bar */}
+            <div className="mb-5">
+              <div className="flex justify-between text-xs font-medium mb-1.5" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
+                <span>{elapsedSeconds < 10 ? 'Analyzing...' : elapsedSeconds < 25 ? 'Generating...' : 'Finalizing...'}</span>
+                <span>{Math.min(Math.round((elapsedSeconds / 35) * 100), 95)}%</span>
+              </div>
+              <div className="h-2.5 w-full rounded-full overflow-hidden" style={{ background: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }}>
+                <div 
+                  className="h-full rounded-full transition-all duration-1000 ease-out"
+                  style={{ 
+                    width: `${Math.min((elapsedSeconds / 35) * 100, 95)}%`,
+                    background: 'linear-gradient(90deg, #06b6d4, #a855f7, #06b6d4)',
+                    backgroundSize: '200% 100%',
+                    animation: 'shimmer 1.5s ease-in-out infinite',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Steps */}
+            <div className="space-y-2 text-left">
+              {[
+                { label: 'Analyzing content', time: 0 },
+                { label: 'Generating flashcards', time: 10 },
+                { label: 'Finalizing study set', time: 25 },
+              ].map((step, i) => {
+                const isDone = elapsedSeconds >= [10, 25, 60][i];
+                const isActive = elapsedSeconds >= step.time && !isDone;
+                return (
+                  <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300" style={{
+                    backgroundColor: isActive ? (isDarkMode ? 'rgba(6,182,212,0.1)' : 'rgba(6,182,212,0.05)') : 'transparent',
+                  }}>
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{
+                      backgroundColor: isDone ? '#22c55e' : isActive ? '#06b6d4' : (isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)'),
+                      color: isDone || isActive ? '#ffffff' : (isDarkMode ? '#64748b' : '#94a3b8'),
+                    }}>
+                      {isDone ? '✓' : isActive ? <span className="animate-pulse">•</span> : (i + 1)}
+                    </div>
+                    <span className="text-sm font-medium" style={{
+                      color: isDone ? '#22c55e' : isActive ? (isDarkMode ? '#ffffff' : '#000000') : (isDarkMode ? '#64748b' : '#94a3b8'),
+                      textDecoration: isDone ? 'line-through' : 'none',
+                    }}>{step.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <style>{`@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
+          </div>
+        </div>
+      )}
 
       {/* Customization Modal */}
       <CustomizeGenerationModal

@@ -142,8 +142,8 @@ export default function CustomizeGenerationModal({
                 }}
                 className="w-full h-2 rounded-full appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #1a73e8 0%, #1a73e8 ${((currentCount - minCount) / (maxCount - minCount)) * 100}%, ${isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'} ${((currentCount - minCount) / (maxCount - minCount)) * 100}%, ${isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'} 100%)`,
-                  accentColor: "#1a73e8",
+                  background: `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${((currentCount - minCount) / (maxCount - minCount)) * 100}%, ${isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(203,213,225,0.5)'} ${((currentCount - minCount) / (maxCount - minCount)) * 100}%, ${isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(203,213,225,0.5)'} 100%)`,
+                  accentColor: "#06b6d4",
                 }}
               />
               <div className="flex justify-between text-xs" style={{ color: isDarkMode ? "#5f6368" : "#94a3b8" }}>
