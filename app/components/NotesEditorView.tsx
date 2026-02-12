@@ -133,6 +133,8 @@ export default function NotesEditorView({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationType, setGenerationType] = useState<"flashcards" | "quiz" | "match" | null>(null);
   const [error, setError] = useState("");
+  const [generationStartTime, setGenerationStartTime] = useState<number>(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   // Customization modal state
   const [showCustomizeModal, setShowCustomizeModal] = useState(false);
@@ -163,6 +165,20 @@ export default function NotesEditorView({
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
+
+  // Timer for loading animation
+  useEffect(() => {
+    if (!isGenerating || generationStartTime === 0) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - generationStartTime) / 1000);
+      setElapsedSeconds(elapsed);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isGenerating, generationStartTime]);
 
   // Auto-save functionality - saves 2 seconds after user stops typing
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -338,6 +354,8 @@ export default function NotesEditorView({
     setIsGenerating(true);
     setGenerationType(type);
     setError("");
+    setGenerationStartTime(Date.now());
+    setElapsedSeconds(0);
 
     try {
       const countToGenerate = type === "match" 
@@ -508,6 +526,91 @@ export default function NotesEditorView({
   };
 
   return (
+    <>
+      {/* Loading Overlay */}
+      {isGenerating && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full shadow-2xl">
+            {/* Central Animation */}
+            <div className="relative w-20 h-20 mx-auto mb-6">
+              <div className="absolute inset-0 rounded-full border-4 border-gray-100 dark:border-gray-800"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+              <div className="absolute inset-3 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+                <span className="text-2xl">✨</span>
+              </div>
+            </div>
+            
+            <div className="space-y-2 mb-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center">
+                Creating your {generationType === "flashcards" ? "flashcards" : generationType === "quiz" ? "quiz" : "match game"}
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                Please wait...
+              </p>
+            </div>
+            
+            {/* Progress Bar with Animation */}
+            <div className="space-y-2 mb-6">
+              <div className="flex justify-between text-xs font-semibold uppercase tracking-wider text-gray-400">
+                <span>Start</span>
+                <span>{Math.round((elapsedSeconds / 75) * 100)}%</span>
+              </div>
+              <div className="h-3 w-full rounded-full overflow-hidden shadow-inner bg-gray-200 dark:bg-gray-700">
+                <div 
+                  className="h-full transition-all duration-300 ease-out animate-pulse"
+                  style={{ 
+                    width: `${Math.min((elapsedSeconds / 75) * 100, 95)}%`,
+                    background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+                  }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Dynamic Steps */}
+            <div className="grid gap-3 text-left">
+              {[
+                { label: "Analyzing content...", icon: "🔍", time: 0 },
+                { label: "Structuring flashcards...", icon: "📑", time: 25 },
+                { label: "Finalizing study set...", icon: "🚀", time: 50 },
+              ].map((step, idx) => {
+                const isActive = elapsedSeconds >= step.time && (idx === 2 || elapsedSeconds < [25, 50, 999][idx]);
+                const isDone = elapsedSeconds >= [25, 50, 999][idx];
+                
+                return (
+                  <div 
+                    key={idx} 
+                    className={`flex items-center gap-4 p-4 rounded-md border transition-all duration-500 ${
+                        isDone 
+                          ? "bg-green-50/50 border-green-100 dark:bg-green-900/10 dark:border-green-800"
+                          : isActive
+                          ? "border-indigo-200 shadow-md scale-[1.02] dark:border-indigo-900 bg-gray-50 dark:bg-gray-700/50"
+                          : "bg-transparent border-transparent opacity-50"
+                    }`}
+                  >
+                    <div 
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors ${
+                        isDone 
+                          ? "bg-green-500 text-white" 
+                          : isActive
+                          ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300 animate-pulse"
+                          : "bg-gray-200 dark:bg-gray-700 text-gray-400"
+                      }`}
+                    >
+                      {isDone ? "✓" : step.icon}
+                    </div>
+                    <span className={`font-medium ${
+                        isDone ? "text-green-700 dark:text-green-400 line-through decoration-green-300/50" : "text-gray-900 dark:text-white"
+                    }`}>
+                      {step.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
     <div className="min-h-screen flex" style={{ backgroundColor: isDarkMode ? "#1a1a2e" : "#f1f5f9" }}>
       {/* Main Editor Area */}
       <div className="flex-1 flex flex-col">
@@ -918,48 +1021,37 @@ Tips:
                   className="block text-sm font-semibold mb-3"
                   style={{ color: isDarkMode ? "#ffffff" : "#000000" }}
                 >
-                  {pendingGenerationType === "match" ? "Number of Pairs" : "Number of Cards"}
+                  {pendingGenerationType === "match" ? "Number of Pairs" : "Number of Cards"}: <span style={{ color: "#1a73e8" }}>{pendingGenerationType === "match" ? generationSettings.matchPairs : generationSettings.count}</span>
                 </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {(pendingGenerationType === "match" 
-                    ? [4, 6, 8, 10, 12, 15]
-                    : [5, 10, 15, 20, 30, 50]
-                  ).map((num) => (
-                    <button
-                      key={num}
-                      onClick={() => {
-                        if (pendingGenerationType === "match") {
-                          setGenerationSettings(s => ({ ...s, matchPairs: num }));
-                        } else {
-                          setGenerationSettings(s => ({ ...s, count: num }));
-                        }
-                      }}
-                      className="px-3 py-3 rounded-xl font-bold text-lg transition-all hover:scale-105"
-                      style={{
-                        backgroundColor: (pendingGenerationType === "match" 
-                          ? generationSettings.matchPairs === num
-                          : generationSettings.count === num)
-                          ? "#1a73e8"
-                          : isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
-                        color: (pendingGenerationType === "match" 
-                          ? generationSettings.matchPairs === num
-                          : generationSettings.count === num)
-                          ? "#ffffff"
-                          : isDarkMode ? "#ffffff" : "#000000",
-                        border: (pendingGenerationType === "match" 
-                          ? generationSettings.matchPairs === num
-                          : generationSettings.count === num)
-                          ? "2px solid #1a73e8"
-                          : `2px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
-                      }}
-                    >
-                      {num}
-                    </button>
-                  ))}
+                <div className="space-y-3">
+                  <input
+                    type="range"
+                    min={pendingGenerationType === "match" ? 4 : 5}
+                    max={pendingGenerationType === "match" ? (isPremium ? 25 : 10) : (isPremium ? 100 : 20)}
+                    step={pendingGenerationType === "match" ? 1 : 5}
+                    value={pendingGenerationType === "match" ? generationSettings.matchPairs : generationSettings.count}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value);
+                      if (pendingGenerationType === "match") {
+                        setGenerationSettings(s => ({ ...s, matchPairs: val }));
+                      } else {
+                        setGenerationSettings(s => ({ ...s, count: val }));
+                      }
+                    }}
+                    className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${((pendingGenerationType === "match" ? generationSettings.matchPairs : generationSettings.count) - (pendingGenerationType === "match" ? 4 : 5)) / ((pendingGenerationType === "match" ? (isPremium ? 25 : 10) : (isPremium ? 100 : 20)) - (pendingGenerationType === "match" ? 4 : 5)) * 100}%, ${isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(203,213,225,0.5)'} ${((pendingGenerationType === "match" ? generationSettings.matchPairs : generationSettings.count) - (pendingGenerationType === "match" ? 4 : 5)) / ((pendingGenerationType === "match" ? (isPremium ? 25 : 10) : (isPremium ? 100 : 20)) - (pendingGenerationType === "match" ? 4 : 5)) * 100}%, ${isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(203,213,225,0.5)'} 100%)`,
+                      accentColor: "#06b6d4",
+                    }}
+                  />
+                  <div className="flex justify-between text-xs" style={{ color: isDarkMode ? "#5f6368" : "#94a3b8" }}>
+                    <span>{pendingGenerationType === "match" ? 4 : 5}</span>
+                    <span>{pendingGenerationType === "match" ? (isPremium ? 25 : 10) : (isPremium ? 100 : 20)}{isPremium ? '' : ' (Free limit)'}</span>
+                  </div>
                 </div>
-                {!isPremium && (pendingGenerationType !== "match" ? generationSettings.count > 15 : generationSettings.matchPairs > 10) && (
+                {!isPremium && (pendingGenerationType !== "match" ? generationSettings.count > 20 : generationSettings.matchPairs > 10) && (
                   <p className="text-xs mt-2 text-amber-500">
-                    ⭐ Premium required for more than {pendingGenerationType === "match" ? "10 pairs" : "15 cards"}
+                    ⭐ Premium required for more than {pendingGenerationType === "match" ? "10 pairs" : "20 cards"}
                   </p>
                 )}
               </div>
@@ -1048,6 +1140,7 @@ Tips:
         </div>
       )}
     </div>
+    </>
   );
 }
 
