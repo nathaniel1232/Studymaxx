@@ -147,6 +147,12 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
     setIsSavingEdit(true);
     try {
       const { supabase } = await import('../utils/supabase');
+      
+      if (!supabase) {
+        alert('Database not configured');
+        return;
+      }
+      
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
 
