@@ -342,13 +342,20 @@ async function generateWithAIGuaranteed(
   numberOfFlashcards: number,
   language: string = "English",
   targetGrade?: string,
-  subject?: string
+  subject?: string,
+  materialType?: string,
+  outputLanguage: string = "auto",
+  difficulty?: string,
+  includeMath?: boolean,
+  knownLanguage?: string,
+  learningLanguage?: string
 ): Promise<Flashcard[]> {
-  const maxAttempts = 3;
+  // Increase max attempts for higher card counts
+  const maxAttempts = numberOfFlashcards > 30 ? 5 : 3;
   let allCards: Flashcard[] = [];
   let attempt = 0;
 
-  console.log(`[generateWithAIGuaranteed] Target: ${numberOfFlashcards} flashcards`);
+  console.log(`[generateWithAIGuaranteed] Target: ${numberOfFlashcards} flashcards (${maxAttempts} max attempts)`);
 
   while (allCards.length < numberOfFlashcards && attempt < maxAttempts) {
     attempt++;
@@ -357,7 +364,7 @@ async function generateWithAIGuaranteed(
     console.log(`[generateWithAIGuaranteed] Attempt ${attempt}/${maxAttempts}: Need ${needed} more cards`);
 
     try {
-      const newCards = await generateWithAI(text, needed, language, targetGrade, subject);
+      const newCards = await generateWithAI(text, needed, language, targetGrade, subject, materialType, outputLanguage, difficulty, includeMath, knownLanguage, learningLanguage);
       
       // Deduplicate based on question similarity
       const uniqueNewCards = newCards.filter(newCard => {
@@ -1206,21 +1213,41 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // STEP 4: Generate flashcards FAST (optimized for serverless timeout limits)
-    // Use fast mode without retries - return quickly to user
-    const flashcards = await generateWithAIFast(
-      text, 
-      numberOfFlashcards, 
-      language || "English",
-      targetGrade,
-      subject,
-      materialType,
-      outputLanguage,
-      difficulty,
-      body.includeMath,
-      knownLanguage,
-      learningLanguage
-    );
+    // STEP 4: Generate flashcards - use guaranteed mode for high card counts
+    // For 25+ cards, use guaranteed generation with retries for reliability
+    // For lower counts, use fast mode for speed
+    let flashcards: Flashcard[];
+    if (numberOfFlashcards >= 25) {
+      console.log("[API /generate POST] Using guaranteed generation mode for", numberOfFlashcards, "cards");
+      flashcards = await generateWithAIGuaranteed(
+        text, 
+        numberOfFlashcards, 
+        language || "English",
+        targetGrade,
+        subject,
+        materialType,
+        outputLanguage,
+        difficulty,
+        body.includeMath,
+        knownLanguage,
+        learningLanguage
+      );
+    } else {
+      console.log("[API /generate POST] Using fast generation mode for", numberOfFlashcards, "cards");
+      flashcards = await generateWithAIFast(
+        text, 
+        numberOfFlashcards, 
+        language || "English",
+        targetGrade,
+        subject,
+        materialType,
+        outputLanguage,
+        difficulty,
+        body.includeMath,
+        knownLanguage,
+        learningLanguage
+      );
+    }
 
     // STEP 5: Increment usage counters (fire-and-forget - don't wait)
     const isNewSet = userStatus.studySetCount < FREE_LIMITS.maxStudySets || userStatus.isPremium;
