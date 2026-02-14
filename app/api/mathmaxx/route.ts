@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
 
     // --- Step 2: Build conversation for Gemini ---
     const systemPrompt = getSystemPrompt(language, schoolLevel);
-    const contents: Array<{ role: string; parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> }> = [];
+    const contents: any[] = [];
 
     // System prompt injected as first user/model exchange
     contents.push({ role: 'user', parts: [{ text: systemPrompt }] });
