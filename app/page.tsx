@@ -1333,6 +1333,19 @@ export default function Home() {
           <DocumentView
             onBack={goBack}
             onGenerateFlashcards={handleGenerateFlashcards}
+            onGenerateQuiz={(questions, subject) => {
+              setQuizQuestions(questions);
+              setCurrentSubject(subject);
+              setViewMode('quiz');
+              window.history.pushState({}, '', '/quiz');
+            }}
+            onGenerateMatch={(terms, definitions, subject) => {
+              setMatchTerms(terms);
+              setMatchDefinitions(definitions);
+              setCurrentSubject(subject);
+              setViewMode('match');
+              window.history.pushState({}, '', '/match');
+            }}
             isPremium={isPremium}
             user={user}
             initialSubject={initialSubject}
