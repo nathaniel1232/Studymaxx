@@ -246,7 +246,6 @@ export default function DocumentView({
       const savedDocs = JSON.parse(localStorage.getItem('studymaxx_documents') || '[]');
       savedDocs.unshift(docData);
       localStorage.setItem('studymaxx_documents', JSON.stringify(savedDocs.slice(0, 50)));
-      setSavedDocuments(savedDocs.slice(0, 50)); // Update the list
       
       setLastSaved(new Date());
     } catch (err) {
