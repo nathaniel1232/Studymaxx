@@ -48,23 +48,32 @@ function getVertexAI(): VertexAI {
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, history, userId, language, schoolLevel } = await request.json();
+    const { message, image, history, userId, language, schoolLevel } = await request.json();
 
     if (!message || !message.trim()) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    // --- Step 1: Run through math engine ---
+    // --- Step 1: Run through math engine (skip if image is provided) ---
     // Detects expressions and pre-computes results with math.js
-    const { enhancedMessage, computedResult, detectedExpression } = buildMathContext(message);
-
-    if (computedResult) {
-      console.log(`[MathMaxx] Computed: "${detectedExpression}" = ${computedResult}`);
+    let enhancedMessage = message;
+    let computedResult = null;
+    let detectedExpression = null;
+    
+    if (!image) {
+      const mathContext = buildMathContext(message);
+      enhancedMessage = mathContext.enhancedMessage;
+      computedResult = mathContext.computedResult;
+      detectedExpression = mathContext.detectedExpression;
+      
+      if (computedResult) {
+        console.log(`[MathMaxx] Computed: "${detectedExpression}" = ${computedResult}`);
+      }
     }
 
     // --- Step 2: Build conversation for Gemini ---
     const systemPrompt = getSystemPrompt(language, schoolLevel);
-    const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
+    const contents: Array<{ role: string; parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> }> = [];
 
     // System prompt injected as first user/model exchange
     contents.push({ role: 'user', parts: [{ text: systemPrompt }] });
@@ -82,8 +91,23 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Add current message (enhanced with math.js result if available)
-    contents.push({ role: 'user', parts: [{ text: enhancedMessage }] });
+    // Add current message with image if provided
+    if (image) {
+      // Extract base64 data from data URL
+      const base64Data = image.split(',')[1];
+      const mimeType = image.split(';')[0].split(':')[1];
+      
+      contents.push({ 
+        role: 'user', 
+        parts: [
+          { text: enhancedMessage + "\n\nPlease analyze this math problem image and provide a step-by-step solution." },
+          { inlineData: { mimeType, data: base64Data } }
+        ]
+      });
+    } else {
+      // Text only
+      contents.push({ role: 'user', parts: [{ text: enhancedMessage }] });
+    }
 
     // --- Step 3: Call Gemini with streaming ---
     const model = getVertexAI().getGenerativeModel({

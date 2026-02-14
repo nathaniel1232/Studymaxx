@@ -249,6 +249,20 @@ const LockIcon = () => (
   </svg>
 );
 
+const ImageIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+    <circle cx="9" cy="9" r="2"/>
+    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+  </svg>
+);
+
+const XIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+  </svg>
+);
+
 // ============================================================
 // MATH LANGUAGE OPTIONS
 // ============================================================
@@ -805,9 +819,12 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const userScrolledUpRef = useRef(false);
 
   // Quiz state
@@ -880,6 +897,42 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
     target.style.height = "auto";
     target.style.height = Math.min(target.scrollHeight, 150) + "px";
     setInputText(target.value);
+  }, []);
+
+  // Handle image upload
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Image must be less than 10MB");
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload an image file");
+      return;
+    }
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      setImagePreview(base64);
+      setUploadedImage(base64);
+    };
+    reader.readAsDataURL(file);
+  }, []);
+
+  // Remove uploaded image
+  const handleRemoveImage = useCallback(() => {
+    setUploadedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   }, []);
 
   // Quick topics — adapt based on school level, labels from translation, topics in English (AI handles language)
@@ -987,12 +1040,18 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: quizContext ? `${quizContext}\n\n${msgText}` : msgText,
+          image: uploadedImage, // Include base64 image if uploaded
           history: chatHistory,
           userId: user?.id,
           language: mathLang,
           schoolLevel: schoolLevel,
         }),
       });
+
+      // Clear uploaded image after sending
+      if (uploadedImage) {
+        handleRemoveImage();
+      }
 
       if (!response.ok) throw new Error("Failed to get response");
 
@@ -1503,6 +1562,26 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
             }}
           >
             <div className="max-w-2xl mx-auto">
+              {/* Image preview */}
+              {imagePreview && (
+                <div className="mb-3 relative inline-block">
+                  <img 
+                    src={imagePreview} 
+                    alt="Upload preview" 
+                    className="max-w-xs max-h-48 rounded-lg border"
+                    style={{ 
+                      borderColor: isDarkMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)" 
+                    }}
+                  />
+                  <button
+                    onClick={handleRemoveImage}
+                    className="absolute -top-2 -right-2 p-1.5 rounded-full bg-red-500 hover:bg-red-600 text-white transition-all"
+                  >
+                    <XIcon />
+                  </button>
+                </div>
+              )}
+              
               <div
                 className="flex items-end gap-2 rounded-xl px-4 py-2"
                 style={{
@@ -1510,6 +1589,27 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
                   border: `1px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
                 }}
               >
+                {/* Image upload button */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isStreaming}
+                  className="p-2 rounded-lg transition-all hover:bg-opacity-80 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 mb-0.5"
+                  style={{
+                    backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
+                    color: isDarkMode ? "#ffffff" : "#000000",
+                  }}
+                  title="Upload math problem image"
+                >
+                  <ImageIcon />
+                </button>
+                
                 <textarea
                   ref={inputRef}
                   value={inputText}
@@ -1522,11 +1622,11 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
                 />
                 <button
                   onClick={() => handleSendMessage()}
-                  disabled={!inputText.trim() || isStreaming}
+                  disabled={(!inputText.trim() && !uploadedImage) || isStreaming}
                   className="p-2.5 rounded-xl transition-all hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 mb-0.5"
                   style={{
-                    background: inputText.trim() && !isStreaming ? "#3b82f6" : (isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"),
-                    color: inputText.trim() && !isStreaming ? "#ffffff" : (isDarkMode ? "#64748b" : "#94a3b8"),
+                    background: (inputText.trim() || uploadedImage) && !isStreaming ? "#3b82f6" : (isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"),
+                    color: (inputText.trim() || uploadedImage) && !isStreaming ? "#ffffff" : (isDarkMode ? "#64748b" : "#94a3b8"),
                   }}
                 >
                   <SendIcon />
