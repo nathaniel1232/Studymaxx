@@ -78,7 +78,7 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
     return (
       <div 
         className={`${sizeClasses} rounded-full flex items-center justify-center font-bold text-white`}
-        style={{ background: 'linear-gradient(135deg, #1a73e8 0%, #34a853 100%)' }}
+        style={{ background: '#06b6d4' }}
       >
         {getInitials()}
       </div>
@@ -158,7 +158,7 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
               <div 
                 className="px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 shadow-md"
                 style={{ 
-                  background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)', 
+                  background: '#fbbf24', 
                   color: '#000',
                   boxShadow: '0 2px 8px rgba(251, 191, 36, 0.4)'
                 }}

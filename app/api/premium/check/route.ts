@@ -127,16 +127,16 @@ export async function GET(request: NextRequest) {
     console.error('[/api/premium/check] CRITICAL ERROR:', error);
     console.error('[/api/premium/check] Error details:', JSON.stringify(error, null, 2));
     
-    // In case of error, return premium access to avoid blocking users
+    // In case of error, restrict access to free tier for security
     return NextResponse.json({
-      isPremium: true,
+      isPremium: false,
       setsCreated: 0,
-      maxSets: -1,
+      maxSets: 2,
       canCreateMore: true,
       dailyAiCount: 0,
-      maxDailyAi: -1,
-      remainingDailyGenerations: -1,
-      error: 'Failed to check premium status - defaulting to premium',
+      maxDailyAi: 2,
+      remainingDailyGenerations: 2,
+      error: 'Failed to check premium status - defaulting to free',
       errorDetails: error instanceof Error ? error.message : String(error)
     });
   }

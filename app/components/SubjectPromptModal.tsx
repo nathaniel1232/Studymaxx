@@ -87,7 +87,7 @@ export default function SubjectPromptModal({
           <div className="flex items-center gap-3 mb-2">
             <div 
               className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #1a73e8 0%, #34a853 100%)" }}
+              style={{ background: '#06b6d4' }}
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
@@ -145,7 +145,7 @@ export default function SubjectPromptModal({
               disabled={!subject.trim()}
               className="flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                background: subject.trim() ? "linear-gradient(135deg, #1a73e8 0%, #34a853 100%)" : "rgba(128,128,128,0.3)",
+                background: subject.trim() ? '#06b6d4' : "rgba(128,128,128,0.3)",
                 color: "#ffffff",
               }}
             >

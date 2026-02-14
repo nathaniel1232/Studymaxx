@@ -821,7 +821,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                   >
                     <button onClick={async () => {
                       const pct = Math.round((quizScore / flashcards.length) * 100);
-                      const text = `I just scored ${pct}% on my study quiz! 🧠⚡\n\nStudying smarter with StudyMaxx — AI-powered flashcards & quizzes from any notes.\n\nTry it free → https://www.studymaxx.net`;
+                      const text = `I just scored ${pct}% on my study quiz!\n\nStudying smarter with StudyMaxx — AI-powered flashcards & quizzes from any notes.\n\nTry it free → https://www.studymaxx.net`;
                       try {
                         if (navigator.share) {
                           await navigator.share({ title: `I scored ${pct}% on StudyMaxx!`, text, url: 'https://www.studymaxx.net' });
@@ -869,13 +869,13 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                   }}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">⚡</span>
+                    <span className="text-xl">⭐</span>
                     <div>
                       <p className="text-sm font-semibold" style={{ color: isDark ? '#e2e8f0' : '#0f172a' }}>
                         Want deeper study sessions?
                       </p>
                       <p className="text-xs mt-0.5" style={{ color: isDark ? '#94a3b8' : '#64748b' }}>
-                        Premium unlocks up to 50 cards, custom difficulty, and unlimited sets
+                        Premium unlocks up to 75 cards, custom difficulty, and unlimited sets
                       </p>
                     </div>
                   </div>
@@ -987,7 +987,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                 </>
               ) : (
                 <div className="text-center py-12">
-                  <div className="text-6xl mb-4">🎯</div>
+                  <div className="text-6xl mb-4">�</div>
                   <h2 className="text-2xl font-bold mb-2" style={{ color: textPrimary }}>All Matched!</h2>
                   <p className="text-lg mb-2" style={{ color: textSecondary }}>
                     Time: <strong>{formatTime(matchTimer)}</strong> · Tries: <strong>{matchAttempts}</strong>
@@ -1011,7 +1011,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                   >
                     <button onClick={async () => {
                       const acc = matchAttempts > 0 ? Math.round((matchedPairs.size / matchAttempts) * 100) : 100;
-                      const text = `I matched all ${matchedPairs.size} pairs in ${formatTime(matchTimer)} with ${acc}% accuracy! 🎯⚡\n\nThink you can beat me? Try StudyMaxx free → https://www.studymaxx.net`;
+                      const text = `I matched all ${matchedPairs.size} pairs in ${formatTime(matchTimer)} with ${acc}% accuracy!\n\nThink you can beat me? Try StudyMaxx free → https://www.studymaxx.net`;
                       try {
                         if (navigator.share) {
                           await navigator.share({ title: `Beat my match time on StudyMaxx!`, text, url: 'https://www.studymaxx.net' });

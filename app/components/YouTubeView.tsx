@@ -661,7 +661,7 @@ export default function YouTubeView({
                 className="p-4 rounded-xl"
                 style={{ backgroundColor: 'rgba(26, 115, 232, 0.1)', border: '1px solid rgba(26, 115, 232, 0.2)' }}
               >
-                <h4 className="font-medium mb-2" style={{ color: isDarkMode ? '#4285f4' : '#1a73e8' }}>💡 Tips</h4>
+                <h4 className="font-medium mb-2" style={{ color: isDarkMode ? '#4285f4' : '#1a73e8' }}>Tips</h4>
                 <ul className="text-sm space-y-1" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
                   <li>• Works with YouTube videos (extracts transcript)</li>
                   <li>• Works with articles and blog posts</li>

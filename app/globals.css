@@ -330,7 +330,7 @@ html.dark .input-text-fix {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  background: var(--primary);
   color: var(--primary-foreground);
   box-shadow: 0 8px 24px rgba(20, 184, 166, 0.35);
   font-weight: 800;
@@ -432,32 +432,32 @@ html.dark .input-text-fix {
 
 /* Bad Grade - Red with danger emotion */
 .btn-grade-bad {
-  background: linear-gradient(135deg, var(--learning-red) 0%, var(--learning-red-hover) 100%);
+  background: var(--learning-red);
   color: white;
 }
 
 .btn-grade-bad:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--learning-red-hover) 0%, var(--learning-red-dark) 100%);
+  background: var(--learning-red-hover);
 }
 
 /* OK Grade - Yellow with caution emotion */
 .btn-grade-ok {
-  background: linear-gradient(135deg, var(--learning-yellow) 0%, var(--learning-yellow-hover) 100%);
+  background: var(--learning-yellow);
   color: white;
 }
 
 .btn-grade-ok:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--learning-yellow-hover) 0%, var(--learning-yellow-dark) 100%);
+  background: var(--learning-yellow-hover);
 }
 
 /* Good Grade - Green with success emotion */
 .btn-grade-good {
-  background: linear-gradient(135deg, var(--learning-green) 0%, var(--learning-green-hover) 100%);
+  background: var(--learning-green);
   color: white;
 }
 
 .btn-grade-good:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--learning-green-hover) 0%, var(--learning-green-dark) 100%);
+  background: var(--learning-green-hover);
 }
 
 /* Interactive option cards (for settings) - Premium selectable cards */
@@ -576,15 +576,15 @@ html.dark .input-text-fix {
 }
 
 .icon-container-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  background: var(--primary);
 }
 
 .icon-container-secondary {
-  background: linear-gradient(135deg, var(--secondary) 0%, #ec4899 100%);
+  background: var(--secondary);
 }
 
 .icon-container-accent {
-  background: linear-gradient(135deg, #ec4899 0%, #f97316 100%);
+  background: #ec4899;
 }
 
 /* Arrow and navigation icons - premium, consistent style */
@@ -606,58 +606,60 @@ a:hover .arrow-icon[class*="rotate-180"].group-hover\:translate-x-1 {
 }
 
 /* Custom Slider Styles */
-input[type="range"].slider {
+input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
 }
 
-input[type="range"].slider::-webkit-slider-thumb {
+input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background: rgb(37, 99, 235);
+  background: #06b6d4;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 2px 8px rgba(6, 182, 212, 0.4);
   transition: all 0.2s ease;
+  position: relative;
+  z-index: 2;
 }
 
-input[type="range"].slider::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.6);
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.6);
 }
 
-input[type="range"].slider::-webkit-slider-thumb:active {
+input[type="range"]::-webkit-slider-thumb:active {
   transform: scale(0.95);
 }
 
-input[type="range"].slider::-moz-range-thumb {
-  width: 24px;
-  height: 24px;
+input[type="range"]::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background: rgb(37, 99, 235);
+  background: #06b6d4;
   cursor: pointer;
   border: none;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 2px 8px rgba(6, 182, 212, 0.4);
   transition: all 0.2s ease;
 }
 
-input[type="range"].slider::-moz-range-thumb:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.6);
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.6);
 }
 
-input[type="range"].slider::-moz-range-thumb:active {
+input[type="range"]::-moz-range-thumb:active {
   transform: scale(0.95);
 }
 
-input[type="range"].slider:disabled::-webkit-slider-thumb {
+input[type="range"]:disabled::-webkit-slider-thumb {
   cursor: not-allowed;
   background: rgb(156, 163, 175);
 }
 
-input[type="range"].slider:disabled::-moz-range-thumb {
+input[type="range"]:disabled::-moz-range-thumb {
   cursor: not-allowed;
   background: rgb(156, 163, 175);
 }
@@ -1219,9 +1221,7 @@ input[type="range"].slider:disabled::-moz-range-thumb {
 
 .gradient-border {
   position: relative;
-  background: linear-gradient(var(--background), var(--background)) padding-box,
-              linear-gradient(135deg, #1a73e8, #34a853, #ea4335, #1a73e8) border-box;
-  border: 2px solid transparent;
+  border: 2px solid var(--primary);
 }
 
 /* Glowing text animation */
@@ -1309,7 +1309,7 @@ input[type="range"].slider:disabled::-moz-range-thumb {
   left: 0;
   width: 0;
   height: 2px;
-  background: linear-gradient(90deg, #1a73e8, #34a853);
+  background: var(--primary);
   transition: width 0.3s ease;
 }
 

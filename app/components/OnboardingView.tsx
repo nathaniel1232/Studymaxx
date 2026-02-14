@@ -359,7 +359,7 @@ export default function OnboardingView({ onComplete }: OnboardingViewProps) {
                       <span style={{ color: '#e2e8f0' }}>{selectedSubjects.join(", ")}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span style={{ color: '#5f6368' }}>🎯</span>
+                      <span style={{ color: '#5f6368' }}>📋</span>
                       <span style={{ color: '#e2e8f0' }}>{LEVELS.find(l => l.value === level)?.label}</span>
                     </div>
                     {country && (

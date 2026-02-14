@@ -186,7 +186,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
       <div className="sticky top-0 z-50 px-4 py-3 backdrop-blur-sm" style={{ borderBottom: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`, backgroundColor: isDarkMode ? 'rgba(26, 26, 46, 0.9)' : 'rgba(241, 245, 249, 0.95)' }}>
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="text-2xl font-bold" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>
-            <span style={{ color: '#1a73e8' }}>Study</span>Maxx
+            <span style={{ color: '#06b6d4' }}>Study</span>Maxx
           </div>
         </div>
       </div>
@@ -263,7 +263,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                       ) : (
                         <div 
                           className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white border-2"
-                          style={{ background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%)', borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
+                          style={{ background: '#06b6d4', borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
                         >
                           {user.email?.substring(0, 2).toUpperCase()}
                         </div>
@@ -364,7 +364,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                       onClick={() => {
                         window.dispatchEvent(new CustomEvent('showPremium'));
                       }}
-                      className="w-full py-4 bg-gradient-to-r from-amber-400 via-yellow-500 to-orange-500 hover:from-amber-300 hover:via-yellow-400 hover:to-orange-400 text-slate-950 font-black rounded-md shadow-lg shadow-amber-500/20 hover:shadow-xl hover:-translate-y-1 transition-all"
+                      className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-md shadow-lg shadow-amber-500/20 hover:shadow-xl hover:-translate-y-1 transition-all"
                     >
                       ⭐ UPGRADE TO PREMIUM
                     </button>
@@ -402,7 +402,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                     className="p-4 rounded-md transition-all duration-200 font-bold text-sm"
                     style={{
                       background: settings.theme === theme 
-                        ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+                        ? '#06b6d4'
                         : isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4',
                       color: settings.theme === theme ? 'white' : isDarkMode ? '#94a3b8' : '#64748b',
                       boxShadow: settings.theme === theme ? '0 4px 15px rgba(6, 182, 212, 0.3)' : 'none',
@@ -447,7 +447,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                     className="p-5 rounded-md transition-all duration-200 flex flex-col items-center justify-center font-bold"
                     style={{
                       background: settings.language === lang 
-                        ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                        ? '#10b981'
                         : isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4',
                       color: settings.language === lang ? 'white' : isDarkMode ? '#94a3b8' : '#64748b',
                       boxShadow: settings.language === lang ? '0 4px 15px rgba(16, 185, 129, 0.3)' : 'none',
@@ -480,7 +480,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
           </section>
 
           {/* Study Tutorial Section */}
-          <section className="bg-gradient-to-br from-cyan-600/20 to-teal-600/20 rounded-md p-6 shadow-xl border border-cyan-500/30">
+          <section className="bg-cyan-600/20 rounded-md p-6 shadow-xl border border-cyan-500/30">
             <h2 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
               📚 How to Study with StudyMaxx
             </h2>
@@ -519,7 +519,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
               </div>
               
               <div className="p-4 bg-emerald-500/10 rounded-md border border-emerald-500/30">
-                <h3 className="font-semibold text-emerald-400 text-sm flex items-center gap-2">💡 Pro Tip</h3>
+                <h3 className="font-semibold text-emerald-400 text-sm flex items-center gap-2">Pro Tip</h3>
                 <p className="text-xs text-slate-300 mt-1">Study in short sessions (15-25 minutes) with breaks. Your brain remembers better when you space out your learning!</p>
               </div>
             </div>
@@ -580,7 +580,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                 </div>
                 <a 
                   href="mailto:studymaxxer@gmail.com"
-                  className="text-violet-400 font-bold text-sm hover:underline"
+                  className="text-blue-400 font-bold text-sm hover:underline"
                 >
                   studymaxxer@gmail.com
                 </a>

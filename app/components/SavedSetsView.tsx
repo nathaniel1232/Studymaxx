@@ -38,6 +38,9 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
   const [movingSetId, setMovingSetId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"recent" | "name" | "cards">("recent");
+  const [editingSetId, setEditingSetId] = useState<string | null>(null);
+  const [editingFlashcards, setEditingFlashcards] = useState<Flashcard[]>([]);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   const loadData = async () => {
     try {
@@ -131,6 +134,65 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
       await deleteFlashcardSet(id);
       await loadData();
     }
+  };
+
+  const handleStartEdit = (setId: string, flashcards: Flashcard[]) => {
+    setEditingSetId(setId);
+    setEditingFlashcards([...flashcards]);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingSetId) return;
+    
+    setIsSavingEdit(true);
+    try {
+      const { supabase } = await import('../utils/supabase');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        alert('Not authenticated. Please log in again.');
+        return;
+      }
+
+      const response = await fetch('/api/flashcard-sets', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          id: editingSetId,
+          flashcards: editingFlashcards
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to save');
+      
+      await loadData();
+      setEditingSetId(null);
+      setEditingFlashcards([]);
+    } catch (err) {
+      console.error('Failed to save edits:', err);
+      alert('Failed to save changes');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSetId(null);
+    setEditingFlashcards([]);
+  };
+
+  const handleUpdateCard = (index: number, field: 'question' | 'answer', value: string) => {
+    const updated = [...editingFlashcards];
+    updated[index] = { ...updated[index], [field]: value };
+    setEditingFlashcards(updated);
+  };
+
+  const handleDeleteCard = (index: number) => {
+    setEditingFlashcards(editingFlashcards.filter((_, i) => i !== index));
   };
 
   const formatDate = (dateString: string) => {
@@ -495,6 +557,18 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                       
                       {/* Actions */}
                       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        {/* Edit */}
+                        <button
+                          onClick={() => handleStartEdit(set.id, set.flashcards)}
+                          className="p-2 rounded-lg transition-all opacity-60 hover:opacity-100"
+                          style={{ background: isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }}
+                          title="Edit flashcards"
+                        >
+                          <svg className="w-4 h-4" style={{ color: isDarkMode ? '#ffffff' : '#000000' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        
                         {/* Move to folder */}
                         <div className="relative">
                           <button
@@ -542,6 +616,18 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                             </div>
                           )}
                         </div>
+                        
+                        {/* Edit */}
+                        <button
+                          onClick={() => handleStartEdit(set.id, set.flashcards)}
+                          className="p-2 rounded-lg transition-all opacity-60 hover:opacity-100 hover:bg-cyan-500/20"
+                          style={{ background: isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }}
+                          title="Edit flashcards"
+                        >
+                          <svg className="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
                         
                         {/* Delete */}
                         <button
@@ -620,6 +706,103 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
               >
                 Delete
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Flashcards Modal */}
+      {editingSetId && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4 py-6 overflow-y-auto" onClick={handleCancelEdit}>
+          <div className="rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" style={{ background: isDarkMode ? '#1a1a2e' : '#ffffff', border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'}` }} onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 z-10 p-6 border-b backdrop-blur-md" style={{ background: isDarkMode ? 'rgba(26, 26, 46, 0.95)' : 'rgba(255,255,255,0.95)', borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-2xl font-bold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                  Edit Flashcards
+                </h2>
+                <button onClick={handleCancelEdit} className="p-2 rounded-lg transition-all hover:bg-red-500/20" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
+                {editingFlashcards.length} cards • Click any card to edit
+              </p>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {editingFlashcards.map((card, index) => (
+                <div key={index} className="p-4 rounded-lg border" style={{ background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#f8fafc', borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}>
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm" style={{ background: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4' }}>
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <label className="block text-xs font-semibold mb-1.5" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
+                          Question
+                        </label>
+                        <textarea
+                          value={card.question}
+                          onChange={(e) => handleUpdateCard(index, 'question', e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg border outline-none resize-none"
+                          style={{ 
+                            background: isDarkMode ? 'rgba(255,255,255,0.08)' : '#ffffff', 
+                            borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                            color: isDarkMode ? '#ffffff' : '#000000'
+                          }}
+                          rows={2}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold mb-1.5" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
+                          Answer
+                        </label>
+                        <textarea
+                          value={card.answer}
+                          onChange={(e) => handleUpdateCard(index, 'answer', e.target.value)}
+                          className="w-full px-3 py-2 rounded-lg border outline-none resize-none"
+                          style={{ 
+                            background: isDarkMode ? 'rgba(255,255,255,0.08)' : '#ffffff', 
+                            borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                            color: isDarkMode ? '#ffffff' : '#000000'
+                          }}
+                          rows={2}
+                        />
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteCard(index)}
+                      className="flex-shrink-0 p-2 rounded-lg transition-all hover:bg-red-500/20"
+                      title="Delete card"
+                    >
+                      <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="sticky bottom-0 p-6 border-t backdrop-blur-md" style={{ background: isDarkMode ? 'rgba(26, 26, 46, 0.95)' : 'rgba(255,255,255,0.95)', borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCancelEdit}
+                  className="flex-1 px-6 py-3 font-semibold rounded-lg transition-all hover:opacity-80"
+                  style={{ background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0', color: isDarkMode ? '#ffffff' : '#000000' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={isSavingEdit || editingFlashcards.length === 0}
+                  className="flex-1 px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSavingEdit ? 'Saving...' : `Save Changes (${editingFlashcards.length} cards)`}
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -48,7 +48,7 @@ export const FREE_LIMITS: UsageLimits = {
 // Premium tier (unlimited)
 export const PREMIUM_LIMITS: UsageLimits = {
   maxStudySets: Infinity,
-  maxFlashcardsPerSet: 50, // 50 cards for premium
+  maxFlashcardsPerSet: 75, // 75 cards for premium
   maxAIGenerationsPerDay: Infinity,
   maxChatMessagesPerDay: Infinity,
   canUploadPDF: true,

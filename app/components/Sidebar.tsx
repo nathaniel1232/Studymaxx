@@ -5,7 +5,7 @@ import { useSettings } from "../contexts/SettingsContext";
 
 interface SidebarProps {
   currentView: string;
-  onNavigate: (view: "dashboard" | "settings" | "pricing" | "about" | "tips") => void;
+  onNavigate: (view: "dashboard" | "settings" | "pricing" | "about" | "tips" | "mathmaxx") => void;
   onSignOut: () => void;
   isPremium: boolean;
   userName?: string;
@@ -70,8 +70,16 @@ const LogOutIcon = () => (
   </svg>
 );
 
+const MathIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+  </svg>
+);
+
 const NAV_ITEMS_BASE = [
   { id: "dashboard" as const, label: "Dashboard", Icon: HomeIcon },
+  { id: "mathmaxx" as const, label: "MathMaxx", Icon: MathIcon },
   { id: "settings" as const, label: "Settings", Icon: SettingsIcon },
   { id: "tips" as const, label: "Study Tips", Icon: LightbulbIcon },
   { id: "about" as const, label: "About Us", Icon: InfoIcon },
@@ -191,7 +199,7 @@ export default function Sidebar({
         {/* Header */}
         <div className="p-6 border-b" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0' }}>
           <div className="text-xl font-bold mb-1">
-            <span style={{ color: '#1a73e8' }}>Study</span>
+            <span style={{ color: '#06b6d4' }}>Study</span>
             <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>Maxx</span>
           </div>
           {userName && (
@@ -226,7 +234,7 @@ export default function Sidebar({
               }}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left"
               style={item.id === "pricing" ? {
-                background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%)',
+                background: 'rgba(6, 182, 212, 0.12)',
                 color: '#06b6d4',
                 border: '1px solid rgba(6, 182, 212, 0.3)',
               } : { 
@@ -260,7 +268,7 @@ export default function Sidebar({
               }}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left"
               style={{
-                background: 'linear-gradient(135deg, rgba(251, 188, 4, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%)',
+                background: 'rgba(251, 188, 4, 0.08)',
                 color: '#f59e0b',
                 border: '1px solid rgba(251, 188, 4, 0.2)',
               }}

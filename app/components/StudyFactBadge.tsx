@@ -50,7 +50,7 @@ export default function StudyFactBadge({ context, position = "inline" }: StudyFa
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-start gap-3">
-          <div className="text-2xl">💡</div>
+          <div className="text-2xl">ℹ️</div>
           <div className="flex-1">
             <div className="text-xs font-bold mb-1 text-indigo-600 dark:text-indigo-400">
               {settings.language === "no" ? "Visste du?" : "Did you know?"}

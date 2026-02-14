@@ -244,7 +244,7 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
             {/* Header */}
             <div className="text-center mb-6">
               <div className="text-2xl font-bold mb-1" style={{ color: isDarkMode ? '#f1f5f9' : '#0f172a' }}>
-                StudyMaxx
+                <span style={{ color: '#06b6d4' }}>Study</span>Maxx
               </div>
               <p className="text-sm" style={{ color: isDarkMode ? '#64748b' : '#94a3b8' }}>
                 {isSignUp ? 'Create your account' : 'Sign in to your account'}
@@ -257,7 +257,7 @@ export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
                 {/* Helpful hint for network host login issues */}
                 {typeof window !== 'undefined' && /^\d+\.\d+\.\d+\.\d+/.test(window.location.hostname) && (
                   <div className="mt-2 pt-2 text-xs" style={{ borderTop: '1px solid rgba(239,68,68,0.2)', color: isDarkMode ? '#94a3b8' : '#64748b' }}>
-                    💡 <strong>Network host detected:</strong> Add <code className="px-1 py-0.5 rounded" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}>{window.location.origin}/auth/callback</code> to Supabase redirect URLs. See <code>NETWORK_AUTH_FIX.md</code>
+                    ℹ️ <strong>Network host detected:</strong> Add <code className="px-1 py-0.5 rounded" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}>{window.location.origin}/auth/callback</code> to Supabase redirect URLs. See <code>NETWORK_AUTH_FIX.md</code>
                   </div>
                 )}
               </div>

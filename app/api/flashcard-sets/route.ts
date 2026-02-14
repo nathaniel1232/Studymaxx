@@ -234,7 +234,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, last_studied, study_count, folder_id } = body;
+    const { id, last_studied, study_count, folder_id, flashcards } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Missing set ID' }, { status: 400 });
@@ -244,6 +244,7 @@ export async function PUT(request: NextRequest) {
     if (last_studied !== undefined) updates.last_studied = last_studied;
     if (study_count !== undefined) updates.study_count = study_count;
     if (folder_id !== undefined) updates.folder_id = folder_id;
+    if (flashcards !== undefined) updates.cards = flashcards;
 
     // Update flashcard set
     const { data: updatedData, error } = await supabase

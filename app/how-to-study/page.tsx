@@ -91,7 +91,7 @@ export default function HowToStudyPage() {
 
             {/* Step 2 */}
             <section className="flex gap-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
                 <NumberCircle num={2} />
               </div>
               <div>
@@ -158,7 +158,7 @@ export default function HowToStudyPage() {
             </section>
 
             {/* Pro Tips Box */}
-            <div className="mt-8 p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-md border border-blue-200 dark:border-blue-800">
+            <div className="mt-8 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <span className="text-amber-500"><LightbulbIcon /></span>
                 {isNorwegian ? "Pro-tips" : "Pro Tips"}
@@ -202,7 +202,7 @@ export default function HowToStudyPage() {
             {/* Study Science Box */}
             <div className="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-md border border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                <span className="text-purple-500"><BrainIcon /></span>
+                <span className="text-blue-500"><BrainIcon /></span>
                 {isNorwegian ? "Hvorfor dette fungerer" : "Why This Works"}
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
@@ -218,7 +218,7 @@ export default function HowToStudyPage() {
             <Link
               href="/"
               className="inline-flex items-center gap-2 px-8 py-4 rounded-md text-white font-bold text-lg transition-all hover:scale-105 shadow-lg"
-              style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%)' }}
+              style={{ background: '#06b6d4' }}
             >
               {isNorwegian ? "Start å studere nå" : "Start Studying Now"}
               <ArrowIcon direction="right" size={20} />

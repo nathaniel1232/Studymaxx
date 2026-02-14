@@ -125,8 +125,6 @@ export default function NotesEditorView({
   const [subject, setSubject] = useState(initialSubject);
   const [isSaving, setIsSaving] = useState(false);
   const [savedDocumentId, setSavedDocumentId] = useState<string | null>(null);
-  const [savedDocuments, setSavedDocuments] = useState<SavedDocument[]>([]);
-  const [showDocumentList, setShowDocumentList] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   // Generation state
@@ -155,11 +153,6 @@ export default function NotesEditorView({
   const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "ai"; text: string }>>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-
-  // Load saved documents on mount
-  useEffect(() => {
-    loadSavedDocuments();
-  }, []);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -204,31 +197,6 @@ export default function NotesEditorView({
       }
     };
   }, [documentContent, documentTitle, subject]); // Trigger on content changes
-
-  const loadSavedDocuments = async () => {
-    if (!supabase || !user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from("user_documents")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("updated_at", { ascending: false });
-      
-      if (data) {
-        setSavedDocuments(data.map(doc => ({
-          id: doc.id,
-          title: doc.title,
-          content: doc.content,
-          subject: doc.subject || "",
-          createdAt: doc.created_at,
-          updatedAt: doc.updated_at,
-        })));
-      }
-    } catch (err) {
-      console.error("Failed to load documents:", err);
-    }
-  };
 
   const handleSaveDocument = async () => {
     if (!documentContent.trim()) {
@@ -298,7 +266,6 @@ export default function NotesEditorView({
       }
       
       setLastSaved(new Date());
-      await loadSavedDocuments();
     } catch (err: any) {
       console.error("Save failed:", err);
       setError("Failed to save document");
@@ -312,7 +279,6 @@ export default function NotesEditorView({
     setDocumentContent(doc.content);
     setSubject(doc.subject);
     setSavedDocumentId(doc.id);
-    setShowDocumentList(false);
     // Load saved generated content
     if (doc.flashcards) setSavedFlashcards(doc.flashcards);
     if (doc.quizQuestions) setSavedQuizQuestions(doc.quizQuestions);
@@ -328,7 +294,6 @@ export default function NotesEditorView({
     setSavedFlashcards([]);
     setSavedQuizQuestions([]);
     setSavedMatchData(null);
-    setShowDocumentList(false);
   };
 
   // Open customization modal before generating
@@ -536,7 +501,7 @@ export default function NotesEditorView({
               <div className="absolute inset-0 rounded-full border-4 border-gray-100 dark:border-gray-800"></div>
               <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
               <div className="absolute inset-3 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
-                <span className="text-2xl">✨</span>
+                <span className="text-2xl">📝</span>
               </div>
             </div>
             
@@ -571,7 +536,7 @@ export default function NotesEditorView({
               {[
                 { label: "Analyzing content...", icon: "🔍", time: 0 },
                 { label: "Structuring flashcards...", icon: "📑", time: 25 },
-                { label: "Finalizing study set...", icon: "🚀", time: 50 },
+                { label: "Finalizing study set...", icon: "✓", time: 50 },
               ].map((step, idx) => {
                 const isActive = elapsedSeconds >= step.time && (idx === 2 || elapsedSeconds < [25, 50, 999][idx]);
                 const isDone = elapsedSeconds >= [25, 50, 999][idx];
@@ -661,83 +626,7 @@ export default function NotesEditorView({
               />
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowDocumentList(!showDocumentList)}
-              className="p-2 rounded-lg transition-all hover:scale-105"
-              style={{
-                backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
-                color: isDarkMode ? "#5f6368" : "#5f6368",
-              }}
-              title="My Documents"
-            >
-              <DocumentIcon />
-            </button>
-            
-            <button
-              onClick={handleSaveDocument}
-              disabled={isSaving}
-              className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all hover:scale-105"
-              style={{
-                backgroundColor: "#1a73e8",
-                color: "#ffffff",
-                opacity: isSaving ? 0.7 : 1,
-              }}
-            >
-              {isSaving ? <SpinnerIcon /> : <SaveIcon />}
-              Save
-            </button>
-          </div>
         </div>
-
-        {/* Document List Dropdown */}
-        {showDocumentList && (
-          <div
-            className="absolute top-16 right-4 z-40 w-72 rounded-xl shadow-2xl border overflow-hidden"
-            style={{
-              backgroundColor: isDarkMode ? "#0f1d32" : "#ffffff",
-              borderColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
-            }}
-          >
-            <div className="p-3 border-b" style={{ borderColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)" }}>
-              <button
-                onClick={handleNewDocument}
-                className="w-full px-3 py-2 rounded-lg text-left font-medium transition-all"
-                style={{
-                  backgroundColor: "rgba(26, 115, 232, 0.15)",
-                  color: "#1a73e8",
-                }}
-              >
-                + New Document
-              </button>
-            </div>
-            <div className="max-h-64 overflow-y-auto">
-              {savedDocuments.length === 0 ? (
-                <p className="p-4 text-sm text-center" style={{ color: isDarkMode ? "#5f6368" : "#5f6368" }}>
-                  No saved documents
-                </p>
-              ) : (
-                savedDocuments.map((doc) => (
-                  <button
-                    key={doc.id}
-                    onClick={() => handleLoadDocument(doc)}
-                    className="w-full px-4 py-3 text-left border-b transition-all hover:bg-opacity-10"
-                    style={{
-                      borderColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
-                      color: isDarkMode ? "#ffffff" : "#000000",
-                    }}
-                  >
-                    <p className="font-medium truncate">{doc.title}</p>
-                    <p className="text-xs" style={{ color: isDarkMode ? "#5f6368" : "#5f6368" }}>
-                      {new Date(doc.updatedAt).toLocaleDateString()}
-                    </p>
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Subject Input */}
         <div className="px-6 py-3 border-b" style={{ borderColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)" }}>
@@ -1129,7 +1018,7 @@ Tips:
                   </>
                 ) : (
                   <>
-                    ✨ Generate {pendingGenerationType === "match" 
+                    Generate {pendingGenerationType === "match" 
                       ? `${generationSettings.matchPairs} Pairs` 
                       : `${generationSettings.count} Cards`}
                   </>

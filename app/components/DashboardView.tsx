@@ -7,7 +7,7 @@ import { getStreakStatus, getWeeklyActivity, getStreaksAtRisk } from "../utils/s
 // WelcomeCard removed - personalization disabled
 
 interface DashboardViewProps {
-  onSelectOption: (option: "notes" | "audio" | "document" | "youtube") => void;
+  onSelectOption: (option: "notes" | "audio" | "document" | "youtube" | "mathmaxx") => void;
   onCreateFlashcards: () => void;
   onLoadSet: (flashcards: import("../utils/storage").Flashcard[], setId: string) => void;
   isPremium: boolean;
@@ -16,6 +16,7 @@ interface DashboardViewProps {
   onBack?: () => void;
   onSettings?: () => void;
   savedSets: FlashcardSet[];
+  onMathMaxx?: () => void;
 }
 
 // Custom SVG icon components
@@ -32,7 +33,7 @@ const MicrophoneIcon = () => (
 );
 
 const LinkIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="#000000" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
   </svg>
 );
@@ -91,7 +92,8 @@ export default function DashboardView({
   user,
   onBack,
   onSettings,
-  savedSets
+  savedSets,
+  onMathMaxx
 }: DashboardViewProps) {
   const { settings } = useSettings();
   const [activeTab, setActiveTab] = useState<"my-notes" | "shared">("my-notes");
@@ -175,7 +177,7 @@ export default function DashboardView({
         body: JSON.stringify({ 
           message: userMessage,
           userId: user?.id || 'anonymous',
-          context: 'You are StudyMaxx AI, a helpful assistant built into the StudyMaxx study app. Help users navigate the app and answer questions about its features. Features include: creating study sets from text/notes, uploading PDFs/documents/images, importing from YouTube URLs and websites, flashcard study mode, quiz mode, match game, AI chat about study material, cross-device sync (premium), and difficulty settings. To create a study set, click "Quick Notes" to type text, "Upload Files" for documents, or "Import from URL" for YouTube/websites. Premium unlocks unlimited sets, file uploads, all difficulty levels, and more cards per set.',
+          context: 'You are StudyMaxx AI, a helpful study assistant built into StudyMaxx. Help users navigate and answer questions. Features: Quick Notes (type/paste text), Upload Files (PDF/images, premium), Import URL (YouTube/websites), flashcard study, quiz mode, match game, AI chat, MathMaxx (math practice with school-level problems), audio recording (record lectures). Premium unlocks unlimited sets, file uploads, all difficulty levels, up to 75 cards per set, and MathMaxx. To start studying, click Create New on the dashboard.',
           history: chatMessages.slice(-6),
         }),
       });
@@ -401,6 +403,42 @@ export default function DashboardView({
               </button>
             );
           })}
+        </div>
+
+        {/* MathMaxx Banner - Subtle Call to Action */}
+        <div 
+          className="mb-8 p-4 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
+          onClick={() => onMathMaxx && onMathMaxx()}
+          style={{ 
+            background: isDarkMode 
+              ? 'linear-gradient(90deg, rgba(6, 182, 212, 0.08) 0%, rgba(6, 182, 212, 0.04) 100%)' 
+              : 'linear-gradient(90deg, rgba(6, 182, 212, 0.04) 0%, rgba(6, 182, 212, 0.02) 100%)',
+            border: isDarkMode ? '1px solid rgba(6, 182, 212, 0.15)' : '1px solid rgba(6, 182, 212, 0.1)',
+          }}
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div 
+                className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4' }}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25v-.008zm2.498-6.75h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007v-.008zm2.504-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008v-.008zm2.498-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008v-.008zM8.25 6h7.5v2.25h-7.5V6zM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 002.25 2.25h10.5a2.25 2.25 0 002.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0012 2.25z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium" style={{ color: isDarkMode ? '#e2e8f0' : '#0f172a' }}>
+                  MathMaxx — Practice math problems
+                </h3>
+                <p className="text-xs mt-0.5" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
+                  School-level math practice tailored to your grade
+                </p>
+              </div>
+            </div>
+            <svg className="w-5 h-5 opacity-60" style={{ color: '#06b6d4' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
         </div>
 
         {/* Premium Upgrade Banner - show only for free users */}
@@ -687,6 +725,7 @@ export default function DashboardView({
           </button>
         )}
       </div>
+
     </div>
   );
 }

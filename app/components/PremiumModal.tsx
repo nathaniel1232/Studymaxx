@@ -99,13 +99,13 @@ export default function PremiumModal({
         }}
       >
         {/* Header - Solid & Clean */}
-        <div className="bg-violet-50 dark:bg-violet-950 border-b border-violet-200 dark:border-violet-900 p-2.5 flex items-start justify-between">
+        <div className="bg-blue-50 dark:bg-blue-950 border-b border-blue-200 dark:border-blue-900 p-2.5 flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2 mb-0.5">
-               <div className="w-6 h-6 rounded-lg bg-violet-700 flex items-center justify-center text-white text-sm">
+               <div className="w-6 h-6 rounded-lg bg-blue-700 flex items-center justify-center text-white text-sm">
                   🎓
                </div>
-               <span className="text-xs font-bold tracking-wider text-violet-700 dark:text-violet-400 uppercase">Premium</span>
+               <span className="text-xs font-bold tracking-wider text-blue-700 dark:text-blue-400 uppercase">Premium</span>
             </div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
               Unlimited Study Access
@@ -160,16 +160,16 @@ export default function PremiumModal({
           {/* Key Benefits */}
           <div className="space-y-1.5 px-1">
             <div className="flex items-start gap-2">
-              <div className="w-5 h-5 rounded-full bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-violet-700 dark:text-violet-400 text-xs font-bold">✓</span>
+              <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-blue-700 dark:text-blue-400 text-xs font-bold">✓</span>
               </div>
               <p className="text-xs text-gray-600 dark:text-gray-300">
                 <span className="font-semibold text-gray-900 dark:text-white">Unlimited</span> – Create any amount
               </p>
             </div>
             <div className="flex items-start gap-2">
-              <div className="w-5 h-5 rounded-full bg-violet-100 dark:bg-violet-900/50 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-violet-700 dark:text-violet-400 text-xs font-bold">✓</span>
+              <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-blue-700 dark:text-blue-400 text-xs font-bold">✓</span>
               </div>
               <p className="text-xs text-gray-600 dark:text-gray-300">
                 <span className="font-semibold text-gray-900 dark:text-white">Smart</span> – DOCX & images
@@ -199,9 +199,9 @@ export default function PremiumModal({
           </div>
 
           {/* Student Value Message */}
-          <div className="mx-1 p-2.5 bg-gradient-to-r from-cyan-500/10 to-teal-500/10 rounded-md border border-cyan-500/20">
+          <div className="mx-1 p-2.5 bg-cyan-500/10 rounded-md border border-cyan-500/20">
             <p className="text-xs text-center font-medium text-cyan-700 dark:text-cyan-400">
-              💡 <span className="font-bold">2x better exam scores</span>
+              ℹ️ <span className="font-bold">2x better exam scores</span>
             </p>
           </div>
 
@@ -212,16 +212,16 @@ export default function PremiumModal({
           )}
 
           {isPremium ? (
-            <div className="w-full py-3 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-bold rounded-md text-center text-sm shadow-lg">
+            <div className="w-full py-3 bg-emerald-100 dark:bg-emerald-900/30 border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-bold rounded-md text-center text-sm shadow-lg">
               ✅ Active Premium Member
             </div>
           ) : (
             <div className="flex flex-col gap-2">
               <button
                 onClick={handleUpgrade}
-                className="w-full py-3.5 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 text-white font-bold rounded-md shadow-xl shadow-purple-500/40 border-2 border-purple-400/50 hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-base"
+                className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-md shadow-xl shadow-blue-500/40 border-2 border-blue-400/50 hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-base"
               >
-                <span>🚀 View Premium Plans</span>
+                <span>View Premium Plans</span>
               </button>
               
               <button

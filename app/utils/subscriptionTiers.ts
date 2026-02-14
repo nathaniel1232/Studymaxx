@@ -39,8 +39,8 @@ export const TIERS: Record<TierName, SubscriptionTier> = {
     display_name: 'Free',
     monthly_price_cents: 0,
     yearly_price_cents: 0,
-    max_daily_sets: 3,
-    max_cards_per_set: 10,
+    max_daily_sets: 2,
+    max_cards_per_set: 20,
     max_folders: 5,
     features: {
       pdf: false,
@@ -59,7 +59,7 @@ export const TIERS: Record<TierName, SubscriptionTier> = {
     monthly_price_cents: 899, // $8.99/mo
     yearly_price_cents: 7999, // $79.99/yr ($6.67/mo, save 26%)
     max_daily_sets: -1, // unlimited
-    max_cards_per_set: 50,
+    max_cards_per_set: 75,
     max_folders: -1, // unlimited
     features: {
       pdf: true,

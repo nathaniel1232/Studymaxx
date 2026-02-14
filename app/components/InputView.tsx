@@ -806,7 +806,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
       <div className="w-full max-w-3xl">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-brand bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+          <h1 className="text-brand" style={{ color: '#06b6d4' }}>
             StudyMaxx
           </h1>
           <p className="text-body-large text-gray-600 dark:text-gray-300 font-light">
@@ -1082,10 +1082,10 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                       disabled={isLoading || selectedImages.length === 0}
                       className={`w-full mt-4 px-6 py-4 font-bold rounded-md transition-all shadow-lg text-white flex items-center justify-center gap-2 ${
                         isLoading 
-                          ? "bg-gradient-to-r from-blue-500 to-purple-500 cursor-wait"
+                          ? "bg-blue-500 cursor-wait"
                           : isImageExtractionComplete
                           ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 hover:shadow-xl"
-                          : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl"
+                          : "bg-blue-600 hover:bg-blue-700 hover:shadow-xl"
                       }`}
                     >
                       {isLoading ? (
@@ -1117,7 +1117,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                             {imageProcessingProgress}
                           </p>
                           <div className="w-full h-2 bg-blue-200 dark:bg-blue-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-gradient-to-r from-blue-500 to-purple-500 animate-pulse"></div>
+                            <div className="h-full bg-blue-500 animate-pulse"></div>
                           </div>
                           <p className="text-xs text-blue-600 dark:text-blue-400 italic">
                             This usually takes 10-30 seconds. Don't close the app.
@@ -1229,7 +1229,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                         disabled={isLocked}
                         className={`px-4 py-3 rounded-md font-medium transition-all relative ${
                           difficulty === level
-                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                            ? "bg-blue-600 text-white shadow-lg"
                             : isLocked
                               ? "bg-gray-100 dark:bg-gray-800/50 text-gray-400 dark:text-gray-600 border border-gray-200 dark:border-gray-700 cursor-not-allowed"
                               : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
@@ -1260,8 +1260,8 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                 <input
                   type="range"
                   min="3"
-                  max={isPremium ? "50" : FREE_LIMITS.maxFlashcardsPerSet.toString()}
-                  value={Math.min(numberOfFlashcards, isPremium ? 50 : FREE_LIMITS.maxFlashcardsPerSet)}
+                  max={isPremium ? "75" : FREE_LIMITS.maxFlashcardsPerSet.toString()}
+                  value={Math.min(numberOfFlashcards, isPremium ? 75 : FREE_LIMITS.maxFlashcardsPerSet)}
                   onChange={(e) => {
                     const value = parseInt(e.target.value);
                     if (!isPremium && value > FREE_LIMITS.maxFlashcardsPerSet) {
@@ -1272,16 +1272,16 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
                   }}
                   className="w-full h-2 rounded-lg appearance-none cursor-pointer"
                   style={{
-                    background: `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${((numberOfFlashcards - 3) / ((isPremium ? 50 : FREE_LIMITS.maxFlashcardsPerSet) - 3)) * 100}%, rgba(203,213,225,0.5) ${((numberOfFlashcards - 3) / ((isPremium ? 50 : FREE_LIMITS.maxFlashcardsPerSet) - 3)) * 100}%, rgba(203,213,225,0.5) 100%)`
+                    background: `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${((numberOfFlashcards - 3) / ((isPremium ? 75 : FREE_LIMITS.maxFlashcardsPerSet) - 3)) * 100}%, rgba(203,213,225,0.5) ${((numberOfFlashcards - 3) / ((isPremium ? 75 : FREE_LIMITS.maxFlashcardsPerSet) - 3)) * 100}%, rgba(203,213,225,0.5) 100%)`
                   }}
                 />
                 <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-2">
                   <span>3</span>
-                  <span>{isPremium ? '50' : FREE_LIMITS.maxFlashcardsPerSet}</span>
+                  <span>{isPremium ? '75' : FREE_LIMITS.maxFlashcardsPerSet}</span>
                 </div>
                 {!isPremium && (
                   <p className="text-xs text-amber-500 mt-2">
-                    ⭐ Premium users can create up to 50 flashcards per set
+                    ⭐ Premium users can create up to 75 flashcards per set
                   </p>
                 )}
               </div>
@@ -1309,7 +1309,7 @@ export default function InputView({ onGenerateFlashcards, onViewSavedSets, onBac
             <button
               type="submit"
               disabled={isLoading || !textInput.trim() || (selectedImages.length > 0 && !isImageExtractionComplete)}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-6 px-8 rounded-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl text-xl"
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-6 px-8 rounded-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl text-xl"
             >
               {isLoading ? (
                 <span className="flex flex-col items-center justify-center gap-2">

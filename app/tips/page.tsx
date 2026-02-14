@@ -98,13 +98,13 @@ export default function StudyTipsPage() {
             onClick={() => router.push('/pricing')}
             style={{ 
               background: isDarkMode 
-                ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(59, 130, 246, 0.1) 100%)'
-                : 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(59, 130, 246, 0.06) 100%)',
+                ? 'rgba(6, 182, 212, 0.1)'
+                : 'rgba(6, 182, 212, 0.06)',
               border: '1px solid rgba(6, 182, 212, 0.25)',
             }}
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #06b6d4, #3b82f6)' }}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: '#06b6d4' }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/>
                 </svg>

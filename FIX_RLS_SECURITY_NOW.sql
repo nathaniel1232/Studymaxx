@@ -10,11 +10,14 @@ AND tablename IN ('users', 'flashcard_sets');
 -- Ensure RLS is enabled on users table
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
--- Drop all existing policies to start clean
+-- Drop all existing policies to start clean (including previously created ones)
 DROP POLICY IF EXISTS "Users can view own data" ON public.users;
 DROP POLICY IF EXISTS "Users can update own data" ON public.users;
 DROP POLICY IF EXISTS "Users can insert own data" ON public.users;
 DROP POLICY IF EXISTS "Enable read access for all users" ON public.users;
+DROP POLICY IF EXISTS "Users can read own profile" ON public.users;
+DROP POLICY IF EXISTS "Users can update own profile" ON public.users;
+DROP POLICY IF EXISTS "Service role can insert users" ON public.users;
 
 -- SECURE POLICY: Users can ONLY read their own data (authenticated required)
 CREATE POLICY "Users can read own profile"
@@ -38,7 +41,14 @@ CREATE POLICY "Service role can insert users"
 -- Now fix flashcard_sets RLS policies
 ALTER TABLE public.flashcard_sets ENABLE ROW LEVEL SECURITY;
 
--- Drop all existing policies
+-- Drop ALL existing policies (including all variations and duplicates)
+DROP POLICY IF EXISTS "Users can view own flashcard sets" ON public.flashcard_sets;
+DROP POLICY IF EXISTS "Users can insert own flashcard sets" ON public.flashcard_sets;
+DROP POLICY IF EXISTS "Users can create own flashcard sets" ON public.flashcard_sets;
+DROP POLICY IF EXISTS "Users can update own flashcard sets" ON public.flashcard_sets;
+DROP POLICY IF EXISTS "Users can delete own flashcard sets" ON public.flashcard_sets;
+DROP POLICY IF EXISTS "Public can view shared flashcard sets" ON public.flashcard_sets;
+DROP POLICY IF EXISTS "Anyone can view shared flashcard sets" ON public.flashcard_sets;
 DROP POLICY IF EXISTS "Users can view own sets" ON public.flashcard_sets;
 DROP POLICY IF EXISTS "Users can insert own sets" ON public.flashcard_sets;
 DROP POLICY IF EXISTS "Users can update own sets" ON public.flashcard_sets;
@@ -46,6 +56,7 @@ DROP POLICY IF EXISTS "Users can delete own sets" ON public.flashcard_sets;
 DROP POLICY IF EXISTS "Anyone can view shared sets" ON public.flashcard_sets;
 DROP POLICY IF EXISTS "Enable read access for all users" ON public.flashcard_sets;
 DROP POLICY IF EXISTS "Allow public read access to shared flashcard sets" ON public.flashcard_sets;
+DROP POLICY IF EXISTS "Service role has full access" ON public.flashcard_sets;
 
 -- SECURE flashcard_sets policies
 -- 1. Users can view their own sets
@@ -60,20 +71,27 @@ CREATE POLICY "Public can view shared flashcard sets"
   FOR SELECT
   USING (is_shared = true);
 
--- 3. Users can insert their own sets
+-- 3. Service role has full access (needed for backend operations)
+CREATE POLICY "Service role has full access"
+  ON public.flashcard_sets
+  FOR ALL
+  USING (auth.role() = 'service_role')
+  WITH CHECK (auth.role() = 'service_role');
+
+-- 4. Users can insert their own sets
 CREATE POLICY "Users can insert own flashcard sets"
   ON public.flashcard_sets
   FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
--- 4. Users can update their own sets
+-- 5. Users can update their own sets
 CREATE POLICY "Users can update own flashcard sets"
   ON public.flashcard_sets
   FOR UPDATE
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
--- 5. Users can delete their own sets
+-- 6. Users can delete their own sets
 CREATE POLICY "Users can delete own flashcard sets"
   ON public.flashcard_sets
   FOR DELETE

@@ -12,7 +12,7 @@ interface WelcomeCardProps {
 const STUDENT_TYPES = [
   { value: "high_school", label: "High School", icon: "📚" },
   { value: "university", label: "College / University", icon: "🎓" },
-  { value: "graduate", label: "Graduate Student", icon: "🎯" },
+  { value: "graduate", label: "Graduate Student", icon: "�" },
   { value: "professional", label: "Professional", icon: "💼" },
 ];
 

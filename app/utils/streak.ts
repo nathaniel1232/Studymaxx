@@ -52,30 +52,59 @@ function saveStreakData(data: StreakData): void {
 }
 
 /**
+ * Calculate the actual current streak from an array of studied dates.
+ * Counts consecutive days backwards from today (or yesterday if not studied today).
+ */
+function computeStreak(studiedDates: string[]): number {
+  if (studiedDates.length === 0) return 0;
+  
+  const sortedDates = [...new Set(studiedDates)].sort().reverse();
+  const today = getTodayStr();
+  const yesterday = getYesterdayStr();
+  
+  // Must have studied today or yesterday to have an active streak
+  if (sortedDates[0] !== today && sortedDates[0] !== yesterday) return 0;
+  
+  let streak = 0;
+  let expectedDate = new Date();
+  // If we haven't studied today, start counting from yesterday
+  if (sortedDates[0] !== today) {
+    expectedDate.setDate(expectedDate.getDate() - 1);
+  }
+  
+  for (const dateStr of sortedDates) {
+    const expected = expectedDate.toISOString().split("T")[0];
+    if (dateStr === expected) {
+      streak++;
+      expectedDate.setDate(expectedDate.getDate() - 1);
+    } else if (dateStr < expected) {
+      // Gap found — streak is broken
+      break;
+    }
+    // dateStr > expected means duplicate or future date, skip
+  }
+  
+  return streak;
+}
+
+/**
  * Record that the user studied a specific set today.
  * Call this when user opens/interacts with a study set.
  */
 export function recordStudySession(setId: string, setName: string): void {
   const data = getStreakData();
   const today = getTodayStr();
-  const yesterday = getYesterdayStr();
 
-  // === Update overall streak ===
-  if (data.lastStudiedDate !== today) {
-    if (data.lastStudiedDate === yesterday) {
-      // Consecutive day — extend streak
-      data.overallStreak += 1;
-    } else if (data.lastStudiedDate === null || data.lastStudiedDate < yesterday) {
-      // Streak broken — reset to 1
-      data.overallStreak = 1;
-    }
-    data.lastStudiedDate = today;
-    if (!data.studiedDates.includes(today)) {
-      data.studiedDates.push(today);
-      // Keep last 90 days only
-      if (data.studiedDates.length > 90) data.studiedDates = data.studiedDates.slice(-90);
-    }
+  // === Update overall studied dates ===
+  if (!data.studiedDates.includes(today)) {
+    data.studiedDates.push(today);
+    // Keep last 90 days only
+    if (data.studiedDates.length > 90) data.studiedDates = data.studiedDates.slice(-90);
   }
+  data.lastStudiedDate = today;
+
+  // Recompute overall streak from actual dates
+  data.overallStreak = computeStreak(data.studiedDates);
   data.longestOverallStreak = Math.max(data.longestOverallStreak, data.overallStreak);
 
   // === Update per-set streak ===
@@ -93,18 +122,14 @@ export function recordStudySession(setId: string, setName: string): void {
   const ss = data.setStreaks[setId];
   ss.setName = setName; // Update name in case it changed
 
-  if (ss.lastStudiedDate !== today) {
-    if (ss.lastStudiedDate === yesterday) {
-      ss.currentStreak += 1;
-    } else if (!ss.lastStudiedDate || ss.lastStudiedDate < yesterday) {
-      ss.currentStreak = 1;
-    }
-    ss.lastStudiedDate = today;
-    if (!ss.studiedDates.includes(today)) {
-      ss.studiedDates.push(today);
-      if (ss.studiedDates.length > 90) ss.studiedDates = ss.studiedDates.slice(-90);
-    }
+  if (!ss.studiedDates.includes(today)) {
+    ss.studiedDates.push(today);
+    if (ss.studiedDates.length > 90) ss.studiedDates = ss.studiedDates.slice(-90);
   }
+  ss.lastStudiedDate = today;
+
+  // Recompute per-set streak from actual dates
+  ss.currentStreak = computeStreak(ss.studiedDates);
   ss.longestStreak = Math.max(ss.longestStreak, ss.currentStreak);
 
   saveStreakData(data);
@@ -112,7 +137,7 @@ export function recordStudySession(setId: string, setName: string): void {
 
 /**
  * Get current streak status for display.
- * Recalculates based on current date (handles streak breaks at midnight).
+ * Recalculates based on actual studied dates (handles streak breaks correctly).
  */
 export function getStreakStatus(): {
   overallStreak: number;
@@ -123,32 +148,23 @@ export function getStreakStatus(): {
 } {
   const data = getStreakData();
   const today = getTodayStr();
-  const yesterday = getYesterdayStr();
 
-  // Recalculate overall streak validity
-  let overallStreak = data.overallStreak;
-  const studiedToday = data.lastStudiedDate === today;
-  
-  if (!studiedToday) {
-    if (data.lastStudiedDate === yesterday) {
-      // Still have their streak — just haven't studied yet today
-    } else {
-      // Streak is broken
-      overallStreak = 0;
-    }
-  }
+  // Recompute overall streak from actual dates
+  const overallStreak = computeStreak(data.studiedDates);
+  const studiedToday = data.studiedDates.includes(today);
 
   // Recalculate per-set streaks
   const activeSetStreaks: SetStreak[] = [];
   const brokenSetStreaks: SetStreak[] = [];
 
   for (const ss of Object.values(data.setStreaks)) {
-    if (ss.lastStudiedDate === today || ss.lastStudiedDate === yesterday) {
+    const setStreak = computeStreak(ss.studiedDates);
+    if (setStreak > 0) {
       activeSetStreaks.push({
         ...ss,
-        currentStreak: ss.lastStudiedDate === today ? ss.currentStreak : ss.currentStreak,
+        currentStreak: setStreak,
       });
-    } else if (ss.currentStreak > 0 && ss.longestStreak > 1) {
+    } else if (ss.longestStreak > 1) {
       brokenSetStreaks.push(ss);
     }
   }
@@ -156,7 +172,7 @@ export function getStreakStatus(): {
   return {
     overallStreak,
     studiedToday,
-    longestStreak: data.longestOverallStreak,
+    longestStreak: Math.max(data.longestOverallStreak, overallStreak),
     setStreaks: activeSetStreaks,
     brokenSetStreaks,
   };
@@ -169,13 +185,13 @@ export function getStreakStatus(): {
 export function getStreaksAtRisk(): SetStreak[] {
   const data = getStreakData();
   const today = getTodayStr();
-  const yesterday = getYesterdayStr();
   const atRisk: SetStreak[] = [];
 
   for (const ss of Object.values(data.setStreaks)) {
-    // Has a streak (>= 2 days), studied yesterday but not today
-    if (ss.currentStreak >= 2 && ss.lastStudiedDate === yesterday) {
-      atRisk.push(ss);
+    const currentStreak = computeStreak(ss.studiedDates);
+    // Has a streak (>= 2 days) via yesterday but not studied today
+    if (currentStreak >= 2 && !ss.studiedDates.includes(today)) {
+      atRisk.push({ ...ss, currentStreak });
     }
   }
 

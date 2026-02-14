@@ -432,7 +432,7 @@ async function generateWithAI(
 
   // Calculate buffer for count enforcement
   // Add 20% buffer to account for validation dropping some cards
-  const bufferedCount = Math.min(Math.ceil(numberOfFlashcards * 1.2), 50);
+  const bufferedCount = Math.min(Math.ceil(numberOfFlashcards * 1.2), 90);
 
   // Build material-specific instructions
   let materialInstructions = "";
@@ -680,26 +680,42 @@ ${materialInstructions}
 
 🎯 CONTENT QUALITY — MAKE EVERY CARD WORTH STUDYING:
 
-1. ZERO REPETITION — EVERY card must test a DIFFERENT concept:
-   - NEVER make 2+ cards about the same fact phrased differently
+1. ZERO REPETITION — EVERY card MUST test a UNIQUE concept:
+   - NEVER make 2+ cards about the same fact, even if phrased differently
    - NEVER ask "What is X?" and then "Define X" — that's the SAME card
-   - Before writing each card, mentally check: "Have I already covered this?"
-   - Cover BREADTH of the material: different topics, sections, themes, people, events, processes
-   - If the material has 10 sections, ensure cards from ALL 10 sections, not 5 cards from section 1
+   - NEVER test the same concept from different angles (e.g., "What causes X?" + "X is caused by what?")
+   - Before writing EACH card, mentally verify: "Have I already covered this exact concept?"
+   - If you catch yourself making a similar card, SKIP it and find a NEW topic
+   - DUPLICATE DETECTION: If any two cards could have the same answer, one must be removed
 
-2. ASK WHAT MATTERS — Focus on EXAM-WORTHY content:
+2. MAXIMUM TOPIC COVERAGE — Spread cards across ALL content:
+   - Mentally divide the input text into sections/themes
+   - Distribute cards EVENLY across all sections — not clustered on one topic
+   - If input has 8 themes, each theme should get roughly ${bufferedCount}/8 cards
+   - Cover: key terms, processes, people, dates, relationships, causes, effects, comparisons
+   - DEPTH + BREADTH: Go deep on important topics, but never skip entire sections
+   - If material is limited, expand with RELATED and ACCURATE supplementary knowledge
+
+3. QUESTION VARIETY — Mix question types across the set:
+   - Use AT LEAST 5 different question starters across the full set
+   - Rotate between: "What...", "Which...", "Who...", "When...", "Where...", "How does...", "What causes...", "Name the...", "What is the term for..."
+   - NEVER have 3+ consecutive questions starting with the same word
+   - Mix difficulty within the set: some recall, some application, some connecting ideas
+   - Each card should feel FRESH and DIFFERENT from the previous one
+
+4. PROGRESSIVE DIFFICULTY — Build knowledge through the set:
+   - Start with foundational definitions (cards 1-20%)
+   - Move to understanding relationships (cards 20-60%)
+   - End with application and connections (cards 60-100%)
+   - This mimics how students naturally learn a topic
+
+5. EXAM-WORTHY CONTENT — Focus on what matters:
    - Key definitions, core concepts, important relationships
    - Cause-and-effect chains, processes and their steps
    - Dates/names/numbers that are critical to know
    - Common exam questions professors ask about this topic
-   - DO NOT test trivial details (page numbers, specific example names unless important, etc.)
+   - DO NOT test trivial details (page numbers, example names, formatting, etc.)
    - Each card should make the student think: "I'm glad I studied this"
-
-3. SMART QUESTION DESIGN — Test understanding, not just recall:
-   - Vary question types: "What...", "Which...", "How does...", "What causes...", "Name the..."
-   - Use CONTEXT in questions to make them specific (not vague)
-   - BAD: "What is important in biology?" → TOO VAGUE
-   - GOOD: "What organelle is responsible for ATP production?" → SPECIFIC
 
 🚨 FORBIDDEN QUESTION TYPES (These don't work as flashcards!):
   ❌ "Explain..." / "Discuss..." / "Describe in detail..." / "Analyze..." / "Compare and contrast..."

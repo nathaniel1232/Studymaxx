@@ -779,7 +779,7 @@ export default function AudioRecordingView({
                             <div className="absolute inset-0 bg-white/20" style={{ width: `${transcribeProgress}%`, transition: 'width 0.3s ease' }} />
                           )}
                           <span className="relative z-10 flex items-center justify-center gap-2">
-                            {isTranscribing ? <><SpinnerIcon /> Processing...</> : '✨ Create AI Notes'}
+                            {isTranscribing ? <><SpinnerIcon /> Processing...</> : 'Create AI Notes'}
                           </span>
                         </button>
                       </div>

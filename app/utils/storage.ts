@@ -174,6 +174,56 @@ export const saveFlashcardSet = async (
   }
 };
 
+/**
+ * Update the flashcards in an existing set.
+ * Works for both logged-in (Supabase) and anonymous (localStorage) users.
+ */
+export const updateFlashcardSetCards = async (
+  setId: string,
+  updatedCards: Flashcard[]
+): Promise<boolean> => {
+  if (typeof window === "undefined") return false;
+
+  const token = await getAuthToken();
+
+  // For logged-in users: update via API
+  if (token) {
+    try {
+      const response = await fetch('/api/flashcard-sets', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: setId, flashcards: updatedCards }),
+      });
+      if (response.ok) {
+        console.log('[Storage] ✅ Updated flashcards in Supabase');
+      }
+    } catch (error) {
+      console.error('[Storage] ❌ Error updating in Supabase:', error);
+    }
+  }
+
+  // Always update localStorage too
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const sets: FlashcardSet[] = JSON.parse(raw);
+      const idx = sets.findIndex(s => s.id === setId);
+      if (idx !== -1) {
+        sets[idx].flashcards = updatedCards;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sets));
+        console.log('[Storage] ✅ Updated flashcards in localStorage');
+      }
+    }
+  } catch (error) {
+    console.error('[Storage] Error updating localStorage:', error);
+  }
+
+  return true;
+};
+
 export const getSavedFlashcardSets = async (): Promise<FlashcardSet[]> => {
   if (typeof window === "undefined") {
     return [];

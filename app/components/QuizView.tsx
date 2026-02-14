@@ -175,7 +175,7 @@ export default function QuizView({ questions, subject, onBack }: QuizViewProps) 
             border: `1px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
             boxShadow: isDarkMode ? 'none' : '0 4px 24px rgba(0,0,0,0.06)',
           }}>
-            <div className="text-4xl mb-4">🧠</div>
+            <div className="text-4xl mb-4">📝</div>
             <h2 className="text-2xl font-bold mb-2" style={{ color: isDarkMode ? "#ffffff" : "#000000" }}>
               Quiz Mode
             </h2>

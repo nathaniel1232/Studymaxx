@@ -77,7 +77,7 @@ export default function SharePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-950">
         <div className="text-center">
           <div className="w-20 h-20 border-4 border-cyan-200 dark:border-cyan-800 border-t-cyan-600 dark:border-t-cyan-400 rounded-full animate-spin mx-auto mb-6"></div>
           <p className="text-gray-600 dark:text-gray-400 text-lg font-semibold">Loading study set...</p>
@@ -88,7 +88,7 @@ export default function SharePage() {
 
   if (error || !flashcardSet) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+      <div className="min-h-screen flex items-center justify-center px-4 bg-white dark:bg-gray-950">
         <div className="max-w-md w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-md shadow-2xl p-10 border border-gray-100 dark:border-gray-700 text-center">
           <div className="text-6xl mb-6">😕</div>
           <h1 className="text-2xl font-black text-gray-900 dark:text-white mb-3">
@@ -99,7 +99,7 @@ export default function SharePage() {
           </p>
           <button
             onClick={() => router.push("/")}
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-black text-lg rounded-md hover:shadow-lg transition-all transform hover:scale-105"
+            className="px-8 py-4 bg-cyan-600 text-white font-black text-lg rounded-md hover:shadow-lg transition-all transform hover:scale-105"
           >
             🏠 Go Back Home
           </button>
@@ -109,14 +109,14 @@ export default function SharePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* Header with share info */}
-      <div className="bg-gradient-to-r from-cyan-50 to-teal-50 dark:from-cyan-950/30 dark:to-teal-950/30 backdrop-blur-sm border-b-2 border-cyan-200 dark:border-cyan-800">
+      <div className="bg-cyan-50 dark:bg-cyan-950/30 backdrop-blur-sm border-b-2 border-cyan-200 dark:border-cyan-800">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="flex items-center justify-between flex-wrap gap-6">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-cyan-500 dark:text-cyan-400"><LinkIcon /></span>
+                <span className="text-gray-900 dark:text-white"><LinkIcon /></span>
                 <span className="px-4 py-2 bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 text-sm font-black rounded-full">
                   Shared Study Set
                 </span>
@@ -134,7 +134,7 @@ export default function SharePage() {
               className={`px-8 py-4 font-black text-lg rounded-md transition-all transform hover:scale-105 flex items-center gap-2 ${
                 isCopied
                   ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
-                  : "bg-gradient-to-r from-cyan-500 to-teal-600 text-white hover:shadow-xl hover:shadow-cyan-400/50"
+                  : "bg-cyan-600 text-white hover:shadow-xl hover:shadow-cyan-400/50"
               }`}
             >
               {isCopied ? <><CheckIcon /> Copied!</> : <><CopyIcon /> Copy to Collection</>}

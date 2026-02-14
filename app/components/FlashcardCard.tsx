@@ -52,28 +52,28 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
   const getCardStyle = (): React.CSSProperties => {
     if (currentRating === 'good') {
       return {
-        background: 'linear-gradient(135deg, #34d399 0%, #10b981 50%, #14b8a6 100%)',
+        background: '#10b981',
         boxShadow: '0 25px 50px -12px rgba(16, 185, 129, 0.6), 0 0 60px rgba(16, 185, 129, 0.4)',
         transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
       };
     }
     if (currentRating === 'ok') {
       return {
-        background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #f97316 100%)',
+        background: '#f59e0b',
         boxShadow: '0 25px 50px -12px rgba(245, 158, 11, 0.6), 0 0 60px rgba(245, 158, 11, 0.4)',
         transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
       };
     }
     if (currentRating === 'bad') {
       return {
-        background: 'linear-gradient(135deg, #fb7185 0%, #ef4444 50%, #ec4899 100%)',
+        background: '#ef4444',
         boxShadow: '0 25px 50px -12px rgba(239, 68, 68, 0.6), 0 0 60px rgba(239, 68, 68, 0.4)',
         transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
       };
     }
     // Default LYSENDE BLÅ - SMOOTH
     return {
-      background: 'linear-gradient(135deg, #60a5fa 0%, #22d3ee 50%, #3b82f6 100%)',
+      background: '#06b6d4',
       boxShadow: '0 25px 50px -12px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.5)',
       transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
     };
@@ -158,8 +158,8 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
             }}
             className={`group relative px-6 md:px-10 py-3 md:py-6 rounded-md md:rounded-md font-bold md:font-black text-sm md:text-xl transition-all duration-500 ease-out shadow-lg md:shadow-xl hover:shadow-xl md:hover:shadow-2xl overflow-hidden active:scale-95 ${
               currentRating === 'bad' 
-                ? 'bg-gradient-to-br from-rose-500 via-red-500 to-rose-600 text-white scale-105 md:scale-110 shadow-rose-500/50' 
-                : 'bg-white dark:bg-gray-800 text-rose-600 dark:text-rose-400 hover:bg-gradient-to-br hover:from-rose-50 hover:to-red-50 dark:hover:from-rose-950/30 dark:hover:to-red-950/30 hover:scale-105 md:hover:scale-110 hover:-translate-y-1 md:hover:-translate-y-2 shadow-rose-200/50 hover:shadow-rose-300/60'
+                ? 'bg-rose-500 text-white scale-105 md:scale-110 shadow-rose-500/50' 
+                : 'bg-white dark:bg-gray-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:scale-105 md:hover:scale-110 hover:-translate-y-1 md:hover:-translate-y-2 shadow-rose-200/50 hover:shadow-rose-300/60'
             }`}
           >
             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
@@ -177,8 +177,8 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
             }}
             className={`group relative px-6 md:px-10 py-3 md:py-6 rounded-md md:rounded-md font-bold md:font-black text-sm md:text-xl transition-all duration-500 ease-out shadow-lg md:shadow-xl hover:shadow-xl md:hover:shadow-2xl overflow-hidden active:scale-95 ${
               currentRating === 'ok' 
-                ? 'bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600 text-white scale-105 md:scale-110 shadow-amber-500/50' 
-                : 'bg-white dark:bg-gray-800 text-amber-600 dark:text-amber-400 hover:bg-gradient-to-br hover:from-amber-50 hover:to-yellow-50 dark:hover:from-amber-950/30 dark:hover:to-yellow-950/30 hover:scale-105 md:hover:scale-110 hover:-translate-y-1 md:hover:-translate-y-2 shadow-amber-200/50 hover:shadow-amber-300/60'
+                ? 'bg-amber-500 text-white scale-105 md:scale-110 shadow-amber-500/50' 
+                : 'bg-white dark:bg-gray-800 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 hover:scale-105 md:hover:scale-110 hover:-translate-y-1 md:hover:-translate-y-2 shadow-amber-200/50 hover:shadow-amber-300/60'
             }`}
           >
             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
@@ -196,8 +196,8 @@ export default function FlashcardCard({ card, isMastered, onRate, currentRating 
             }}
             className={`group relative px-6 md:px-10 py-3 md:py-6 rounded-md md:rounded-md font-bold md:font-black text-sm md:text-xl transition-all duration-500 ease-out shadow-lg md:shadow-xl hover:shadow-xl md:hover:shadow-2xl overflow-hidden active:scale-95 ${
               currentRating === 'good' 
-                ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-emerald-600 text-white scale-105 md:scale-110 shadow-emerald-500/50'
-                : 'bg-white dark:bg-gray-800 text-emerald-600 dark:text-emerald-400 hover:bg-gradient-to-br hover:from-emerald-50 hover:to-green-50 dark:hover:from-emerald-950/30 dark:hover:to-green-950/30 hover:scale-105 md:hover:scale-110 hover:-translate-y-1 md:hover:-translate-y-2 shadow-emerald-200/50 hover:shadow-emerald-300/60'
+                ? 'bg-emerald-500 text-white scale-105 md:scale-110 shadow-emerald-500/50'
+                : 'bg-white dark:bg-gray-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:scale-105 md:hover:scale-110 hover:-translate-y-1 md:hover:-translate-y-2 shadow-emerald-200/50 hover:shadow-emerald-300/60'
             }`}
           >
             <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>

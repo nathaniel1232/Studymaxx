@@ -12,10 +12,10 @@ const STUDENT_TYPES = [
   { value: "high_school", label: "High School Student", emoji: "📚", description: "Grades 9-12" },
   { value: "middle_school", label: "Middle School Student", emoji: "📖", description: "Grades 6-8" },
   { value: "university", label: "Undergraduate Student", emoji: "🎓", description: "Bachelor's degree" },
-  { value: "graduate", label: "Graduate Student", emoji: "🎯", description: "Master's or PhD" },
+  { value: "graduate", label: "Graduate Student", emoji: "�", description: "Master's or PhD" },
   { value: "professional", label: "Working Professional", emoji: "💼", description: "Career development" },
   { value: "teacher", label: "Teacher / Professor", emoji: "👨‍🏫", description: "Creating study materials" },
-  { value: "other", label: "Other", emoji: "🌟", description: "Self-learner" },
+  { value: "other", label: "Other", emoji: "📖", description: "Self-learner" },
 ];
 
 // Standardized tests
@@ -329,7 +329,7 @@ export default function TurboOnboarding({ onComplete }: TurboOnboardingProps) {
               color: '#ffffff'
             }}
           >
-            {isSubmitting ? 'Setting up...' : step === totalSteps ? 'Get Started 🚀' : 'Continue'}
+            {isSubmitting ? 'Setting up...' : step === totalSteps ? 'Get Started' : 'Continue'}
           </button>
 
           <div className="flex items-center justify-between">

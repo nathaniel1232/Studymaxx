@@ -45,7 +45,7 @@ export default function AboutPage() {
         </button>
         
         <h1 className="text-4xl font-bold mb-4" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-          About <span style={{ color: '#22d3ee' }}>Study</span>Maxx
+          About <span style={{ color: '#06b6d4' }}>Study</span>Maxx
         </h1>
         
         <p className="text-lg mb-8" style={{ color: '#5f6368' }}>
@@ -54,14 +54,14 @@ export default function AboutPage() {
         
         <div className="space-y-6">
           <div className="p-6 rounded-2xl shadow-sm" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : '#ffffff', border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid #cbd5e1' }}>
-            <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#0f172a' }}>🎯 Our Mission</h2>
+            <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#0f172a' }}>Our Mission</h2>
             <p style={{ color: isDarkMode ? '#94a3b8' : '#374151' }}>
               We believe studying shouldn't be painful. StudyMaxx uses advanced AI to transform any content - notes, PDFs, YouTube videos, audio recordings - into personalized study materials that actually help you learn.
             </p>
           </div>
 
           <div className="p-6 rounded-2xl shadow-sm" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : '#ffffff', border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid #cbd5e1' }}>
-            <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#0f172a' }}>⚡ How It Works</h2>
+            <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#0f172a' }}>How It Works</h2>
             <p style={{ color: isDarkMode ? '#94a3b8' : '#374151' }}>
               Simply paste your notes, upload a document, or share a YouTube link. Our AI analyzes the content and generates high-quality flashcards, quizzes, and summaries tailored to help you ace your exams.
             </p>

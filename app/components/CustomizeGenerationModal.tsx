@@ -77,7 +77,7 @@ export default function CustomizeGenerationModal({
   // Free users get max count limits, premium gets higher
   const maxCount = generationType === "match" 
     ? (isPremium ? 25 : 10)
-    : (isPremium ? 100 : 20);
+    : (isPremium ? 75 : 20);
   const minCount = generationType === "match" ? 4 : 5;
   const step = generationType === "match" ? 1 : 5;
 

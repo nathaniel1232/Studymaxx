@@ -31,6 +31,7 @@ import NotesEditorView from "./components/NotesEditorView";
 import QuizView from "./components/QuizView";
 import MatchGame from "./components/MatchGame";
 import SubjectPromptModal from "./components/SubjectPromptModal";
+import MathMaxxView from "./components/MathMaxxView";
 
 // Custom SVG Icons for landing page (replacing emojis)
 const EditNoteIcon = () => (
@@ -56,7 +57,7 @@ const TargetIcon = () => (
   </svg>
 );
 
-type ViewMode = "home" | "input" | "createFlow" | "dashboard" | "studying" | "saved" | "settings" | "audio" | "youtube" | "document" | "notes" | "quiz" | "match" | "pricing" | "tips" | "about";
+type ViewMode = "home" | "input" | "createFlow" | "dashboard" | "studying" | "saved" | "settings" | "audio" | "youtube" | "document" | "notes" | "quiz" | "match" | "pricing" | "tips" | "about" | "mathmaxx";
 type MaterialType = "notes" | "audio" | "document" | "youtube" | null;
 
 export default function Home() {
@@ -126,7 +127,8 @@ export default function Home() {
         about: '/about',
         notes: '/notes',
         quiz: '/quiz',
-        match: '/match'
+        match: '/match',
+        mathmaxx: '/mathmaxx'
       };
       window.history.pushState({}, '', urlMap[previousView] || '/');
     } else if (user) {
@@ -270,7 +272,7 @@ export default function Home() {
               
               // Show success toast
               setToast({ 
-                message: '🎉 Premium activated! All features unlocked.',
+                message: 'Premium activated! All features unlocked.',
                 type: 'success' 
               });
               
@@ -553,7 +555,14 @@ export default function Home() {
     navigateTo("dashboard", "/dashboard");
   };
 
-  const handleGoToCreate = (option?: "notes" | "audio" | "document" | "youtube") => {
+  const handleGoToCreate = (option?: "notes" | "audio" | "document" | "youtube" | "mathmaxx") => {
+    // Handle MathMaxx
+    if (option === "mathmaxx") {
+      setViewMode('mathmaxx');
+      window.history.pushState({}, '', '/mathmaxx');
+      return;
+    }
+    
     // Route to dedicated views for audio, youtube, document, and notes
     // But first show subject prompt modal
     if (option === "audio" || option === "youtube" || option === "document" || option === "notes") {
@@ -647,7 +656,7 @@ export default function Home() {
           <nav className="relative z-50 px-6 py-4 flex justify-between items-center border-b" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0' }}>
             <div className="flex items-center gap-8">
               <div className="text-2xl font-bold tracking-tight" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>
-                <span style={{ color: '#1a73e8' }}>Study</span>Maxx
+                <span style={{ color: '#06b6d4' }}>Study</span>Maxx
               </div>
               <div className="hidden md:flex items-center gap-6">
                 <a href="/pricing" style={{ color: '#5f6368' }} className="text-sm hover:text-blue-600 transition-colors">Upgrade to Premium</a>
@@ -668,7 +677,7 @@ export default function Home() {
                     onClick={handleCreateNew}
                     className="px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-200 hover:shadow-md"
                     style={{ 
-                      backgroundColor: '#1a73e8', 
+                      backgroundColor: '#06b6d4', 
                       color: '#ffffff',
                     }}
                   >
@@ -695,7 +704,7 @@ export default function Home() {
                     onClick={handleCreateNew}
                     className="px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-200 hover:shadow-md hover:brightness-110"
                     style={{ 
-                      backgroundColor: '#1a73e8', 
+                      backgroundColor: '#06b6d4', 
                       color: '#ffffff',
                     }}
                   >
@@ -712,7 +721,7 @@ export default function Home() {
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               <div 
                 className="absolute w-72 h-72 rounded-full morphing-blob opacity-20 blur-3xl animate-float"
-                style={{ backgroundColor: 'rgba(26, 115, 232, 0.25)', top: '10%', left: '10%' }}
+                style={{ backgroundColor: 'rgba(6, 182, 212, 0.25)', top: '10%', left: '10%' }}
               />
               <div 
                 className="absolute w-96 h-96 rounded-full morphing-blob opacity-15 blur-3xl animate-float animation-delay-2000"
@@ -726,45 +735,39 @@ export default function Home() {
 
             {/* Main Headline */}
             <h1 className="text-5xl md:text-7xl font-bold text-center max-w-4xl mb-6 leading-[1.1] animate-fade-in-up animation-delay-100">
-              <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>Stop re-reading.</span>
+              <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>Study less.</span>
               <br />
-              <span 
-                className="bg-clip-text text-transparent"
-                style={{ 
-                  backgroundImage: 'linear-gradient(135deg, #1a73e8, #2563eb, #1a73e8)',
-                  backgroundSize: '100% 100%'
-                }}
-              >
-                Start remembering.
+              <span style={{ color: '#06b6d4' }}>
+                Remember everything.
               </span>
             </h1>
             
             {/* Subheadline */}
             <p className="text-lg md:text-xl text-center max-w-2xl mb-10 animate-fade-in-up animation-delay-200" style={{ color: '#5f6368' }}>
-              Paste your notes, upload a PDF, or drop a YouTube link — get flashcards and quizzes in seconds. Free.
+              Turn your notes, PDFs, or YouTube links into flashcards and quizzes — in seconds.
             </p>
 
-            {/* Primary CTA - NotebookLM Style */}
+            {/* Primary CTA */}
             <div className="flex flex-col items-center gap-4 mb-8 animate-fade-in-up animation-delay-300">
               <button
                 onClick={handleCreateNew}
                 className="group px-10 py-5 rounded-full text-lg font-medium transition-all duration-300 hover:shadow-2xl hover:scale-105 active:scale-100 flex items-center gap-3"
                 style={{ 
-                  backgroundColor: '#1a73e8',
+                  backgroundColor: '#06b6d4',
                   color: '#ffffff',
                 }}
               >
-                <span>Create Your First Study Set</span>
+                <span>Start Studying Smarter</span>
                 <svg className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </button>
               
-              <p className="text-sm flex items-center gap-2 animate-fade-in-up animation-delay-400" style={{ color: '#5f6368' }}>
+              <p className="text-sm flex items-center gap-2 mt-1" style={{ color: '#5f6368' }}>
                 <svg className="w-4 h-4" style={{ color: '#34a853' }} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span>No credit card required · 2 free sets per day</span>
+                <span>Free to use · No credit card required</span>
               </p>
             </div>
 
@@ -787,7 +790,7 @@ export default function Home() {
             <div className="flex items-center gap-4 mt-12 mb-16 animate-fade-in-up animation-delay-500">
               <div className="flex -space-x-3">
                 {[
-                  { color: '#1a73e8', letter: 'J' },
+                  { color: '#06b6d4', letter: 'J' },
                   { color: '#ea4335', letter: 'M' },
                   { color: '#fbbc04', letter: 'S' },
                   { color: '#34a853', letter: 'K' },
@@ -821,10 +824,10 @@ export default function Home() {
               <div className="grid md:grid-cols-3 gap-6">
                 {/* Step 1 */}
                 <div className="text-center p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-xl card-3d animate-fade-in-up animation-delay-700" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#ffffff', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0' }}>
-                  <div className="w-14 h-14 mx-auto mb-4 rounded-xl flex items-center justify-center transition-transform duration-300 hover:scale-105" style={{ backgroundColor: 'rgba(26, 115, 232, 0.1)', color: '#1a73e8' }}>
+                  <div className="w-14 h-14 mx-auto mb-4 rounded-xl flex items-center justify-center transition-transform duration-300 hover:scale-105" style={{ backgroundColor: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4' }}>
                     <EditNoteIcon />
                   </div>
-                  <div className="text-xs font-bold mb-2 px-2 py-1 rounded-full inline-block" style={{ backgroundColor: 'rgba(26, 115, 232, 0.1)', color: '#1a73e8' }}>
+                  <div className="text-xs font-bold mb-2 px-2 py-1 rounded-full inline-block" style={{ backgroundColor: 'rgba(6, 182, 212, 0.1)', color: '#06b6d4' }}>
                     STEP 1
                   </div>
                   <h4 className="font-medium mb-2" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>Add Your Content</h4>
@@ -862,16 +865,16 @@ export default function Home() {
           <div className="relative px-6 py-20" style={{ borderTop: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}>
             <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl md:text-4xl font-bold text-center mb-4" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-                Everything you need to <span style={{ color: '#1a73e8' }}>ace your exams</span>
+                Everything you need to <span style={{ color: '#06b6d4' }}>ace your exams</span>
               </h2>
               <p className="text-center mb-12 max-w-2xl mx-auto" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
                 Powerful features designed by students, for students.
               </p>
               
               <div className="grid md:grid-cols-3 gap-6">
-                <div className="p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-xl card-3d" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(26, 115, 232, 0.05)', border: isDarkMode ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(26, 115, 232, 0.2)' }}>
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 hover:scale-105" style={{ backgroundColor: 'rgba(26, 115, 232, 0.15)' }}>
-                    <svg className="w-6 h-6" style={{ color: '#1a73e8' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-xl card-3d" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(6, 182, 212, 0.05)', border: isDarkMode ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(6, 182, 212, 0.2)' }}>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 hover:scale-105" style={{ backgroundColor: 'rgba(6, 182, 212, 0.15)' }}>
+                    <svg className="w-6 h-6" style={{ color: '#06b6d4' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                   </div>
@@ -907,11 +910,11 @@ export default function Home() {
             <div className="max-w-4xl mx-auto">
               {isPremium && user ? (
                 <div className="text-center">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 animate-bounce-in" style={{ backgroundColor: 'rgba(26, 115, 232, 0.1)', border: '2px solid #1a73e8' }}>
-                    <svg className="w-5 h-5" style={{ color: '#1a73e8' }} fill="currentColor" viewBox="0 0 20 20">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 animate-bounce-in" style={{ backgroundColor: 'rgba(6, 182, 212, 0.1)', border: '2px solid #06b6d4' }}>
+                    <svg className="w-5 h-5" style={{ color: '#06b6d4' }} fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    <span style={{ color: '#1a73e8' }} className="font-medium">Premium Active</span>
+                    <span style={{ color: '#06b6d4' }} className="font-medium">Premium Active</span>
                   </div>
                   <h2 className="text-3xl font-bold mb-4" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>You're all set!</h2>
                   <p className="mb-8" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Enjoy unlimited study sets and all premium features.</p>
@@ -919,11 +922,11 @@ export default function Home() {
               ) : (
                 <>
                   <div className="text-center mb-12">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6" style={{ backgroundColor: 'rgba(26, 115, 232, 0.1)', border: '2px solid #1a73e8' }}>
-                      <span style={{ color: '#1a73e8' }} className="font-medium">🎓 Premium Plan</span>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6" style={{ backgroundColor: 'rgba(6, 182, 212, 0.1)', border: '2px solid #06b6d4' }}>
+                      <span style={{ color: '#06b6d4' }} className="font-medium">🎓 Premium Plan</span>
                     </div>
                     <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-                      Unlock <span style={{ color: '#1a73e8' }}>everything</span> for $8.99/mo
+                      Unlock <span style={{ color: '#06b6d4' }}>everything</span> for $8.99/mo
                     </h2>
                     <p style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Or save 26% with the annual plan at $79.99/year.</p>
                   </div>
@@ -964,9 +967,9 @@ export default function Home() {
                     </div>
 
                     {/* Premium Plan */}
-                    <div className="p-8 rounded-2xl relative transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl card-3d" style={{ backgroundColor: isDarkMode ? 'rgba(26, 115, 232, 0.05)' : 'rgba(26, 115, 232, 0.05)', border: '2px solid #1a73e8', zIndex: 10 }}>
+                    <div className="p-8 rounded-2xl relative transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl card-3d" style={{ backgroundColor: isDarkMode ? 'rgba(6, 182, 212, 0.05)' : 'rgba(6, 182, 212, 0.05)', border: '2px solid #06b6d4', zIndex: 10 }}>
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                        <span className="px-3 py-1 text-xs font-bold rounded-full" style={{ backgroundColor: '#1a73e8', color: '#ffffff' }}>
+                        <span className="px-3 py-1 text-xs font-bold rounded-full" style={{ backgroundColor: '#06b6d4', color: '#ffffff' }}>
                           MOST POPULAR
                         </span>
                       </div>
@@ -978,25 +981,25 @@ export default function Home() {
                       </div>
                       <ul className="space-y-3 mb-8">
                         <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: '#1a73e8' }} fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: '#06b6d4' }} fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                           <span><strong style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Unlimited</strong> study sets</span>
                         </li>
                         <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: '#1a73e8' }} fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: '#06b6d4' }} fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                           <span>PDF & image uploads</span>
                         </li>
                         <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: '#1a73e8' }} fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: '#06b6d4' }} fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                           <span>Priority AI processing</span>
                         </li>
                         <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: '#1a73e8' }} fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: '#06b6d4' }} fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                           <span>Cross-device sync</span>
@@ -1011,7 +1014,7 @@ export default function Home() {
                           }
                         }}
                         className="w-full py-3 px-6 font-semibold rounded-xl transition-all duration-300 hover:opacity-90 hover:scale-105 active:scale-100"
-                        style={{ backgroundColor: '#1a73e8', color: '#ffffff' }}
+                        style={{ backgroundColor: '#06b6d4', color: '#ffffff' }}
                       >
                         Get Premium
                       </button>
@@ -1030,14 +1033,24 @@ export default function Home() {
                 <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
                   Your next exam is closer than you think.
                 </h2>
-                <p className="text-lg mb-8" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
-                  Students using active recall score 50% higher. Start studying smarter now — it takes 30 seconds.
+                <p className="text-lg mb-6" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
+                  Students using active recall score 50% higher. Join 1,000+ students studying smarter — it takes 30 seconds.
                 </p>
+                <div className="flex flex-wrap justify-center gap-3 mb-8">
+                  {['Flashcards from any source', 'AI math tutor', 'Smart quizzes', '20+ languages'].map((feature) => (
+                    <span key={feature} className="flex items-center gap-1.5 text-sm" style={{ color: isDarkMode ? '#94a3b8' : '#5f6368' }}>
+                      <svg className="w-4 h-4" style={{ color: '#06b6d4' }} fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      {feature}
+                    </span>
+                  ))}
+                </div>
                 <button
                   onClick={handleCreateNew}
                   className="group px-10 py-5 rounded-2xl text-lg font-bold transition-all duration-300 hover:scale-105 hover:shadow-2xl active:scale-100"
                   style={{ 
-                    backgroundColor: '#1a73e8', 
+                    backgroundColor: '#06b6d4', 
                     color: '#ffffff'
                   }}
                 >
@@ -1085,6 +1098,9 @@ export default function Home() {
                 window.history.pushState({}, '', '/settings');
               } else if (view === 'pricing') {
                 window.location.href = '/pricing';
+              } else if (view === 'mathmaxx') {
+                setViewMode('mathmaxx');
+                window.history.pushState({}, '', '/mathmaxx');
               } else if (view === 'tips' || view === 'about') {
                 // These are now handled via external pages or modals
                 window.location.href = `/${view}`;
@@ -1113,6 +1129,7 @@ export default function Home() {
             onBack={goBack}
             onSettings={handleViewSettings}
             savedSets={savedSets}
+            onMathMaxx={() => { setViewMode('mathmaxx'); window.history.pushState({}, '', '/mathmaxx'); }}
           />
         </>
       )}
@@ -1129,6 +1146,9 @@ export default function Home() {
                 window.history.pushState({}, '', '/settings');
               } else if (view === 'pricing') {
                 window.location.href = '/pricing';
+              } else if (view === 'mathmaxx') {
+                setViewMode('mathmaxx');
+                window.history.pushState({}, '', '/mathmaxx');
               }
             }}
             onSignOut={async () => {
@@ -1175,6 +1195,9 @@ export default function Home() {
                 window.history.pushState({}, '', '/settings');
               } else if (view === 'pricing') {
                 window.location.href = '/pricing';
+              } else if (view === 'mathmaxx') {
+                setViewMode('mathmaxx');
+                window.history.pushState({}, '', '/mathmaxx');
               }
             }}
             onSignOut={async () => {
@@ -1230,6 +1253,9 @@ export default function Home() {
                 window.history.pushState({}, '', '/settings');
               } else if (view === 'pricing') {
                 window.location.href = '/pricing';
+              } else if (view === 'mathmaxx') {
+                setViewMode('mathmaxx');
+                window.history.pushState({}, '', '/mathmaxx');
               }
             }}
             onSignOut={async () => {
@@ -1286,6 +1312,9 @@ export default function Home() {
                 window.history.pushState({}, '', '/settings');
               } else if (view === 'pricing') {
                 window.location.href = '/pricing';
+              } else if (view === 'mathmaxx') {
+                setViewMode('mathmaxx');
+                window.history.pushState({}, '', '/mathmaxx');
               }
             }}
             onSignOut={async () => {
@@ -1323,6 +1352,9 @@ export default function Home() {
                 window.history.pushState({}, '', '/settings');
               } else if (view === 'pricing') {
                 window.location.href = '/pricing';
+              } else if (view === 'mathmaxx') {
+                setViewMode('mathmaxx');
+                window.history.pushState({}, '', '/mathmaxx');
               }
             }}
             onSignOut={async () => {
@@ -1365,6 +1397,44 @@ export default function Home() {
           onBack={goBack}
         />
       )}
+      {viewMode === "mathmaxx" && (
+        <>
+          <Sidebar
+            currentView="mathmaxx"
+            onNavigate={(view) => {
+              if (view === 'dashboard') {
+                setViewMode('dashboard');
+                window.history.pushState({}, '', '/dashboard');
+              } else if (view === 'settings') {
+                setViewMode('settings');
+                window.history.pushState({}, '', '/settings');
+              } else if (view === 'pricing') {
+                window.location.href = '/pricing';
+              } else if (view === 'mathmaxx') {
+                setViewMode('mathmaxx');
+                window.history.pushState({}, '', '/mathmaxx');
+              }
+            }}
+            onSignOut={async () => {
+              if (supabase) {
+                await supabase.auth.signOut();
+                setUser(null);
+                setIsPremium(false);
+                setViewMode('home');
+                window.history.replaceState({}, '', '/');
+              }
+            }}
+            isPremium={isPremium}
+            userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+            userEmail={user?.email}
+          />
+          <MathMaxxView
+            onBack={goBack}
+            isPremium={isPremium}
+            user={user}
+          />
+        </>
+      )}
       {viewMode === "settings" && (
         <>
           <Sidebar
@@ -1378,6 +1448,9 @@ export default function Home() {
                 window.history.pushState({}, '', '/settings');
               } else if (view === 'pricing') {
                 window.location.href = '/pricing';
+              } else if (view === 'mathmaxx') {
+                setViewMode('mathmaxx');
+                window.history.pushState({}, '', '/mathmaxx');
               }
             }}
             onSignOut={async () => {

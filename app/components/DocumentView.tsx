@@ -131,18 +131,6 @@ export default function DocumentView({
   const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "ai"; text: string }>>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const [savedDocuments, setSavedDocuments] = useState<any[]>([]);
-  const [showSavedDocs, setShowSavedDocs] = useState(false);
-
-  // Load saved documents list on mount
-  useEffect(() => {
-    try {
-      const savedDocs = JSON.parse(localStorage.getItem('studymaxx_documents') || '[]');
-      setSavedDocuments(savedDocs);
-    } catch (err) {
-      console.error("Failed to load saved documents:", err);
-    }
-  }, []); // Only run once on mount
 
   // Auto-scroll chat
   useEffect(() => {
@@ -604,72 +592,6 @@ export default function DocumentView({
           </div>
 
           <div className="flex items-center gap-2">
-            {savedDocuments.length > 0 && (
-              <div className="relative">
-                <button
-                  onClick={() => setShowSavedDocs(!showSavedDocs)}
-                  className="px-3 py-2 rounded-lg font-medium flex items-center gap-2 transition-all duration-200 hover:scale-105 active:scale-95"
-                  style={{
-                    backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
-                    color: isDarkMode ? "#ffffff" : "#000000",
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M3 12h18M3 6h18M3 18h18"/>
-                  </svg>
-                  Saved ({savedDocuments.length})
-                </button>
-                {showSavedDocs && (
-                  <div 
-                    className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-y-auto rounded-xl shadow-2xl z-50"
-                    style={{
-                      backgroundColor: isDarkMode ? "#1f2937" : "#ffffff",
-                      border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-                    }}
-                  >
-                    <div className="p-3 border-b" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }}>
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-bold" style={{ color: isDarkMode ? "#ffffff" : "#000000" }}>Saved Versions</h4>
-                        <button onClick={() => setShowSavedDocs(false)} className="text-sm" style={{ color: isDarkMode ? "#9aa0a6" : "#64748b" }}>Close</button>
-                      </div>
-                    </div>
-                    {savedDocuments.map((doc, index) => (
-                      <button
-                        key={doc.id}
-                        onClick={() => {
-                          setDocumentTitle(doc.title);
-                          setDocumentText(doc.content);
-                          setSubject(doc.subject || "");
-                          setShowSavedDocs(false);
-                        }}
-                        className="w-full p-3 text-left border-b transition-all duration-200 hover:bg-opacity-50"
-                        style={{
-                          borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                          backgroundColor: 'transparent',
-                        }}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium truncate" style={{ color: isDarkMode ? "#ffffff" : "#000000" }}>
-                              {doc.title}
-                            </div>
-                            <div className="text-xs mt-1" style={{ color: isDarkMode ? "#9aa0a6" : "#64748b" }}>
-                              {index === 0 ? '📝 Latest' : '🕐 Old version'} • {new Date(doc.createdAt).toLocaleDateString()}
-                            </div>
-                            {doc.subject && (
-                              <div className="text-xs mt-1 px-2 py-0.5 rounded inline-block" style={{ backgroundColor: 'rgba(26, 115, 232, 0.15)', color: '#1a73e8' }}>
-                                {doc.subject}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            
             <button
               onClick={() => fileInputRef.current?.click()}
               className="p-2 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-lg active:scale-95"
@@ -688,20 +610,6 @@ export default function DocumentView({
               onChange={handleFileUpload}
               className="hidden"
             />
-            
-            <button
-              onClick={handleSaveDocument}
-              disabled={isSaving}
-              className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
-              style={{
-                backgroundColor: "#1a73e8",
-                color: "#ffffff",
-                opacity: isSaving ? 0.7 : 1,
-              }}
-            >
-              {isSaving ? <SpinnerIcon /> : <SaveIcon />}
-              Save
-            </button>
           </div>
         </div>
 

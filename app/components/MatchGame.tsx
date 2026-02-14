@@ -182,7 +182,7 @@ export default function MatchGame({ terms, definitions, subject, onBack }: Match
               border: `1px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
             }}
           >
-            <div className="text-6xl mb-4">🎯</div>
+            <div className="text-6xl mb-4">�</div>
             <h2 className="text-2xl md:text-3xl font-bold mb-2" style={{ color: isDarkMode ? "#ffffff" : "#000000" }}>
               Game Complete!
             </h2>

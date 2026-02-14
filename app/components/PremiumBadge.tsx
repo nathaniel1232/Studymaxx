@@ -30,7 +30,7 @@ export function PremiumBadge({
   if (variant === "overlay") {
     return (
       <div className={`absolute top-2 right-2 ${className}`}>
-        <div className={`${sizeClasses[size]} bg-violet-700 text-white font-bold rounded-full shadow-md flex items-center gap-1`}>
+        <div className={`${sizeClasses[size]} bg-blue-700 text-white font-bold rounded-full shadow-md flex items-center gap-1`}>
           {showIcon && <span className="text-sm">⭐</span>}
           <span>Premium</span>
         </div>
@@ -41,7 +41,7 @@ export function PremiumBadge({
   if (variant === "tooltip") {
     return (
       <div className={`group relative inline-block ${className}`}>
-        <div className={`${sizeClasses[size]} bg-violet-700 text-white font-bold rounded-full cursor-help flex items-center gap-1 shadow-md`}>
+        <div className={`${sizeClasses[size]} bg-blue-700 text-white font-bold rounded-full cursor-help flex items-center gap-1 shadow-md`}>
           {showIcon && <span>🔒</span>}
           <span>Premium</span>
         </div>
@@ -55,7 +55,7 @@ export function PremiumBadge({
 
   // Default inline variant
   return (
-    <span className={`${sizeClasses[size]} inline-flex items-center gap-1 bg-violet-700 text-white font-bold rounded-full shadow-md ${className}`}>
+    <span className={`${sizeClasses[size]} inline-flex items-center gap-1 bg-blue-700 text-white font-bold rounded-full shadow-md ${className}`}>
       {showIcon && <span>⭐</span>}
       <span>Premium</span>
     </span>
@@ -117,7 +117,7 @@ export function LockedFeature({
       </div>
 
       {/* Hover effect */}
-      <div className="absolute inset-0 rounded-md bg-gradient-to-br from-amber-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+      <div className="absolute inset-0 rounded-md bg-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
     </button>
   );
 }
@@ -168,9 +168,9 @@ export function FeatureComparison({ onUpgrade }: FeatureComparisonProps) {
       </div>
 
       {/* Premium Tier */}
-      <div className="relative p-4 border-2 border-amber-500 rounded-md bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20">
+      <div className="relative p-4 border-2 border-amber-500 rounded-md bg-amber-50 dark:bg-amber-900/20">
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+          <span className="bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full">
             MOST POPULAR
           </span>
         </div>
@@ -205,7 +205,7 @@ export function FeatureComparison({ onUpgrade }: FeatureComparisonProps) {
         </ul>
         <button
           onClick={onUpgrade}
-          className="w-full py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-lg transition-all"
+          className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg transition-all"
         >
           Ascend to Premium →
         </button>

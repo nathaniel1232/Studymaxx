@@ -146,7 +146,7 @@ export default function PricingPage() {
             className="text-2xl font-bold cursor-pointer"
             onClick={() => router.push('/')}
           >
-            <span style={{ color: '#22d3ee' }}>Study</span>
+            <span style={{ color: '#06b6d4' }}>Study</span>
             <span style={{ color: textPrimary }}>Maxx</span>
           </h1>
           <button
@@ -187,8 +187,8 @@ export default function PricingPage() {
               className="inline-block px-6 py-4 rounded-2xl shadow-lg"
               style={{
                 background: isGrandfathered
-                  ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
-                  : 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)'
+                  ? '#f59e0b'
+                  : '#06b6d4'
               }}
             >
               <div className="flex items-center gap-3">
@@ -302,8 +302,8 @@ export default function PricingPage() {
             className="relative overflow-hidden rounded-2xl"
             style={{ 
               background: isDarkMode 
-                ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)' 
-                : 'linear-gradient(135deg, rgba(6, 182, 212, 0.04) 0%, rgba(59, 130, 246, 0.04) 100%)',
+                ? 'rgba(6, 182, 212, 0.08)' 
+                : 'rgba(6, 182, 212, 0.03)',
               border: '2px solid rgba(6, 182, 212, 0.4)',
               boxShadow: isDarkMode ? '0 8px 32px rgba(6, 182, 212, 0.1)' : '0 8px 32px rgba(6, 182, 212, 0.12)',
             }}
@@ -360,7 +360,7 @@ export default function PricingPage() {
               <button
                 onClick={() => handleSelectPlan('premium')}
                 className="w-full py-3 px-6 font-bold rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl"
-                style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', color: '#ffffff', boxShadow: '0 10px 30px -10px rgba(6, 182, 212, 0.4)' }}
+                style={{ background: '#06b6d4', color: '#ffffff', boxShadow: '0 10px 30px -10px rgba(6, 182, 212, 0.4)' }}
               >
                 {billingInterval === 'year' ? 'Get Premium — $79.99/year' : 'Get Premium — $8.99/mo'}
               </button>
