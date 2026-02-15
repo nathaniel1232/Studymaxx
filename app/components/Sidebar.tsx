@@ -5,7 +5,7 @@ import { useSettings } from "../contexts/SettingsContext";
 
 interface SidebarProps {
   currentView: string;
-  onNavigate: (view: "dashboard" | "settings" | "pricing" | "about" | "tips" | "mathmaxx") => void;
+  onNavigate: (view: "dashboard" | "settings" | "pricing" | "about" | "tips" | "mathmaxx" | "summarizer") => void;
   onSignOut: () => void;
   isPremium: boolean;
   userName?: string;
@@ -77,9 +77,16 @@ const MathIcon = () => (
   </svg>
 );
 
+const SummarizerIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 6h16M4 12h16M4 18h10" />
+  </svg>
+);
+
 const NAV_ITEMS_BASE = [
   { id: "dashboard" as const, label: "Dashboard", Icon: HomeIcon },
   { id: "mathmaxx" as const, label: "MathMaxx", Icon: MathIcon },
+  { id: "summarizer" as const, label: "Summarizer", Icon: SummarizerIcon },
   { id: "settings" as const, label: "Settings", Icon: SettingsIcon },
   { id: "tips" as const, label: "Study Tips", Icon: LightbulbIcon },
   { id: "about" as const, label: "About Us", Icon: InfoIcon },
@@ -108,14 +115,16 @@ export default function Sidebar({
   const NAV_ITEMS = isPremium 
     ? [
         NAV_ITEMS_BASE[0], // Dashboard
-        NAV_ITEMS_BASE[1], // Settings
-        ...NAV_ITEMS_BASE.slice(2), // Tips, About
+        NAV_ITEMS_BASE[1], // MathMaxx
+        NAV_ITEMS_BASE[2], // Summarizer
+        ...NAV_ITEMS_BASE.slice(3), // Settings, Tips, About
       ]
     : [
         NAV_ITEMS_BASE[0], // Dashboard
-        NAV_ITEMS_BASE[1], // Settings
+        NAV_ITEMS_BASE[1], // MathMaxx
+        NAV_ITEMS_BASE[2], // Summarizer
         { id: "pricing" as const, label: "Upgrade to Premium", Icon: DiamondIcon },
-        ...NAV_ITEMS_BASE.slice(2), // Tips, About
+        ...NAV_ITEMS_BASE.slice(3), // Settings, Tips, About
       ];
 
   const handleManageSubscription = async () => {
@@ -217,8 +226,8 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* Navigation - NotebookLM Style */}
-        <nav className="p-4">
+        {/* Navigation - NotebookLM Style - Scrollable */}
+        <nav className="p-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 220px)' }}>
           {NAV_ITEMS.map((item) => (
             <button
               key={item.id}

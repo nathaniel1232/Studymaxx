@@ -181,12 +181,21 @@ export function getSystemPrompt(language?: string, schoolLevel?: string): string
 
   const langName = (language && LANGUAGE_NAMES[language]) || null;
   if (langName && language !== 'en') {
-    prompt += `\n\nLANGUAGE INSTRUCTION: The student prefers ${langName}.
-- Respond in ${langName} for ALL explanations and text
-- Math symbols, LaTeX, and variable names stay in standard notation
-- If the student writes in another language, match their language`;
+    prompt += `\n\nCRITICAL LANGUAGE RULE — THIS OVERRIDES EVERYTHING ABOVE:
+You MUST respond in ${langName}. ALL your explanations, instructions, questions, encouragement, and text MUST be written in ${langName}.
+- Math symbols, LaTeX notation, and variable names stay in standard mathematical notation (e.g., $x$, $\\sin$, $\\frac{}{}$)
+- But ALL surrounding text, step descriptions, and explanations MUST be in ${langName}
+- NEVER respond in English unless the student explicitly asks you to
+- This is non-negotiable. Even if the system prompt above is written in English, your RESPONSES must be in ${langName}`;
   } else {
-    prompt += `\n\nLANGUAGE INSTRUCTION: Respond in the same language the student writes in. Default to English.`;
+    prompt += `\n\nCRITICAL LANGUAGE RULE — THIS OVERRIDES EVERYTHING ABOVE:
+You MUST respond in the SAME language the student writes in. If they write in Norwegian, respond in Norwegian. If they write in Spanish, respond in Spanish. If they write in French, respond in French.
+- DETECT the language of each message and MATCH it exactly
+- Even though this system prompt is in English, your response language is determined by the STUDENT'S language
+- Math symbols, LaTeX notation, and variable names stay in standard mathematical notation
+- But ALL text, explanations, and instructions MUST be in the student's language
+- Only respond in English if the student writes in English
+- This is non-negotiable`;
   }
 
   return prompt;

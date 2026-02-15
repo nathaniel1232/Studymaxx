@@ -32,6 +32,7 @@ import QuizView from "./components/QuizView";
 import MatchGame from "./components/MatchGame";
 import SubjectPromptModal from "./components/SubjectPromptModal";
 import MathMaxxView from "./components/MathMaxxView";
+import SummarizerView from "./components/SummarizerView";
 
 // Custom SVG Icons for landing page (replacing emojis)
 const EditNoteIcon = () => (
@@ -57,7 +58,7 @@ const TargetIcon = () => (
   </svg>
 );
 
-type ViewMode = "home" | "input" | "createFlow" | "dashboard" | "studying" | "saved" | "settings" | "audio" | "youtube" | "document" | "notes" | "quiz" | "match" | "pricing" | "tips" | "about" | "mathmaxx";
+type ViewMode = "home" | "input" | "createFlow" | "dashboard" | "studying" | "saved" | "settings" | "audio" | "youtube" | "document" | "notes" | "quiz" | "match" | "pricing" | "tips" | "about" | "mathmaxx" | "summarizer";
 type MaterialType = "notes" | "audio" | "document" | "youtube" | null;
 
 export default function Home() {
@@ -105,6 +106,38 @@ export default function Home() {
     if (url) window.history.pushState({}, '', url);
   };
 
+  // Shared sidebar navigation handler
+  const handleSidebarNavigate = (view: string) => {
+    if (view === 'dashboard') {
+      setViewMode('dashboard');
+      window.history.pushState({}, '', '/dashboard');
+    } else if (view === 'settings') {
+      setViewMode('settings');
+      window.history.pushState({}, '', '/settings');
+    } else if (view === 'pricing') {
+      window.location.href = '/pricing';
+    } else if (view === 'mathmaxx') {
+      setViewMode('mathmaxx');
+      window.history.pushState({}, '', '/mathmaxx');
+    } else if (view === 'summarizer') {
+      setViewMode('summarizer');
+      window.history.pushState({}, '', '/summarizer');
+    } else if (view === 'tips' || view === 'about') {
+      window.location.href = `/${view}`;
+    }
+  };
+
+  // Shared sidebar sign out handler
+  const handleSidebarSignOut = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+      setUser(null);
+      setIsPremium(false);
+      setViewMode('home');
+      window.history.replaceState({}, '', '/');
+    }
+  };
+
   // Helper to go back properly
   const goBack = () => {
     const previousView = navigationHistory.current.pop();
@@ -128,7 +161,8 @@ export default function Home() {
         notes: '/notes',
         quiz: '/quiz',
         match: '/match',
-        mathmaxx: '/mathmaxx'
+        mathmaxx: '/mathmaxx',
+        summarizer: '/summarizer'
       };
       window.history.pushState({}, '', urlMap[previousView] || '/');
     } else if (user) {
@@ -160,6 +194,9 @@ export default function Home() {
     } else if (viewParam === 'dashboard' && user) {
       setViewMode('dashboard');
       window.history.replaceState({}, '', '/');
+    } else if (viewParam === 'summarizer' && user) {
+      setViewMode('summarizer');
+      window.history.replaceState({}, '', '/summarizer');
     }
   }, [user]);
 
@@ -1089,32 +1126,8 @@ export default function Home() {
         <>
           <Sidebar
             currentView="dashboard"
-            onNavigate={(view) => {
-              if (view === 'dashboard') {
-                setViewMode('dashboard');
-                window.history.pushState({}, '', '/dashboard');
-              } else if (view === 'settings') {
-                setViewMode('settings');
-                window.history.pushState({}, '', '/settings');
-              } else if (view === 'pricing') {
-                window.location.href = '/pricing';
-              } else if (view === 'mathmaxx') {
-                setViewMode('mathmaxx');
-                window.history.pushState({}, '', '/mathmaxx');
-              } else if (view === 'tips' || view === 'about') {
-                // These are now handled via external pages or modals
-                window.location.href = `/${view}`;
-              }
-            }}
-            onSignOut={async () => {
-              if (supabase) {
-                await supabase.auth.signOut();
-                setUser(null);
-                setIsPremium(false);
-                setViewMode('home');
-                window.history.replaceState({}, '', '/');
-              }
-            }}
+            onNavigate={handleSidebarNavigate}
+            onSignOut={handleSidebarSignOut}
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}
@@ -1130,6 +1143,7 @@ export default function Home() {
             onSettings={handleViewSettings}
             savedSets={savedSets}
             onMathMaxx={() => { setViewMode('mathmaxx'); window.history.pushState({}, '', '/mathmaxx'); }}
+            onSummarizer={() => { setViewMode('summarizer'); window.history.pushState({}, '', '/summarizer'); }}
           />
         </>
       )}
@@ -1137,29 +1151,8 @@ export default function Home() {
         <>
           <Sidebar
             currentView="dashboard"
-            onNavigate={(view) => {
-              if (view === 'dashboard') {
-                setViewMode('dashboard');
-                window.history.pushState({}, '', '/dashboard');
-              } else if (view === 'settings') {
-                setViewMode('settings');
-                window.history.pushState({}, '', '/settings');
-              } else if (view === 'pricing') {
-                window.location.href = '/pricing';
-              } else if (view === 'mathmaxx') {
-                setViewMode('mathmaxx');
-                window.history.pushState({}, '', '/mathmaxx');
-              }
-            }}
-            onSignOut={async () => {
-              if (supabase) {
-                await supabase.auth.signOut();
-                setUser(null);
-                setIsPremium(false);
-                setViewMode('home');
-                window.history.replaceState({}, '', '/');
-              }
-            }}
+            onNavigate={handleSidebarNavigate}
+            onSignOut={handleSidebarSignOut}
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}
@@ -1186,29 +1179,8 @@ export default function Home() {
         <>
           <Sidebar
             currentView="dashboard"
-            onNavigate={(view) => {
-              if (view === 'dashboard') {
-                setViewMode('dashboard');
-                window.history.pushState({}, '', '/dashboard');
-              } else if (view === 'settings') {
-                setViewMode('settings');
-                window.history.pushState({}, '', '/settings');
-              } else if (view === 'pricing') {
-                window.location.href = '/pricing';
-              } else if (view === 'mathmaxx') {
-                setViewMode('mathmaxx');
-                window.history.pushState({}, '', '/mathmaxx');
-              }
-            }}
-            onSignOut={async () => {
-              if (supabase) {
-                await supabase.auth.signOut();
-                setUser(null);
-                setIsPremium(false);
-                setViewMode('home');
-                window.history.replaceState({}, '', '/');
-              }
-            }}
+            onNavigate={handleSidebarNavigate}
+            onSignOut={handleSidebarSignOut}
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}
@@ -1244,29 +1216,8 @@ export default function Home() {
         <>
           <Sidebar
             currentView="dashboard"
-            onNavigate={(view) => {
-              if (view === 'dashboard') {
-                setViewMode('dashboard');
-                window.history.pushState({}, '', '/dashboard');
-              } else if (view === 'settings') {
-                setViewMode('settings');
-                window.history.pushState({}, '', '/settings');
-              } else if (view === 'pricing') {
-                window.location.href = '/pricing';
-              } else if (view === 'mathmaxx') {
-                setViewMode('mathmaxx');
-                window.history.pushState({}, '', '/mathmaxx');
-              }
-            }}
-            onSignOut={async () => {
-              if (supabase) {
-                await supabase.auth.signOut();
-                setUser(null);
-                setIsPremium(false);
-                setViewMode('home');
-                window.history.replaceState({}, '', '/');
-              }
-            }}
+            onNavigate={handleSidebarNavigate}
+            onSignOut={handleSidebarSignOut}
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}
@@ -1303,29 +1254,8 @@ export default function Home() {
         <>
           <Sidebar
             currentView="dashboard"
-            onNavigate={(view) => {
-              if (view === 'dashboard') {
-                setViewMode('dashboard');
-                window.history.pushState({}, '', '/dashboard');
-              } else if (view === 'settings') {
-                setViewMode('settings');
-                window.history.pushState({}, '', '/settings');
-              } else if (view === 'pricing') {
-                window.location.href = '/pricing';
-              } else if (view === 'mathmaxx') {
-                setViewMode('mathmaxx');
-                window.history.pushState({}, '', '/mathmaxx');
-              }
-            }}
-            onSignOut={async () => {
-              if (supabase) {
-                await supabase.auth.signOut();
-                setUser(null);
-                setIsPremium(false);
-                setViewMode('home');
-                window.history.replaceState({}, '', '/');
-              }
-            }}
+            onNavigate={handleSidebarNavigate}
+            onSignOut={handleSidebarSignOut}
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}
@@ -1356,29 +1286,8 @@ export default function Home() {
         <>
           <Sidebar
             currentView="dashboard"
-            onNavigate={(view) => {
-              if (view === 'dashboard') {
-                setViewMode('dashboard');
-                window.history.pushState({}, '', '/dashboard');
-              } else if (view === 'settings') {
-                setViewMode('settings');
-                window.history.pushState({}, '', '/settings');
-              } else if (view === 'pricing') {
-                window.location.href = '/pricing';
-              } else if (view === 'mathmaxx') {
-                setViewMode('mathmaxx');
-                window.history.pushState({}, '', '/mathmaxx');
-              }
-            }}
-            onSignOut={async () => {
-              if (supabase) {
-                await supabase.auth.signOut();
-                setUser(null);
-                setIsPremium(false);
-                setViewMode('home');
-                window.history.replaceState({}, '', '/');
-              }
-            }}
+            onNavigate={handleSidebarNavigate}
+            onSignOut={handleSidebarSignOut}
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}
@@ -1414,29 +1323,8 @@ export default function Home() {
         <>
           <Sidebar
             currentView="mathmaxx"
-            onNavigate={(view) => {
-              if (view === 'dashboard') {
-                setViewMode('dashboard');
-                window.history.pushState({}, '', '/dashboard');
-              } else if (view === 'settings') {
-                setViewMode('settings');
-                window.history.pushState({}, '', '/settings');
-              } else if (view === 'pricing') {
-                window.location.href = '/pricing';
-              } else if (view === 'mathmaxx') {
-                setViewMode('mathmaxx');
-                window.history.pushState({}, '', '/mathmaxx');
-              }
-            }}
-            onSignOut={async () => {
-              if (supabase) {
-                await supabase.auth.signOut();
-                setUser(null);
-                setIsPremium(false);
-                setViewMode('home');
-                window.history.replaceState({}, '', '/');
-              }
-            }}
+            onNavigate={handleSidebarNavigate}
+            onSignOut={handleSidebarSignOut}
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}
@@ -1448,33 +1336,29 @@ export default function Home() {
           />
         </>
       )}
+      {viewMode === "summarizer" && (
+        <>
+          <Sidebar
+            currentView="summarizer"
+            onNavigate={handleSidebarNavigate}
+            onSignOut={handleSidebarSignOut}
+            isPremium={isPremium}
+            userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+            userEmail={user?.email}
+          />
+          <SummarizerView
+            onBack={goBack}
+            isPremium={isPremium}
+            user={user}
+          />
+        </>
+      )}
       {viewMode === "settings" && (
         <>
           <Sidebar
             currentView="settings"
-            onNavigate={(view) => {
-              if (view === 'dashboard') {
-                setViewMode('dashboard');
-                window.history.pushState({}, '', '/dashboard');
-              } else if (view === 'settings') {
-                setViewMode('settings');
-                window.history.pushState({}, '', '/settings');
-              } else if (view === 'pricing') {
-                window.location.href = '/pricing';
-              } else if (view === 'mathmaxx') {
-                setViewMode('mathmaxx');
-                window.history.pushState({}, '', '/mathmaxx');
-              }
-            }}
-            onSignOut={async () => {
-              if (supabase) {
-                await supabase.auth.signOut();
-                setUser(null);
-                setIsPremium(false);
-                setViewMode('home');
-                window.history.replaceState({}, '', '/');
-              }
-            }}
+            onNavigate={handleSidebarNavigate}
+            onSignOut={handleSidebarSignOut}
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}

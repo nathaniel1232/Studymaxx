@@ -1562,25 +1562,7 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
             }}
           >
             <div className="max-w-2xl mx-auto">
-              {/* Image preview */}
-              {imagePreview && (
-                <div className="mb-3 relative inline-block">
-                  <img 
-                    src={imagePreview} 
-                    alt="Upload preview" 
-                    className="max-w-xs max-h-48 rounded-lg border"
-                    style={{ 
-                      borderColor: isDarkMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)" 
-                    }}
-                  />
-                  <button
-                    onClick={handleRemoveImage}
-                    className="absolute -top-2 -right-2 p-1.5 rounded-full bg-red-500 hover:bg-red-600 text-white transition-all"
-                  >
-                    <XIcon />
-                  </button>
-                </div>
-              )}
+              {/* Image preview - hidden for now */}
               
               <div
                 className="flex items-end gap-2 rounded-xl px-4 py-2"
@@ -1589,26 +1571,7 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
                   border: `1px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
                 }}
               >
-                {/* Image upload button */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isStreaming}
-                  className="p-2 rounded-lg transition-all hover:bg-opacity-80 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 mb-0.5"
-                  style={{
-                    backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
-                    color: isDarkMode ? "#ffffff" : "#000000",
-                  }}
-                  title="Upload math problem image"
-                >
-                  <ImageIcon />
-                </button>
+                {/* Image upload button - hidden for now */}
                 
                 <textarea
                   ref={inputRef}
@@ -1622,11 +1585,11 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
                 />
                 <button
                   onClick={() => handleSendMessage()}
-                  disabled={(!inputText.trim() && !uploadedImage) || isStreaming}
+                  disabled={!inputText.trim() || isStreaming}
                   className="p-2.5 rounded-xl transition-all hover:scale-110 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 mb-0.5"
                   style={{
-                    background: (inputText.trim() || uploadedImage) && !isStreaming ? "#3b82f6" : (isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"),
-                    color: (inputText.trim() || uploadedImage) && !isStreaming ? "#ffffff" : (isDarkMode ? "#64748b" : "#94a3b8"),
+                    background: inputText.trim() && !isStreaming ? "#3b82f6" : (isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"),
+                    color: inputText.trim() && !isStreaming ? "#ffffff" : (isDarkMode ? "#64748b" : "#94a3b8"),
                   }}
                 >
                   <SendIcon />

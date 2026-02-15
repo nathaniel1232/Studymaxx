@@ -51,6 +51,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Detect if user is asking for a summary/analysis
+    const isSummaryRequest = /\b(summar|analyz|overview|break.?down|oppsummer|analyser|sammendrag)\b/i.test(message);
+
+    const contextLimit = isSummaryRequest ? 6000 : 3000;
     const systemPrompt = `You are StudyMaxx AI — an expert study tutor built into the StudyMaxx learning platform.
 
 YOUR ROLE:
@@ -66,12 +70,38 @@ HOW TO RESPOND:
 - If the student asks about something from their material, reference it directly
 - Answer the actual question — don't pad with unnecessary motivation
 
+SPECIAL: SUMMARIZE / ANALYZE REQUESTS
+If the student asks you to "summarize", "analyze", "give an overview", or "break down" their notes/material, provide a COMPREHENSIVE structured analysis using this EXACT format:
+
+TITLE & CONTEXT
+• Descriptive title for the material
+• Type of content, subject area, and why it matters
+
+KEY POINTS
+• List 3-7 of the most important insights as bullet points
+• Each point should be specific and standalone
+
+SECTION-BY-SECTION BREAKDOWN
+• Go through the material systematically in logical sections
+• For each section: heading, main content summary, specific details (names, dates, formulas, definitions)
+• Show connections between sections
+
+THEMATIC & CONCEPTUAL INSIGHTS
+• Overarching themes and patterns
+• Tone, approach, and methodology
+• Connections between concepts
+• Any gaps or limitations
+
+QUICK SUMMARY
+• One paragraph (3-5 sentences) capturing the essence of the entire material
+
 FORMATTING:
 - Do NOT use markdown (no **, __, #, or *)
 - Use plain text with natural paragraph breaks
-- Use numbered lists (1. 2. 3.) when listing things
+- Use bullet points and numbered lists for clarity
+- Section headers should be in CAPS
 
-${context ? `\nSTUDY MATERIAL:\n${context.substring(0, 2000)}` : ''}`;
+${context ? `\nSTUDY MATERIAL:\n${context.substring(0, contextLimit)}` : ''}`;
 
     // Build conversation contents for Gemini
     // Start with system instruction as the first user message, then alternate user/model
@@ -104,7 +134,7 @@ ${context ? `\nSTUDY MATERIAL:\n${context.substring(0, 2000)}` : ''}`;
       contents,
       generationConfig: {
         temperature: 0.5,
-        maxOutputTokens: 800,
+        maxOutputTokens: isSummaryRequest ? 4096 : 1200,
       },
     });
 
