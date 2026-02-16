@@ -6,7 +6,8 @@ import Providers from "./components/Providers";
 const outfit = Outfit({
   variable: "--font-outfit",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "600", "700"], // Reduced from 5 to 3 weights for faster loading
+  display: "swap", // Show fallback text immediately while font loads
 });
 
 export const metadata: Metadata = {
@@ -26,6 +27,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Preconnect to external domains for faster loading */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body
         className={`${outfit.variable} font-sans antialiased`}
         style={{ fontFamily: 'var(--font-outfit), system-ui, sans-serif' }}

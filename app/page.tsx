@@ -2,12 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { Analytics } from "@vercel/analytics/next";
 import InputView from "./components/InputView";
-import CreateFlowView from "./components/CreateFlowView";
-import StudyView from "./components/StudyViewNew";
-import SavedSetsView from "./components/SavedSetsView";
-import SettingsView from "./components/SettingsView";
 import LoginModal from "./components/LoginModal";
 import UserProfileDropdown from "./components/UserProfileDropdown";
 import StudyFactBadge from "./components/StudyFactBadge";
@@ -22,17 +19,23 @@ import { useTranslation, useSettings } from "./contexts/SettingsContext";
 import { usePersonalization } from "./contexts/PersonalizationContext";
 import ArrowIcon from "./components/icons/ArrowIcon";
 import { getCurrentUser, onAuthStateChange, supabase } from "./utils/supabase";
-import DashboardView from "./components/DashboardView";
 import Sidebar from "./components/Sidebar";
-import AudioRecordingView from "./components/AudioRecordingView";
-import YouTubeView from "./components/YouTubeView";
-import DocumentView from "./components/DocumentView";
-import NotesEditorView from "./components/NotesEditorView";
-import QuizView from "./components/QuizView";
-import MatchGame from "./components/MatchGame";
-import SubjectPromptModal from "./components/SubjectPromptModal";
-import MathMaxxView from "./components/MathMaxxView";
-import SummarizerView from "./components/SummarizerView";
+
+// Lazy load heavy components that aren't needed on initial render
+const CreateFlowView = dynamic(() => import("./components/CreateFlowView"), { ssr: false });
+const StudyView = dynamic(() => import("./components/StudyViewNew"), { ssr: false });
+const SavedSetsView = dynamic(() => import("./components/SavedSetsView"), { ssr: false });
+const SettingsView = dynamic(() => import("./components/SettingsView"), { ssr: false });
+const DashboardView = dynamic(() => import("./components/DashboardView"), { ssr: false });
+const AudioRecordingView = dynamic(() => import("./components/AudioRecordingView"), { ssr: false });
+const YouTubeView = dynamic(() => import("./components/YouTubeView"), { ssr: false });
+const DocumentView = dynamic(() => import("./components/DocumentView"), { ssr: false });
+const NotesEditorView = dynamic(() => import("./components/NotesEditorView"), { ssr: false });
+const QuizView = dynamic(() => import("./components/QuizView"), { ssr: false });
+const MatchGame = dynamic(() => import("./components/MatchGame"), { ssr: false });
+const SubjectPromptModal = dynamic(() => import("./components/SubjectPromptModal"), { ssr: false });
+const MathMaxxView = dynamic(() => import("./components/MathMaxxView"), { ssr: false });
+const SummarizerView = dynamic(() => import("./components/SummarizerView"), { ssr: false });
 
 // Custom SVG Icons for landing page (replacing emojis)
 const EditNoteIcon = () => (
