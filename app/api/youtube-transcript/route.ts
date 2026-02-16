@@ -64,13 +64,19 @@ function pickBestTrack(tracks: any[]): any {
   // 1. Manual English
   const manualEn = tracks.find((t: any) => t.languageCode === 'en' && t.kind !== 'asr');
   if (manualEn) return manualEn;
-  // 2. Auto-generated English
-  const autoEn = tracks.find((t: any) => t.languageCode === 'en');
+  // 2. Auto-generated English (explicitly check for 'asr' kind)
+  const autoEn = tracks.find((t: any) => t.languageCode === 'en' && t.kind === 'asr');
   if (autoEn) return autoEn;
-  // 3. Any manual track
+  // 3. Any English track (fallback if kind field is missing)
+  const anyEn = tracks.find((t: any) => t.languageCode === 'en');
+  if (anyEn) return anyEn;
+  // 4. Any auto-generated track
+  const anyAuto = tracks.find((t: any) => t.kind === 'asr');
+  if (anyAuto) return anyAuto;
+  // 5. Any manual track
   const anyManual = tracks.find((t: any) => t.kind !== 'asr');
   if (anyManual) return anyManual;
-  // 4. First available
+  // 6. First available
   return tracks[0];
 }
 

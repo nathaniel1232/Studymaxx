@@ -269,14 +269,27 @@ export default function DashboardView({
               <div className="flex items-center gap-4">
                 {/* Streak Fire Icon */}
                 <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
                   style={{
                     background: streakData.studiedToday
                       ? 'rgba(34, 197, 94, 0.15)'
                       : 'rgba(251, 146, 60, 0.15)',
                   }}
                 >
-                  {streakData.studiedToday ? '🔥' : '📚'}
+                  {streakData.studiedToday ? (
+                    <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2C12 2 8 6 8 10C8 12.21 9.79 14 12 14C14.21 14 16 12.21 16 10C16 6 12 2 12 2Z" fill="#22c55e" stroke="#16a34a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M12 14C12 14 10 16 10 18C10 19.1 10.9 20 12 20C13.1 20 14 19.1 14 18C14 16 12 14 12 14Z" fill="#f59e0b" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M7.5 12C7.5 12 6 13 6 14.5C6 15.33 6.67 16 7.5 16C8.33 16 9 15.33 9 14.5C9 13 7.5 12 7.5 12Z" fill="#ef4444" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M16.5 12C16.5 12 18 13 18 14.5C18 15.33 17.33 16 16.5 16C15.67 16 15 15.33 15 14.5C15 13 16.5 12 16.5 12Z" fill="#ef4444" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ) : (
+                    <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4 19.5C4 18.837 4.26339 18.2011 4.73223 17.7322C5.20107 17.2634 5.83696 17 6.5 17H20" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M6.5 2H20V22H6.5C5.83696 22 5.20107 21.7366 4.73223 21.2678C4.26339 20.7989 4 20.163 4 19.5V4.5C4 3.83696 4.26339 3.20107 4.73223 2.73223C5.20107 2.26339 5.83696 2 6.5 2Z" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M10 6H16M10 10H16M10 14H16" stroke="#ea580c" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  )}
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm" style={{ color: isDarkMode ? '#e2e8f0' : '#0f172a' }}>
@@ -291,7 +304,7 @@ export default function DashboardView({
                   </h3>
                   <p className="text-xs mt-0.5" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
                     {streakData.studiedToday 
-                      ? `Best streak: ${streakData.longestStreak} days`
+                      ? `Current streak: ${streakData.overallStreak} days`
                       : "Open a study set to keep your streak going"
                     }
                   </p>
