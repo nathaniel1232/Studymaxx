@@ -34,10 +34,19 @@ export async function POST(request: NextRequest) {
     };
     const srcLabel = sourceLabel[sourceType] || 'material';
 
-    const prompt = `You are an expert academic summarizer. Create a comprehensive, well-structured summary of this ${srcLabel}.
+    const prompt = `🚨 ABSOLUTE REQUIREMENT - LANGUAGE MATCHING 🚨
+YOU MUST write this summary in the EXACT SAME LANGUAGE as the input text below.
+- If input is Norwegian → summary in Norwegian
+- If input is Spanish → summary in Spanish  
+- If input is French → summary in French
+- If input is German → summary in German
+- If input is English → summary in English
+DO NOT translate to English. DO NOT use English if the input is another language.
+Match the input language character-by-character. This is MANDATORY.
 
-CRITICAL LANGUAGE RULE:
-Write the summary in the SAME language as the input text. If input is Norwegian, write in Norwegian. If English, write in English. NEVER mix languages. Match the input language EXACTLY.
+===================================================
+
+You are an expert academic summarizer. Create a comprehensive, well-structured summary of this ${srcLabel}.
 
 LENGTH REQUIREMENT: ${lengthInstruction}
 
@@ -91,10 +100,12 @@ EXAMPLES OF GOOD vs BAD BULLETS:
 
 Remember: This is for STUDY purposes. Students need detailed, complete information to learn from. Don't create a "too long; didn't read" - create a "organized and complete" summary.
 
+🚨 REMINDER: Write your summary in the SAME language as the input below. NOT in English unless input is English. 🚨
+
 INPUT:
 ${text}
 
-SUMMARY:`;
+SUMMARY (in the same language as the input above):`;
 
     // Use OpenAI GPT-4o-mini for summarization
     const completion = await openai.chat.completions.create({
@@ -102,7 +113,7 @@ SUMMARY:`;
       messages: [
         {
           role: 'system',
-          content: 'You are an expert academic summarizer. Generate comprehensive, well-structured summaries that help students learn effectively.'
+          content: 'You are an expert academic summarizer. CRITICAL: You MUST write summaries in the SAME language as the input text. If input is Norwegian, write in Norwegian. If Spanish, write in Spanish. If German, write in German. NEVER translate to English unless the input is English. This is an absolute requirement.'
         },
         {
           role: 'user',

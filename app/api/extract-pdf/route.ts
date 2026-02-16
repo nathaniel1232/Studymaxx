@@ -7,14 +7,24 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export const maxDuration = 120;
 
 async function pdfToImages(pdfBuffer: Buffer): Promise<string[]> {
-  // Try to use canvas if available (works locally but may not work on Vercel)
+  // OCR requires DOM APIs (DOMMatrix, canvas) which don't exist in Vercel's Node runtime
+  // If these aren't available, just return empty array and use text extraction instead
   try {
-    const { getDocument } = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    // Try importing pdfjs-dist - this will fail on Vercel with DOMMatrix error
+    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs').catch(() => null);
+    if (!pdfjs) {
+      console.log('[PDF to Images] pdfjs-dist not available (DOMMatrix missing), skipping OCR');
+      return [];
+    }
+    
+    const { getDocument } = pdfjs;
+    
+    // Try importing canvas - also requires native modules
     // @ts-expect-error - canvas is a native module without types
     const canvas = await import('canvas').catch(() => null);
     
     if (!canvas) {
-      console.log('[PDF to Images] Canvas not available, falling back to text extraction');
+      console.log('[PDF to Images] Canvas not available, skipping OCR');
       return [];
     }
     
@@ -36,25 +46,26 @@ async function pdfToImages(pdfBuffer: Buffer): Promise<string[]> {
       const page = await pdfDoc.getPage(pageNum);
       const viewport = page.getViewport({ scale: 2.0 }); // 2x scale for better quality
       
-      const canvas = createCanvas(viewport.width, viewport.height);
-      const context = canvas.getContext('2d');
+      const canvasObj = createCanvas(viewport.width, viewport.height);
+      const context = canvasObj.getContext('2d');
       
       await page.render({
         canvasContext: context as any,
         viewport: viewport,
-        canvas: canvas as any,
+        canvas: canvasObj as any,
       }).promise;
       
       // Convert canvas to base64 PNG
-      const dataUrl = canvas.toDataURL('image/png');
+      const dataUrl = canvasObj.toDataURL('image/png');
       images.push(dataUrl);
       console.log(`[PDF to Images] ✅ Converted page ${pageNum}`);
     }
     
     return images;
   } catch (error: any) {
-    console.error('[PDF to Images] Conversion failed:', error.message);
-    throw error;
+    // Don't crash - just skip OCR and return empty array
+    console.log('[PDF to Images] OCR not available:', error.message);
+    return [];
   }
 }
 
