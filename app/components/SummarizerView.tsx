@@ -263,20 +263,36 @@ export default function SummarizerView({ onBack, isPremium, user }: SummarizerVi
 
   // ── Supabase save/delete ───────────────────
   const autoSave = async (summaryText: string, title: string) => {
-    if (!user?.id || !summaryText.trim()) return;
+    if (!user?.id || !summaryText.trim()) {
+      console.log('[Summarizer] Cannot auto-save: missing user or summary', { hasUser: !!user?.id, summaryLength: summaryText?.length });
+      return;
+    }
     setIsSaving(true);
     try {
+      console.log('[Summarizer] Attempting to save summary...', { userId: user.id, titleLength: title?.length, summaryLength: summaryText?.length });
       const res = await fetch("/api/summaries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: user.id, title: title || "Untitled", summary: summaryText, sourceType }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.summary) setSavedSummaries(prev => [data.summary, ...prev].slice(0, 50));
-        setSuccessMsg("Saved!");
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('[Summarizer] Save failed with status:', res.status, errorData);
+        setError(`Failed to save: ${errorData.error || 'Please run the summaries schema in Supabase'}`);
+        return;
       }
-    } catch { /* silent */ }
+      
+      const data = await res.json();
+      console.log('[Summarizer] ✅ Save successful:', data);
+      if (data.summary) {
+        setSavedSummaries(prev => [data.summary, ...prev].slice(0, 50));
+        setSuccessMsg("Saved to My Summaries!");
+      }
+    } catch (err: any) {
+      console.error('[Summarizer] Save error:', err);
+      setError(`Save failed: ${err.message || 'Check console for details'}`);
+    }
     finally { setIsSaving(false); }
   };
 
