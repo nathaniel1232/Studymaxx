@@ -256,7 +256,7 @@ export default function SummarizerView({ onBack, isPremium, user }: SummarizerVi
       if (!contentType || !contentType.includes('application/json')) {
         const textResponse = await res.text();
         console.error('[Summarizer] Non-JSON response:', textResponse.substring(0, 500));
-        throw new Error('Server returned non-JSON response. This usually means Vertex AI is not configured correctly. Check your VERTEX_AI_PROJECT_ID and GOOGLE_APPLICATION_CREDENTIALS environment variables in Vercel.');
+        throw new Error('Server returned non-JSON response. This usually means the OpenAI API is not configured correctly. Check your OPENAI_API_KEY environment variable in Vercel.');
       }
       
       const d = await res.json();

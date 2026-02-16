@@ -1,36 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { VertexAI } from '@google-cloud/vertexai';
+import OpenAI from 'openai';
 
 export const maxDuration = 60;
 
-// Lazy-initialize Vertex AI
-let vertexAI: VertexAI | null = null;
-
-function getVertexAI() {
-  if (!vertexAI) {
-    const projectId = process.env.VERTEX_AI_PROJECT_ID;
-    if (!projectId) {
-      throw new Error('VERTEX_AI_PROJECT_ID not configured');
-    }
-    
-    const credJson = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    if (credJson && credJson.startsWith('{')) {
-      try {
-        const creds = JSON.parse(credJson);
-        vertexAI = new VertexAI({
-          project: projectId,
-          location: 'us-central1',
-          googleAuthOptions: { credentials: creds },
-        });
-      } catch {
-        vertexAI = new VertexAI({ project: projectId, location: 'us-central1' });
-      }
-    } else {
-      vertexAI = new VertexAI({ project: projectId, location: 'us-central1' });
-    }
-  }
-  return vertexAI;
-}
+const openai = new OpenAI({ 
+  apiKey: process.env.OPENAI_API_KEY 
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -121,17 +96,24 @@ ${text}
 
 SUMMARY:`;
 
-    const model = getVertexAI().getGenerativeModel({ model: 'gemini-2.5-flash' });
-
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: length === 'long' ? 8192 : length === 'medium' ? 5120 : 3072,
-      },
+    // Use OpenAI GPT-4o-mini for summarization
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert academic summarizer. Generate comprehensive, well-structured summaries that help students learn effectively.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.2,
+      max_tokens: length === 'long' ? 8192 : length === 'medium' ? 5120 : 3072,
     });
 
-    const summary = result.response.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    const summary = completion.choices[0]?.message?.content?.trim() || '';
 
     if (!summary) {
       return NextResponse.json({ error: 'Failed to generate summary' }, { status: 500 });
