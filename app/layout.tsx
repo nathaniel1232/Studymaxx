@@ -12,6 +12,11 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "StudyMaxx - Turn Notes into Flashcards",
   description: "Generate flashcards from your notes instantly. Study smarter, not harder.",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
 };
 
 export default function RootLayout({

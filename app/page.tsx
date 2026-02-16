@@ -79,6 +79,7 @@ export default function Home() {
   const [remainingStudySets, setRemainingStudySets] = useState(3);
   const [premiumCheckCount, setPremiumCheckCount] = useState(0);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginModalMode, setLoginModalMode] = useState<'signin' | 'signup'>('signin');
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning" } | null>(null);
   const [selectedMaterialType, setSelectedMaterialType] = useState<MaterialType>(null);
@@ -586,7 +587,7 @@ export default function Home() {
   const handleCreateNew = () => {
     // Require login to access dashboard
     if (!user) {
-      handleOpenLoginModal();
+      handleOpenSignUpModal();
       return;
     }
     navigateTo("dashboard", "/dashboard");
@@ -668,8 +669,16 @@ export default function Home() {
   const scrollPositionRef = useRef(0);
   const handleOpenLoginModal = () => {
     scrollPositionRef.current = window.scrollY;
+    setLoginModalMode('signin');
     setShowLoginModal(true);
   };
+  
+  const handleOpenSignUpModal = () => {
+    scrollPositionRef.current = window.scrollY;
+    setLoginModalMode('signup');
+    setShowLoginModal(true);
+  };
+  
   const handleCloseLoginModal = () => {
     setShowLoginModal(false);
     // Restore scroll position after modal closes
@@ -1396,6 +1405,7 @@ export default function Home() {
         <LoginModal 
           onClose={handleCloseLoginModal}
           onSkip={handleCloseLoginModal}
+          initialMode={loginModalMode}
         />
       )}
 

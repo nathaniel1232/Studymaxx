@@ -7,16 +7,17 @@ import { useSettings } from "../contexts/SettingsContext";
 interface LoginModalProps {
   onClose: () => void;
   onSkip?: () => void;
+  initialMode?: 'signin' | 'signup';
 }
 
-export default function LoginModal({ onClose, onSkip }: LoginModalProps) {
+export default function LoginModal({ onClose, onSkip, initialMode = 'signin' }: LoginModalProps) {
   const handleSkip = onSkip || onClose;
   const { settings } = useSettings();
   const isDarkMode = settings.theme === 'dark' || 
     (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
   const [isMagicLink, setIsMagicLink] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
