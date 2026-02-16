@@ -240,13 +240,38 @@ export default function SummarizerView({ onBack, isPremium, user }: SummarizerVi
 
     setIsSummarizing(true); setError("");
     try {
+      console.log('[Summarizer] Starting summarization request...');
       const res = await fetch("/api/summarize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: inputText, length, sourceType }),
       });
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error || "Failed to summarize"); }
+      
+      console.log('[Summarizer] Response status:', res.status, res.statusText);
+      
+      // Check content type before parsing
+      const contentType = res.headers.get('content-type');
+      console.log('[Summarizer] Content-Type:', contentType);
+      
+      if (!contentType || !contentType.includes('application/json')) {
+        const textResponse = await res.text();
+        console.error('[Summarizer] Non-JSON response:', textResponse.substring(0, 500));
+        throw new Error('Server returned non-JSON response. This usually means Vertex AI is not configured correctly. Check your VERTEX_AI_PROJECT_ID and GOOGLE_APPLICATION_CREDENTIALS environment variables in Vercel.');
+      }
+      
       const d = await res.json();
+      
+      if (!res.ok) {
+        console.error('[Summarizer] API error:', d);
+        throw new Error(d.error || "Failed to summarize");
+      }
+      
+      if (!d.summary) {
+        console.error('[Summarizer] No summary in response:', d);
+        throw new Error('Server returned empty summary');
+      }
+      
+      console.log('[Summarizer] ✅ Summary generated successfully');
       setSummary(d.summary);
 
       // Extract title from first line
@@ -257,7 +282,10 @@ export default function SummarizerView({ onBack, isPremium, user }: SummarizerVi
 
       // Auto-save to Supabase
       if (user?.id) autoSave(d.summary, firstLine);
-    } catch (err: any) { setError(err.message); }
+    } catch (err: any) {
+      console.error('[Summarizer] Error:', err);
+      setError(err.message || 'Failed to generate summary. Check browser console for details.');
+    }
     finally { setIsSummarizing(false); }
   };
 
