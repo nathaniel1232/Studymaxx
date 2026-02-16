@@ -45,9 +45,9 @@ export async function POST(request: NextRequest) {
     }
 
     const lengthMap: Record<string, string> = {
-      'short': 'MINIMUM 5-7 key points + 2-3 sections with bullets. Quick 1-2 minute read. Cover essential topics clearly.',
-      'medium': 'MINIMUM 8-10 key points + 3-4 sections with detailed bullets. Easy 3-4 minute read. Cover all main topics thoroughly.',
-      'long': 'MINIMUM 12-15 key points + 5-7 sections with comprehensive bullets. Thorough 5-7 minute read. Cover everything important with specific details and examples.',
+      'short': 'MINIMUM 100-150 words across 3-5 sections. Each section must have 2-4 bullets. This is a QUICK overview, but still comprehensive and informative.',
+      'medium': 'MINIMUM 250-350 words across 5-7 sections. Each section must have 3-5 bullets. This is a STANDARD summary - thorough but not exhaustive.',
+      'long': 'MINIMUM 500-700 words across 8-12 sections. Each section must have 4-7 bullets. This is a COMPREHENSIVE summary covering all important details with examples and context.',
     };
     const lengthInstruction = lengthMap[length] || lengthMap['medium'];
 
@@ -59,38 +59,62 @@ export async function POST(request: NextRequest) {
     };
     const srcLabel = sourceLabel[sourceType] || 'material';
 
-    const prompt = `You are a study summary assistant. Create a clean, easy-to-read summary of this ${srcLabel}.
+    const prompt = `You are an expert academic summarizer. Create a comprehensive, well-structured summary of this ${srcLabel}.
 
 CRITICAL LANGUAGE RULE:
-Write the summary in the SAME language as the input. If Norwegian, write in Norwegian. If English, write in English. Match the language EXACTLY.
+Write the summary in the SAME language as the input text. If input is Norwegian, write in Norwegian. If English, write in English. NEVER mix languages. Match the input language EXACTLY.
 
-LENGTH: ${lengthInstruction}
+LENGTH REQUIREMENT: ${lengthInstruction}
+
+CRITICAL: DO NOT create a short or vague summary! The user needs a COMPREHENSIVE summary with ALL important information. Include:
+- ALL key concepts, definitions, and terms
+- ALL important names, dates, numbers, and statistics  
+- ALL main arguments, theories, or explanations
+- Specific examples and details (not just generic statements)
+- Context and background information
+- Relationships between concepts
 
 FORMAT — Follow this EXACT structure:
 
-1. Start with an emoji + title line that describes the content (e.g. "📖 Photosynthesis Overview" or "🎬 Analysis of [Video Title]")
+1. Title Line: Start with a relevant emoji + title (e.g. "📖 Complete Overview: Photosynthesis" or "🌍 Deep Dive: World Geography")
 
-2. A "Brief Overview" section — 2-3 sentences max explaining what this is about
+2. "📋 Overview" section (2-3 sentences explaining what this content covers)
 
-3. "Key Points" section — bullet points (use •) with the most important takeaways. Each point should be ONE short sentence, not a paragraph.
+3. Content Sections — Break into logical topic sections. Each section MUST have:
+   - Emoji + clear heading (e.g. "🧪 Chemical Process", "📊 Statistical Analysis", "🎯 Key Concepts")
+   - Multiple bullet points (•) with DETAILED information
+   - Each bullet should be 1-2 sentences with specific facts
+   - DO NOT skip important details to save space
+   - Include numbers, percentages, dates, names, technical terms
+   - Add sub-bullets (◦) for related details when needed
 
-4. Break the content into logical sections (number depends on length setting), each with:
-   - An emoji + section heading (e.g. "🧪 Chemical Reactions" or "📊 Key Statistics")
-   - 3-6 bullet points per section with specific details
-   - Keep each bullet SHORT but INFORMATIVE — one clear fact or concept per line
+4. "💡 Key Takeaways" — Final section with 3-5 sentences summarizing the most important points
 
-5. End with a "💡 Quick Summary" — 2-3 sentences that capture the essence
+CRITICAL RULES FOR QUALITY:
+✅ COMPREHENSIVE: Cover ALL main topics - don't leave out important sections
+✅ SPECIFIC: Use exact terms, names, numbers (not "many studies" but "23 studies from 2020-2023")  
+✅ DETAILED: Each bullet should contain substantial information, not vague statements
+✅ WELL-ORGANIZED: Logical flow between sections
+✅ STUDENT-FRIENDLY: Clear language but don't dumb it down - include proper terminology
+✅ SCANNABLE: Use emojis, bullets, clear spacing
+✅ COMPLETE: If the source has 10 main topics, your summary should cover all 10
 
-CRITICAL RULES:
-• INCLUDE ALL IMPORTANT INFORMATION — names, dates, numbers, definitions, formulas, key concepts, examples
-• Keep it SIMPLE and SCANNABLE — a student should be able to read this on the bus
-• Use emojis for section headings (📌 🔑 📊 🧪 🎯 💡 📝 🌍 🎵 🎬 📖 🔬 ⚡ 🎓 etc.)
-• Every point should be a bullet (•), not a paragraph
-• NO walls of text — but don't skip important details
+FORMAT RULES:
+• Use emojis for all section headings (📌 🔑 📊 🧪 🎯 💡 📝 🌍 🎵 📖 🔬 ⚡ 🎓 🌡️ 💰 ⚙️ 🏛️ 🧬)
+• Every point uses a bullet (•)
+• Sub-points use circle bullets (◦)
 • NO markdown formatting (no **, ##, __)
-• NO meta-text like "Here is a summary" — start directly with the emoji title
-• Make it comprehensive enough to study from — don't leave out key information
-• Balance brevity with completeness — short bullets, but ALL essential facts
+• NO meta-text like "Here is a summary" — start directly with the title
+• NO walls of text — use bullets and spacing
+
+EXAMPLES OF GOOD vs BAD BULLETS:
+❌ BAD: "Birds are diverse and found worldwide"
+✅ GOOD: "Over 11,000 bird species exist worldwide, ranging from the 5.5cm bee hummingbird to the 2.8m ostrich • Found on every continent including Antarctica (penguins)"
+
+❌ BAD: "The process involves several steps"
+✅ GOOD: "Photosynthesis occurs in 3 stages: Light absorption (chlorophyll captures photons), Light reactions (produces ATP + NADPH), Calvin Cycle (converts CO₂ to glucose) • Takes place in chloroplasts"
+
+Remember: This is for STUDY purposes. Students need detailed, complete information to learn from. Don't create a "too long; didn't read" - create a "organized and complete" summary.
 
 INPUT:
 ${text}
@@ -102,8 +126,8 @@ SUMMARY:`;
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: length === 'long' ? 6144 : length === 'medium' ? 3072 : 2048,
+        temperature: 0.2,
+        maxOutputTokens: length === 'long' ? 8192 : length === 'medium' ? 5120 : 3072,
       },
     });
 

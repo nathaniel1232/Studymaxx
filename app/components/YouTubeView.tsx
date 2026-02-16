@@ -528,26 +528,9 @@ export default function YouTubeView({
                 )}
               </div>
             )}
-            
-            {extractedContent && onGenerateFlashcards && (
-              <button
-                onClick={() => {
-                  // Generate flashcards directly instead of notes editor
-                  if (extractedContent && subject) {
-                    handleContinue();
-                  }
-                }}
-                disabled={!subject}
-                className="px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50"
-                style={{
-                  backgroundColor: "#1a73e8",
-                  color: "#ffffff",
-                }}
-              >
-                Create Study Set →
-              </button>
-            )}
           </div>
+
+          {/*REMOVED: Duplicate "Create Study Set" button that bypassed proper flashcard generation. Users should use the sidebar/mobile buttons which properly generate flashcards via handleGenerate("flashcards") */}
         </div>
 
         {/* Subject Input */}
