@@ -246,6 +246,14 @@ html.dark .input-text-fix {
   color: #ffffff !important;
 }
 
+/* Mobile input fixes - prevent iOS zoom on focus + ensure typing works */
+@media (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px !important;
+    -webkit-appearance: none;
+  }
+}
+
 /* ========================================
    UTILITY CLASSES
    ======================================== */

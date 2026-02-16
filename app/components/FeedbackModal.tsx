@@ -22,7 +22,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
 
   const handleSubmit = async () => {
     if (!message.trim()) {
-      setError(settings.language === "no" ? "Skriv en melding" : "Please enter a message");
+      setError("Please enter a message");
       return;
     }
 
@@ -53,7 +53,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
         setType("bug");
       }, 2000);
     } catch (err) {
-      setError(settings.language === "no" ? "Kunne ikke sende. Prøv igjen." : "Failed to submit. Please try again.");
+      setError("Failed to submit. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -94,15 +94,13 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
               className="text-xl font-bold mb-2"
               style={{ color: isDark ? '#f1f5f9' : '#1e293b' }}
             >
-              {settings.language === "no" ? "Takk!" : "Thank you!"}
+              {"Thank you!"}
             </h3>
             <p 
               className="text-sm"
               style={{ color: isDark ? '#94a3b8' : '#64748b' }}
             >
-              {settings.language === "no" 
-                ? "Din tilbakemelding er sendt." 
-                : "Your feedback has been submitted."}
+              {"Your feedback has been submitted."}
             </p>
           </div>
         ) : (
@@ -127,15 +125,13 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                       className="text-lg font-bold"
                       style={{ color: isDark ? '#f1f5f9' : '#1e293b' }}
                     >
-                      {settings.language === "no" ? "Send tilbakemelding" : "Send Feedback"}
+                      {"Send Feedback"}
                     </h2>
                     <p 
                       className="text-xs"
                       style={{ color: isDark ? '#94a3b8' : '#64748b' }}
                     >
-                      {settings.language === "no" 
-                        ? "Rapporter feil eller foreslå funksjoner" 
-                        : "Report bugs or suggest features"}
+                      {"Report bugs or suggest features"}
                     </p>
                   </div>
                 </div>
@@ -160,13 +156,13 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                   className="block text-sm font-bold mb-2"
                   style={{ color: isDark ? '#f1f5f9' : '#1e293b' }}
                 >
-                  {settings.language === "no" ? "Type" : "Type"}
+                  {"Type"}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: "bug", label: settings.language === "no" ? "Feil" : "Bug", color: "#ef4444" },
-                    { id: "feature", label: settings.language === "no" ? "Forslag" : "Feature", color: "#10b981" },
-                    { id: "other", label: settings.language === "no" ? "Annet" : "Other", color: "#3b82f6" }
+                    { id: "bug", label: "Bug", color: "#ef4444" },
+                    { id: "feature", label: "Feature", color: "#10b981" },
+                    { id: "other", label: "Other", color: "#3b82f6" }
                   ].map((item) => (
                     <button
                       key={item.id}
@@ -196,14 +192,12 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                   className="block text-sm font-bold mb-2"
                   style={{ color: isDark ? '#f1f5f9' : '#1e293b' }}
                 >
-                  {settings.language === "no" ? "Melding" : "Message"} *
+                  {"Message"} *
                 </label>
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder={settings.language === "no" 
-                    ? "Beskriv problemet eller forslaget ditt..." 
-                    : "Describe the issue or your suggestion..."}
+                  placeholder="Describe the issue or your suggestion..."
                   rows={4}
                   className="w-full px-4 py-3 rounded-lg resize-none transition-all focus:outline-none"
                   style={{ 
@@ -220,15 +214,13 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                   className="block text-sm font-bold mb-2"
                   style={{ color: isDark ? '#f1f5f9' : '#1e293b' }}
                 >
-                  {settings.language === "no" ? "E-post (valgfritt)" : "Email (optional)"}
+                  {"Email (optional)"}
                 </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={settings.language === "no" 
-                    ? "For oppfølging" 
-                    : "For follow-up"}
+                  placeholder="For follow-up"
                   className="w-full px-4 py-3 rounded-lg transition-all focus:outline-none"
                   style={{ 
                     backgroundColor: isDark ? '#0f172a' : '#f1f5f9',
@@ -258,7 +250,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                   border: isDark ? '2px solid #475569' : '2px solid #cbd5e1'
                 }}
               >
-                {settings.language === "no" ? "Avbryt" : "Cancel"}
+                {"Cancel"}
               </button>
               <button
                 onClick={handleSubmit}
@@ -270,9 +262,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                   border: isDark ? '2px solid #0ea5e9' : '2px solid #0f172a'
                 }}
               >
-                {isSubmitting 
-                  ? (settings.language === "no" ? "Sender..." : "Sending...") 
-                  : (settings.language === "no" ? "Send" : "Submit")}
+                {isSubmitting ? "Sending..." : "Submit"}
               </button>
             </div>
           </>

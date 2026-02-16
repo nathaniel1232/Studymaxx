@@ -564,7 +564,7 @@ export default function DashboardView({
         {/* AI Chat */}
         {showAIChat ? (
           <div 
-            className="fixed bottom-6 right-6 w-80 rounded-2xl overflow-hidden shadow-2xl"
+            className="fixed bottom-4 right-4 left-4 sm:left-auto sm:w-80 sm:bottom-6 sm:right-6 rounded-2xl overflow-hidden shadow-2xl z-50"
             style={{ 
               backgroundColor: isDarkMode ? 'rgba(15, 29, 50, 0.95)' : 'rgba(255, 255, 255, 0.95)', 
               border: '1px solid rgba(6, 182, 212, 0.2)' 

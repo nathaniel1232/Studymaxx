@@ -791,13 +791,13 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                           className="text-lg font-bold"
                           style={{ color: settings.theme === 'dark' ? '#f1f5f9' : '#1e293b' }}
                         >
-                          {settings.language === 'no' ? 'Velg testtype' : 'Choose Test Type'}
+                          Choose Test Type
                         </h3>
                         <p 
                           className="text-xs"
                           style={{ color: settings.theme === 'dark' ? '#94a3b8' : '#64748b' }}
                         >
-                          {settings.language === 'no' ? 'Hvordan vil du svare?' : 'How do you want to answer?'}
+                          How do you want to answer?
                         </p>
                       </div>
                     </div>
@@ -815,8 +815,8 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                       }}
                     >
                       <div className="text-left">
-                        <p className="font-bold text-base mb-1">{settings.language === 'no' ? 'Skriv svar' : 'Written Answer'}</p>
-                        <p className="text-sm opacity-90">{settings.language === 'no' ? 'Skriv inn svaret selv' : 'Type in your answer'}</p>
+                        <p className="font-bold text-base mb-1">Written Answer</p>
+                        <p className="text-sm opacity-90">Type in your answer</p>
                       </div>
                     </button>
                     
@@ -830,8 +830,8 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                       }}
                     >
                       <div className="text-left">
-                        <p className="font-bold text-base mb-1">{settings.language === 'no' ? 'Flervalg' : 'Multiple Choice'}</p>
-                        <p className="text-sm opacity-90">{settings.language === 'no' ? 'Velg riktig svar fra alternativene' : 'Pick from answer options'}</p>
+                        <p className="font-bold text-base mb-1">Multiple Choice</p>
+                        <p className="text-sm opacity-90">Pick from answer options</p>
                       </div>
                     </button>
                   </div>
@@ -850,7 +850,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         border: settings.theme === 'dark' ? '2px solid #475569' : '2px solid #cbd5e1'
                       }}
                     >
-                      {settings.language === 'no' ? 'Avbryt' : 'Cancel'}
+                      Cancel
                     </button>
                   </div>
                 </>
@@ -876,13 +876,13 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                           className="text-lg font-bold"
                           style={{ color: settings.theme === 'dark' ? '#f1f5f9' : '#1e293b' }}
                         >
-                          {settings.language === 'no' ? 'Velg modus' : 'Choose Mode'}
+                          Choose Mode
                         </h3>
                         <p 
                           className="text-xs"
                           style={{ color: settings.theme === 'dark' ? '#94a3b8' : '#64748b' }}
                         >
-                          {settings.language === 'no' ? 'Med liv eller bare øving?' : 'With lives or just practice?'}
+                          With lives or just practice?
                         </p>
                       </div>
                     </div>
@@ -912,8 +912,8 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                       }}
                     >
                       <div className="text-left">
-                        <p className="font-bold text-base mb-1">{settings.language === 'no' ? 'Med liv' : 'Lives Mode'}</p>
-                        <p className="text-sm opacity-90">{settings.language === 'no' ? '3 liv - spillet slutter når du går tom' : '3 lives - game ends when you run out'}</p>
+                        <p className="font-bold text-base mb-1">Lives Mode</p>
+                        <p className="text-sm opacity-90">3 lives - game ends when you run out</p>
                       </div>
                     </button>
                     
@@ -939,8 +939,8 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                       }}
                     >
                       <div className="text-left">
-                        <p className="font-bold text-base mb-1">{settings.language === 'no' ? 'Øvingsmodus' : 'Practice Mode'}</p>
-                        <p className="text-sm opacity-90">{settings.language === 'no' ? 'Ingen liv - se poengsum på slutten' : 'No lives - see your score at the end'}</p>
+                        <p className="font-bold text-base mb-1">Practice Mode</p>
+                        <p className="text-sm opacity-90">No lives - see your score at the end</p>
                       </div>
                     </button>
                   </div>
@@ -959,7 +959,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         border: settings.theme === 'dark' ? '2px solid #475569' : '2px solid #cbd5e1'
                       }}
                     >
-                      {settings.language === 'no' ? '← Tilbake' : '← Back'}
+                      ← Back
                     </button>
                   </div>
                 </>
@@ -1013,17 +1013,17 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                 /* Practice Mode - Score Display */
                 <div className="bg-indigo-600 rounded-md p-6 shadow-2xl">
                   <p className="text-sm text-white font-black uppercase tracking-wide mb-2 drop-shadow-lg">
-                    {settings.language === 'no' ? 'Poengsum' : 'Score'}
+                    Score
                   </p>
                   <div className="flex items-center justify-center gap-4">
                     <div className="text-center">
                       <p className="text-3xl font-bold text-emerald-300">{Array.from(testResults.values()).filter(v => v).length}</p>
-                      <p className="text-xs text-white/70">{settings.language === 'no' ? 'Riktig' : 'Correct'}</p>
+                      <p className="text-xs text-white/70">Correct</p>
                     </div>
                     <div className="text-2xl text-white/50">/</div>
                     <div className="text-center">
                       <p className="text-3xl font-bold text-rose-300">{Array.from(testResults.values()).filter(v => !v).length}</p>
-                      <p className="text-xs text-white/70">{settings.language === 'no' ? 'Feil' : 'Wrong'}</p>
+                      <p className="text-xs text-white/70">Wrong</p>
                     </div>
                   </div>
                 </div>
@@ -1216,7 +1216,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                   {!writtenSubmitted ? (
                     <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700">
                       <p className="text-lg font-bold text-gray-900 dark:text-white mb-4 text-center">
-                        {settings.language === 'no' ? 'Skriv inn svaret ditt' : 'Type your answer'}
+                        Type your answer
                       </p>
                       <input
                         type="text"
@@ -1251,7 +1251,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                             }
                           }
                         }}
-                        placeholder={settings.language === 'no' ? 'Ditt svar...' : 'Your answer...'}
+                        placeholder="Your answer..."
                         className="w-full px-5 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-white text-lg"
                         autoFocus
                       />
@@ -1287,10 +1287,10 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         disabled={!writtenAnswer.trim()}
                         className="w-full mt-4 py-4 bg-blue-600 hover:opacity-90 text-white font-bold text-lg rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {settings.language === 'no' ? 'Sjekk svar' : 'Check Answer'}
+                        Check Answer
                       </button>
                       <p className="text-sm text-gray-400 mt-3 text-center">
-                        {settings.language === 'no' ? 'Små skrivefeil godtas' : 'Small typos are accepted'}
+                        Small typos are accepted
                       </p>
                     </div>
                   ) : (
@@ -1300,18 +1300,18 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                           <span className="text-3xl">{isAnswerCorrect ? '✅' : '❌'}</span>
                           <p className={`font-bold text-xl ${isAnswerCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                             {isAnswerCorrect 
-                              ? (settings.language === 'no' ? 'Riktig!' : 'Correct!') 
-                              : (settings.language === 'no' ? 'Feil' : 'Incorrect')}
+                              ? 'Correct!' 
+                              : 'Incorrect'}
                           </p>
                         </div>
                         <div className="space-y-2">
                           <p className="text-gray-600 dark:text-gray-300">
-                            <span className="font-medium">{settings.language === 'no' ? 'Ditt svar: ' : 'Your answer: '}</span>
+                            <span className="font-medium">Your answer: </span>
                             <span className={isAnswerCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400 line-through'}>{writtenAnswer}</span>
                           </p>
                           {!isAnswerCorrect && (
                             <p className="text-gray-600 dark:text-gray-300">
-                              <span className="font-medium">{settings.language === 'no' ? 'Riktig svar: ' : 'Correct answer: '}</span>
+                              <span className="font-medium">Correct answer: </span>
                               <span className="text-emerald-600 dark:text-emerald-400 font-bold">{currentCard.answer}</span>
                             </p>
                           )}
@@ -1325,11 +1325,11 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                             <span className="text-xl">ℹ️</span>
                             <div className="flex-1">
                               <p className="font-semibold text-blue-800 dark:text-blue-300 mb-1">
-                                {settings.language === 'no' ? 'Forklaring' : 'Explanation'}
+                                Explanation
                               </p>
                               {isLoadingExplanation ? (
                                 <p className="text-blue-600 dark:text-blue-400 text-sm animate-pulse">
-                                  {settings.language === 'no' ? 'Genererer forklaring...' : 'Generating explanation...'}
+                                  Generating explanation...
                                 </p>
                               ) : explanation ? (
                                 <p className="text-blue-700 dark:text-blue-300 text-sm leading-relaxed">
@@ -1337,7 +1337,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                                 </p>
                               ) : (
                                 <p className="text-blue-600 dark:text-blue-400 text-sm italic">
-                                  {settings.language === 'no' ? 'Ingen forklaring tilgjengelig' : 'No explanation available'}
+                                  No explanation available
                                 </p>
                               )}
                             </div>
@@ -1400,11 +1400,11 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         <span className="text-xl">ℹ️</span>
                         <div className="flex-1">
                           <p className="font-semibold text-blue-800 dark:text-blue-300 mb-1">
-                            {settings.language === 'no' ? 'Forklaring' : 'Explanation'}
+                            Explanation
                           </p>
                           {isLoadingExplanation ? (
                             <p className="text-blue-600 dark:text-blue-400 text-sm animate-pulse">
-                              {settings.language === 'no' ? 'Genererer forklaring...' : 'Generating explanation...'}
+                              Generating explanation...
                             </p>
                           ) : explanation ? (
                             <p className="text-blue-700 dark:text-blue-300 text-sm leading-relaxed">
@@ -1412,7 +1412,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                             </p>
                           ) : (
                             <p className="text-blue-600 dark:text-blue-400 text-sm italic">
-                              {settings.language === 'no' ? 'Ingen forklaring tilgjengelig' : 'No explanation available'}
+                              No explanation available
                             </p>
                           )}
                         </div>
@@ -1437,7 +1437,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                   {selectedAnswer === null ? (
                     <div className="bg-white dark:bg-gray-800 p-8 rounded-md shadow-lg border border-gray-100 dark:border-gray-700">
                       <p className="text-lg font-bold text-gray-900 dark:text-white mb-6 text-center">
-                        {settings.language === 'no' ? 'Hvordan gikk det?' : 'How did you do?'}
+                        How did you do?
                       </p>
                       <div className="flex justify-center gap-4">
                         <button
@@ -1446,7 +1446,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         >
                           <span className="flex flex-col items-center gap-2">
                             <span className="text-4xl group-hover:scale-110 transition-transform">😫</span>
-                            <span>{settings.language === 'no' ? 'Feil' : 'Wrong'}</span>
+                            <span>Wrong</span>
                           </span>
                         </button>
                         <button
@@ -1464,7 +1464,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                         >
                           <span className="flex flex-col items-center gap-2">
                             <span className="text-4xl group-hover:scale-110 transition-transform">🤩</span>
-                            <span>{settings.language === 'no' ? 'Riktig' : 'Correct'}</span>
+                            <span>Correct</span>
                           </span>
                         </button>
                       </div>

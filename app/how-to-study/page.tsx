@@ -42,7 +42,6 @@ const BrainIcon = () => (
 export default function HowToStudyPage() {
   const t = useTranslation();
   const { settings } = useSettings();
-  const isNorwegian = settings.language === "no";
 
   const isDarkMode = settings.theme === 'dark' || (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
@@ -63,12 +62,10 @@ export default function HowToStudyPage() {
         {/* Content */}
         <div className="bg-white dark:bg-gray-800 rounded-md shadow-xl p-8 md:p-12" style={{ border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)' }}>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            {isNorwegian ? "Slik studerer du med StudyMaxx" : "How to Study with StudyMaxx"}
+            How to Study with StudyMaxx
           </h1>
           <p className="text-lg text-gray-500 dark:text-gray-400 mb-8">
-            {isNorwegian 
-              ? "En enkel guide for å lære mest mulig" 
-              : "A simple guide to maximize your learning"}
+            A simple guide to maximize your learning
           </p>
 
           <div className="space-y-8">
@@ -79,12 +76,10 @@ export default function HowToStudyPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  {isNorwegian ? "Lim inn notatene dine" : "Paste Your Notes"}
+                  Paste Your Notes
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300">
-                  {isNorwegian 
-                    ? "Kopier teksten fra forelesningsnotatene, læreboka eller presentasjonene dine. Jo mer relevant innhold, jo bedre flashcards får du."
-                    : "Copy text from your lecture notes, textbook, or slides. The more relevant content you provide, the better flashcards you'll get."}
+                  Copy text from your lecture notes, textbook, or slides. The more relevant content you provide, the better flashcards you'll get.
                 </p>
               </div>
             </section>
@@ -96,12 +91,10 @@ export default function HowToStudyPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  {isNorwegian ? "AI lager flashcards for deg" : "AI Creates Flashcards"}
+                  AI Creates Flashcards
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300">
-                  {isNorwegian 
-                    ? "StudyMaxx sin AI analyserer teksten og lager spørsmål som tester forståelsen din – ikke bare definisjoner, men sammenhenger og konsepter."
-                    : "StudyMaxx's AI analyzes your text and creates questions that test real understanding – not just definitions, but connections and concepts."}
+                  StudyMaxx's AI analyzes your text and creates questions that test real understanding – not just definitions, but connections and concepts.
                 </p>
               </div>
             </section>
@@ -113,12 +106,10 @@ export default function HowToStudyPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  {isNorwegian ? "Bla gjennom kortene" : "Flip Through Cards"}
+                  Flip Through Cards
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300">
-                  {isNorwegian 
-                    ? "Les spørsmålet, tenk på svaret, og snu kortet for å sjekke. Denne aktive gjenkallelsen styrker hukommelsen din mye bedre enn å bare lese."
-                    : "Read the question, think of the answer, then flip the card to check. This active recall strengthens your memory much better than passive reading."}
+                  Read the question, think of the answer, then flip the card to check. This active recall strengthens your memory much better than passive reading.
                 </p>
               </div>
             </section>
@@ -130,12 +121,10 @@ export default function HowToStudyPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  {isNorwegian ? "Test deg selv" : "Test Yourself"}
+                  Test Yourself
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300">
-                  {isNorwegian 
-                    ? "Når du føler deg klar, bruk quiz-funksjonen. Hvert spørsmål har flere valg – og feil svar er designet for å ligne riktige, så du må virkelig kunne stoffet."
-                    : "When you feel ready, use the quiz mode. Each question has multiple choices – wrong answers are designed to look plausible, so you really need to know your stuff."}
+                  When you feel ready, use the quiz mode. Each question has multiple choices – wrong answers are designed to look plausible, so you really need to know your stuff.
                 </p>
               </div>
             </section>
@@ -147,12 +136,10 @@ export default function HowToStudyPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  {isNorwegian ? "Gjenta over tid" : "Repeat Over Time"}
+                  Repeat Over Time
                 </h2>
                 <p className="text-gray-600 dark:text-gray-300">
-                  {isNorwegian 
-                    ? "Det beste tipset: Studer i korte økter over flere dager i stedet for én lang kveld. Hjernen din trenger tid til å bearbeide informasjonen."
-                    : "The best tip: Study in short sessions over several days instead of one long night. Your brain needs time to process the information."}
+                  The best tip: Study in short sessions over several days instead of one long night. Your brain needs time to process the information.
                 </p>
               </div>
             </section>
@@ -161,40 +148,24 @@ export default function HowToStudyPage() {
             <div className="mt-8 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <span className="text-amber-500"><LightbulbIcon /></span>
-                {isNorwegian ? "Pro-tips" : "Pro Tips"}
+                Pro Tips
               </h3>
               <ul className="space-y-3 text-gray-600 dark:text-gray-300">
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-1"><CheckmarkIcon /></span>
-                  <span>
-                    {isNorwegian 
-                      ? "Start med å skumme gjennom alle kortene før du begynner å memorere."
-                      : "Start by skimming through all cards before memorizing."}
-                  </span>
+                  <span>Start by skimming through all cards before memorizing.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-1"><CheckmarkIcon /></span>
-                  <span>
-                    {isNorwegian 
-                      ? "Fokuser ekstra på kortene du synes er vanskelige."
-                      : "Focus extra on the cards you find difficult."}
-                  </span>
+                  <span>Focus extra on the cards you find difficult.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-1"><CheckmarkIcon /></span>
-                  <span>
-                    {isNorwegian 
-                      ? "Forklar svaret høyt for deg selv – det hjelper!"
-                      : "Explain the answer out loud to yourself – it helps!"}
-                  </span>
+                  <span>Explain the answer out loud to yourself – it helps!</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-1"><CheckmarkIcon /></span>
-                  <span>
-                    {isNorwegian 
-                      ? "Ta quiz-en flere ganger for å styrke langtidshukommelsen."
-                      : "Take the quiz multiple times to strengthen long-term memory."}
-                  </span>
+                  <span>Take the quiz multiple times to strengthen long-term memory.</span>
                 </li>
               </ul>
             </div>
@@ -203,12 +174,10 @@ export default function HowToStudyPage() {
             <div className="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-md border border-gray-200 dark:border-gray-700">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
                 <span className="text-blue-500"><BrainIcon /></span>
-                {isNorwegian ? "Hvorfor dette fungerer" : "Why This Works"}
+                Why This Works
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
-                {isNorwegian 
-                  ? "StudyMaxx bruker to forskningsbaserte læringsteknikker: aktiv gjenkalling (å hente informasjon fra hukommelsen) og repetert læring. Studier viser at disse metodene er mye mer effektive enn å bare lese og markere tekst."
-                  : "StudyMaxx uses two research-backed learning techniques: active recall (retrieving information from memory) and spaced repetition. Studies show these methods are much more effective than just reading and highlighting text."}
+                StudyMaxx uses two research-backed learning techniques: active recall (retrieving information from memory) and spaced repetition. Studies show these methods are much more effective than just reading and highlighting text.
               </p>
             </div>
           </div>
@@ -220,7 +189,7 @@ export default function HowToStudyPage() {
               className="inline-flex items-center gap-2 px-8 py-4 rounded-md text-white font-bold text-lg transition-all hover:scale-105 shadow-lg"
               style={{ background: '#06b6d4' }}
             >
-              {isNorwegian ? "Start å studere nå" : "Start Studying Now"}
+              Start Studying Now
               <ArrowIcon direction="right" size={20} />
             </Link>
           </div>

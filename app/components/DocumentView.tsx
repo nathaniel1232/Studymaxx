@@ -132,6 +132,12 @@ export default function DocumentView({
   const [isChatLoading, setIsChatLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Drag-and-drop state
+  const [isDragging, setIsDragging] = useState(false);
+  
+  // Mobile chat toggle
+  const [showMobileChat, setShowMobileChat] = useState(false);
+
   // Auto-scroll chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -168,16 +174,36 @@ export default function DocumentView({
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    await processFile(file);
+  };
 
+  const processFile = async (file: File) => {
     setUploadedFile(file);
     setIsExtracting(true);
     setError("");
 
     try {
+      const fileExt = file.name.split(".").pop()?.toLowerCase();
+
+      // Handle .txt files directly in the browser
+      if (fileExt === "txt") {
+        const text = await file.text();
+        if (!text.trim()) {
+          throw new Error("The text file is empty.");
+        }
+        setDocumentText(text);
+        if (!subject && file.name) {
+          const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+          setSubject(nameWithoutExt);
+          setDocumentTitle(nameWithoutExt);
+        }
+        setIsExtracting(false);
+        return;
+      }
+
       const formData = new FormData();
       formData.append("file", file);
 
-      const fileExt = file.name.split(".").pop()?.toLowerCase();
       let endpoint = "/api/extract-text";
       
       if (fileExt === "pdf") {
@@ -253,6 +279,36 @@ export default function DocumentView({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    const allowedExts = ["pdf", "doc", "docx", "ppt", "pptx", "txt", "png", "jpg", "jpeg", "gif", "webp"];
+    if (!ext || !allowedExts.includes(ext)) {
+      setError(`Unsupported file type: .${ext}. Supported: PDF, Word, PowerPoint, TXT, and images.`);
+      return;
+    }
+    
+    processFile(file);
   };
 
   const openCustomizeModal = (type: "flashcards" | "quiz" | "match") => {
@@ -532,8 +588,51 @@ export default function DocumentView({
 
       if (!response.ok) throw new Error("Failed to get response");
       
-      const data = await response.json();
-      setChatMessages(prev => [...prev, { role: "ai", text: data.response || "I couldn't generate a response." }]);
+      // Handle SSE streaming response
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No response stream");
+      
+      const decoder = new TextDecoder();
+      let fullText = "";
+      
+      // Add empty AI message that we'll update as chunks arrive
+      setChatMessages(prev => [...prev, { role: "ai", text: "" }]);
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
+        
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6).trim();
+            if (data === "[DONE]") break;
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.text) {
+                fullText += parsed.text;
+                setChatMessages(prev => {
+                  const updated = [...prev];
+                  updated[updated.length - 1] = { role: "ai", text: fullText };
+                  return updated;
+                });
+              }
+            } catch {
+              // Skip malformed JSON chunks
+            }
+          }
+        }
+      }
+      
+      if (!fullText.trim()) {
+        setChatMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: "ai", text: "I couldn't generate a response." };
+          return updated;
+        });
+      }
     } catch (err) {
       setChatMessages(prev => [...prev, { role: "ai", text: "Sorry, I encountered an error. Please try again." }]);
     } finally {
@@ -637,7 +736,7 @@ export default function DocumentView({
         </div>
 
         {/* Document Content Area */}
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-6 pb-20 lg:pb-6 overflow-auto" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
           {isExtracting ? (
             <div className="flex flex-col items-center justify-center h-full gap-4">
               <div className="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#1a73e8', borderTopColor: 'transparent' }} />
@@ -659,10 +758,16 @@ export default function DocumentView({
             <div 
               className="flex flex-col items-center justify-center h-full gap-6 p-12 rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-300 hover:border-solid hover:scale-[1.01] hover:shadow-xl"
               style={{ 
-                borderColor: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)', 
-                backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : '#ffffff' 
+                borderColor: isDragging ? '#06b6d4' : isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)', 
+                backgroundColor: isDragging 
+                  ? (isDarkMode ? 'rgba(6, 182, 212, 0.08)' : 'rgba(6, 182, 212, 0.05)')
+                  : isDarkMode ? 'rgba(255,255,255,0.03)' : '#ffffff',
+                transform: isDragging ? 'scale(1.01)' : undefined,
               }}
               onClick={() => fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
             >
               <div 
                 className="w-20 h-20 rounded-2xl flex items-center justify-center transition-transform duration-300 hover:scale-110"
@@ -797,10 +902,7 @@ export default function DocumentView({
                     {msg.role === "user" ? "You" : "AI"}
                   </div>
                   
-                  <div className="flex-1 space-y-1">
-                    <div className="text-xs font-medium" style={{ color: isDarkMode ? "#9aa0a6" : "#5f6368" }}>
-                      {msg.role === "user" ? "You" : "StudyMaxx AI"}
-                    </div>
+                  <div className="flex-1">
                     <div
                       className="text-sm leading-relaxed"
                       style={{ color: isDarkMode ? "#e2e8f0" : "#1e293b" }}
@@ -865,25 +967,91 @@ export default function DocumentView({
         backgroundColor: isDarkMode ? 'rgba(15, 29, 50, 0.95)' : 'rgba(255, 255, 255, 0.95)',
         borderTop: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'}` 
       }}>
-        <button
-          onClick={() => openCustomizeModal("flashcards")}
-          disabled={isGenerating}
-          className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
-          style={{
-            background: "linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)",
-            color: "#ffffff",
-            opacity: isGenerating ? 0.7 : 1,
-            boxShadow: '0 4px 14px rgba(6, 182, 212, 0.3)',
-          }}
-        >
-          {isGenerating ? <SpinnerIcon /> : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74L12 2z" />
+        <div className="flex gap-2">
+          <button
+            onClick={() => openCustomizeModal("flashcards")}
+            disabled={isGenerating}
+            className="flex-1 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
+            style={{
+              background: "linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)",
+              color: "#ffffff",
+              opacity: isGenerating ? 0.7 : 1,
+              boxShadow: '0 4px 14px rgba(6, 182, 212, 0.3)',
+            }}
+          >
+            {isGenerating ? <SpinnerIcon /> : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74L12 2z" />
+              </svg>
+            )}
+            Create Study Set
+          </button>
+          <button
+            onClick={() => setShowMobileChat(!showMobileChat)}
+            className="px-4 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-1 transition-all"
+            style={{
+              backgroundColor: showMobileChat ? '#1a73e8' : (isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'),
+              color: showMobileChat ? '#ffffff' : (isDarkMode ? '#e2e8f0' : '#374151'),
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
-          )}
-          Create Study Set
-        </button>
+            AI
+          </button>
+        </div>
       </div>
+
+      {/* Mobile Chat Panel */}
+      {showMobileChat && (
+        <div className="lg:hidden fixed inset-0 z-50 flex flex-col" style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#f1f5f9' }}>
+          <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)' }}>
+            <h3 className="text-base font-bold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>StudyMaxx AI</h3>
+            <button onClick={() => setShowMobileChat(false)} className="p-2 rounded-lg" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}>
+              <CloseIcon />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {chatMessages.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgba(26, 115, 232, 0.1)" }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" strokeWidth="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                </div>
+                <p className="font-medium mb-1" style={{ color: isDarkMode ? "#ffffff" : "#000000" }}>Ask me anything about your document!</p>
+              </div>
+            ) : (
+              chatMessages.map((msg, i) => (
+                <div key={i} className="flex gap-3 items-start">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
+                    style={{ backgroundColor: msg.role === "user" ? "#1a73e8" : isDarkMode ? "rgba(26, 115, 232, 0.15)" : "rgba(26, 115, 232, 0.1)", color: msg.role === "user" ? "#ffffff" : "#1a73e8" }}>
+                    {msg.role === "user" ? "You" : "AI"}
+                  </div>
+                  <div className="flex-1 text-sm leading-relaxed" style={{ color: isDarkMode ? "#e2e8f0" : "#1e293b" }}>{msg.text}</div>
+                </div>
+              ))
+            )}
+            {isChatLoading && (
+              <div className="flex gap-3 items-start">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: isDarkMode ? "rgba(26, 115, 232, 0.15)" : "rgba(26, 115, 232, 0.1)" }}>
+                  <SpinnerIcon />
+                </div>
+                <div className="text-sm" style={{ color: isDarkMode ? "#9aa0a6" : "#64748b" }}>Thinking...</div>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+          <div className="p-4 border-t" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)' }}>
+            <div className="flex items-center gap-2 p-2 rounded-xl" style={{ backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)", border: `1px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}` }}>
+              <input type="text" value={chatMessage} onChange={(e) => setChatMessage(e.target.value)} onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendChat()} placeholder="Ask about your document..." className="flex-1 bg-transparent border-none outline-none text-sm" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }} disabled={isChatLoading} />
+              <button onClick={handleSendChat} disabled={!chatMessage.trim() || isChatLoading} className="p-2 rounded-lg transition-all disabled:opacity-50" style={{ backgroundColor: "#1a73e8", color: "#ffffff" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Customization Modal */}
       <CustomizeGenerationModal

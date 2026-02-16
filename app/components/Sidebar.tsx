@@ -140,9 +140,12 @@ export default function Sidebar({
       const data = await response.json();
       if (data.url) {
         window.location.href = data.url;
+      } else if (data.error) {
+        alert(data.error);
       }
     } catch (error) {
       console.error('Failed to open portal:', error);
+      alert("Could not open subscription management. Your premium may have been granted manually — there's no subscription to manage.");
     }
   };
 

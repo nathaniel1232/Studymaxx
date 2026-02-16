@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useSettings } from "../contexts/SettingsContext";
 import { useRouter } from "next/navigation";
 
 export default function AboutPage() {
   const { settings } = useSettings();
   const router = useRouter();
+  const [showEmailPopup, setShowEmailPopup] = useState(false);
+  const [copied, setCopied] = useState(false);
   const isDarkMode = settings.theme === 'dark' || 
     (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
@@ -79,14 +82,55 @@ export default function AboutPage() {
             <p className="mb-4" style={{ color: isDarkMode ? '#94a3b8' : '#374151' }}>
               Have questions, feedback, or suggestions? We'd love to hear from you!
             </p>
-            <a 
-              href="mailto:studymaxxer@gmail.com"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-opacity hover:opacity-80"
+            <button 
+              onClick={() => { setShowEmailPopup(true); setCopied(false); }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-opacity hover:opacity-80 cursor-pointer"
               style={{ backgroundColor: '#1a73e8', color: '#ffffff' }}
             >
-              Email Us
-            </a>
+              Contact Us
+            </button>
           </div>
+
+          {/* Email Popup */}
+          {showEmailPopup && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={() => setShowEmailPopup(false)}>
+              <div 
+                className="mx-4 p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center"
+                style={{ backgroundColor: isDarkMode ? '#1e293b' : '#ffffff' }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="text-4xl mb-3">📧</div>
+                <h3 className="text-lg font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Get in touch</h3>
+                <p className="text-sm mb-4" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>Send us an email at:</p>
+                <div 
+                  className="px-4 py-3 rounded-xl mb-4 font-mono text-sm select-all"
+                  style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : '#f1f5f9', color: isDarkMode ? '#e2e8f0' : '#0f172a' }}
+                >
+                  studymaxxer@gmail.com
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      await navigator.clipboard.writeText('studymaxxer@gmail.com');
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="flex-1 py-2.5 rounded-xl font-medium transition-all hover:opacity-90"
+                    style={{ backgroundColor: '#06b6d4', color: '#ffffff' }}
+                  >
+                    {copied ? '✓ Copied!' : 'Copy Email'}
+                  </button>
+                  <button
+                    onClick={() => setShowEmailPopup(false)}
+                    className="px-4 py-2.5 rounded-xl font-medium transition-all"
+                    style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f1f5f9', color: isDarkMode ? '#e2e8f0' : '#374151' }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="mt-12 pt-8 border-t text-center" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}>

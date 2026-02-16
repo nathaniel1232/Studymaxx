@@ -53,7 +53,7 @@ export default function StudyFactBadge({ context, position = "inline" }: StudyFa
           <div className="text-2xl">ℹ️</div>
           <div className="flex-1">
             <div className="text-xs font-bold mb-1 text-indigo-600 dark:text-indigo-400">
-              {settings.language === "no" ? "Visste du?" : "Did you know?"}
+              {"Did you know?"}
             </div>
             <p className="text-sm font-medium leading-relaxed" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
               {fact.text[settings.language]}

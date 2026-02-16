@@ -439,42 +439,10 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
               <label className="block text-sm font-bold mb-2 uppercase tracking-tight" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
                 Language
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                {(["en", "no"] as Language[]).map((lang) => (
-                  <button
-                    key={lang}
-                    onClick={() => handleUpdateSetting(() => updateLanguage(lang))}
-                    className="p-5 rounded-md transition-all duration-200 flex flex-col items-center justify-center font-bold"
-                    style={{
-                      background: settings.language === lang 
-                        ? '#10b981'
-                        : isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4',
-                      color: settings.language === lang ? 'white' : isDarkMode ? '#94a3b8' : '#64748b',
-                      boxShadow: settings.language === lang ? '0 4px 15px rgba(16, 185, 129, 0.3)' : 'none',
-                      border: settings.language === lang ? 'none' : `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`
-                    }}
-                    onMouseEnter={(e) => {
-                      if (settings.language !== lang) {
-                        e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.03)' : '#ffffff';
-                        e.currentTarget.style.color = isDarkMode ? '#ffffff' : '#000000';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (settings.language !== lang) {
-                        e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4';
-                        e.currentTarget.style.color = isDarkMode ? '#94a3b8' : '#64748b';
-                      }
-                    }}
-                  >
-                    <div className="text-3xl mb-2">
-                      {lang === "en" && "🇬🇧"}
-                      {lang === "no" && "🇳🇴"}
-                    </div>
-                    <div className="text-sm">
-                      {lang === "en" ? "English" : "Norsk"}
-                    </div>
-                  </button>
-                ))}
+              <div className="p-4 rounded-md flex items-center gap-3" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4', border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` }}>
+                <span className="text-2xl">🇬🇧</span>
+                <span className="font-medium" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>English</span>
+                <span className="text-xs ml-auto" style={{ color: isDarkMode ? '#64748b' : '#94a3b8' }}>More languages coming soon</span>
               </div>
             </div>
           </section>

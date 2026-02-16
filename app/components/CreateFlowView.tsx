@@ -667,27 +667,27 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   // Subject examples
   const getSubjectExamples = () => [
     { 
-      name: settings.language === "no" ? "Språk" : "Language Learning",
-      description: settings.language === "no" ? "Lær ordforråd mellom to språk" : "Learn vocabulary between two languages"
+      name: "Language Learning",
+      description: "Learn vocabulary between two languages"
     },
     { 
-      name: settings.language === "no" ? "Matte" : "Math",
+      name: "Math",
       description: null
     },
     { 
-      name: settings.language === "no" ? "Biologi" : "Biology",
+      name: "Biology",
       description: null
     },
     { 
-      name: settings.language === "no" ? "Historie" : "History",
+      name: "History",
       description: null
     },
     { 
-      name: settings.language === "no" ? "Naturfag" : "Chemistry",
+      name: "Chemistry",
       description: null
     },
     { 
-      name: settings.language === "no" ? "Fysikk" : "Physics",
+      name: "Physics",
       description: null
     }
   ];
@@ -816,16 +816,12 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         }
         
         if (!knownLanguage || !learningLanguage) {
-          setError(settings.language === "no"
-            ? "Velg hvilket språk du kan og hvilket du lærer"
-            : "Select which language you know and which you're learning");
+          setError("Select which language you know and which you're learning");
           return;
         }
         
         if (knownLanguage === learningLanguage) {
-          setError(settings.language === "no"
-            ? "Språkene må være forskjellige"
-            : "Languages must be different");
+          setError("Languages must be different");
           return;
         }
       }
@@ -2022,32 +2018,26 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       }}
                     >
                       <h3 className="font-bold text-sm mb-3" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
-                        {settings.language === "no" ? "🌍 Språkinnstillinger" : "🌍 Language Settings"}
+                        {"🌍 Language Settings"}
                       </h3>
                       
                       <p className="text-xs mb-3 p-2 rounded-md" style={{ backgroundColor: 'rgba(6, 182, 212, 0.1)', color: (isDarkMode ? '#ffffff' : '#000000') }}>
-                        {settings.language === "no"
-                          ? "✨ Vi oppdaget at du har ordpar (f.eks. 'hund - dog'). Velg språkene dine:"
-                          : "✨ We detected vocabulary pairs (e.g., 'dog - hund'). Select your languages:"}
+                        {"✨ We detected vocabulary pairs (e.g., 'dog - hund'). Select your languages:"}
                       </p>
                       
                       {detectedLanguages.length >= 2 && (
                         <p className="text-xs mb-2" style={{ color: (isDarkMode ? '#9aa0a6' : '#5f6368') }}>
-                          {settings.language === "no" 
-                            ? `✓ Detekterte språk: ${detectedLanguages.join(" + ")}` 
-                            : `✓ Detected languages: ${detectedLanguages.join(" + ")}`}
+                          {`✓ Detected languages: ${detectedLanguages.join(" + ")}`}
                         </p>
                       )}
                       <p className="text-xs text-cyan-600 dark:text-cyan-400 mb-3 font-medium">
-                        {settings.language === "no"
-                          ? "Velg ditt morsmål og språket du lærer:"
-                          : "Choose your native language and the language you're learning:"}
+                        {"Choose your native language and the language you're learning:"}
                       </p>
                       
                       {/* Known Language - Only detected languages */}
                       <div className="mb-3">
                         <label className="block text-sm font-medium mb-2" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
-                          {settings.language === "no" ? "🏠 Mitt morsmål (jeg kan):" : "🏠 My native language (I know):"}
+                          {"🏠 My native language (I know):"}
                         </label>
                         <select
                           value={knownLanguage}
@@ -2059,7 +2049,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                             borderColor: knownLanguage ? '#06b6d4' : (isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)')
                           }}
                         >
-                          <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
+                          <option value="">{"Select language"}</option>
                           {detectedLanguages.map(lang => (
                             <option key={`known-${lang}`} value={lang}>{lang}</option>
                           ))}
@@ -2069,7 +2059,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       {/* Learning Language - Only detected languages */}
                       <div>
                         <label className="block text-sm font-medium mb-2" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
-                          {settings.language === "no" ? "📚 Jeg lærer:" : "📚 I'm learning:"}
+                          {"📚 I'm learning:"}
                         </label>
                         <select
                           value={learningLanguage}
@@ -2081,7 +2071,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                             borderColor: learningLanguage ? '#06b6d4' : (isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)')
                           }}
                         >
-                          <option value="">{settings.language === "no" ? "Velg språk" : "Select language"}</option>
+                          <option value="">{"Select language"}</option>
                           {detectedLanguages.map(lang => (
                             <option key={`learning-${lang}`} value={lang}>{lang}</option>
                           ))}
@@ -2091,14 +2081,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       {knownLanguage && learningLanguage && knownLanguage !== learningLanguage && (
                         <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '2px solid #10b981' }}>
                           <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300 mb-2">
-                            ✓ {settings.language === "no" 
-                              ? `Lærer ${learningLanguage} fra ${knownLanguage}` 
-                              : `Learning ${learningLanguage} from ${knownLanguage}`}
+                            ✓ {`Learning ${learningLanguage} from ${knownLanguage}`}
                           </p>
                           <p className="text-xs text-emerald-600 dark:text-emerald-400 leading-relaxed">
-                            {settings.language === "no"
-                              ? `📝 Alle spørsmål vil være på ${knownLanguage} og be deg oversette til ${learningLanguage}`
-                              : `📝 All questions will be in ${knownLanguage} asking you to translate into ${learningLanguage}`}
+                            {`📝 All questions will be in ${knownLanguage} asking you to translate into ${learningLanguage}`}
                           </p>
                         </div>
                       )}
@@ -2106,9 +2092,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       {knownLanguage && learningLanguage && knownLanguage === learningLanguage && (
                         <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '2px solid #ef4444' }}>
                           <p className="text-xs font-bold text-red-600 dark:text-red-400">
-                            ⚠️ {settings.language === "no"
-                              ? "Velg to forskjellige språk"
-                              : "Please select two different languages"}
+                            ⚠️ {"Please select two different languages"}
                           </p>
                         </div>
                       )}
@@ -2518,7 +2502,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       boxShadow: manualLanguageOverride ? '0 0 8px rgba(34, 197, 94, 0.3)' : 'none'
                     }}
                   >
-                    <option value="">{settings.language === "no" ? "Bruk oppdaget språk" : "Use detected language"}</option>
+                    <option value="">{"Use detected language"}</option>
                     {["Finnish", "German", "Norwegian", "Swedish", "English", "Spanish", "French", "Italian", 
                       "Dutch", "Danish", "Portuguese", "Polish", "Russian", "Turkish", "Greek", "Japanese", 
                       "Chinese", "Korean", "Arabic", "Hindi", "Vietnamese", "Thai", "Indonesian"].map(lang => (
@@ -2585,9 +2569,9 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
               {/* Dynamic Steps */}
               <div className="grid gap-3 text-left">
                 {[
-                   { label: settings.language === "no" ? "Analyserer innhold..." : "Analyzing content...", icon: "🔍", time: 0 },
-                   { label: settings.language === "no" ? "Strukturerer flashcards..." : "Structuring flashcards...", icon: "📑", time: 25 },
-                   { label: settings.language === "no" ? "Ferdigstiller settet..." : "Finalizing study set...", icon: "🚀", time: 50 },
+                   { label: "Analyzing content...", icon: "🔍", time: 0 },
+                   { label: "Structuring flashcards...", icon: "📑", time: 25 },
+                   { label: "Finalizing study set...", icon: "🚀", time: 50 },
                 ].map((step, idx) => {
                    const isActive = elapsedSeconds >= step.time && (idx === 2 || elapsedSeconds < [25, 50, 999][idx]);
                    const isDone = elapsedSeconds >= [25, 50, 999][idx];
@@ -2632,16 +2616,12 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                    <svg className="w-16 h-16 text-blue-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
                 </div>
                 <p className="text-xs font-bold text-blue-600 dark:text-blue-400 mb-2 uppercase tracking-wider flex items-center gap-2">
-                   <span>💡</span> {settings.language === "no" ? "Visste du?" : "Did you know?"}
+                   <span>💡</span> {"Did you know?"}
                 </p>
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300 leading-relaxed">
                   {[
-                    settings.language === "no" 
-                      ? "Å prøve å huske informasjon styrker hukommelsen mer enn å bare lese notater." 
-                      : "Active recall recruits more neural networks than passive review.",
-                    settings.language === "no"
-                      ? "Korte, spredte økter over tid er mer effektive enn lange økter."
-                      : "Spaced repetition can increase learning efficiency by up to 200%.",
+                    "Active recall recruits more neural networks than passive review.",
+                    "Spaced repetition can increase learning efficiency by up to 200%.",
                   ][Math.floor(elapsedSeconds / 25) % 2]}
                 </p>
               </div>
