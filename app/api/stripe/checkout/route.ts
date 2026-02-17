@@ -86,12 +86,16 @@ export async function POST(req: NextRequest) {
     // Get the origin for redirect URLs
     const origin = req.headers.get("origin") || "http://localhost:3000";
 
-    // Parse request body for interval preference (monthly or yearly)
+    // Parse request body for interval preference (monthly or yearly) and promo code
     let interval = 'month';
+    let promoCode: string | null = null;
     try {
       const body = await req.json();
       if (body.interval === 'year') {
         interval = 'year';
+      }
+      if (body.promoCode) {
+        promoCode = body.promoCode;
       }
     } catch (e) {
       // Body might be empty, default to month
@@ -102,10 +106,10 @@ export async function POST(req: NextRequest) {
       ? 'price_1SvZnEPDFQXMY7iph7WBuiVR'  // Yearly: $79.99/year
       : 'price_1SvZfEPDFQXMY7ipV19NzhM9'; // Monthly: $8.99/month
 
-    console.log(`[Checkout] Creating checkout for user ${userId}, interval: ${interval}, priceId: ${priceId}`);
+    console.log(`[Checkout] Creating checkout for user ${userId}, interval: ${interval}, priceId: ${priceId}${promoCode ? `, promo: ${promoCode}` : ''}`);
 
     // Create Stripe Checkout Session with your product Price IDs
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: any = {
       payment_method_types: ["card"],
       mode: "subscription",
       line_items: [
@@ -123,7 +127,16 @@ export async function POST(req: NextRequest) {
       cancel_url: `${origin}?premium=cancelled`,
       allow_promotion_codes: true,
       billing_address_collection: "auto",
-    });
+    };
+
+    // Apply promo code if provided
+    if (promoCode) {
+      sessionParams.discounts = [{
+        coupon: promoCode, // Use the coupon ID directly
+      }];
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     return NextResponse.json({ 
       url: session.url,

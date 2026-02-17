@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../utils/supabase";
 import { useSettings } from "../contexts/SettingsContext";
 
@@ -28,6 +28,7 @@ const XIcon = ({ color }: { color: string }) => (
 
 export default function PricingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { settings } = useSettings();
   const isDarkMode = settings.theme === 'dark' || 
     (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -35,6 +36,7 @@ export default function PricingPage() {
   const [isGrandfathered, setIsGrandfathered] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
+  const promoCode = searchParams.get('campaign') === 'email50' ? '5dgCe1PK' : null;
 
   useEffect(() => {
     checkPremiumStatus();
@@ -98,7 +100,8 @@ export default function PricingPage() {
           'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
-          interval: billingInterval
+          interval: billingInterval,
+          promoCode: promoCode
         }),
       });
 
@@ -212,11 +215,16 @@ export default function PricingPage() {
 
         {/* Title */}
         <div className="text-center mb-8">
+          {promoCode && (
+            <div className="mb-4 inline-block px-4 py-2 rounded-lg" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+              <p style={{ color: '#22c55e', fontSize: '14px', fontWeight: '600', margin: 0 }}>Special Campaign Price Applied: {promoCode}</p>
+            </div>
+          )}
           <h2 className="text-4xl font-bold mb-4" style={{ color: textPrimary }}>
             Upgrade to <span style={{ color: '#22d3ee' }}>Premium</span>
           </h2>
           <p className="text-lg mb-6" style={{ color: textSecondary }}>
-            Unlock unlimited study sets, AI tutor, file uploads, and more
+            {promoCode ? '50% off your first month only' : 'Unlock unlimited study sets, AI tutor, file uploads, and more'}
           </p>
           
           {/* Billing Toggle */}
@@ -323,15 +331,27 @@ export default function PricingPage() {
                 Everything you need to ace your studies
               </p>
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-4xl font-bold" style={{ color: '#22d3ee' }}>
-                  {billingInterval === 'year' ? '$79.99' : '$8.99'}
-                </span>
+                {promoCode ? (
+                  <>
+                    <span className="text-2xl" style={{ color: textSecondary, textDecoration: 'line-through' }}>
+                      {billingInterval === 'year' ? '$79.99' : '$8.99'}
+                    </span>
+                    <span className="mx-1" style={{ color: textSecondary }}>→</span>
+                    <span className="text-4xl font-bold" style={{ color: '#22c55e' }}>
+                      $4.49
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-4xl font-bold" style={{ color: '#22d3ee' }}>
+                    {billingInterval === 'year' ? '$79.99' : '$8.99'}
+                  </span>
+                )}
                 <span className="text-sm" style={{ color: textSecondary }}>
-                  /{billingInterval === 'year' ? 'year' : 'month'}
+                  /{promoCode ? 'month (first month only)' : billingInterval === 'year' ? 'year' : 'month'}
                 </span>
               </div>
-              <p className="text-xs mb-6" style={{ color: billingInterval === 'year' ? '#22c55e' : textSecondary }}>
-                {billingInterval === 'year' ? 'That\'s just $6.67/month \u2014 save 26%!' : '$79.99/year if you pay annually (save 26%)'}
+              <p className="text-xs mb-6" style={{ color: promoCode ? '#22c55e' : (billingInterval === 'year' ? '#22c55e' : textSecondary) }}>
+                {promoCode ? 'Then $8.99/month. Cancel anytime.' : (billingInterval === 'year' ? 'That\'s just $6.67/month — save 26%!' : '$79.99/year if you pay annually (save 26%)')}
               </p>
 
               <div className="space-y-3 mb-8">
