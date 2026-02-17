@@ -1908,10 +1908,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                               try {
                                 setIsExtractingYouTube(true);
                                 setError("");
-                                const response = await fetch('/api/youtube/transcript', {
+                                const response = await fetch('/api/youtube-transcript', {
                                   method: 'POST',
                                   headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ videoUrl: youtubeUrl }),
+                                  body: JSON.stringify({ url: youtubeUrl }),
                                 });
                                 
                                 if (!response.ok) {
@@ -1920,7 +1920,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                                 }
                                 
                                 const data = await response.json();
-                                setTextInput(data.transcript);
+                                setTextInput(data.text || data.transcript);
                                 setError("");
                               } catch (err: any) {
                                 console.error('YouTube extraction error:', err);
