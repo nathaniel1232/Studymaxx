@@ -129,14 +129,19 @@ export async function POST(req: NextRequest) {
       billing_address_collection: "auto",
     };
 
-    // Apply promo code if provided
+    // Apply coupon if provided
     if (promoCode) {
+      console.log(`[Checkout] Applying coupon: ${promoCode}`);
       sessionParams.discounts = [{
-        coupon: promoCode, // Use the coupon ID directly
+        coupon: promoCode,
       }];
     }
 
+    console.log(`[Checkout] Session params:`, JSON.stringify(sessionParams, null, 2));
+
     const session = await stripe.checkout.sessions.create(sessionParams);
+    
+    console.log(`[Checkout] ✅ Session created: ${session.id} with URL: ${session.url}`);
 
     return NextResponse.json({ 
       url: session.url,

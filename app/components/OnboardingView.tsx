@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { usePersonalization, StudyLevel } from "../contexts/PersonalizationContext";
+import { useSettings, Language } from "../contexts/SettingsContext";
 
 interface OnboardingViewProps {
   onComplete: () => void;
@@ -44,6 +45,7 @@ const LANGUAGES = [
 
 export default function OnboardingView({ onComplete }: OnboardingViewProps) {
   const { completeOnboarding, skipOnboarding } = usePersonalization();
+  const { updateLanguage } = useSettings();
   
   const [step, setStep] = useState(1);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
@@ -89,6 +91,12 @@ export default function OnboardingView({ onComplete }: OnboardingViewProps) {
     if (!level || selectedSubjects.length === 0) return;
     
     setIsSubmitting(true);
+
+    // Save the chosen language to app settings
+    if (language && language !== "other") {
+      updateLanguage(language as Language);
+    }
+
     const success = await completeOnboarding({
       subjects: selectedSubjects,
       level,

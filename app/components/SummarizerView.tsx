@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useSettings } from "../contexts/SettingsContext";
+import { useSettings, getLanguageName } from "../contexts/SettingsContext";
 
 interface SummarizerViewProps {
   onBack: () => void;
@@ -241,10 +241,11 @@ export default function SummarizerView({ onBack, isPremium, user }: SummarizerVi
     setIsSummarizing(true); setError("");
     try {
       console.log('[Summarizer] Starting summarization request...');
+      console.log('[Summarizer] Output language:', settings.language, '→', getLanguageName(settings.language));
       const res = await fetch("/api/summarize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: inputText, length, sourceType }),
+        body: JSON.stringify({ text: inputText, length, sourceType, outputLanguage: settings.language }),
       });
       
       console.log('[Summarizer] Response status:', res.status, res.statusText);

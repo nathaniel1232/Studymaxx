@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Flashcard, generateFlashcards } from "../utils/flashcardGenerator";
 import { saveFlashcardSet } from "../utils/storage";
-import { useSettings } from "../contexts/SettingsContext";
+import { useSettings, getLanguageName } from "../contexts/SettingsContext";
 import { supabase, getCurrentUser } from "../utils/supabase";
 import CustomizeGenerationModal, { GenerationSettings } from "./CustomizeGenerationModal";
 
@@ -583,6 +583,7 @@ export default function DocumentView({
           message: userMessage,
           context: documentText,
           subject: subject,
+          outputLanguage: settings.language,
         }),
       });
 

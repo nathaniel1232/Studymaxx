@@ -1509,7 +1509,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
                            {/* Show streak if correct */}
                            {isAnswerCorrect && currentStreak > 1 && (
                             <p className="text-sm font-bold text-orange-500">
-                              🔥 {currentStreak} {t("streak")}
+                              ⚡ {currentStreak} {t("streak")}
                             </p>
                            )}
                         </div>

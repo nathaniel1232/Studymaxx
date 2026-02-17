@@ -19,6 +19,8 @@ export interface UsageLimits {
   maxFlashcardsPerSet: number;
   maxAIGenerationsPerDay: number;
   maxChatMessagesPerDay: number;
+  maxSummarizationsPerDay: number; // NEW: Summarizer daily limit
+  maxQuizzesPerDay: number; // NEW: Quiz daily limit
   canUploadPDF: boolean;
   canUploadImages: boolean;
   canUseYouTube: boolean;
@@ -30,27 +32,32 @@ export interface UsageLimits {
 }
 
 // Free tier limits - HARD LIMITS enforced server-side
+// Free users get: 2 flashcards/day, 2 summaries/day, 10 MathMaxx messages/day, 1 quiz/day
 export const FREE_LIMITS: UsageLimits = {
-  maxStudySets: 2, // 2 study sets per 24 hours via notes
-  maxFlashcardsPerSet: 20, // Up to 20 cards for free
-  maxAIGenerationsPerDay: 2, // 2 AI generations per day
-  maxChatMessagesPerDay: 10, // 10 AI chat messages per day
-  canUploadPDF: false, // One-time trial only
-  canUploadImages: false, // One-time trial only
-  canUseYouTube: true, // YouTube/website extraction is free (no AI cost)
-  canUseAudioRecording: false, // One-time trial only
-  canRegenerate: false,
-  canSelectDifficulty: false,
+  maxStudySets: 2, // 2 flashcard sets per 24 hours (from notes or YouTube)
+  maxFlashcardsPerSet: 20, // Up to 20 cards per set for free
+  maxAIGenerationsPerDay: 2, // 2 flashcard generation sessions per day
+  maxChatMessagesPerDay: 10, // 10 MathMaxx chat messages per day
+  maxSummarizationsPerDay: 2, // 2 summaries per day (PDF, YouTube, notes, web)
+  maxQuizzesPerDay: 1, // 1 quiz generation per day
+  canUploadPDF: true, // Allow PDF uploads for flashcards (counts toward daily limit)
+  canUploadImages: true, // Allow image uploads for flashcards
+  canUseYouTube: true, // Allow YouTube extraction (counts toward daily limit)
+  canUseAudioRecording: true, // Allow audio recording
+  canRegenerate: false, // No regeneration for free
+  canSelectDifficulty: false, // No difficulty selection for free
   canSyncDevices: false,
   canShareSets: false,
 };
 
-// Premium tier (unlimited)
+// Premium tier (UNLIMITED EVERYTHING)
 export const PREMIUM_LIMITS: UsageLimits = {
-  maxStudySets: Infinity,
-  maxFlashcardsPerSet: 75, // 75 cards for premium
-  maxAIGenerationsPerDay: Infinity,
-  maxChatMessagesPerDay: Infinity,
+  maxStudySets: Infinity, // UNLIMITED flashcard sets
+  maxFlashcardsPerSet: 75, // 75 cards max per set (to prevent abuse)
+  maxAIGenerationsPerDay: Infinity, // UNLIMITED AI generations
+  maxChatMessagesPerDay: Infinity, // UNLIMITED chat messages
+  maxSummarizationsPerDay: Infinity, // UNLIMITED summaries
+  maxQuizzesPerDay: Infinity, // UNLIMITED quizzes
   canUploadPDF: true,
   canUploadImages: true,
   canUseYouTube: true,

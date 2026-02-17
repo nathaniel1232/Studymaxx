@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useSettings } from "../contexts/SettingsContext";
+import { useSettings, getLanguageName } from "../contexts/SettingsContext";
 import { Flashcard, generateFlashcards } from "../utils/flashcardGenerator";
 import { saveFlashcardSet } from "../utils/storage";
 import { supabase, getCurrentUser } from "../utils/supabase";
@@ -327,6 +327,11 @@ export default function NotesEditorView({
         ? generationSettings.matchPairs 
         : generationSettings.count;
 
+      // Determine output language from settings
+      const outputLang = settings.language && settings.language !== "en" 
+        ? getLanguageName(settings.language) 
+        : "auto";
+
       const cards = await generateFlashcards(
         documentContent,
         countToGenerate,
@@ -334,7 +339,7 @@ export default function NotesEditorView({
         "B",
         user?.id || "anonymous",
         "notes",
-        "auto",
+        outputLang,
         generationSettings.difficulty,
         false,
         undefined,
@@ -434,6 +439,7 @@ export default function NotesEditorView({
           userId: user?.id || "anonymous",
           context: documentContent.substring(0, 3000),
           history: chatMessages.map(m => ({ role: m.role, text: m.text })),
+          outputLanguage: settings.language,
         }),
       });
 
@@ -492,93 +498,77 @@ export default function NotesEditorView({
 
   return (
     <>
-      {/* Loading Overlay */}
+      {/* Loading Overlay — matches Document style */}
       {isGenerating && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full shadow-2xl">
-            {/* Central Animation */}
-            <div className="relative w-20 h-20 mx-auto mb-6">
-              <div className="absolute inset-0 rounded-full border-4 border-gray-100 dark:border-gray-800"></div>
-              <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
-              <div className="absolute inset-3 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
-                <span className="text-2xl">📝</span>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}>
+          <div className="text-center max-w-sm w-full mx-4 p-8 rounded-2xl" style={{ backgroundColor: isDarkMode ? 'rgba(15, 29, 50, 0.95)' : 'rgba(255,255,255,0.95)' }}>
+            <div className="w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' }}>
+              <svg className="animate-spin" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+              </svg>
             </div>
-            
-            <div className="space-y-2 mb-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center">
-                Creating your {generationType === "flashcards" ? "flashcards" : generationType === "quiz" ? "quiz" : "match game"}
-              </h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                Please wait...
-              </p>
-            </div>
-            
-            {/* Progress Bar with Animation */}
-            <div className="space-y-2 mb-6">
-              <div className="flex justify-between text-xs font-semibold uppercase tracking-wider text-gray-400">
-                <span>Start</span>
-                <span>{Math.round((elapsedSeconds / 75) * 100)}%</span>
+
+            <h3 className="text-xl font-bold mb-1" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              Creating your {generationType === "flashcards" ? "flashcards" : generationType === "quiz" ? "quiz" : "match game"}...
+            </h3>
+            <p className="text-sm mb-5" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
+              This usually takes 10-30 seconds
+            </p>
+
+            {/* Progress bar */}
+            <div className="mb-5">
+              <div className="flex justify-between text-xs font-medium mb-1.5" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
+                <span>{elapsedSeconds < 10 ? 'Analyzing...' : elapsedSeconds < 25 ? 'Generating...' : 'Finalizing...'}</span>
+                <span>{Math.min(Math.round((elapsedSeconds / 35) * 100), 95)}%</span>
               </div>
-              <div className="h-3 w-full rounded-full overflow-hidden shadow-inner bg-gray-200 dark:bg-gray-700">
-                <div 
-                  className="h-full transition-all duration-300 ease-out animate-pulse"
-                  style={{ 
-                    width: `${Math.min((elapsedSeconds / 75) * 100, 95)}%`,
-                    background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
+              <div className="h-2.5 w-full rounded-full overflow-hidden" style={{ background: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }}>
+                <div
+                  className="h-full rounded-full transition-all duration-1000 ease-out"
+                  style={{
+                    width: `${Math.min((elapsedSeconds / 35) * 100, 95)}%`,
+                    background: 'linear-gradient(90deg, #06b6d4, #a855f7, #06b6d4)',
+                    backgroundSize: '200% 100%',
+                    animation: 'shimmer 1.5s ease-in-out infinite',
                   }}
-                ></div>
+                />
               </div>
             </div>
 
-            {/* Dynamic Steps */}
-            <div className="grid gap-3 text-left">
+            {/* Steps */}
+            <div className="space-y-2 text-left">
               {[
-                { label: "Analyzing content...", icon: "🔍", time: 0 },
-                { label: "Structuring flashcards...", icon: "📑", time: 25 },
-                { label: "Finalizing study set...", icon: "✓", time: 50 },
-              ].map((step, idx) => {
-                const isActive = elapsedSeconds >= step.time && (idx === 2 || elapsedSeconds < [25, 50, 999][idx]);
-                const isDone = elapsedSeconds >= [25, 50, 999][idx];
-                
+                { label: 'Analyzing content', time: 0 },
+                { label: 'Generating flashcards', time: 10 },
+                { label: 'Finalizing study set', time: 25 },
+              ].map((step, i) => {
+                const isDone = elapsedSeconds >= [10, 25, 60][i];
+                const isActive = elapsedSeconds >= step.time && !isDone;
                 return (
-                  <div 
-                    key={idx} 
-                    className={`flex items-center gap-4 p-4 rounded-md border transition-all duration-500 ${
-                        isDone 
-                          ? "bg-green-50/50 border-green-100 dark:bg-green-900/10 dark:border-green-800"
-                          : isActive
-                          ? "border-indigo-200 shadow-md scale-[1.02] dark:border-indigo-900 bg-gray-50 dark:bg-gray-700/50"
-                          : "bg-transparent border-transparent opacity-50"
-                    }`}
-                  >
-                    <div 
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors ${
-                        isDone 
-                          ? "bg-green-500 text-white" 
-                          : isActive
-                          ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300 animate-pulse"
-                          : "bg-gray-200 dark:bg-gray-700 text-gray-400"
-                      }`}
-                    >
-                      {isDone ? "✓" : step.icon}
+                  <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300" style={{
+                    backgroundColor: isActive ? (isDarkMode ? 'rgba(6,182,212,0.1)' : 'rgba(6,182,212,0.05)') : 'transparent',
+                  }}>
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs" style={{
+                      backgroundColor: isDone ? '#22c55e' : isActive ? '#06b6d4' : (isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)'),
+                      color: isDone || isActive ? '#ffffff' : (isDarkMode ? '#64748b' : '#94a3b8'),
+                    }}>
+                      {isDone ? '✓' : isActive ? <span className="animate-pulse">•</span> : (i + 1)}
                     </div>
-                    <span className={`font-medium ${
-                        isDone ? "text-green-700 dark:text-green-400 line-through decoration-green-300/50" : "text-gray-900 dark:text-white"
-                    }`}>
-                      {step.label}
-                    </span>
+                    <span className="text-sm font-medium" style={{
+                      color: isDone ? '#22c55e' : isActive ? (isDarkMode ? '#ffffff' : '#000000') : (isDarkMode ? '#64748b' : '#94a3b8'),
+                      textDecoration: isDone ? 'line-through' : 'none',
+                    }}>{step.label}</span>
                   </div>
                 );
               })}
             </div>
+            <style>{`@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
           </div>
         </div>
       )}
 
-    <div className="min-h-screen flex" style={{ backgroundColor: isDarkMode ? "#1a1a2e" : "#f1f5f9" }}>
-      {/* Main Editor Area */}
-      <div className="flex-1 flex flex-col">
+    <div className="min-h-screen flex flex-col lg:flex-row" style={{ backgroundColor: isDarkMode ? "#1a1a2e" : "#f1f5f9" }}>
+      {/* Main Editor Area - shown BELOW chat on mobile, LEFT on desktop */}
+      <div className="flex-1 flex flex-col min-w-0 order-last lg:order-first">
         {/* Accent Strip - Notes Green/Blue theme */}
         <div 
           className="h-1" 
@@ -589,16 +579,16 @@ export default function NotesEditorView({
         
         {/* Top Bar */}
         <div
-          className="sticky top-0 z-30 px-4 py-3 flex items-center justify-between border-b"
+          className="sticky top-0 z-30 px-3 lg:px-4 py-3 flex items-center justify-between border-b"
           style={{
             backgroundColor: isDarkMode ? "rgba(15, 29, 50, 0.95)" : "rgba(255, 255, 255, 0.95)",
             borderColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)",
           }}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 lg:gap-3 flex-1 min-w-0">
             <button
               onClick={onBack}
-              className="p-2 rounded-lg transition-all hover:scale-105"
+              className="p-2 rounded-lg transition-all hover:scale-105 flex-shrink-0"
               style={{
                 backgroundColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
                 color: isDarkMode ? "#ffffff" : "#000000",
@@ -609,18 +599,18 @@ export default function NotesEditorView({
               </svg>
             </button>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               <div 
-                className="w-8 h-8 rounded-lg flex items-center justify-center" 
+                className="w-7 h-7 lg:w-8 lg:h-8 rounded-lg flex items-center justify-center flex-shrink-0" 
                 style={{ background: "linear-gradient(135deg, #1a73e8 0%, #34a853 100%)" }}
               >
-                <span className="text-lg">📝</span>
+                <span className="text-base lg:text-lg">📝</span>
               </div>
               <input
                 type="text"
                 value={documentTitle}
                 onChange={(e) => setDocumentTitle(e.target.value)}
-                className="text-lg font-bold bg-transparent border-none outline-none"
+                className="text-base lg:text-lg font-bold bg-transparent border-none outline-none w-full min-w-0"
                 style={{ color: isDarkMode ? "#ffffff" : "#000000" }}
                 placeholder="Document Title"
               />
@@ -629,7 +619,7 @@ export default function NotesEditorView({
         </div>
 
         {/* Subject Input */}
-        <div className="px-6 py-3 border-b" style={{ borderColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)" }}>
+        <div className="px-4 lg:px-6 py-3 border-b" style={{ borderColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)" }}>
           <input
             type="text"
             value={subject}
@@ -640,8 +630,8 @@ export default function NotesEditorView({
           />
         </div>
 
-        {/* Editor Area */}
-        <div className="flex-1 p-6">
+        {/* Editor Area - Fixed, non-resizable */}
+        <div className="flex-1 p-3 lg:p-6 overflow-hidden">
           <textarea
             value={documentContent}
             onChange={(e) => setDocumentContent(e.target.value)}
@@ -649,13 +639,15 @@ export default function NotesEditorView({
 
 Tips:
 • Add your class notes, lecture summaries, or study material
-• Use the buttons on the right to generate flashcards, quizzes, or match games
+• Use the buttons below to generate flashcards, quizzes, or match games
 • Ask the AI assistant questions about your notes"
-            className="w-full h-full min-h-[60vh] p-4 rounded-xl resize-none outline-none text-base leading-relaxed"
+            className="w-full h-full p-3 lg:p-4 rounded-xl resize-none outline-none text-sm lg:text-base leading-relaxed touch-manipulation"
             style={{
               backgroundColor: isDarkMode ? "rgba(255,255,255,0.03)" : "#ffffff",
               color: isDarkMode ? "#ffffff" : "#000000",
               border: isDarkMode ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.1)",
+              minHeight: "300px",
+              maxHeight: "calc(100vh - 300px)",
             }}
           />
           
@@ -671,16 +663,17 @@ Tips:
         </div>
       </div>
 
-      {/* Right Sidebar - Actions & Chat */}
+      {/* Sidebar - Chat & Actions: shown FIRST on mobile, RIGHT on desktop */}
       <div
-        className="w-96 border-l flex flex-col"
+        className="w-full lg:w-96 border-b lg:border-b-0 lg:border-t-0 lg:border-l flex flex-col order-first lg:order-last"
         style={{
           backgroundColor: isDarkMode ? "rgba(15, 29, 50, 0.5)" : "rgba(241, 245, 249, 0.95)",
           borderColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)",
+          maxHeight: "none",
         }}
       >
         {/* Action Buttons */}
-        <div className="p-4 border-b" style={{ borderColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)" }}>
+        <div className="p-3 lg:p-4 border-b" style={{ borderColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)" }}>
           <h3 className="text-sm font-semibold mb-3" style={{ color: isDarkMode ? "#e8eaed" : "#0f172a" }}>
             Create from Notes
           </h3>
@@ -690,7 +683,7 @@ Tips:
             <button
               onClick={() => openCustomizeModal("flashcards")}
               disabled={isGenerating}
-              className="w-full px-4 py-3.5 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full px-3 lg:px-4 py-3 lg:py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 lg:gap-3 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] text-sm lg:text-base"
               style={{
                 background: "linear-gradient(135deg, #1a73e8 0%, #06b6d4 100%)",
                 color: "#ffffff",

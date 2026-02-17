@@ -36,6 +36,7 @@ export default function PricingPage() {
   const [isGrandfathered, setIsGrandfathered] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const promoCode = searchParams.get('campaign') === 'email50' ? '5dgCe1PK' : null;
 
   useEffect(() => {
@@ -79,19 +80,36 @@ export default function PricingPage() {
       return;
     }
 
+    setIsCheckoutLoading(true);
+
     try {
       if (!supabase) {
-        alert('Please sign in first to purchase Premium');
+        console.error('[Pricing] Supabase not initialized');
+        alert('App not fully loaded. Please refresh and try again.');
+        setIsCheckoutLoading(false);
         return;
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log('[Pricing] Checking user session...');
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (!session) {
-        alert('Please sign in first to purchase Premium');
-        router.push('/?signin=true');
+      if (sessionError) {
+        console.error('[Pricing] Session error:', sessionError);
+        alert('Could not verify your session. Please sign in again.');
+        setIsCheckoutLoading(false);
         return;
       }
+      
+      if (!session) {
+        console.log('[Pricing] No active session - redirecting to signin');
+        alert('Please sign in first to purchase Premium');
+        router.push('/?signin=true');
+        setIsCheckoutLoading(false);
+        return;
+      }
+
+      console.log('[Pricing] Session found for user:', session.user?.email);
+      console.log('[Pricing] Sending checkout request with promo:', promoCode);
 
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
@@ -105,21 +123,30 @@ export default function PricingPage() {
         }),
       });
 
+      console.log('[Pricing] Checkout response status:', response.status);
+
       if (response.ok) {
-        const { url } = await response.json();
-        if (url) {
-          window.location.href = url;
+        const data = await response.json();
+        console.log('[Pricing] Checkout session created:', data.sessionId);
+        
+        if (data.url) {
+          console.log('[Pricing] Redirecting to Stripe checkout URL');
+          window.location.href = data.url;
         } else {
-          alert('Failed to create checkout session - no URL returned');
+          console.error('[Pricing] No checkout URL in response');
+          alert('Failed to create checkout session - no URL returned. Please try again.');
+          setIsCheckoutLoading(false);
         }
       } else {
         const errorData = await response.json();
-        console.error('Failed to create checkout session:', errorData);
-        alert('Failed to create checkout session. Please try again.');
+        console.error('[Pricing] Checkout API error:', errorData);
+        alert(`Error: ${errorData.error || 'Failed to create checkout session'}`);
+        setIsCheckoutLoading(false);
       }
-    } catch (error) {
-      console.error('Checkout error:', error);
-      alert('An error occurred. Please try again.');
+    } catch (error: any) {
+      console.error('[Pricing] Checkout error:', error);
+      alert(`An error occurred: ${error.message || 'Please try again.'}`);
+      setIsCheckoutLoading(false);
     }
   };
 
@@ -379,10 +406,11 @@ export default function PricingPage() {
 
               <button
                 onClick={() => handleSelectPlan('premium')}
-                className="w-full py-3 px-6 font-bold rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl"
+                disabled={isCheckoutLoading}
+                className="w-full py-3 px-6 font-bold rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{ background: '#06b6d4', color: '#ffffff', boxShadow: '0 10px 30px -10px rgba(6, 182, 212, 0.4)' }}
               >
-                {billingInterval === 'year' ? 'Get Premium — $79.99/year' : 'Get Premium — $8.99/mo'}
+                {isCheckoutLoading ? 'Processing...' : (billingInterval === 'year' ? 'Get Premium — $79.99/year' : 'Get Premium — $8.99/mo')}
               </button>
               <p className="text-center text-xs mt-3" style={{ color: textSecondary }}>
                 Cancel anytime — no commitment

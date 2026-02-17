@@ -7,8 +7,8 @@ import { Language } from "../contexts/SettingsContext";
 
 export interface StudyFact {
   id: string;
-  text: Record<Language, string>;
-  source: Record<Language, string>;
+  text: Partial<Record<Language, string>>;
+  source: Partial<Record<Language, string>>;
   context: "general" | "flashcards" | "testing" | "spaced-repetition";
 }
 
@@ -106,8 +106,8 @@ export function getStudyFact(context?: StudyFact["context"], language: Language 
   const fact = filtered[Math.floor(Math.random() * filtered.length)];
   return {
     id: fact.id,
-    text: fact.text[language],
-    source: fact.source[language]
+    text: fact.text[language] || fact.text["en"] || "Study tip",
+    source: fact.source[language] || fact.source["en"] || "Research"
   };
 }
 
@@ -119,7 +119,7 @@ export function getStudyFactsByContext(context: StudyFact["context"], language: 
     .filter(fact => fact.context === context)
     .map(fact => ({
       id: fact.id,
-      text: fact.text[language],
-      source: fact.source[language]
+      text: fact.text[language] || fact.text["en"] || "Study tip",
+      source: fact.source[language] || fact.source["en"] || "Research"
     }));
 }

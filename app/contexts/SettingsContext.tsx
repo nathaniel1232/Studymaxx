@@ -3,8 +3,47 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 export type Theme = "light" | "dark" | "system";
-export type Language = "en";
+export type Language = "en" | "no" | "es" | "fr" | "de" | "sv" | "da" | "fi" | "pt" | "it" | "nl" | "pl" | "tr" | "ru" | "uk" | "ar" | "zh" | "ja" | "ko" | "hi" | "other";
 export type GradeSystem = "A-F" | "1-6" | "percentage";
+
+// Full language support for AI output
+export const SUPPORTED_LANGUAGES = [
+  { code: "en" as Language, label: "English", flag: "🇬🇧" },
+  { code: "no" as Language, label: "Norwegian", flag: "🇳🇴" },
+  { code: "es" as Language, label: "Spanish", flag: "🇪🇸" },
+  { code: "fr" as Language, label: "French", flag: "🇫🇷" },
+  { code: "de" as Language, label: "German", flag: "🇩🇪" },
+  { code: "sv" as Language, label: "Swedish", flag: "🇸🇪" },
+  { code: "da" as Language, label: "Danish", flag: "🇩🇰" },
+  { code: "fi" as Language, label: "Finnish", flag: "🇫🇮" },
+  { code: "pt" as Language, label: "Portuguese", flag: "🇵🇹" },
+  { code: "it" as Language, label: "Italian", flag: "🇮🇹" },
+  { code: "nl" as Language, label: "Dutch", flag: "🇳🇱" },
+  { code: "pl" as Language, label: "Polish", flag: "🇵🇱" },
+  { code: "tr" as Language, label: "Turkish", flag: "🇹🇷" },
+  { code: "ru" as Language, label: "Russian", flag: "🇷🇺" },
+  { code: "uk" as Language, label: "Ukrainian", flag: "🇺🇦" },
+  { code: "ar" as Language, label: "Arabic", flag: "🇸🇦" },
+  { code: "zh" as Language, label: "Chinese", flag: "🇨🇳" },
+  { code: "ja" as Language, label: "Japanese", flag: "🇯🇵" },
+  { code: "ko" as Language, label: "Korean", flag: "🇰🇷" },
+  { code: "hi" as Language, label: "Hindi", flag: "🇮🇳" },
+] as const;
+
+/** Get full language name from code for AI prompts */
+export function getLanguageName(code: string): string {
+  const lang = SUPPORTED_LANGUAGES.find(l => l.code === code);
+  if (lang) return lang.label;
+  // Fallback for common codes
+  const map: Record<string, string> = {
+    en: "English", no: "Norwegian", es: "Spanish", fr: "French",
+    de: "German", sv: "Swedish", da: "Danish", fi: "Finnish",
+    pt: "Portuguese", it: "Italian", nl: "Dutch", pl: "Polish",
+    tr: "Turkish", ru: "Russian", uk: "Ukrainian", ar: "Arabic",
+    zh: "Chinese", ja: "Japanese", ko: "Korean", hi: "Hindi",
+  };
+  return map[code] || "English";
+}
 
 export interface AppSettings {
   theme: Theme;
@@ -165,7 +204,7 @@ export function useTranslation() {
   const { settings } = useSettings();
   
   return (key: string, variables?: Record<string, string>): string => {
-    const translations: Record<string, Record<Language, string>> = {
+    const translations: Record<string, Partial<Record<Language, string>>> = {
       // Navigation
       "home": { en: "Home" },
       "create_new": { en: "Create new" },
@@ -512,7 +551,8 @@ export function useTranslation() {
       "switch_to_login": { en: "Switch to login" }
     };
     
-    let text = translations[key]?.[settings.language] || key;
+    // Get translation with fallback to English, then to key
+    let text = translations[key]?.[settings.language] || translations[key]?.["en"] || key;
     
     // Replace variables if provided
     if (variables) {

@@ -350,22 +350,22 @@ export default function Sidebar({
             <span className="text-lg"><MessageIcon /></span>
             <span className="font-medium">Send Feedback</span>
           </button>
-        </nav>
 
-        {/* Sign Out */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0' }}>
-          <button
-            onClick={() => {
-              onSignOut();
-              setIsOpen(false);
-            }}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left"
-            style={{ color: '#ea4335' }}
-          >
-            <span className="text-lg"><LogOutIcon /></span>
-            <span className="font-medium">Sign Out</span>
-          </button>
-        </div>
+          {/* Sign Out - inside nav, below Send Feedback */}
+          <div className="mt-2 pt-2 border-t" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0' }}>
+            <button
+              onClick={() => {
+                onSignOut();
+                setIsOpen(false);
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left"
+              style={{ color: '#ea4335' }}
+            >
+              <span className="text-lg"><LogOutIcon /></span>
+              <span className="font-medium">Sign Out</span>
+            </button>
+          </div>
+        </nav>
       </div>
 
       {/* Feedback Modal - NotebookLM Style */}

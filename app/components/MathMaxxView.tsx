@@ -792,12 +792,8 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
     (settings.theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   const appLang = settings.language || "en";
 
-  // MathMaxx has its own language setting (supports 20 languages vs app's 2)
-  const [mathLang, setMathLang] = useState<string>(() => {
-    if (typeof window === "undefined") return settings.language || "en";
-    return localStorage.getItem("mathmaxx_language") || settings.language || "en";
-  });
-  const [showLangPicker, setShowLangPicker] = useState(false);
+  // Use app-wide language setting directly (no separate MathMaxx language picker)
+  const mathLang = appLang;
 
   // UI strings - fully translated for all 20 languages
   const s = getMathStrings(mathLang);
@@ -862,11 +858,6 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
   useEffect(() => {
     localStorage.setItem("mathmaxx_school_level", schoolLevel);
   }, [schoolLevel]);
-
-  // Persist math language preference
-  useEffect(() => {
-    localStorage.setItem("mathmaxx_language", mathLang);
-  }, [mathLang]);
 
   // Auto-scroll chat — only if user hasn't scrolled up
   useEffect(() => {
@@ -1367,55 +1358,7 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
           </button>
         )}
 
-        {/* Language picker button */}
-        <div className="relative">
-          <button
-            onClick={() => setShowLangPicker(!showLangPicker)}
-            className="px-2.5 py-1.5 rounded-lg text-sm transition-all hover:scale-105 flex items-center gap-1"
-            style={{
-              backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-              border: `1px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
-            }}
-          >
-            <span>{MATH_LANGUAGES.find(l => l.code === mathLang)?.flag || "🌐"}</span>
-            <span style={{ color: isDarkMode ? "#94a3b8" : "#64748b", fontSize: "11px" }}>
-              {MATH_LANGUAGES.find(l => l.code === mathLang)?.label?.slice(0, 3) || "EN"}
-            </span>
-          </button>
-          {showLangPicker && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowLangPicker(false)} />
-              <div
-                className="absolute right-0 top-full mt-1 z-50 rounded-xl shadow-lg overflow-hidden"
-                style={{
-                  backgroundColor: isDarkMode ? "#1e293b" : "#ffffff",
-                  border: `1px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
-                  width: "180px",
-                  maxHeight: "320px",
-                  overflowY: "auto",
-                }}
-              >
-                {MATH_LANGUAGES.map((l) => (
-                  <button
-                    key={l.code}
-                    onClick={() => { setMathLang(l.code); setShowLangPicker(false); }}
-                    className="w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-all"
-                    style={{
-                      backgroundColor: mathLang === l.code ? (isDarkMode ? "rgba(6,182,212,0.15)" : "rgba(6,182,212,0.08)") : "transparent",
-                      color: mathLang === l.code ? "#06b6d4" : (isDarkMode ? "#e2e8f0" : "#334155"),
-                    }}
-                    onMouseEnter={(e) => { if (mathLang !== l.code) e.currentTarget.style.backgroundColor = isDarkMode ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)"; }}
-                    onMouseLeave={(e) => { if (mathLang !== l.code) e.currentTarget.style.backgroundColor = "transparent"; }}
-                  >
-                    <span>{l.flag}</span>
-                    <span>{l.label}</span>
-                    {mathLang === l.code && <span className="ml-auto text-xs">✓</span>}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+
       </div>
 
       {/* ============================================================ */}

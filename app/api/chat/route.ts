@@ -42,7 +42,7 @@ function getVertexAI() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, userId, context, history } = await request.json();
+    const { message, userId, context, history, outputLanguage } = await request.json();
 
     if (!message || !message.trim()) {
       return NextResponse.json(
@@ -51,17 +51,50 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Resolve language name from code
+    const LANG_NAMES: Record<string, string> = {
+      en: 'English', no: 'Norwegian', es: 'Spanish', fr: 'French',
+      de: 'German', sv: 'Swedish', da: 'Danish', fi: 'Finnish',
+      pt: 'Portuguese', it: 'Italian', nl: 'Dutch', pl: 'Polish',
+      tr: 'Turkish', ru: 'Russian', uk: 'Ukrainian', ar: 'Arabic',
+      zh: 'Chinese', ja: 'Japanese', ko: 'Korean', hi: 'Hindi',
+    };
+    const langName = outputLanguage ? LANG_NAMES[outputLanguage] : null;
+
     // Detect if user is asking for a summary/analysis
     const isSummaryRequest = /\b(summar|analyz|overview|break.?down|oppsummer|analyser|sammendrag)\b/i.test(message);
+    
+    // Detect if user is EXPLICITLY asking for HTML/website/code creation (BLOCK THIS)
+    const isCodeRequest = /\b(create|make|build|write|generate)\s+(a|an|me)?\s*(html|website|webpage|web page|web site|code|program|script|function)\b/i.test(message) || 
+                          /<html|<!DOCTYPE|<script|<style/.test(message);
+    
+    // If user asks for code creation, return polite rejection immediately
+    if (isCodeRequest) {
+      return NextResponse.json({
+        response: "I cannot create HTML code, websites, or programming code. I'm here to help you solve academic exercises and understand study material in subjects like math, physics, chemistry, biology, history, and more. Ask me about a problem or concept you're studying! 📚"
+      });
+    }
 
     const contextLimit = isSummaryRequest ? 6000 : 3000;
+    
+    // Build language instruction
+    const langInstruction = langName && langName !== 'English'
+      ? `\n\n🚨 LANGUAGE REQUIREMENT: You MUST respond ENTIRELY in ${langName}. The user has chosen ${langName} as their language. ALL your responses — explanations, examples, summaries — must be in ${langName}. Do NOT respond in English unless the user explicitly writes in English.`
+      : '';
+
     const systemPrompt = `You are StudyMaxx AI — an expert study tutor built into the StudyMaxx learning platform.
 
 YOUR ROLE:
 - Help students understand their study materials deeply
 - Give clear, accurate explanations for any concept or term
 - If the student says they don't understand something, break it down simply
-- Adjust your language to match the student's (if they write in Norwegian, respond in Norwegian, etc.)
+- Adjust your language to match the student's (if they write in Norwegian, respond in Norwegian, etc.)${langInstruction}
+
+🚨 CRITICAL RESTRICTION - NO CODE GENERATION:
+- You MUST NOT generate HTML, CSS, JavaScript, or any programming code
+- You MUST NOT create websites, web pages, or any code snippets
+- If asked for code, respond: "I cannot create code. I'm here to help with academic subjects like math, physics, chemistry, biology, history, etc."
+- You are ONLY for academic study help: solving problems, explaining concepts, analyzing study material
 
 HOW TO RESPOND:
 - Be concise but complete — typically 2-6 sentences unless a longer explanation is needed
