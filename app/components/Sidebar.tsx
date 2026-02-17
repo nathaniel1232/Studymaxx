@@ -157,7 +157,7 @@ export default function Sidebar({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          feedback: feedbackText,
+          message: feedbackText,
           email: userEmail,
           type: 'general'
         })
