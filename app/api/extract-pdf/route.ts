@@ -1,71 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
-import { PDFDocument } from 'pdf-lib';
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { VertexAI } from '@google-cloud/vertexai';
 
 export const maxDuration = 120;
 
-async function pdfToImages(pdfBuffer: Buffer): Promise<string[]> {
-  // OCR requires DOM APIs (DOMMatrix, canvas) which don't exist in Vercel's Node runtime
-  // If these aren't available, just return empty array and use text extraction instead
+let vertexAI: VertexAI | null = null;
+
+function getVertexAI(): VertexAI | null {
+  if (vertexAI) return vertexAI;
+  if (!process.env.VERTEX_AI_PROJECT_ID) return null;
   try {
-    // Try importing pdfjs-dist - this will fail on Vercel with DOMMatrix error
-    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs').catch(() => null);
-    if (!pdfjs) {
-      console.log('[PDF to Images] pdfjs-dist not available (DOMMatrix missing), skipping OCR');
-      return [];
+    const credJson = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    if (credJson && credJson.startsWith('{')) {
+      const creds = JSON.parse(credJson);
+      vertexAI = new VertexAI({
+        project: process.env.VERTEX_AI_PROJECT_ID,
+        location: 'us-central1',
+        googleAuthOptions: { credentials: creds },
+      });
+    } else {
+      vertexAI = new VertexAI({
+        project: process.env.VERTEX_AI_PROJECT_ID,
+        location: 'us-central1',
+      });
     }
-    
-    const { getDocument } = pdfjs;
-    
-    // Try importing canvas - also requires native modules
-    // @ts-expect-error - canvas is a native module without types
-    const canvas = await import('canvas').catch(() => null);
-    
-    if (!canvas) {
-      console.log('[PDF to Images] Canvas not available, skipping OCR');
-      return [];
-    }
-    
-    const { createCanvas } = canvas;
-    
-    // Load PDF with pdfjs-dist
-    const loadingTask = getDocument({
-      data: new Uint8Array(pdfBuffer),
-      useSystemFonts: true,
-    });
-    
-    const pdfDoc = await loadingTask.promise;
-    const numPages = Math.min(pdfDoc.numPages, 5); // Max 5 pages
-    const images: string[] = [];
-    
-    console.log(`[PDF to Images] Converting ${numPages} pages...`);
-    
-    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-      const page = await pdfDoc.getPage(pageNum);
-      const viewport = page.getViewport({ scale: 2.0 }); // 2x scale for better quality
-      
-      const canvasObj = createCanvas(viewport.width, viewport.height);
-      const context = canvasObj.getContext('2d');
-      
-      await page.render({
-        canvasContext: context as any,
-        viewport: viewport,
-        canvas: canvasObj as any,
-      }).promise;
-      
-      // Convert canvas to base64 PNG
-      const dataUrl = canvasObj.toDataURL('image/png');
-      images.push(dataUrl);
-      console.log(`[PDF to Images] ✅ Converted page ${pageNum}`);
-    }
-    
-    return images;
-  } catch (error: any) {
-    // Don't crash - just skip OCR and return empty array
-    console.log('[PDF to Images] OCR not available:', error.message);
-    return [];
+    return vertexAI;
+  } catch (e: any) {
+    console.error('[Extract PDF] Vertex AI init failed:', e.message);
+    return null;
   }
 }
 
@@ -98,99 +59,76 @@ export async function POST(request: NextRequest) {
       console.log('[Extract PDF] pdf-parse failed:', parseError.message);
     }
 
-    // If text extraction succeeded, return it
-    if (text.length >= 50) {
-      console.log('[Extract PDF] ✅ Text-based PDF');
+    // If we got meaningful text, return it
+    if (text.length >= 10) {
+      console.log('[Extract PDF] ✅ Text-based PDF extracted successfully');
       return NextResponse.json({ text, method: 'text' });
     }
 
-    // Step 2: Image-based PDF - Convert to images and OCR
-    console.log('[Extract PDF] Starting image OCR...');
+    // Step 2: Use Gemini AI to read the PDF directly
+    // Handles scanned PDFs, image-based PDFs, and PDFs with complex font encodings
+    console.log('[Extract PDF] pdf-parse got insufficient text, trying Gemini AI...');
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (buffer.length > 20 * 1024 * 1024) {
       return NextResponse.json(
-        { error: 'OCR requires OpenAI API key' },
-        { status: 422 }
+        { error: 'PDF too large (max 20MB). Please split into smaller files.' },
+        { status: 400 }
+      );
+    }
+
+    const ai = getVertexAI();
+    if (!ai) {
+      console.error('[Extract PDF] Vertex AI not configured');
+      if (text.length > 0) {
+        return NextResponse.json({ text, method: 'partial' });
+      }
+      return NextResponse.json(
+        { error: 'Could not extract text from this PDF. Please try pasting the text manually.' },
+        { status: 500 }
       );
     }
 
     try {
-      const images = await pdfToImages(buffer);
-      
-      if (images.length === 0) {
-        console.log('[Extract PDF] ⚠️  Canvas not available, falling back to text-only mode');
-        return NextResponse.json({ 
-          text: text || 'Unable to extract text from this PDF. Canvas/OCR not available.',
-          method: 'fallbacktext'
-        });
-      }
-      
-      console.log(`[Extract PDF] ${images.length} images ready for OCR`);
+      const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+      const base64Pdf = buffer.toString('base64');
+      console.log(`[Extract PDF] Sending ${(base64Pdf.length / 1024).toFixed(0)} KB to Gemini...`);
 
-      const ocrTexts: string[] = [];
-
-      for (let i = 0; i < images.length; i++) {
-        console.log(`[Extract PDF] OCR page ${i + 1}/${images.length}...`);
-
-        const response = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
-          messages: [
+      const result = await model.generateContent({
+        contents: [{
+          role: 'user',
+          parts: [
             {
-              role: 'user',
-              content: [
-                {
-                  type: 'text',
-                  text: 'Extract ALL text from this PDF page. Keep original language, formatting, and special characters. Output ONLY the text, nothing else. If blank, output "BLANK".',
-                },
-                {
-                  type: 'image_url',
-                  image_url: {
-                    url: images[i],
-                    detail: 'high',
-                  },
-                },
-              ],
+              inlineData: {
+                mimeType: 'application/pdf',
+                data: base64Pdf,
+              },
+            },
+            {
+              text: 'Extract ALL text content from this PDF document. Rules:\n- Keep the original language exactly as written\n- Preserve paragraph structure with line breaks\n- Include all headings, bullet points, numbered lists\n- Include any text in tables or figures\n- Do NOT add commentary, page numbers, or labels like "Page 1:"\n- Do NOT say "Here is the text:" or similar\n- Output ONLY the raw extracted text\n- If a page is blank, skip it',
             },
           ],
-          max_tokens: 4000,
-          temperature: 0,
-        });
+        }],
+      });
 
-        const pageText = response.choices[0]?.message?.content?.trim() || '';
+      const extractedText = result.response.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
 
-        if (pageText && pageText !== 'BLANK' && pageText.length > 5) {
-          console.log(`[Extract PDF] ✅ Page ${i + 1}: ${pageText.length} chars`);
-          ocrTexts.push(`--- Page ${i + 1} ---\n${pageText}`);
-        }
-
-        // Rate limit delay
-        if (i < images.length - 1) {
-          await new Promise(r => setTimeout(r, 300));
-        }
-      }
-
-      const fullText = ocrTexts.join('\n\n');
-
-      if (fullText.length < 10) {
+      if (extractedText.length < 10) {
         return NextResponse.json(
-          { error: 'No readable text found in PDF' },
+          { error: 'No readable text found in this PDF. The file may be empty or corrupted.' },
           { status: 422 }
         );
       }
 
-      console.log(`[Extract PDF] ✅ OCR complete: ${fullText.length} chars from ${ocrTexts.length} pages`);
-      return NextResponse.json({ text: fullText, method: 'ocr', pages: ocrTexts.length });
+      console.log(`[Extract PDF] ✅ Gemini extracted ${extractedText.length} chars`);
+      return NextResponse.json({ text: extractedText, method: 'gemini' });
 
-    } catch (ocrError: any) {
-      console.error('[Extract PDF] OCR error:', ocrError.message);
-
-      // Return partial text if available
+    } catch (geminiError: any) {
+      console.error('[Extract PDF] Gemini extraction failed:', geminiError.message);
       if (text.length > 0) {
         return NextResponse.json({ text, method: 'partial' });
       }
-
       return NextResponse.json(
-        { error: `OCR failed: ${ocrError.message}` },
+        { error: 'Failed to read this PDF. Please try a different file or paste the text manually.' },
         { status: 500 }
       );
     }

@@ -218,15 +218,16 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Transcribe] Final transcription: ${transcription.length} characters transcribed`);
 
-    // Generate summary using Gemini 2.0 Flash with retry logic
-    console.log('[Transcribe] Generating summary with Gemini...');
+    // Generate summary using Gemini 2.0 Flash (non-fatal — transcription always returned)
+    let summary = '';
     
+    try {
     if (!vertexAI) {
-      return NextResponse.json(
-        { error: 'Vertex AI not configured' },
-        { status: 500 }
-      );
+      console.warn('[Transcribe] Vertex AI not configured, skipping summary generation');
+      throw new Error('Vertex AI not configured');
     }
+    
+    console.log('[Transcribe] Generating summary with Gemini...');
     
     const model = vertexAI.getGenerativeModel({
       model: 'gemini-2.0-flash-exp',
@@ -303,7 +304,6 @@ EXAMPLE START (use this format):
 ${languageCode !== 'unknown' && languageCode !== 'en' ? `\nREMEMBER: ALL text in ${languageName}, NO English.` : ''}`;
 
     // Retry logic with exponential backoff for rate limiting
-    let summary = '';
     let retryCount = 0;
     const maxRetries = 5; // Increased from 3 to 5
     const baseDelay = 1000; // Start with 1 second (reduced from 2)
@@ -329,7 +329,7 @@ ${languageCode !== 'unknown' && languageCode !== 'en' ? `\nREMEMBER: ALL text in
         } else {
           // Either not a rate limit error, or we've exhausted retries
           console.error(`[Transcribe] Gemini failed after ${retryCount + 1} attempts:`, geminiError.message);
-          throw geminiError;
+          break; // Don't throw — we'll return transcription without summary
         }
       }
     }
@@ -345,6 +345,17 @@ ${languageCode !== 'unknown' && languageCode !== 'en' ? `\nREMEMBER: ALL text in
       .replace(/^Here(?:'s| is) (?:the |your )?summary[:\s]*/i, '') // Remove "Here's the summary:" etc
       .replace(/^OK,?\s*/i, '')      // Remove "OK," prefix
       .trim();
+
+    } catch (summaryErr: any) {
+      console.error('[Transcribe] Summary generation failed (non-fatal):', summaryErr.message);
+      summary = '';
+    }
+
+    // Fallback summary if generation failed or was skipped
+    if (!summary) {
+      const safePreview = transcription.substring(0, 400).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      summary = '<h2>\ud83d\udcdd Audio Transcription</h2><p>' + safePreview + (transcription.length > 400 ? '...' : '') + '</p><hr style="border: 1px solid rgba(6, 182, 212, 0.2); margin: 1.5rem 0;"><p><em>Automatic summary is temporarily unavailable. Your full transcription is saved above.</em></p>';
+    }
 
     console.log('[Transcribe] Transcription complete, length:', transcription.length);
 

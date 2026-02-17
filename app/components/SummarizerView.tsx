@@ -242,11 +242,24 @@ export default function SummarizerView({ onBack, isPremium, user }: SummarizerVi
     try {
       console.log('[Summarizer] Starting summarization request...');
       console.log('[Summarizer] Output language:', settings.language, '→', getLanguageName(settings.language));
-      const res = await fetch("/api/summarize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: inputText, length, sourceType, outputLanguage: settings.language }),
-      });
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 55000);
+      let res: Response;
+      try {
+        res = await fetch("/api/summarize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: inputText, length, sourceType, outputLanguage: settings.language }),
+          signal: controller.signal,
+        });
+      } catch (fetchErr: any) {
+        clearTimeout(timeout);
+        if (fetchErr.name === 'AbortError') {
+          throw new Error('Summarization took too long. Try selecting "Short" length or pasting less text.');
+        }
+        throw fetchErr;
+      }
+      clearTimeout(timeout);
       
       console.log('[Summarizer] Response status:', res.status, res.statusText);
       
@@ -260,7 +273,13 @@ export default function SummarizerView({ onBack, isPremium, user }: SummarizerVi
         throw new Error('Server returned non-JSON response. This usually means the OpenAI API is not configured correctly. Check your OPENAI_API_KEY environment variable in Vercel.');
       }
       
-      const d = await res.json();
+      let d;
+      try {
+        d = await res.json();
+      } catch (jsonErr) {
+        console.error('[Summarizer] JSON parse error:', jsonErr);
+        throw new Error('Server returned an invalid response. This may be a timeout. Try "Short" length or less text.');
+      }
       
       if (!res.ok) {
         console.error('[Summarizer] API error:', d);
