@@ -1,22 +1,30 @@
 // Send Premium Upgrade Email Campaign via Resend
-// Usage: node send-premium-campaign.js
+// SETUP:
+// 1. Export free users from Supabase SQL (see EMAIL_STRIPE_SETUP.md)
+// 2. Paste emails in the users array below
+// 3. Set RESEND_API_KEY environment variable
+// 4. Test with one email first (see line 25)
+// 5. Run: node send-premium-campaign.js
 
 const fs = require('fs');
 const path = require('path');
 
-// You'll need to install: npm install resend
-// Or use fetch API directly
-
+// ⚙️ CONFIGURATION
 const RESEND_API_KEY = process.env.RESEND_API_KEY || 'YOUR_RESEND_API_KEY_HERE';
-const FROM_EMAIL = 'StudyMaxx <onboarding@studymaxx.net>'; // Replace with your verified domain
-const BATCH_SIZE = 100; // Resend recommends sending in batches
+const FROM_EMAIL = 'StudyMaxx <onboarding@studymaxx.net>'; // Update with your verified domain
+const BATCH_SIZE = 100;
 
-// Sample user list - Replace with your actual users from Supabase
-// Query: SELECT email FROM users WHERE is_premium = false AND email IS NOT NULL LIMIT 1000;
+// 📧 PASTE YOUR EXPORTED USERS HERE
+// Got from: Supabase > SQL Editor > SELECT email FROM users...
+// Format: { email: 'user@example.com' }
 const users = [
+  // TEST: Uncomment one line to test with yourself
+  // { email: 'your-email@gmail.com' },
+
+  // PRODUCTION: Paste all exported emails below
   // { email: 'user1@example.com' },
   // { email: 'user2@example.com' },
-  // Add your users here
+  // { email: 'user3@example.com' },
 ];
 
 async function sendEmailBatch(batch) {
@@ -68,52 +76,89 @@ async function sendCampaign() {
   console.log('🚀 Starting Premium Upgrade Email Campaign\n');
   
   if (!RESEND_API_KEY || RESEND_API_KEY === 'YOUR_RESEND_API_KEY_HERE') {
-    console.error('❌ Error: RESEND_API_KEY not set!');
-    console.log('Set it as environment variable or update the script.');
+    console.error('❌ FATAL: RESEND_API_KEY not set!');
+    console.error('\nFix this:');
+    console.error('  Windows PowerShell: $env:RESEND_API_KEY = "re_xxxxx"');
+    console.error('  Mac/Linux bash:     export RESEND_API_KEY="re_xxxxx"');
+    console.error('\nThen run: node send-premium-campaign.js');
     process.exit(1);
   }
 
   if (users.length === 0) {
-    console.error('❌ Error: No users to send to!');
-    console.log('Update the users array with your free-tier users.');
+    console.error('❌ FATAL: No users in the array!');
+    console.error('\nFix this:');
+    console.error('1. Export users from Supabase (see EMAIL_STRIPE_SETUP.md)');
+    console.error('2. Paste emails in the users array at top of this file');
+    console.error('3. Format: { email: "user@example.com" }');
+    console.error('\nThen run: node send-premium-campaign.js');
     process.exit(1);
   }
 
-  console.log(`📧 Preparing to send to ${users.length} users in batches of ${BATCH_SIZE}\n`);
+  console.log(`📋 Configuration:`);
+  console.log(`   From: ${FROM_EMAIL}`);
+  console.log(`   Total emails: ${users.length}`);
+  console.log(`   Batch size: ${BATCH_SIZE}`);
+  console.log(`\n ⚠️  THIS IS A REAL CAMPAIGN - emails will actually be sent!\n`);
 
-  let totalSent = 0;
-  let totalFailed = 0;
-
-  // Send in batches to avoid rate limits
-  for (let i = 0; i < users.length; i += BATCH_SIZE) {
-    const batch = users.slice(i, i + BATCH_SIZE);
-    console.log(`\n📦 Batch ${Math.floor(i / BATCH_SIZE) + 1} (${batch.length} emails):\n`);
+  // Only warn on large campaigns
+  if (users.length > 50) {
+    console.log('⏸️  Large campaign detected. Proceed? (y/n):');
+    const readline = require('readline');
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
     
-    const results = await sendEmailBatch(batch);
-    
-    const batchSuccess = results.filter(r => r.success).length;
-    const batchFailed = results.filter(r => !r.success).length;
-    
-    totalSent += batchSuccess;
-    totalFailed += batchFailed;
-
-    console.log(`\n   ✓ Sent: ${batchSuccess}`);
-    console.log(`   ✗ Failed: ${batchFailed}`);
-
-    // Wait 1 second between batches to respect rate limits
-    if (i + BATCH_SIZE < users.length) {
-      console.log('\n⏳ Waiting 1 second before next batch...');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    }
+    rl.question('> ', (answer) => {
+      rl.close();
+      if (answer.toLowerCase() !== 'y') {
+        console.log('❌ Campaign cancelled.');
+        process.exit(0);
+      }
+      startSending();
+    });
+  } else {
+    startSending();
   }
 
-  console.log('\n' + '='.repeat(50));
-  console.log('📊 Campaign Summary:');
-  console.log('='.repeat(50));
-  console.log(`Total Sent: ${totalSent}`);
-  console.log(`Total Failed: ${totalFailed}`);
-  console.log(`Success Rate: ${((totalSent / users.length) * 100).toFixed(1)}%`);
-  console.log('\n✅ Campaign complete!');
+  async function startSending() {
+    let totalSent = 0;
+    let totalFailed = 0;
+
+    for (let i = 0; i < users.length; i += BATCH_SIZE) {
+      const batch = users.slice(i, i + BATCH_SIZE);
+      console.log(`\n📦 Batch ${Math.floor(i / BATCH_SIZE) + 1} of ${Math.ceil(users.length / BATCH_SIZE)} (${batch.length} emails):\n`);
+      
+      const results = await sendEmailBatch(batch);
+      
+      const batchSuccess = results.filter(r => r.success).length;
+      const batchFailed = results.filter(r => !r.success).length;
+      
+      totalSent += batchSuccess;
+      totalFailed += batchFailed;
+
+      console.log(`   ✓ Sent: ${batchSuccess}`);
+      console.log(`   ✗ Failed: ${batchFailed}`);
+
+      if (i + BATCH_SIZE < users.length) {
+        console.log('\n⏳ Waiting 1 second before next batch...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+
+    console.log('\n' + '='.repeat(60));
+    console.log('📊 CAMPAIGN COMPLETE');
+    console.log('='.repeat(60));
+    console.log(`\n✓ Total Sent: ${totalSent}`);
+    console.log(`✗ Total Failed: ${totalFailed}`);
+    console.log(`  Success Rate: ${((totalSent / users.length) * 100).toFixed(1)}%`);
+    
+    console.log('\n📈 Next Steps:');
+    console.log('   1. Check Resend dashboard: https://resend.com/emails');
+    console.log('   2. Monitor Stripe for new customers: https://dashboard.stripe.com/customers');
+    console.log('   3. Expected: 5-10 new premium users from this campaign');
+    console.log('\n✅ Good luck! 🚀\n');
+  }
 }
 
 // Run the campaign
