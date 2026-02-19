@@ -92,7 +92,11 @@ export default function TurboOnboarding({ onComplete }: TurboOnboardingProps) {
 
   const handleSkip = async () => {
     // Mark as done and go to app
-    localStorage.setItem("studymaxx_onboarding_skipped", "true");
+    try {
+      localStorage.setItem("studymaxx_onboarding_skipped", "true");
+    } catch (error) {
+      console.warn("[TurboOnboarding] localStorage not available on skip:", error);
+    }
     await skipOnboarding();
     onComplete();
   };
@@ -120,13 +124,17 @@ export default function TurboOnboarding({ onComplete }: TurboOnboardingProps) {
     };
 
     // Save to localStorage immediately
-    localStorage.setItem("studymaxx_onboarding", JSON.stringify({
-      studentType,
-      standardizedTests,
-      graduationYear,
-      subjects: selectedSubjects,
-      completed_at: new Date().toISOString(),
-    }));
+    try {
+      localStorage.setItem("studymaxx_onboarding", JSON.stringify({
+        studentType,
+        standardizedTests,
+        graduationYear,
+        subjects: selectedSubjects,
+        completed_at: new Date().toISOString(),
+      }));
+    } catch (error) {
+      console.warn("[TurboOnboarding] localStorage not available on save:", error);
+    }
 
     // Try to update context
     await completeOnboarding({

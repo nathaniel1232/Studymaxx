@@ -71,12 +71,17 @@ export function PersonalizationProvider({ children }: { children: ReactNode }) {
   // Check localStorage FIRST before anything else
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const skipped = localStorage.getItem("studymaxx_onboarding_skipped");
-      const savedOnboarding = localStorage.getItem("studymaxx_onboarding");
-      
-      if (skipped === "true" || savedOnboarding) {
-        // Onboarding was already done - mark it
-        setOnboardingChecked(true);
+      try {
+        const skipped = localStorage.getItem("studymaxx_onboarding_skipped");
+        const savedOnboarding = localStorage.getItem("studymaxx_onboarding");
+        
+        if (skipped === "true" || savedOnboarding) {
+          // Onboarding was already done - mark it
+          setOnboardingChecked(true);
+        }
+      } catch (error) {
+        console.warn("[Personalization] localStorage not available:", error);
+        // Continue without localStorage - it might be private mode
       }
     }
   }, []);
@@ -98,8 +103,16 @@ export function PersonalizationProvider({ children }: { children: ReactNode }) {
       }
 
       // Check localStorage first before even hitting DB
-      const skipped = typeof window !== "undefined" ? localStorage.getItem("studymaxx_onboarding_skipped") : null;
-      const savedOnboarding = typeof window !== "undefined" ? localStorage.getItem("studymaxx_onboarding") : null;
+      let skipped = null;
+      let savedOnboarding = null;
+      try {
+        if (typeof window !== "undefined") {
+          skipped = localStorage.getItem("studymaxx_onboarding_skipped");
+          savedOnboarding = localStorage.getItem("studymaxx_onboarding");
+        }
+      } catch (error) {
+        console.warn("[Personalization] localStorage not available in fetchProfile:", error);
+      }
       const localOnboardingDone = skipped === "true" || !!savedOnboarding;
 
       const { data, error } = await supabase
@@ -241,12 +254,16 @@ export function PersonalizationProvider({ children }: { children: ReactNode }) {
 
     // Store in localStorage as backup
     if (typeof window !== "undefined") {
-      localStorage.setItem("studymaxx_onboarding", JSON.stringify({
-        subjects: data.subjects,
-        level: data.level,
-        exam_date: data.exam_date,
-        completed_at: new Date().toISOString(),
-      }));
+      try {
+        localStorage.setItem("studymaxx_onboarding", JSON.stringify({
+          subjects: data.subjects,
+          level: data.level,
+          exam_date: data.exam_date,
+          completed_at: new Date().toISOString(),
+        }));
+      } catch (error) {
+        console.warn("[Personalization] Could not save onboarding to localStorage:", error);
+      }
     }
 
     // Try to update DB - write actual personalization data
@@ -292,7 +309,11 @@ export function PersonalizationProvider({ children }: { children: ReactNode }) {
 
     // Store skip in localStorage
     if (typeof window !== "undefined") {
-      localStorage.setItem("studymaxx_onboarding_skipped", "true");
+      try {
+        localStorage.setItem("studymaxx_onboarding_skipped", "true");
+      } catch (error) {
+        console.warn("[Personalization] Could not save skip to localStorage:", error);
+      }
     }
 
     return true;
@@ -301,11 +322,15 @@ export function PersonalizationProvider({ children }: { children: ReactNode }) {
   // Check if onboarding was skipped in localStorage
   useEffect(() => {
     if (typeof window !== "undefined" && profile && !profile.onboarding_completed) {
-      const skipped = localStorage.getItem("studymaxx_onboarding_skipped");
-      const savedOnboarding = localStorage.getItem("studymaxx_onboarding");
-      
-      if (skipped === "true" || savedOnboarding) {
-        setProfile((prev) => prev ? { ...prev, onboarding_completed: true } : null);
+      try {
+        const skipped = localStorage.getItem("studymaxx_onboarding_skipped");
+        const savedOnboarding = localStorage.getItem("studymaxx_onboarding");
+        
+        if (skipped === "true" || savedOnboarding) {
+          setProfile((prev) => prev ? { ...prev, onboarding_completed: true } : null);
+        }
+      } catch (error) {
+        console.warn("[Personalization] Could not read localStorage in check effect:", error);
       }
     }
   }, [profile?.id]);

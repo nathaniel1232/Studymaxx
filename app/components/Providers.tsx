@@ -5,6 +5,7 @@ import { SettingsProvider } from "../contexts/SettingsContext";
 import { PersonalizationProvider } from "../contexts/PersonalizationContext";
 import ThemeWrapper from "./ThemeWrapper";
 import CookieConsent from "./CookieConsent";
+import ErrorBoundary from "./ErrorBoundary";
 
 interface ProvidersProps {
   children: ReactNode;
@@ -12,14 +13,16 @@ interface ProvidersProps {
 
 export default function Providers({ children }: ProvidersProps) {
   return (
-    <SettingsProvider>
-      <PersonalizationProvider>
-        <ThemeWrapper>
-          {children}
-          <CookieConsent />
-        </ThemeWrapper>
-      </PersonalizationProvider>
-    </SettingsProvider>
+    <ErrorBoundary>
+      <SettingsProvider>
+        <PersonalizationProvider>
+          <ThemeWrapper>
+            {children}
+            <CookieConsent />
+          </ThemeWrapper>
+        </PersonalizationProvider>
+      </SettingsProvider>
+    </ErrorBoundary>
   );
 }
 

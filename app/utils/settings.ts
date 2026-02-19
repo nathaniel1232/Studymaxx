@@ -17,20 +17,39 @@ export interface AppSettings {
 
 const SETTINGS_KEY = "studymaxx-settings";
 
-const defaultSettings: AppSettings = {
-  theme: "system",
-  language: "en",
-  uiScale: "default",
-  gradeSystem: "A-F"
-};
+// In-memory fallback for Safari private mode
+let memoryStore: AppSettings = { ...defaultSettings };
+let isStorageAvailable = true;
+
+// Test if localStorage is available (Safari private mode blocks it)
+function testStorageAvailable(): boolean {
+  try {
+    const test = "__test__";
+    localStorage.setItem(test, test);
+    localStorage.removeItem(test);
+    return true;
+  } catch (e) {
+    console.warn("[Storage] localStorage is not available - using memory fallback", e);
+    return false;
+  }
+}
+
+// Check storage availability once at startup
+if (typeof window !== "undefined") {
+  isStorageAvailable = testStorageAvailable();
+}
 
 /**
- * Load settings from localStorage
+ * Load settings from localStorage or memory
  */
 export function getSettings(): AppSettings {
   if (typeof window === "undefined") return defaultSettings;
   
   try {
+    if (!isStorageAvailable) {
+      return memoryStore;
+    }
+    
     const stored = localStorage.getItem(SETTINGS_KEY);
     if (!stored) return defaultSettings;
     
@@ -43,17 +62,26 @@ export function getSettings(): AppSettings {
 }
 
 /**
- * Save settings to localStorage
+ * Save settings to localStorage or memory
  */
 export function saveSettings(settings: AppSettings): void {
   if (typeof window === "undefined") return;
   
+  // Always update memory store as fallback
+  memoryStore = settings;
+  
   try {
+    if (!isStorageAvailable) {
+      console.log("[Storage] Using memory fallback for settings");
+      return;
+    }
+    
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     applyTheme(settings.theme);
     applyUIScale(settings.uiScale);
   } catch (error) {
     console.error("Failed to save settings:", error);
+    // Fallback to memory store succeeded above
   }
 }
 

@@ -10,9 +10,14 @@ export type CookieConsent = "accepted" | "declined" | null;
 // Helper function to get consent status
 export function getCookieConsent(): CookieConsent {
   if (typeof window === "undefined") return null;
-  const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
-  if (consent === "accepted" || consent === "declined") return consent;
-  return null;
+  try {
+    const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
+    if (consent === "accepted" || consent === "declined") return consent;
+    return null;
+  } catch (error) {
+    console.warn("[CookieConsent] localStorage not available:", error);
+    return null;
+  }
 }
 
 // Helper to check if analytics/tracking is allowed
@@ -28,16 +33,27 @@ export default function CookieConsent() {
 
   useEffect(() => {
     // Check if user has already consented
-    const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
-    if (!consent) {
-      // Small delay to prevent flash on page load
+    try {
+      const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
+      if (!consent) {
+        // Small delay to prevent flash on page load
+        const timer = setTimeout(() => setShowBanner(true), 500);
+        return () => clearTimeout(timer);
+      }
+    } catch (error) {
+      console.warn("[CookieConsent] localStorage not available on mount:", error);
+      // Show banner anyway if we can't check localStorage
       const timer = setTimeout(() => setShowBanner(true), 500);
       return () => clearTimeout(timer);
     }
   }, []);
 
   const handleAccept = () => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, "accepted");
+    try {
+      localStorage.setItem(COOKIE_CONSENT_KEY, "accepted");
+    } catch (error) {
+      console.warn("[CookieConsent] localStorage not available on accept:", error);
+    }
     setShowBanner(false);
     
     // Enable analytics/tracking here
@@ -46,7 +62,11 @@ export default function CookieConsent() {
   };
 
   const handleDecline = () => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, "declined");
+    try {
+      localStorage.setItem(COOKIE_CONSENT_KEY, "declined");
+    } catch (error) {
+      console.warn("[CookieConsent] localStorage not available on decline:", error);
+    }
     setShowBanner(false);
     
     // Disable analytics/tracking

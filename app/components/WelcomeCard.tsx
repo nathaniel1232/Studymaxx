@@ -48,10 +48,14 @@ export default function WelcomeCard({ userName, onDismiss }: WelcomeCardProps) {
   // Check if already completed
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const skipped = localStorage.getItem("studymaxx_onboarding_skipped");
-      const saved = localStorage.getItem("studymaxx_onboarding");
-      if (skipped === "true" || saved) {
-        setDismissed(true);
+      try {
+        const skipped = localStorage.getItem("studymaxx_onboarding_skipped");
+        const saved = localStorage.getItem("studymaxx_onboarding");
+        if (skipped === "true" || saved) {
+          setDismissed(true);
+        }
+      } catch (error) {
+        console.warn("[WelcomeCard] localStorage not available:", error);
       }
     }
   }, []);
@@ -74,7 +78,11 @@ export default function WelcomeCard({ userName, onDismiss }: WelcomeCardProps) {
   };
 
   const handleSkip = async () => {
-    localStorage.setItem("studymaxx_onboarding_skipped", "true");
+    try {
+      localStorage.setItem("studymaxx_onboarding_skipped", "true");
+    } catch (error) {
+      console.warn("[WelcomeCard] localStorage not available on skip:", error);
+    }
     await skipOnboarding();
     setDismissed(true);
     onDismiss?.();

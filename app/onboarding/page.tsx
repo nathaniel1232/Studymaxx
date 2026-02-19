@@ -12,13 +12,18 @@ export default function OnboardingPage() {
   useEffect(() => {
     // Check localStorage first
     if (typeof window !== "undefined") {
-      const skipped = localStorage.getItem("studymaxx_onboarding_skipped");
-      const savedOnboarding = localStorage.getItem("studymaxx_onboarding");
-      
-      if (skipped === "true" || savedOnboarding) {
-        // Already done onboarding - go to dashboard
-        router.push("/?view=create");
-        return;
+      try {
+        const skipped = localStorage.getItem("studymaxx_onboarding_skipped");
+        const savedOnboarding = localStorage.getItem("studymaxx_onboarding");
+        
+        if (skipped === "true" || savedOnboarding) {
+          // Already done onboarding - go to dashboard
+          router.push("/?view=create");
+          return;
+        }
+      } catch (error) {
+        console.warn("[Onboarding] localStorage not available:", error);
+        // Continue even if localStorage fails - user can still onboard
       }
     }
 
