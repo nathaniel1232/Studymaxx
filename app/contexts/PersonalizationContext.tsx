@@ -94,7 +94,17 @@ export function PersonalizationProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const user = await getCurrentUser();
+      // Add timeout to prevent hanging on slow mobile networks
+      const timeoutPromise = new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(null);
+        }, 5000); // 5 second timeout
+      });
+
+      const user = await Promise.race([
+        getCurrentUser(),
+        timeoutPromise
+      ]) as any;
       
       if (!user) {
         setProfile(null);
@@ -115,11 +125,23 @@ export function PersonalizationProvider({ children }: { children: ReactNode }) {
       }
       const localOnboardingDone = skipped === "true" || !!savedOnboarding;
 
-      const { data, error } = await supabase
+      // Add timeout to Supabase query
+      const queryPromise = supabase
         .from("users")
         .select("*")
         .eq("id", user.id)
         .single();
+
+      const dbTimeoutPromise = new Promise((resolve) => {
+        setTimeout(() => {
+          resolve({ data: null, error: { message: 'Database query timeout' } });
+        }, 5000); // 5 second timeout
+      });
+
+      const { data, error } = await Promise.race([
+        queryPromise,
+        dbTimeoutPromise
+      ]) as any;
 
       if (error) {
         console.error("[Personalization] Failed to fetch profile:", error);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useSettings, useTranslation, Theme } from "../contexts/SettingsContext";
 import { studyFacts } from "../utils/studyFacts";
 import ArrowIcon from "./icons/ArrowIcon";
@@ -765,7 +766,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
               </div>
 
               <a
-                href="mailto:studymaxxer@gmail.com?subject=Affiliate Program Interest&body=Hi! I'm interested in becoming a StudyMaxx affiliate and promoting the app on TikTok. Please send me more information about the program and how to get my referral code.%0A%0AMy TikTok handle: [Your handle]%0A%0AThank you!"
+                href="/affiliate"
                 style={{
                   display: 'flex',
                   width: '100%',

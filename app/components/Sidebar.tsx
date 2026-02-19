@@ -293,7 +293,7 @@ export default function Sidebar({
           {/* Affiliate Program Button */}
           <button
             onClick={() => {
-              window.location.href = "mailto:studymaxxer@gmail.com?subject=Affiliate Program Interest&body=Hi! I'm interested in becoming a StudyMaxx affiliate and promoting the app on TikTok. Please send me more information about the program and how to get my referral code.%0A%0AMy TikTok handle: [Your handle]%0A%0AThank you!";
+              window.location.href = "/affiliate";
               setIsOpen(false);
             }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left"
