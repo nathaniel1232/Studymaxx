@@ -17,6 +17,14 @@ export interface AppSettings {
 
 const SETTINGS_KEY = "studymaxx-settings";
 
+// Default settings values
+const defaultSettings: AppSettings = {
+  theme: "light",
+  language: "en",
+  uiScale: "default",
+  gradeSystem: "A-F",
+};
+
 // In-memory fallback for Safari private mode
 let memoryStore: AppSettings = { ...defaultSettings };
 let isStorageAvailable = true;
