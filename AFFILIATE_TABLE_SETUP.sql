@@ -30,7 +30,7 @@ CREATE POLICY "Allow authenticated users to view affiliate applications"
   FOR SELECT
   USING (auth.uid() IS NOT NULL);
 
--- Allow authenticated users to update only pending applications they own
+-- Allow authenticated users to update applications
 CREATE POLICY "Allow updates to applications"
   ON public.affiliate_applications
   FOR UPDATE
@@ -48,9 +48,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger for automatic timestamp update
-DROP TRIGGER IF EXISTS affiliate_applications_updated_at_trigger ON public.affiliate_applications;
-CREATE TRIGGER affiliate_applications_updated_at_trigger
-  BEFORE UPDATE ON public.affiliate_applications
-  FOR EACH ROW
-  EXECUTE FUNCTION public.update_affiliate_applications_timestamp();
+-- Safely create trigger only if it doesn't exist yet (no DROP needed)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgname = 'affiliate_applications_updated_at_trigger'
+  ) THEN
+    CREATE TRIGGER affiliate_applications_updated_at_trigger
+      BEFORE UPDATE ON public.affiliate_applications
+      FOR EACH ROW
+      EXECUTE FUNCTION public.update_affiliate_applications_timestamp();
+  END IF;
+END;
+$$;
+

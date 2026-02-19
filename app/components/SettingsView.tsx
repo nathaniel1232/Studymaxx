@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 import { useSettings, useTranslation, Theme } from "../contexts/SettingsContext";
 import { studyFacts } from "../utils/studyFacts";
 import ArrowIcon from "./icons/ArrowIcon";
@@ -28,6 +27,13 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
   const [feedbackType, setFeedbackType] = useState<'bug' | 'feature' | 'other'>('other');
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
+
+  // Affiliate modal state
+  const [showAffiliateModal, setShowAffiliateModal] = useState(false);
+  const [affiliateForm, setAffiliateForm] = useState({ fullName: '', email: '', tiktokHandle: '', message: '' });
+  const [affiliateSubmitting, setAffiliateSubmitting] = useState(false);
+  const [affiliateSubmitted, setAffiliateSubmitted] = useState(false);
+  const [affiliateError, setAffiliateError] = useState('');
 
   useEffect(() => {
     loadUserInfo();
@@ -765,26 +771,28 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
                 </div>
               </div>
 
-              <a
-                href="/affiliate"
+              <button
+                onClick={() => setShowAffiliateModal(true)}
                 style={{
                   display: 'flex',
                   width: '100%',
                   padding: '16px',
                   borderRadius: '8px',
-                  background: 'linear-gradient(135deg, #8b5cf6, #d946ef)',
+                  background: 'linear-gradient(135deg, #06b6d4, #2563eb)',
                   color: '#ffffff',
                   fontWeight: 900,
                   textAlign: 'center',
-                  textDecoration: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
                   minHeight: '44px',
                   lineHeight: '1.2',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  fontSize: '15px'
                 }}
               >
                 Apply Now
-              </a>
+              </button>
             </div>
           </div>
 
@@ -814,6 +822,83 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
 
         <div style={{ height: '64px' }} />
       </div>
+
+      {/* Affiliate Modal */}
+      {showAffiliateModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 60, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} className="sm:items-center sm:p-4">
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} onClick={() => { setShowAffiliateModal(false); setAffiliateSubmitted(false); setAffiliateError(''); }} />
+          <div style={{ position: 'relative', width: '100%', maxWidth: '480px', borderRadius: '20px 20px 0 0', backgroundColor: isDark ? '#0f1629' : '#fff', border: isDark ? '1px solid rgba(6,182,212,0.2)' : '1px solid #e2e8f0', boxShadow: '0 8px 40px rgba(0,0,0,0.3)', maxHeight: '90vh', overflowY: 'auto' }} className="sm:rounded-2xl">
+            {/* Header */}
+            <div style={{ padding: '20px 24px', background: isDark ? 'linear-gradient(135deg, rgba(6,182,212,0.15), rgba(37,99,235,0.15))' : 'linear-gradient(135deg, rgba(6,182,212,0.08), rgba(37,99,235,0.08))', borderBottom: isDark ? '1px solid rgba(6,182,212,0.2)' : '1px solid rgba(6,182,212,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
+                  <span style={{ fontSize: '20px' }}>💼</span>
+                  <h3 style={{ fontSize: '20px', fontWeight: 900, color: isDark ? '#e2e8f0' : '#000', margin: 0 }}>Affiliate Program</h3>
+                </div>
+                <p style={{ fontSize: '13px', color: isDark ? '#94a3b8' : '#64748b', margin: 0 }}>Earn 20% recurring — every month they stay subscribed</p>
+              </div>
+              <button onClick={() => { setShowAffiliateModal(false); setAffiliateSubmitted(false); setAffiliateError(''); }} style={{ color: isDark ? '#94a3b8' : '#64748b', fontSize: '20px', background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>✕</button>
+            </div>
+
+            <div style={{ padding: '20px 24px' }}>
+              {affiliateSubmitted ? (
+                <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>✅</div>
+                  <h4 style={{ fontSize: '20px', fontWeight: 900, marginBottom: '8px', color: isDark ? '#e2e8f0' : '#000' }}>Application Sent!</h4>
+                  <p style={{ color: isDark ? '#94a3b8' : '#64748b', fontSize: '14px', marginBottom: '24px' }}>We'll review it and get back to you within 48 hours.</p>
+                  <button onClick={() => { setShowAffiliateModal(false); setAffiliateSubmitted(false); }} style={{ padding: '10px 28px', borderRadius: '12px', background: 'linear-gradient(135deg, #06b6d4, #2563eb)', color: '#fff', fontWeight: 700, border: 'none', cursor: 'pointer', fontSize: '15px' }}>Close</button>
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+                    <div style={{ padding: '14px', borderRadius: '12px', background: isDark ? 'rgba(6,182,212,0.1)' : 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.2)' }}>
+                      <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#06b6d4', marginBottom: '4px' }}>Your Code Gives</div>
+                      <div style={{ fontWeight: 900, fontSize: '18px', color: isDark ? '#e2e8f0' : '#000' }}>15% off</div>
+                      <div style={{ fontSize: '11px', color: isDark ? '#94a3b8' : '#64748b' }}>first month for customers</div>
+                    </div>
+                    <div style={{ padding: '14px', borderRadius: '12px', background: 'linear-gradient(135deg, rgba(6,182,212,0.12), rgba(37,99,235,0.12))', border: '1px solid rgba(6,182,212,0.25)' }}>
+                      <div style={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#06b6d4', marginBottom: '4px' }}>You Earn</div>
+                      <div style={{ fontWeight: 900, fontSize: '18px', color: isDark ? '#e2e8f0' : '#000' }}>20% monthly</div>
+                      <div style={{ fontSize: '11px', color: isDark ? '#94a3b8' : '#64748b' }}>recurring commission</div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {affiliateError && <div style={{ padding: '12px', borderRadius: '10px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)', fontSize: '13px' }}>{affiliateError}</div>}
+                    {[{ label: 'Full Name', key: 'fullName', type: 'text', placeholder: 'John Doe' }, { label: 'Email Address', key: 'email', type: 'email', placeholder: 'your@email.com' }, { label: 'TikTok / Social Handle', key: 'tiktokHandle', type: 'text', placeholder: '@yourhandle' }].map(field => (
+                      <div key={field.key}>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px', color: isDark ? '#94a3b8' : '#475569' }}>{field.label}</label>
+                        <input type={field.type} value={(affiliateForm as any)[field.key]} onChange={e => setAffiliateForm(p => ({...p, [field.key]: e.target.value}))} placeholder={field.placeholder} style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', background: isDark ? 'rgba(255,255,255,0.06)' : '#f8fafc', border: isDark ? '1px solid rgba(6,182,212,0.2)' : '1px solid #e2e8f0', color: isDark ? '#e2e8f0' : '#000', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }} />
+                      </div>
+                    ))}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '13px', fontWeight: 700, marginBottom: '6px', color: isDark ? '#94a3b8' : '#475569' }}>About You <span style={{ fontWeight: 400, opacity: 0.6 }}>(optional)</span></label>
+                      <textarea value={affiliateForm.message} onChange={e => setAffiliateForm(p => ({...p, message: e.target.value}))} placeholder="Audience size, content style, why you'd be a great fit..." rows={3} style={{ width: '100%', padding: '12px 14px', borderRadius: '10px', background: isDark ? 'rgba(255,255,255,0.06)' : '#f8fafc', border: isDark ? '1px solid rgba(6,182,212,0.2)' : '1px solid #e2e8f0', color: isDark ? '#e2e8f0' : '#000', fontSize: '15px', outline: 'none', resize: 'none', boxSizing: 'border-box' }} />
+                    </div>
+                    <button
+                      disabled={affiliateSubmitting || !affiliateForm.fullName || !affiliateForm.email || !affiliateForm.tiktokHandle}
+                      onClick={async () => {
+                        setAffiliateSubmitting(true);
+                        setAffiliateError('');
+                        try {
+                          const res = await fetch('/api/affiliate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(affiliateForm) });
+                          const d = await res.json();
+                          if (res.ok) { setAffiliateSubmitted(true); setAffiliateForm({ fullName: '', email: '', tiktokHandle: '', message: '' }); }
+                          else { setAffiliateError(d?.details || d?.error || 'Something went wrong.'); }
+                        } catch { setAffiliateError('Network error. Please check your connection.'); }
+                        finally { setAffiliateSubmitting(false); }
+                      }}
+                      style={{ width: '100%', padding: '14px', borderRadius: '12px', background: (affiliateSubmitting || !affiliateForm.fullName || !affiliateForm.email || !affiliateForm.tiktokHandle) ? 'rgba(6,182,212,0.4)' : 'linear-gradient(135deg, #06b6d4, #2563eb)', color: '#fff', fontWeight: 900, border: 'none', cursor: (affiliateSubmitting || !affiliateForm.fullName || !affiliateForm.email || !affiliateForm.tiktokHandle) ? 'not-allowed' : 'pointer', fontSize: '15px' }}
+                    >
+                      {affiliateSubmitting ? 'Submitting...' : 'Submit Application'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

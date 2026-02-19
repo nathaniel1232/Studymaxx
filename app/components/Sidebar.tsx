@@ -108,6 +108,11 @@ export default function Sidebar({
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
+  const [showAffiliate, setShowAffiliate] = useState(false);
+  const [affiliateForm, setAffiliateForm] = useState({ fullName: '', email: '', tiktokHandle: '', message: '' });
+  const [affiliateSubmitting, setAffiliateSubmitting] = useState(false);
+  const [affiliateSubmitted, setAffiliateSubmitted] = useState(false);
+  const [affiliateError, setAffiliateError] = useState('');
   
   // Debug logging for premium status
   console.log('[Sidebar] 🔍 isPremium:', isPremium, '| type:', typeof isPremium, '| email:', userEmail);
@@ -293,7 +298,7 @@ export default function Sidebar({
           {/* Affiliate Program Button */}
           <button
             onClick={() => {
-              window.location.href = "/affiliate";
+              setShowAffiliate(true);
               setIsOpen(false);
             }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left"
@@ -368,6 +373,108 @@ export default function Sidebar({
           </div>
         </nav>
       </div>
+
+      {/* Affiliate Modal */}
+      {showAffiliate && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setShowAffiliate(false); setAffiliateSubmitted(false); setAffiliateError(''); }} />
+          <div
+            className="relative w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl overflow-y-auto"
+            style={{ backgroundColor: isDarkMode ? '#0f1629' : '#ffffff', border: isDarkMode ? '1px solid rgba(6,182,212,0.2)' : '1px solid #e2e8f0', boxShadow: '0 8px 40px rgba(0,0,0,0.3)', maxHeight: '90vh' }}
+          >
+            {/* Header */}
+            <div className="sticky top-0 px-6 py-5 flex items-center justify-between" style={{ background: isDarkMode ? 'linear-gradient(135deg, rgba(6,182,212,0.15), rgba(37,99,235,0.15))' : 'linear-gradient(135deg, rgba(6,182,212,0.08), rgba(37,99,235,0.08))', borderBottom: isDarkMode ? '1px solid rgba(6,182,212,0.2)' : '1px solid rgba(6,182,212,0.15)' }}>
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span style={{ color: '#06b6d4', fontSize: '20px' }}>💼</span>
+                  <h3 className="text-xl font-bold" style={{ color: isDarkMode ? '#e2e8f0' : '#000' }}>Affiliate Program</h3>
+                </div>
+                <p style={{ fontSize: '13px', color: isDarkMode ? '#94a3b8' : '#64748b' }}>Earn 20% recurring — every month they stay subscribed</p>
+              </div>
+              <button onClick={() => { setShowAffiliate(false); setAffiliateSubmitted(false); setAffiliateError(''); }} style={{ color: isDarkMode ? '#94a3b8' : '#64748b', fontSize: '20px', lineHeight: 1 }}>✕</button>
+            </div>
+
+            <div className="px-6 py-5">
+              {affiliateSubmitted ? (
+                <div className="text-center py-10">
+                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>✅</div>
+                  <h4 className="text-xl font-bold mb-2" style={{ color: isDarkMode ? '#e2e8f0' : '#000' }}>Application Sent!</h4>
+                  <p style={{ color: isDarkMode ? '#94a3b8' : '#64748b', fontSize: '14px' }}>We'll review it and get back to you within 48 hours.</p>
+                  <button onClick={() => { setShowAffiliate(false); setAffiliateSubmitted(false); }} className="mt-6 px-6 py-2 rounded-xl font-semibold" style={{ background: 'linear-gradient(135deg, #06b6d4, #2563eb)', color: '#fff' }}>Close</button>
+                </div>
+              ) : (
+                <>
+                  {/* Commission Cards */}
+                  <div className="grid grid-cols-2 gap-3 mb-5">
+                    <div className="p-4 rounded-xl" style={{ background: isDarkMode ? 'rgba(6,182,212,0.1)' : 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.2)' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#06b6d4', marginBottom: '4px' }}>Your Code Gives</div>
+                      <div className="font-bold text-lg" style={{ color: isDarkMode ? '#e2e8f0' : '#000' }}>15% off</div>
+                      <div style={{ fontSize: '12px', color: isDarkMode ? '#94a3b8' : '#64748b' }}>first month for customers</div>
+                    </div>
+                    <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.12), rgba(37,99,235,0.12))', border: '1px solid rgba(6,182,212,0.25)' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#06b6d4', marginBottom: '4px' }}>You Earn</div>
+                      <div className="font-bold text-lg" style={{ color: isDarkMode ? '#e2e8f0' : '#000' }}>20% monthly</div>
+                      <div style={{ fontSize: '12px', color: isDarkMode ? '#94a3b8' : '#64748b' }}>recurring commission</div>
+                    </div>
+                  </div>
+
+                  {/* Form */}
+                  <div className="space-y-3">
+                    {affiliateError && (
+                      <div className="p-3 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>{affiliateError}</div>
+                    )}
+                    <div>
+                      <label className="block text-sm font-semibold mb-1" style={{ color: isDarkMode ? '#94a3b8' : '#475569' }}>Full Name</label>
+                      <input type="text" value={affiliateForm.fullName} onChange={e => setAffiliateForm(p => ({...p, fullName: e.target.value}))} placeholder="John Doe" className="w-full px-4 py-3 rounded-xl outline-none transition-all" style={{ background: isDarkMode ? 'rgba(255,255,255,0.06)' : '#f8fafc', border: isDarkMode ? '1px solid rgba(6,182,212,0.2)' : '1px solid #e2e8f0', color: isDarkMode ? '#e2e8f0' : '#000', fontSize: '15px' }} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1" style={{ color: isDarkMode ? '#94a3b8' : '#475569' }}>Email Address</label>
+                      <input type="email" value={affiliateForm.email} onChange={e => setAffiliateForm(p => ({...p, email: e.target.value}))} placeholder="your@email.com" className="w-full px-4 py-3 rounded-xl outline-none transition-all" style={{ background: isDarkMode ? 'rgba(255,255,255,0.06)' : '#f8fafc', border: isDarkMode ? '1px solid rgba(6,182,212,0.2)' : '1px solid #e2e8f0', color: isDarkMode ? '#e2e8f0' : '#000', fontSize: '15px' }} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1" style={{ color: isDarkMode ? '#94a3b8' : '#475569' }}>TikTok / Social Handle</label>
+                      <input type="text" value={affiliateForm.tiktokHandle} onChange={e => setAffiliateForm(p => ({...p, tiktokHandle: e.target.value}))} placeholder="@yourhandle" className="w-full px-4 py-3 rounded-xl outline-none transition-all" style={{ background: isDarkMode ? 'rgba(255,255,255,0.06)' : '#f8fafc', border: isDarkMode ? '1px solid rgba(6,182,212,0.2)' : '1px solid #e2e8f0', color: isDarkMode ? '#e2e8f0' : '#000', fontSize: '15px' }} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1" style={{ color: isDarkMode ? '#94a3b8' : '#475569' }}>Tell us about yourself <span style={{ fontWeight: 400, opacity: 0.6 }}>(optional)</span></label>
+                      <textarea value={affiliateForm.message} onChange={e => setAffiliateForm(p => ({...p, message: e.target.value}))} placeholder="Audience size, content style, why you'd be a great fit..." rows={3} className="w-full px-4 py-3 rounded-xl outline-none resize-none transition-all" style={{ background: isDarkMode ? 'rgba(255,255,255,0.06)' : '#f8fafc', border: isDarkMode ? '1px solid rgba(6,182,212,0.2)' : '1px solid #e2e8f0', color: isDarkMode ? '#e2e8f0' : '#000', fontSize: '15px' }} />
+                    </div>
+                    <button
+                      disabled={affiliateSubmitting || !affiliateForm.fullName || !affiliateForm.email || !affiliateForm.tiktokHandle}
+                      onClick={async () => {
+                        setAffiliateSubmitting(true);
+                        setAffiliateError('');
+                        try {
+                          const res = await fetch('/api/affiliate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(affiliateForm)
+                          });
+                          const d = await res.json();
+                          if (res.ok) {
+                            setAffiliateSubmitted(true);
+                            setAffiliateForm({ fullName: '', email: '', tiktokHandle: '', message: '' });
+                          } else {
+                            setAffiliateError(d?.details || d?.error || 'Something went wrong. Please try again.');
+                          }
+                        } catch {
+                          setAffiliateError('Network error. Please check your connection.');
+                        } finally {
+                          setAffiliateSubmitting(false);
+                        }
+                      }}
+                      className="w-full py-3.5 rounded-xl font-bold text-white transition-all"
+                      style={{ background: (affiliateSubmitting || !affiliateForm.fullName || !affiliateForm.email || !affiliateForm.tiktokHandle) ? 'rgba(6,182,212,0.4)' : 'linear-gradient(135deg, #06b6d4, #2563eb)', cursor: (affiliateSubmitting || !affiliateForm.fullName || !affiliateForm.email || !affiliateForm.tiktokHandle) ? 'not-allowed' : 'pointer', fontSize: '15px' }}
+                    >
+                      {affiliateSubmitting ? 'Submitting...' : 'Submit Application'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Feedback Modal - NotebookLM Style */}
       {showFeedback && (
