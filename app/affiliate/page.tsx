@@ -33,21 +33,31 @@ export default function AffiliatePage() {
     setIsSubmitting(true);
 
     try {
+      console.log('[Affiliate Form] Submitting:', formData);
       const response = await fetch('/api/affiliate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
 
+      console.log('[Affiliate Form] Response status:', response.status);
+      const responseData = await response.json();
+      console.log('[Affiliate Form] Response data:', responseData);
+
       if (response.ok) {
+        console.log('[Affiliate Form] Success! Application submitted.');
         setSubmitted(true);
         setFormData({ fullName: '', email: '', tiktokHandle: '', message: '' });
         setTimeout(() => {
           router.push('/');
         }, 3000);
+      } else {
+        console.error('[Affiliate Form] Error:', responseData);
+        alert('Error submitting application: ' + (responseData?.details || responseData?.error || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Failed to submit affiliate form:', error);
+      console.error('[Affiliate Form] Failed to submit affiliate form:', error);
+      alert('Network error: ' + String(error));
     } finally {
       setIsSubmitting(false);
     }
