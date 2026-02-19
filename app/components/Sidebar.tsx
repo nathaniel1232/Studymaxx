@@ -303,17 +303,17 @@ export default function Sidebar({
             }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left"
             style={{ 
-              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(217, 70, 239, 0.12))',
-              color: '#8b5cf6',
-              border: '1px solid rgba(139, 92, 246, 0.2)'
+              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(37, 99, 235, 0.12))',
+              color: '#06b6d4',
+              border: '1px solid rgba(6, 182, 212, 0.3)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(217, 70, 239, 0.2))';
-              e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.4)';
+              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(37, 99, 235, 0.2))';
+              e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.5)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(217, 70, 239, 0.12))';
-              e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.2)';
+              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(37, 99, 235, 0.12))';
+              e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.3)';
             }}
           >
             <span className="text-lg">💼</span>

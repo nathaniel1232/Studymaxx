@@ -739,8 +739,8 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
             <div style={{
               padding: '32px',
               borderRadius: '16px',
-              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(217, 70, 239, 0.1))',
-              border: '2px solid rgba(139, 92, 246, 0.3)'
+              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(37, 99, 235, 0.08))',
+              border: '2px solid rgba(6, 182, 212, 0.25)'
             }}>
               <h2 style={{ fontSize: '28px', fontWeight: 900, marginBottom: '16px' }}>
                 💼 Become an Affiliate
@@ -751,7 +751,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
               </p>
 
               <div style={{ padding: '16px', borderRadius: '8px', background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.5)', marginBottom: '16px' }}>
-                <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', color: '#8b5cf6', marginBottom: '4px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', color: '#06b6d4', marginBottom: '4px' }}>
                   Your Customers Get
                 </div>
                 <div style={{ fontSize: '20px', fontWeight: 900, color: isDark ? '#ffffff' : '#000000' }}>
@@ -760,7 +760,7 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
               </div>
 
               <div style={{ padding: '16px', borderRadius: '8px', background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.5)', marginBottom: '20px' }}>
-                <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', color: '#8b5cf6', marginBottom: '4px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', color: '#06b6d4', marginBottom: '4px' }}>
                   You Earn
                 </div>
                 <div style={{ fontSize: '20px', fontWeight: 900, color: isDark ? '#ffffff' : '#000000' }}>
