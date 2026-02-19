@@ -5,7 +5,6 @@ import { useSettings, useTranslation, Theme } from "../contexts/SettingsContext"
 import { studyFacts } from "../utils/studyFacts";
 import ArrowIcon from "./icons/ArrowIcon";
 import { getCurrentUser, signOut, supabase } from "../utils/supabase";
-import UpdatesModal from "./UpdatesModal";
 
 interface SettingsViewProps {
   onBack: () => void;
@@ -18,10 +17,16 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
   const [user, setUser] = useState<any>(null);
   const [isPremium, setIsPremium] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [showUpdatesModal, setShowUpdatesModal] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Feedback state
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackType, setFeedbackType] = useState<'bug' | 'feature' | 'other'>('other');
+  const [feedbackSent, setFeedbackSent] = useState(false);
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
 
   useEffect(() => {
     loadUserInfo();
@@ -135,6 +140,39 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
       console.error('Error removing avatar:', error);
     } finally {
       setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleSendFeedback = async () => {
+    if (!feedbackText.trim()) return;
+    
+    setIsSendingFeedback(true);
+    try {
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          message: feedbackText,
+          email: user?.email || null,
+          type: feedbackType
+        })
+      });
+      
+      if (response.ok) {
+        setFeedbackSent(true);
+        setFeedbackText("");
+        setTimeout(() => {
+          setFeedbackSent(false);
+          setShowFeedback(false);
+        }, 2000);
+      } else {
+        alert('Failed to send feedback. Please try again.');
+      }
+    } catch (e) {
+      console.error('Failed to send feedback:', e);
+      alert('Failed to send feedback. Please try again.');
+    } finally {
+      setIsSendingFeedback(false);
     }
   };
 
@@ -568,8 +606,33 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
             </div>
           </div>
 
-          {/* What's New & Contact */}
+          {/* Contact Us */}
+          <div style={{
+            padding: '32px',
+            borderRadius: '16px',
+            background: isDark ? '#1a1a1a' : '#f9f9f9',
+            border: isDark ? '1px solid #333' : '1px solid #e5e5e5'
+          }}>
+            <h2 style={{ fontSize: '28px', fontWeight: 900, marginBottom: '24px' }}>
+              Contact Us
+            </h2>
+
+            <div style={{ padding: '20px', borderRadius: '12px', background: isDark ? '#0a0a0a' : '#ffffff' }}>
+              <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', color: isDark ? '#666' : '#999', marginBottom: '8px' }}>
+                Email
+              </div>
+              <a 
+                href="mailto:studymaxxer@gmail.com"
+                style={{ fontSize: '16px', fontWeight: 700, color: '#1a73e8', textDecoration: 'none' }}
+              >
+                studymaxxer@gmail.com
+              </a>
+            </div>
+          </div>
+
+          {/* Feedback & Affiliate Program */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
+            {/* Send Feedback */}
             <div style={{
               padding: '32px',
               borderRadius: '16px',
@@ -577,48 +640,150 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
               border: isDark ? '1px solid #333' : '1px solid #e5e5e5'
             }}>
               <h2 style={{ fontSize: '28px', fontWeight: 900, marginBottom: '24px' }}>
-                What's New
+                Send Feedback
               </h2>
 
-              <button
-                onClick={() => setShowUpdatesModal(true)}
+              {feedbackSent ? (
+                <div style={{ 
+                  padding: '20px', 
+                  borderRadius: '12px', 
+                  background: 'rgba(34, 197, 94, 0.1)', 
+                  border: '2px solid #22c55e',
+                  textAlign: 'center'
+                }}>
+                  <p style={{ fontSize: '16px', fontWeight: 700, color: '#22c55e', marginBottom: '8px' }}>
+                    ✓ Thank you!
+                  </p>
+                  <p style={{ fontSize: '14px', color: isDark ? '#a0a0a0' : '#666666' }}>
+                    Your feedback has been received.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', color: isDark ? '#666' : '#999', marginBottom: '8px' }}>
+                      Type
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {(['bug', 'feature', 'other'] as const).map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => setFeedbackType(type)}
+                          style={{
+                            flex: 1,
+                            padding: '8px',
+                            borderRadius: '8px',
+                            background: feedbackType === type ? '#1a73e8' : (isDark ? '#0a0a0a' : '#ffffff'),
+                            color: feedbackType === type ? '#ffffff' : (isDark ? '#ffffff' : '#000000'),
+                            border: feedbackType === type ? 'none' : (isDark ? '1px solid #333' : '1px solid #e5e5e5'),
+                            fontWeight: 700,
+                            fontSize: '12px',
+                            cursor: 'pointer',
+                            textTransform: 'capitalize'
+                          }}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <textarea
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    placeholder="Tell us what you think..."
+                    style={{
+                      width: '100%',
+                      minHeight: '120px',
+                      padding: '16px',
+                      borderRadius: '12px',
+                      background: isDark ? '#0a0a0a' : '#ffffff',
+                      color: isDark ? '#ffffff' : '#000000',
+                      border: isDark ? '1px solid #333' : '1px solid #e5e5e5',
+                      fontSize: '15px',
+                      fontFamily: 'inherit',
+                      resize: 'vertical',
+                      marginBottom: '16px'
+                    }}
+                  />
+
+                  <button
+                    onClick={handleSendFeedback}
+                    disabled={!feedbackText.trim() || isSendingFeedback}
+                    style={{
+                      width: '100%',
+                      padding: '16px',
+                      borderRadius: '8px',
+                      background: (!feedbackText.trim() || isSendingFeedback) ? (isDark ? '#333' : '#e5e5e5') : '#1a73e8',
+                      color: (!feedbackText.trim() || isSendingFeedback) ? (isDark ? '#666' : '#999') : '#ffffff',
+                      fontWeight: 900,
+                      border: 'none',
+                      cursor: (!feedbackText.trim() || isSendingFeedback) ? 'not-allowed' : 'pointer',
+                      minHeight: '44px'
+                    }}
+                  >
+                    {isSendingFeedback ? 'Sending...' : 'Send Feedback'}
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Affiliate Program */}
+            <div style={{
+              padding: '32px',
+              borderRadius: '16px',
+              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(217, 70, 239, 0.1))',
+              border: '2px solid rgba(139, 92, 246, 0.3)'
+            }}>
+              <h2 style={{ fontSize: '28px', fontWeight: 900, marginBottom: '16px' }}>
+                💼 Become an Affiliate
+              </h2>
+
+              <p style={{ fontSize: '14px', color: isDark ? '#a0a0a0' : '#666666', marginBottom: '16px', lineHeight: '1.6' }}>
+                Help us grow on TikTok and earn money! Get your unique referral code and earn:
+              </p>
+
+              <div style={{ padding: '16px', borderRadius: '8px', background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.5)', marginBottom: '16px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', color: '#8b5cf6', marginBottom: '4px' }}>
+                  Your Customers Get
+                </div>
+                <div style={{ fontSize: '20px', fontWeight: 900, color: isDark ? '#ffffff' : '#000000' }}>
+                  15% off first month
+                </div>
+              </div>
+
+              <div style={{ padding: '16px', borderRadius: '8px', background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.5)', marginBottom: '20px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', color: '#8b5cf6', marginBottom: '4px' }}>
+                  You Earn
+                </div>
+                <div style={{ fontSize: '20px', fontWeight: 900, color: isDark ? '#ffffff' : '#000000' }}>
+                  20% recurring commission
+                </div>
+                <div style={{ fontSize: '12px', color: isDark ? '#666' : '#999', marginTop: '4px' }}>
+                  Every month they stay subscribed
+                </div>
+              </div>
+
+              <a
+                href="mailto:studymaxxer@gmail.com?subject=Affiliate Program Interest&body=Hi! I'm interested in becoming a StudyMaxx affiliate and promoting the app on TikTok. Please send me more information about the program and how to get my referral code.%0A%0AMy TikTok handle: [Your handle]%0A%0AThank you!"
                 style={{
+                  display: 'flex',
                   width: '100%',
                   padding: '16px',
                   borderRadius: '8px',
-                  background: isDark ? '#333' : '#e5e5e5',
-                  color: isDark ? '#ffffff' : '#000000',
+                  background: 'linear-gradient(135deg, #8b5cf6, #d946ef)',
+                  color: '#ffffff',
                   fontWeight: 900,
-                  border: 'none',
-                  cursor: 'pointer',
-                  minHeight: '44px'
+                  textAlign: 'center',
+                  textDecoration: 'none',
+                  minHeight: '44px',
+                  lineHeight: '1.2',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
               >
-                View Update Log
-              </button>
-            </div>
-
-            <div style={{
-              padding: '32px',
-              borderRadius: '16px',
-              background: isDark ? '#1a1a1a' : '#f9f9f9',
-              border: isDark ? '1px solid #333' : '1px solid #e5e5e5'
-            }}>
-              <h2 style={{ fontSize: '28px', fontWeight: 900, marginBottom: '24px' }}>
-                Contact Us
-              </h2>
-
-              <div style={{ padding: '20px', borderRadius: '12px', background: isDark ? '#0a0a0a' : '#ffffff' }}>
-                <div style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', color: isDark ? '#666' : '#999', marginBottom: '8px' }}>
-                  Email
-                </div>
-                <a 
-                  href="mailto:studymaxxer@gmail.com"
-                  style={{ fontSize: '16px', fontWeight: 700, color: '#1a73e8', textDecoration: 'none' }}
-                >
-                  studymaxxer@gmail.com
-                </a>
-              </div>
+                Apply Now
+              </a>
             </div>
           </div>
 
@@ -648,11 +813,6 @@ export default function SettingsView({ onBack }: SettingsViewProps) {
 
         <div style={{ height: '64px' }} />
       </div>
-
-      <UpdatesModal 
-        isOpen={showUpdatesModal} 
-        onClose={() => setShowUpdatesModal(false)} 
-      />
     </div>
   );
 }
