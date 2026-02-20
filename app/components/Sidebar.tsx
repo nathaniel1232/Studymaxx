@@ -295,6 +295,24 @@ export default function Sidebar({
             </button>
           )}
           
+          {/* Feedback Button */}
+          <button
+            onClick={() => setShowFeedback(true)}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left"
+            style={{ color: isDarkMode ? '#94a3b8' : '#5f6368' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)';
+              e.currentTarget.style.color = isDarkMode ? '#e2e8f0' : '#000000';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = isDarkMode ? '#94a3b8' : '#5f6368';
+            }}
+          >
+            <span><MessageIcon /></span>
+            <span className="font-medium">Send Feedback</span>
+          </button>
+
           {/* Affiliate Program Button */}
           <button
             onClick={() => {
@@ -302,47 +320,18 @@ export default function Sidebar({
               setIsOpen(false);
             }}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left"
-            style={{ 
-              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(37, 99, 235, 0.12))',
-              color: '#06b6d4',
-              border: '1px solid rgba(6, 182, 212, 0.3)'
-            }}
+            style={{ color: isDarkMode ? '#94a3b8' : '#5f6368' }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(37, 99, 235, 0.2))';
-              e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.5)';
+              e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)';
+              e.currentTarget.style.color = isDarkMode ? '#e2e8f0' : '#000000';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(37, 99, 235, 0.12))';
-              e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.3)';
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.color = isDarkMode ? '#94a3b8' : '#5f6368';
             }}
           >
-            <span className="text-lg">💼</span>
-            <div className="flex-1">
-              <div className="font-bold">Become an Affiliate</div>
-              <div style={{ fontSize: '11px', opacity: 0.8 }}>Earn 20% recurring</div>
-            </div>
-          </button>
-
-          {/* Feedback Button */}
-          <button
-            onClick={() => setShowFeedback(true)}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left"
-            style={{ 
-              background: 'linear-gradient(135deg, rgba(26, 115, 232, 0.12), rgba(6, 182, 212, 0.12))',
-              color: '#1a73e8',
-              border: '1px solid rgba(26, 115, 232, 0.2)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(26, 115, 232, 0.2), rgba(6, 182, 212, 0.2))';
-              e.currentTarget.style.borderColor = 'rgba(26, 115, 232, 0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(26, 115, 232, 0.12), rgba(6, 182, 212, 0.12))';
-              e.currentTarget.style.borderColor = 'rgba(26, 115, 232, 0.2)';
-            }}
-          >
-            <span className="text-lg"><MessageIcon /></span>
-            <span className="font-bold">Send Feedback</span>
+            <span>💼</span>
+            <span className="font-medium">Become an Affiliate</span>
           </button>
 
           {/* Sign Out - inside nav, below Send Feedback */}

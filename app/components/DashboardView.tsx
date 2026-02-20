@@ -531,28 +531,32 @@ export default function DashboardView({
                   </span>
                 </div>
                 
-                <h3 className="font-medium mb-2 line-clamp-1" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>
+                <h3 className="font-medium mb-1 line-clamp-1" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>
                   {set.name}
                 </h3>
                 <p className="text-sm mb-4" style={{ color: '#5f6368' }}>
-                  {set.flashcards.length} flashcards
-                  {set.subject && ` · ${set.subject}`}
+                  {set.flashcards.length} cards{set.subject && ` · ${set.subject}`}
                 </p>
 
-                <button
-                  onClick={() => onLoadSet(set.flashcards, set.id)}
-                  className="w-full py-2.5 rounded-xl font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
-                  style={{ backgroundColor: '#1a73e8' }}
-                >
-                  Study Now
-                </button>
-                <button
-                  onClick={() => setDeletingSetId(set.id)}
-                  className="w-full mt-2 py-2 rounded-xl text-sm font-medium transition-all hover:bg-red-500/10"
-                  style={{ color: '#ef4444', border: '1px solid rgba(239,68,68,0.35)', background: 'transparent' }}
-                >
-                  Delete
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onLoadSet(set.flashcards, set.id)}
+                    className="flex-1 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                    style={{ backgroundColor: '#1a73e8' }}
+                  >
+                    Study →
+                  </button>
+                  <button
+                    onClick={() => setDeletingSetId(set.id)}
+                    className="p-2 rounded-lg transition-all hover:bg-red-500/15"
+                    style={{ color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', background: 'transparent', flexShrink: 0 }}
+                    title="Delete set"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
