@@ -581,8 +581,8 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                         <div className="relative">
                           <button
                             onClick={() => setMovingSetId(movingSetId === set.id ? null : set.id)}
-                            className="move-trigger p-2 rounded-lg transition-all opacity-60 hover:opacity-100"
-                            style={{ background: isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }}
+                            className="move-trigger p-2 rounded-lg transition-all"
+                            style={{ background: isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0', color: isDarkMode ? '#ffffff' : '#000000' }}
                             title="Move to folder"
                           >
                             <svg className="w-4 h-4" style={{ color: isDarkMode ? '#ffffff' : '#000000' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -628,24 +628,12 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                         {/* Edit */}
                         <button
                           onClick={() => handleStartEdit(set.id, set.flashcards)}
-                          className="p-2 rounded-lg transition-all opacity-60 hover:opacity-100 hover:bg-cyan-500/20"
+                          className="p-2 rounded-lg transition-all hover:bg-cyan-500/20"
                           style={{ background: isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }}
                           title="Edit flashcards"
                         >
                           <svg className="w-4 h-4 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        
-                        {/* Delete */}
-                        <button
-                          onClick={() => handleDelete(set.id)}
-                          className="p-2 rounded-lg transition-all opacity-60 hover:opacity-100 hover:bg-red-500/20"
-                          style={{ background: isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }}
-                          title="Delete"
-                        >
-                          <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </button>
                       </div>
@@ -673,6 +661,15 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                       className="w-full py-2.5 sm:py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold rounded-lg transition-all hover:shadow-md active:scale-[0.98]"
                     >
                       Study Now
+                    </button>
+
+                    {/* Delete button */}
+                    <button
+                      onClick={() => handleDelete(set.id)}
+                      className="w-full mt-2 py-2 text-sm font-medium rounded-lg transition-all hover:bg-red-500/10"
+                      style={{ color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', background: 'transparent' }}
+                    >
+                      Delete Set
                     </button>
                   </div>
                 ))}
