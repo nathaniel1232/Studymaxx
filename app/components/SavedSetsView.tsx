@@ -41,6 +41,8 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
   const [editingSetId, setEditingSetId] = useState<string | null>(null);
   const [editingFlashcards, setEditingFlashcards] = useState<Flashcard[]>([]);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [deletingSetId, setDeletingSetId] = useState<string | null>(null);
+  const [isDeletingSet, setIsDeletingSet] = useState(false);
 
   const loadData = async () => {
     try {
@@ -129,10 +131,22 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm(t("confirm_delete") || "Are you sure you want to delete this flashcard set?")) {
-      await deleteFlashcardSet(id);
+  const handleDelete = (id: string) => {
+    setDeletingSetId(id);
+  };
+
+  const confirmDeleteSet = async () => {
+    if (!deletingSetId) return;
+    setIsDeletingSet(true);
+    try {
+      await deleteFlashcardSet(deletingSetId);
+      setDeletingSetId(null);
       await loadData();
+    } catch (err) {
+      console.error('[SavedSetsView] Delete failed:', err);
+      alert('Failed to delete. Please try again.');
+    } finally {
+      setIsDeletingSet(false);
     }
   };
 
@@ -679,6 +693,44 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
           </div>
         </div>
       </div>
+
+      {/* Delete Study Set Confirmation Modal */}
+      {deletingSetId && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4" onClick={() => setDeletingSetId(null)}>
+          <div className="rounded-xl shadow-2xl max-w-md w-full p-6" style={{ background: isDarkMode ? 'rgba(255,255,255,0.1)' : '#ffffff', border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'}` }} onClick={(e) => e.stopPropagation()}>
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-red-500/10">
+                <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                Delete Study Set?
+              </h3>
+              <p style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
+                "{savedSets.find(s => s.id === deletingSetId)?.name}" will be permanently deleted.
+                This cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeletingSetId(null)}
+                className="flex-1 px-4 py-3 font-medium rounded-lg transition-all"
+                style={{ background: isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0', color: isDarkMode ? '#ffffff' : '#000000' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteSet}
+                disabled={isDeletingSet}
+                className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isDeletingSet ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Folder Confirmation Modal */}
       {deletingFolderId && (
