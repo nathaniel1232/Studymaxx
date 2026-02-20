@@ -577,18 +577,6 @@ export default function SavedSetsView({ onLoadSet, onBack }: SavedSetsViewProps)
                       
                       {/* Actions */}
                       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                        {/* Edit */}
-                        <button
-                          onClick={() => handleStartEdit(set.id, set.flashcards)}
-                          className="p-2 rounded-lg transition-all opacity-60 hover:opacity-100"
-                          style={{ background: isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }}
-                          title="Edit flashcards"
-                        >
-                          <svg className="w-4 h-4" style={{ color: isDarkMode ? '#ffffff' : '#000000' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        
                         {/* Move to folder */}
                         <div className="relative">
                           <button
