@@ -541,8 +541,8 @@ export default function DashboardView({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => onLoadSet(set.flashcards, set.id)}
-                    className="flex-1 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
-                    style={{ backgroundColor: '#1a73e8' }}
+                    className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all hover:opacity-90 active:scale-[0.98]"
+                    style={{ backgroundColor: '#1a73e8', color: '#ffffff' }}
                   >
                     Study →
                   </button>

@@ -208,13 +208,13 @@ export default function Sidebar({
 
       {/* Sidebar Panel - NotebookLM Style */}
       <div 
-        className={`fixed left-0 top-0 h-full w-72 z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed left-0 top-0 h-full w-72 z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#f1f5f9', borderRight: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0' }}
       >
         {/* Header */}
-        <div className="p-6 border-b" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0' }}>
+        <div className="p-6 border-b flex-shrink-0" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0' }}>
           <div className="text-xl font-bold mb-1">
             <span style={{ color: '#06b6d4' }}>Study</span>
             <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>Maxx</span>
@@ -234,8 +234,8 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* Navigation - NotebookLM Style - Scrollable */}
-        <nav className="p-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 220px)' }}>
+        {/* Navigation - flex-1 so it fills remaining space, min-h-0 so it can shrink and scroll only when truly needed */}
+        <nav className="p-4 flex-1 overflow-y-auto min-h-0">
           {NAV_ITEMS.map((item) => (
             <button
               key={item.id}
