@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FlashcardSet } from "../utils/storage";
+import { FlashcardSet, deleteFlashcardSet } from "../utils/storage";
 import { useSettings } from "../contexts/SettingsContext";
 import { getStreakStatus, getWeeklyActivity, getStreaksAtRisk } from "../utils/streak";
 // WelcomeCard removed - personalization disabled
@@ -18,6 +18,7 @@ interface DashboardViewProps {
   savedSets: FlashcardSet[];
   onMathMaxx?: () => void;
   onSummarizer?: () => void;
+  onDeleteSet?: () => void;
 }
 
 // Custom SVG icon components
@@ -95,10 +96,28 @@ export default function DashboardView({
   onSettings,
   savedSets,
   onMathMaxx,
-  onSummarizer
+  onSummarizer,
+  onDeleteSet
 }: DashboardViewProps) {
   const { settings } = useSettings();
   const [activeTab, setActiveTab] = useState<"my-notes" | "shared">("my-notes");
+  const [deletingSetId, setDeletingSetId] = useState<string | null>(null);
+  const [isDeletingSet, setIsDeletingSet] = useState(false);
+
+  const confirmDeleteSet = async () => {
+    if (!deletingSetId) return;
+    setIsDeletingSet(true);
+    try {
+      await deleteFlashcardSet(deletingSetId);
+      setDeletingSetId(null);
+      if (onDeleteSet) onDeleteSet();
+    } catch (err) {
+      console.error('Delete failed:', err);
+      alert('Failed to delete. Please try again.');
+    } finally {
+      setIsDeletingSet(false);
+    }
+  };
   const [showAIChat, setShowAIChat] = useState(true);
   const [chatMessage, setChatMessage] = useState('');
   const [chatMessages, setChatMessages] = useState<Array<{role: 'user' | 'ai', text: string}>>([]);
@@ -489,10 +508,9 @@ export default function DashboardView({
         {savedSets.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {savedSets.map((set) => (
-              <button
+              <div
                 key={set.id}
-                onClick={() => onLoadSet(set.flashcards, set.id)}
-                className="group p-5 rounded-2xl text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                className="p-5 rounded-2xl"
                 style={{ 
                   backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#ffffff', 
                   border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #cbd5e1',
@@ -513,23 +531,29 @@ export default function DashboardView({
                   </span>
                 </div>
                 
-                <h3 className="font-medium mb-1 line-clamp-1" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>
+                <h3 className="font-medium mb-2 line-clamp-1" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>
                   {set.name}
                 </h3>
-                <p className="text-sm" style={{ color: '#5f6368' }}>
+                <p className="text-sm mb-4" style={{ color: '#5f6368' }}>
                   {set.flashcards.length} flashcards
                   {set.subject && ` · ${set.subject}`}
                 </p>
-                
-                <div className="mt-3 pt-3 border-t flex items-center justify-between" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }}>
-                  <span className="text-xs" style={{ color: '#5f6368' }}>
-                    Click to study
-                  </span>
-                  <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#1a73e8' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </button>
+
+                <button
+                  onClick={() => onLoadSet(set.flashcards, set.id)}
+                  className="w-full py-2.5 rounded-xl font-semibold text-white transition-all hover:opacity-90 active:scale-[0.98]"
+                  style={{ backgroundColor: '#1a73e8' }}
+                >
+                  Study Now
+                </button>
+                <button
+                  onClick={() => setDeletingSetId(set.id)}
+                  className="w-full mt-2 py-2 rounded-xl text-sm font-medium transition-all hover:bg-red-500/10"
+                  style={{ color: '#ef4444', border: '1px solid rgba(239,68,68,0.35)', background: 'transparent' }}
+                >
+                  Delete
+                </button>
+              </div>
             ))}
           </div>
         ) : (
@@ -561,7 +585,32 @@ export default function DashboardView({
           </div>
         )}
 
-        {/* AI Chat */}
+        {/* Delete Set Confirmation Modal */}
+      {deletingSetId && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4" onClick={() => setDeletingSetId(null)}>
+          <div className="rounded-xl shadow-2xl max-w-sm w-full p-6" style={{ background: isDarkMode ? '#1a1a2e' : '#ffffff', border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}` }} onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.1)' }}>
+                <svg className="w-7 h-7" style={{ color: '#ef4444' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold mb-1" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Delete Study Set?</h3>
+              <p className="text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
+                "{savedSets.find(s => s.id === deletingSetId)?.name}" will be permanently deleted.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setDeletingSetId(null)} className="flex-1 py-3 rounded-xl font-medium" style={{ background: isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0', color: isDarkMode ? '#ffffff' : '#000000' }}>Cancel</button>
+              <button onClick={confirmDeleteSet} disabled={isDeletingSet} className="flex-1 py-3 rounded-xl font-medium text-white disabled:opacity-60" style={{ background: '#ef4444' }}>
+                {isDeletingSet ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Chat */}
         {showAIChat ? (
           <div 
             className="fixed bottom-4 right-4 left-4 sm:left-auto sm:w-80 sm:bottom-6 sm:right-6 rounded-2xl overflow-hidden shadow-2xl z-50"

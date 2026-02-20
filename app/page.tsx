@@ -1156,6 +1156,7 @@ export default function Home() {
             savedSets={savedSets}
             onMathMaxx={() => { setViewMode('mathmaxx'); window.history.pushState({}, '', '/mathmaxx'); }}
             onSummarizer={() => { setViewMode('summarizer'); window.history.pushState({}, '', '/summarizer'); }}
+            onDeleteSet={async () => { const sets = await getSavedFlashcardSets(); setSavedSets(sets); }}
           />
         </>
       )}
