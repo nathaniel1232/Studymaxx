@@ -642,9 +642,9 @@ export default function DocumentView({
   };
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: isDarkMode ? "#1a1a2e" : "#f1f5f9" }}>
+    <div className="h-screen overflow-hidden flex" style={{ backgroundColor: isDarkMode ? "#1a1a2e" : "#f1f5f9" }}>
       {/* Main Document Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Top Bar */}
         <div
           className="sticky top-0 z-30 px-4 py-3 flex items-center justify-between border-b"
@@ -810,7 +810,7 @@ export default function DocumentView({
 
       {/* Side Panel - Desktop only */}
       <aside 
-        className="hidden lg:flex w-80 border-l flex-col"
+        className="hidden lg:flex w-80 border-l flex-col min-h-0"
         style={{ 
           borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)', 
           backgroundColor: isDarkMode ? 'rgba(15, 29, 50, 0.5)' : 'rgba(241, 245, 249, 0.95)' 

@@ -1523,7 +1523,19 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
           {/* STEP 2: Add Learning Material */}
           {currentStep === 2 && (
             <div className="space-y-3">
-              <div className="mb-3">
+              <div className="mb-3 flex items-center gap-3">
+                <button
+                  onClick={() => setCurrentStep(1)}
+                  className="p-2 rounded-lg transition-all hover:scale-105 flex-shrink-0"
+                  style={{
+                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                    color: isDarkMode ? '#ffffff' : '#000000',
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
+                </button>
                 <h2 className="text-xl font-bold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
                   Add material
                 </h2>

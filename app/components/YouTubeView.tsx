@@ -419,9 +419,9 @@ export default function YouTubeView({
   const showSidebar = !!extractedContent;
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: isDarkMode ? "#1a1a2e" : "#f1f5f9" }}>
+    <div className="h-screen overflow-hidden flex" style={{ backgroundColor: isDarkMode ? "#1a1a2e" : "#f1f5f9" }}>
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Top Bar */}
         <div
           className="sticky top-0 z-30 px-4 py-3 flex items-center justify-between border-b"
@@ -702,7 +702,7 @@ export default function YouTubeView({
 
       {/* Right Sidebar - hidden on mobile */}
       {showSidebar && (
-        <div className="hidden lg:flex w-96 border-l flex-col"
+        <div className="hidden lg:flex w-96 border-l flex-col min-h-0"
           style={{ backgroundColor: isDarkMode ? "rgba(15, 29, 50, 0.5)" : "rgba(241, 245, 249, 0.95)", borderColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)" }}
         >
           {/* Action Buttons */}
@@ -745,16 +745,16 @@ export default function YouTubeView({
                   </div>
                 ))
               )}
-              {isChatLoading && chatMessages[chatMessages.length - 1]?.text === "" && (
+              {isChatLoading && (
                 <div className="flex gap-3 items-start">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold" style={{ backgroundColor: isDarkMode ? "rgba(26, 115, 232, 0.15)" : "rgba(26, 115, 232, 0.1)", color: "#1a73e8" }}>AI</div>
-                  <div className="flex-1 space-y-1">
-                    <div className="text-xs font-medium" style={{ color: isDarkMode ? "#9aa0a6" : "#5f6368" }}>StudyMaxx AI</div>
-                    <div className="flex gap-1 py-1">
-                      <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#1a73e8', animationDelay: "0ms" }} />
-                      <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#1a73e8', animationDelay: "150ms" }} />
-                      <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#1a73e8', animationDelay: "300ms" }} />
-                    </div>
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: isDarkMode ? "rgba(26, 115, 232, 0.15)" : "rgba(26, 115, 232, 0.1)" }}
+                  >
+                    <SpinnerIcon />
+                  </div>
+                  <div className="text-sm" style={{ color: isDarkMode ? "#9aa0a6" : "#64748b" }}>
+                    Thinking...
                   </div>
                 </div>
               )}

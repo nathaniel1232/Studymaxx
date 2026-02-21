@@ -566,9 +566,9 @@ export default function NotesEditorView({
         </div>
       )}
 
-    <div className="min-h-screen flex flex-col lg:flex-row" style={{ backgroundColor: isDarkMode ? "#1a1a2e" : "#f1f5f9" }}>
+    <div className="h-screen overflow-hidden flex flex-col lg:flex-row" style={{ backgroundColor: isDarkMode ? "#1a1a2e" : "#f1f5f9" }}>
       {/* Main Editor Area - shown BELOW chat on mobile, LEFT on desktop */}
-      <div className="flex-1 flex flex-col min-w-0 order-last lg:order-first">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 order-last lg:order-first">
         {/* Accent Strip - Notes Green/Blue theme */}
         <div 
           className="h-1" 
@@ -665,7 +665,7 @@ Tips:
 
       {/* Sidebar - Chat & Actions: shown FIRST on mobile, RIGHT on desktop */}
       <div
-        className="w-full lg:w-96 border-b lg:border-b-0 lg:border-t-0 lg:border-l flex flex-col order-first lg:order-last"
+        className="w-full lg:w-96 border-b lg:border-b-0 lg:border-t-0 lg:border-l flex flex-col min-h-0 order-first lg:order-last"
         style={{
           backgroundColor: isDarkMode ? "rgba(15, 29, 50, 0.5)" : "rgba(241, 245, 249, 0.95)",
           borderColor: isDarkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.1)",
@@ -809,23 +809,13 @@ Tips:
             {isChatLoading && (
               <div className="flex gap-3 items-start">
                 <div 
-                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
-                  style={{
-                    backgroundColor: isDarkMode ? "rgba(26, 115, 232, 0.15)" : "rgba(26, 115, 232, 0.1)",
-                    color: "#1a73e8"
-                  }}
+                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: isDarkMode ? "rgba(26, 115, 232, 0.15)" : "rgba(26, 115, 232, 0.1)" }}
                 >
-                  AI
+                  <SpinnerIcon />
                 </div>
-                <div className="flex-1 space-y-1">
-                  <div className="text-xs font-medium" style={{ color: isDarkMode ? "#9aa0a6" : "#5f6368" }}>
-                    StudyMaxx AI
-                  </div>
-                  <div className="flex gap-1 py-1">
-                    <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#1a73e8', animationDelay: "0ms" }} />
-                    <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#1a73e8', animationDelay: "150ms" }} />
-                    <div className="w-2 h-2 rounded-full animate-bounce" style={{ backgroundColor: '#1a73e8', animationDelay: "300ms" }} />
-                  </div>
+                <div className="text-sm" style={{ color: isDarkMode ? "#9aa0a6" : "#64748b" }}>
+                  Thinking...
                 </div>
               </div>
             )}
