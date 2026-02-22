@@ -102,7 +102,6 @@ export default function PricingPage() {
       
       if (!session) {
         console.log('[Pricing] No active session - redirecting to signin');
-        alert('Please sign in first to purchase Premium');
         router.push('/?signin=true');
         setIsCheckoutLoading(false);
         return;

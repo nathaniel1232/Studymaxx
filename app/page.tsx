@@ -251,6 +251,13 @@ export default function Home() {
   // Check URL params for view on mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    // Handle ?signin=true redirect from pricing page when user isn't logged in
+    if (urlParams.get('signin') === 'true') {
+      window.history.replaceState({}, '', '/');
+      setShowLoginModal(true);
+      setLoginModalMode('signin');
+      return;
+    }
     const viewParam = urlParams.get('view');
     if (viewParam === 'create') {
       // Only redirect to dashboard if user is logged in

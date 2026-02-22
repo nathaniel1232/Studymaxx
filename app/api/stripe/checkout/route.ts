@@ -128,9 +128,7 @@ export async function POST(req: NextRequest) {
       cancel_url: `${origin}?premium=cancelled`,
       allow_promotion_codes: true,
       billing_address_collection: "auto",
-      // 7-day free trial — user gets Premium access immediately, card only charged after trial
       subscription_data: {
-        trial_period_days: 7,
         metadata: {
           userId: userId,
         },
