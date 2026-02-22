@@ -1213,11 +1213,12 @@ export default function Home() {
                       <p className="text-sm mb-4" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>When you have more than 2 subjects to crush</p>
                       <div className="mb-1">
                         <div className="text-xs mb-1" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>Less than one coffee per month</div>
-                        <div>
-                          <span className="text-4xl font-bold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>$8.99</span>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-xl line-through" style={{ color: isDarkMode ? '#475569' : '#94a3b8' }}>$5.99</span>
+                          <span className="text-4xl font-bold" style={{ color: isDarkMode ? '#22d3ee' : '#06b6d4' }}>$4.42</span>
                           <span style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>/month</span>
                         </div>
-                        <p className="text-xs mt-1" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Or $79.99/year — save 26%</p>
+                        <p className="text-xs mt-1" style={{ color: '#22c55e' }}>Billed as $52.99/year — 2 months free</p>
                       </div>
                       <ul className="space-y-3 mt-5 mb-6">
                         {[

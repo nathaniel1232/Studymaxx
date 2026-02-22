@@ -56,8 +56,8 @@ export const TIERS: Record<TierName, SubscriptionTier> = {
   premium: {
     tier_name: 'premium',
     display_name: 'Premium',
-    monthly_price_cents: 899, // $8.99/mo
-    yearly_price_cents: 7999, // $79.99/yr ($6.67/mo, save 26%)
+    monthly_price_cents: 599, // $5.99/mo
+    yearly_price_cents: 5299, // $52.99/yr ($4.42/mo, save 26%)
     max_daily_sets: -1, // unlimited
     max_cards_per_set: 75,
     max_folders: -1, // unlimited

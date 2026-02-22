@@ -1566,7 +1566,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
             <span className="text-xl flex-shrink-0">⚡</span>
             <div className="min-w-0">
               <p className="text-xs font-bold text-white truncate">Unlock Premium — 50 cards/set, PDF uploads &amp; AI coach</p>
-              <p className="text-xs" style={{ color: '#94a3b8' }}>$8.99/month or $79.99/year</p>
+              <p className="text-xs" style={{ color: '#94a3b8' }}>$5.99/month or $52.99/year</p>
             </div>
           </div>
           <a

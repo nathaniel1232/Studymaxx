@@ -104,8 +104,8 @@ export async function POST(req: NextRequest) {
 
     // Use your actual Stripe Price IDs
     const priceId = interval === 'year' 
-      ? 'price_1SvZnEPDFQXMY7iph7WBuiVR'  // Yearly: $79.99/year
-      : 'price_1SvZfEPDFQXMY7ipV19NzhM9'; // Monthly: $8.99/month
+      ? 'price_1T3ewnPDFQXMY7ipSviaJLwb'  // Yearly: $52.99/year
+      : 'price_1T3ewCPDFQXMY7ipIysE73qy'; // Monthly: $5.99/month
 
     console.log(`[Checkout] Creating checkout for user ${userId}, interval: ${interval}, priceId: ${priceId}${promoCode ? `, promo: ${promoCode}` : ''}`);
 

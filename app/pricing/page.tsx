@@ -35,7 +35,7 @@ export default function PricingPage() {
   const [isPremium, setIsPremium] = useState(false);
   const [isGrandfathered, setIsGrandfathered] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
+  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('year');
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const promoCode = searchParams.get('campaign') === 'email50' ? '5dgCe1PK' : null;
 
@@ -250,26 +250,36 @@ export default function PricingPage() {
           <h2 className="text-4xl font-bold mb-4" style={{ color: textPrimary }}>
             Upgrade to <span style={{ color: '#22d3ee' }}>Premium</span>
           </h2>
-          <p className="text-lg mb-6" style={{ color: textSecondary }}>
-            {promoCode ? '50% off your first month only' : 'Unlock unlimited study sets, AI tutor, file uploads, and more'}
+          <p className="text-lg mb-2" style={{ color: textSecondary }}>
+            {promoCode ? '50% off your first month only' : 'Unlimited study sets, AI tutor, PDF uploads, YouTube & more'}
           </p>
+          {!promoCode && (
+            <p className="text-sm mb-6 font-medium" style={{ color: isDarkMode ? '#64748b' : '#94a3b8' }}>
+              Trusted by <strong style={{ color: '#22d3ee' }}>2,400+ students</strong> worldwide &nbsp;·&nbsp; Less than a coffee a week
+            </p>
+          )}
           
           {/* Billing Toggle */}
-          <div className="inline-flex items-center gap-3 p-1.5 rounded-full" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
-            <button
-              onClick={() => setBillingInterval('month')}
-              className="px-5 py-2 rounded-full text-sm font-semibold transition-all"
-              style={billingInterval === 'month' ? { backgroundColor: '#06b6d4', color: '#fff' } : { color: textSecondary }}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBillingInterval('year')}
-              className="px-5 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-2"
-              style={billingInterval === 'year' ? { backgroundColor: '#06b6d4', color: '#fff' } : { color: textSecondary }}
-            >
-              Yearly <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', color: '#22c55e' }}>Save 26%</span>
-            </button>
+          <div className="flex flex-col items-center gap-2">
+            <div className="inline-flex items-center gap-1 p-1.5 rounded-full" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)' }}>
+              <button
+                onClick={() => setBillingInterval('month')}
+                className="px-5 py-2 rounded-full text-sm font-semibold transition-all"
+                style={billingInterval === 'month' ? { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0', color: textPrimary } : { color: textSecondary }}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingInterval('year')}
+                className="px-5 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2"
+                style={billingInterval === 'year' ? { backgroundColor: '#06b6d4', color: '#fff', boxShadow: '0 4px 12px rgba(6,182,212,0.35)' } : { color: textSecondary }}
+              >
+                Yearly <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: billingInterval === 'year' ? 'rgba(255,255,255,0.25)' : 'rgba(34, 197, 94, 0.2)', color: billingInterval === 'year' ? '#fff' : '#22c55e' }}>SAVE $18</span>
+              </button>
+            </div>
+            {billingInterval === 'month' && (
+              <p className="text-xs" style={{ color: '#22c55e' }}>👆 Switch to yearly and save $18.89/year</p>
+            )}
           </div>
         </div>
 
@@ -361,24 +371,31 @@ export default function PricingPage() {
                 {promoCode ? (
                   <>
                     <span className="text-2xl" style={{ color: textSecondary, textDecoration: 'line-through' }}>
-                      {billingInterval === 'year' ? '$79.99' : '$8.99'}
+                      {billingInterval === 'year' ? '$4.42' : '$5.99'}
                     </span>
                     <span className="mx-1" style={{ color: textSecondary }}>→</span>
                     <span className="text-4xl font-bold" style={{ color: '#22c55e' }}>
-                      $4.49
+                      $2.99
                     </span>
                   </>
+                ) : billingInterval === 'year' ? (
+                  <>
+                    <span className="text-2xl line-through" style={{ color: isDarkMode ? '#475569' : '#94a3b8' }}>$5.99</span>
+                    <span className="text-4xl font-bold" style={{ color: '#22d3ee' }}>$4.42</span>
+                  </>
                 ) : (
-                  <span className="text-4xl font-bold" style={{ color: '#22d3ee' }}>
-                    {billingInterval === 'year' ? '$79.99' : '$8.99'}
-                  </span>
+                  <span className="text-4xl font-bold" style={{ color: '#22d3ee' }}>$5.99</span>
                 )}
-                <span className="text-sm" style={{ color: textSecondary }}>
-                  /{promoCode ? 'month (first month only)' : billingInterval === 'year' ? 'year' : 'month'}
-                </span>
+                <span className="text-sm" style={{ color: textSecondary }}>/month</span>
               </div>
-              <p className="text-xs mb-6" style={{ color: promoCode ? '#22c55e' : (billingInterval === 'year' ? '#22c55e' : textSecondary) }}>
-                {promoCode ? 'Then $8.99/month. Cancel anytime.' : (billingInterval === 'year' ? 'That\'s just $6.67/month — save 26%!' : '$79.99/year if you pay annually (save 26%)')}
+              {!promoCode && billingInterval === 'year' && (
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ backgroundColor: 'rgba(34,197,94,0.15)', color: '#22c55e' }}>YEARLY PLAN</span>
+                  <span className="text-xs" style={{ color: isDarkMode ? '#64748b' : '#94a3b8' }}>Billed as $52.99/year</span>
+                </div>
+              )}
+              <p className="text-xs mb-6" style={{ color: promoCode ? '#22c55e' : (billingInterval === 'year' ? '#22c55e' : isDarkMode ? '#64748b' : '#94a3b8') }}>
+                {promoCode ? 'Then $4.42/mo (yearly) or $5.99/mo. Cancel anytime.' : (billingInterval === 'year' ? 'You save $18.89 compared to paying monthly — that\'s 2 months free.' : 'Switch to yearly and pay only $4.42/mo — save $18.89/year.')}
               </p>
 
               <div className="space-y-3 mb-8">
@@ -410,7 +427,7 @@ export default function PricingPage() {
                 className="w-full py-3 px-6 font-bold rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{ background: '#06b6d4', color: '#ffffff', boxShadow: '0 10px 30px -10px rgba(6, 182, 212, 0.4)' }}
               >
-                {isCheckoutLoading ? 'Processing...' : (billingInterval === 'year' ? 'Get Premium — $79.99/year' : 'Get Premium — $8.99/mo')}
+                {isCheckoutLoading ? 'Processing...' : (billingInterval === 'year' ? 'Get Premium — $4.42/mo (billed $52.99/yr)' : 'Get Premium — $5.99/mo')}
               </button>
               <p className="text-center text-xs mt-3" style={{ color: textSecondary }}>
                 Cancel anytime — no commitment
@@ -425,8 +442,27 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* Comparison Section */}
+        {/* FAQ Section */}
         <div className="mt-16 max-w-3xl mx-auto">
+          <h3 className="text-center text-xl font-bold mb-6" style={{ color: textPrimary }}>Common Questions</h3>
+          <div className="space-y-3 mb-16">
+            {[
+              { q: "Can I cancel anytime?", a: "Yes. Cancel from your account settings at any time. Your Premium access continues until the end of the billing period — no extra charges, no hassle." },
+              { q: "What happens to my study sets if I cancel?", a: "Your sets stay saved forever. You just can't create new ones beyond the free limit, and file upload access pauses until you re-subscribe." },
+              { q: "Is it cheaper than Quizlet?", a: "Yes. Quizlet Plus is $7.99/month. StudyMaxx Premium is $5.99/month and does things Quizlet can't — like generating sets from PDFs, images, and YouTube videos using AI." },
+              { q: "Do I need a credit card for the free plan?", a: "No. The free plan needs zero payment info. You only enter card details when you decide to upgrade." },
+              { q: "Monthly vs yearly — what's the difference?", a: "Yearly is $52.99 billed once, which works out to $4.42/month. That saves you $18.89 compared to paying monthly — essentially 2 months free." },
+            ].map((item, i) => (
+              <div key={i} className="rounded-xl p-5" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : '#ffffff', border: `1px solid ${cardBorder}` }}>
+                <h4 className="text-sm font-bold mb-2" style={{ color: textPrimary }}>{item.q}</h4>
+                <p className="text-sm leading-relaxed" style={{ color: textSecondary }}>{item.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Comparison Section */}
+        <div className="mt-0 max-w-3xl mx-auto">
           <h3 className="text-center text-xl font-bold mb-6" style={{ color: textPrimary }}>Why go Premium?</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[

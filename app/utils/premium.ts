@@ -242,7 +242,7 @@ export function getLocalizedPricing() {
     'SEK': { amount: 99, symbol: 'kr', display: '99 kr', yearlyAmount: 899, yearlyDisplay: '899 kr' },
     'DKK': { amount: 65, symbol: 'kr', display: '65 kr', yearlyAmount: 549, yearlyDisplay: '549 kr' },
     'EUR': { amount: 8.49, symbol: '€', display: '€8.49', yearlyAmount: 74.99, yearlyDisplay: '€74.99' },
-    'USD': { amount: 8.99, symbol: '$', display: '$8.99', yearlyAmount: 79.99, yearlyDisplay: '$79.99' },
+    'USD': { amount: 5.99, symbol: '$', display: '$5.99', yearlyAmount: 52.99, yearlyDisplay: '$52.99' },
     'GBP': { amount: 7.49, symbol: '£', display: '£7.49', yearlyAmount: 64.99, yearlyDisplay: '£64.99' },
     'CAD': { amount: 11.99, symbol: '$', display: '$11.99 CAD', yearlyAmount: 99.99, yearlyDisplay: '$99.99' },
     'AUD': { amount: 13.99, symbol: '$', display: '$13.99 AUD', yearlyAmount: 119.99, yearlyDisplay: '$119.99' },
