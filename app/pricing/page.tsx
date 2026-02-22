@@ -35,7 +35,7 @@ export default function PricingPage() {
   const [isPremium, setIsPremium] = useState(false);
   const [isGrandfathered, setIsGrandfathered] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('year');
+  const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const promoCode = searchParams.get('campaign') === 'email50' ? '5dgCe1PK' : null;
 
@@ -277,7 +277,7 @@ export default function PricingPage() {
               </button>
             </div>
             {billingInterval === 'month' && (
-              <p className="text-xs" style={{ color: '#22c55e' }}>👆 Switch to yearly and save $18.89/year</p>
+              <p className="text-xs" style={{ color: '#22c55e' }}>Switch to yearly and pay just $4.42/mo — save $18.89</p>
             )}
           </div>
         </div>
