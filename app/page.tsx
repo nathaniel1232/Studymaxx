@@ -254,6 +254,7 @@ export default function Home() {
     // Handle ?signin=true redirect from pricing page when user isn't logged in
     if (urlParams.get('signin') === 'true') {
       window.history.replaceState({}, '', '/');
+      sessionStorage.setItem('returnAfterLogin', '/pricing');
       setShowLoginModal(true);
       setLoginModalMode('signin');
       return;
@@ -582,6 +583,13 @@ export default function Home() {
       const isOwnerUser = newUser?.email === 'studymaxxer@gmail.com';
       setIsOwner(isOwnerUser);
       if (newUser && supabase) {
+        // If user just logged in and was redirected from pricing, go back there
+        const returnTo = sessionStorage.getItem('returnAfterLogin');
+        if (returnTo) {
+          sessionStorage.removeItem('returnAfterLogin');
+          window.location.href = returnTo;
+          return;
+        }
         // Sync user to database
         fetch('/api/auth/sync-user', {
           method: 'POST',

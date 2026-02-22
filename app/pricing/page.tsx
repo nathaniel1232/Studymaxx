@@ -208,7 +208,7 @@ export default function PricingPage() {
       </div>
 
       {/* Pricing Section */}
-      <div className="relative z-10 max-w-5xl mx-auto px-4 py-16">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 py-10 sm:py-16">
         {/* Premium Status Banner for existing premium users */}
         {!isLoading && isPremium && (
           <div className="mb-8 text-center">
@@ -254,7 +254,7 @@ export default function PricingPage() {
           </p>
           {!promoCode && (
             <p className="text-sm mb-6 font-medium" style={{ color: isDarkMode ? '#64748b' : '#94a3b8' }}>
-              Trusted by <strong style={{ color: '#22d3ee' }}>2,400+ students</strong> worldwide &nbsp;·&nbsp; Less than a coffee a week
+              Less than a coffee a week &nbsp;·&nbsp; Cancel anytime
             </p>
           )}
           
@@ -283,13 +283,13 @@ export default function PricingPage() {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {/* Free Plan */}
           <div 
-            className="relative overflow-hidden rounded-2xl"
+            className="relative overflow-hidden rounded-2xl order-2 md:order-1"
             style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: isDarkMode ? 'none' : '0 4px 24px rgba(0,0,0,0.06)' }}
           >
-            <div className="p-8">
+            <div className="p-5 sm:p-8">
               <h3 className="text-2xl font-bold mb-3" style={{ color: textPrimary }}>
                 Free
               </h3>
@@ -343,7 +343,7 @@ export default function PricingPage() {
 
           {/* Premium Plan */}
           <div 
-            className="relative overflow-hidden rounded-2xl"
+            className="relative overflow-hidden rounded-2xl order-1 md:order-2"
             style={{ 
               background: isDarkMode 
                 ? 'rgba(6, 182, 212, 0.08)' 
@@ -359,7 +359,7 @@ export default function PricingPage() {
               MOST POPULAR
             </div>
             
-            <div className="p-8">
+            <div className="p-5 sm:p-8">
               <h3 className="text-2xl font-bold mb-1" style={{ color: '#22d3ee' }}>
                 Premium
               </h3>
