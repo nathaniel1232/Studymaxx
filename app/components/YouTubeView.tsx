@@ -15,6 +15,7 @@ interface YouTubeViewProps {
   isPremium?: boolean;
   user?: any;
   initialSubject?: string;
+  onRequestLogin?: () => void;
 }
 
 // Icons
@@ -66,7 +67,8 @@ export default function YouTubeView({
   onGenerateMatch,
   isPremium,
   user,
-  initialSubject = ""
+  initialSubject = "",
+  onRequestLogin
 }: YouTubeViewProps) {
   const { settings } = useSettings();
   const isDarkMode = settings.theme === 'dark' || 
@@ -250,6 +252,12 @@ export default function YouTubeView({
 
     if (extractedContent.length < 50) {
       setError("Content too short. Try a longer video.");
+      return;
+    }
+
+    // Guest gate — require login before generating
+    if (!user) {
+      onRequestLogin?.();
       return;
     }
 

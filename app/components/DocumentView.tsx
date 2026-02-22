@@ -15,6 +15,7 @@ interface DocumentViewProps {
   isPremium: boolean;
   user?: any;
   initialSubject?: string;
+  onRequestLogin?: () => void;
 }
 
 // Icons
@@ -90,6 +91,7 @@ export default function DocumentView({
   isPremium,
   user,
   initialSubject = "",
+  onRequestLogin,
 }: DocumentViewProps) {
   const { settings } = useSettings();
   const isDarkMode = settings.theme === 'dark' || 
@@ -322,6 +324,8 @@ export default function DocumentView({
   };
 
   const handleGenerate = async () => {
+    // Guest gate
+    if (!user) { onRequestLogin?.(); return; }
     handleGenerateWithConfig(generationSettings);
   };
 

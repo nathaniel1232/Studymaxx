@@ -20,6 +20,7 @@ interface StudyViewProps {
   flashcards: Flashcard[];
   currentSetId: string | null;
   onBack: () => void;
+  isPremium?: boolean;
 }
 
 interface ToastMessage {
@@ -27,7 +28,7 @@ interface ToastMessage {
   type: ToastType;
 }
 
-export default function StudyView({ flashcards: initialFlashcards, currentSetId, onBack }: StudyViewProps) {
+export default function StudyView({ flashcards: initialFlashcards, currentSetId, onBack, isPremium = false }: StudyViewProps) {
   const t = useTranslation();
   const { settings } = useSettings();
   const isDarkMode = settings.theme === 'dark' || (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -1550,6 +1551,32 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
           type={toast.type}
           onClose={() => setToast(null)}
         />
+      )}
+
+      {/* Premium upsell banner — free users only */}
+      {!isPremium && (
+        <div
+          className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-3 px-4 py-3"
+          style={{
+            background: 'linear-gradient(135deg, #0f172a 0%, #0c1a2e 100%)',
+            borderTop: '1px solid rgba(6,182,212,0.35)',
+          }}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="text-xl flex-shrink-0">⚡</span>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-white truncate">Unlock Premium — 50 cards/set, PDF uploads &amp; AI coach</p>
+              <p className="text-xs" style={{ color: '#94a3b8' }}>$8.99/month or $79.99/year</p>
+            </div>
+          </div>
+          <a
+            href="/pricing"
+            className="px-4 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap flex-shrink-0 transition-opacity hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)', color: '#fff' }}
+          >
+            Get Premium →
+          </a>
+        </div>
       )}
     </div>
   );

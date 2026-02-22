@@ -61,14 +61,15 @@ export async function POST(req: NextRequest) {
       });
 
       for (const customer of existingCustomers.data) {
-        const subscriptions = await stripe.subscriptions.list({
-          customer: customer.id,
-          status: 'active',
-          limit: 10
-        });
+        // Check both 'active' and 'trialing' to prevent double sign-ups
+        const [activeSubscriptions, trialingSubscriptions] = await Promise.all([
+          stripe.subscriptions.list({ customer: customer.id, status: 'active', limit: 5 }),
+          stripe.subscriptions.list({ customer: customer.id, status: 'trialing', limit: 5 }),
+        ]);
 
-        if (subscriptions.data.length > 0) {
-          console.log(`[Checkout] User ${email} already has active subscription`);
+        if (activeSubscriptions.data.length > 0 || trialingSubscriptions.data.length > 0) {
+          const status = activeSubscriptions.data.length > 0 ? 'active' : 'trialing (free trial)';
+          console.log(`[Checkout] User ${email} already has ${status} subscription`);
           return NextResponse.json(
             { 
               error: "You already have an active Premium subscription. Please visit the billing portal to manage your subscription.",
@@ -127,11 +128,21 @@ export async function POST(req: NextRequest) {
       cancel_url: `${origin}?premium=cancelled`,
       allow_promotion_codes: true,
       billing_address_collection: "auto",
+      // 7-day free trial — user gets Premium access immediately, card only charged after trial
+      subscription_data: {
+        trial_period_days: 7,
+        metadata: {
+          userId: userId,
+        },
+      },
     };
 
-    // Apply coupon if provided
+    // Apply coupon if provided.
+    // NOTE: cannot use allow_promotion_codes + discounts simultaneously — remove the general
+    // promotion code field when a specific coupon is applied.
     if (promoCode) {
       console.log(`[Checkout] Applying coupon: ${promoCode}`);
+      delete sessionParams.allow_promotion_codes;
       sessionParams.discounts = [{
         coupon: promoCode,
       }];

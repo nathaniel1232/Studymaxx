@@ -15,6 +15,7 @@ interface NotesEditorViewProps {
   user?: any;
   initialText?: string;
   initialSubject?: string;
+  onRequestLogin?: () => void;
 }
 
 interface SavedDocument {
@@ -114,6 +115,7 @@ export default function NotesEditorView({
   user,
   initialText = "",
   initialSubject = "",
+  onRequestLogin,
 }: NotesEditorViewProps) {
   const { settings } = useSettings();
   const isDarkMode = settings.theme === 'dark' || 
@@ -304,6 +306,11 @@ export default function NotesEditorView({
     }
     if (documentContent.length < 50) {
       setError("Please add more content to generate from (at least 50 characters)");
+      return;
+    }
+    // Guest gate
+    if (!user) {
+      onRequestLogin?.();
       return;
     }
     setPendingGenerationType(type);

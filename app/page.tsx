@@ -100,6 +100,76 @@ export default function Home() {
   const [pendingView, setPendingView] = useState<"notes" | "audio" | "document" | "youtube" | null>(null);
   const [initialSubject, setInitialSubject] = useState<string>("");
   
+  // Carousel state for testimonials
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  
+  // Review data
+  const reviews = [
+    {
+      stars: "★★★★☆",
+      quote: "Making flashcards by hand used to take me forever. This is way faster. I uploaded my chem chapter and the quiz it made was pretty good ngl.",
+      author: "Marcus T.",
+      initials: "M",
+      color: "#1a73e8",
+      flag: "🇩🇪",
+      location: "High school student",
+    },
+    {
+      stars: "★★★★★",
+      quote: "maths was just not clicking for me. used the mathmaxx thing to ask questions while i was going through my notes and it finally made sense. 18/20 on the test",
+      author: "Alex R.",
+      initials: "A",
+      color: "#f97316",
+      flag: "🇬🇷",
+      location: "High school student",
+    },
+    {
+      stars: "★★★★★",
+      quote: "Had a bio exam the next day with like 40 pages of notes. Uploaded them and got flashcards in under a minute. Actually worked lol",
+      author: "Emma K.",
+      initials: "E",
+      color: "#06b6d4",
+      flag: "🇬🇧",
+      location: "Med student",
+    },
+    {
+      stars: "★★★★★",
+      quote: "i was completely fried going into finals week. saw this on tiktok and it honestly saved me. did 3 exams in 2 days and passed all of them when i thought i was cooked",
+      author: "Rey",
+      initials: "R",
+      color: "#a855f7",
+      flag: "🇨🇦",
+      location: "Sophomore",
+    },
+    {
+      stars: "★★★★★",
+      quote: "been using quizlet for years but this is actually better for understanding stuff. the way it turns a lecture pdf into actual questions you have to think about is different",
+      author: "Jess M.",
+      initials: "J",
+      color: "#10b981",
+      flag: "🇦🇺",
+      location: "Uni student",
+    },
+    {
+      stars: "★★★★☆",
+      quote: "my history notes are always a mess but i pasted them in and it gave me proper flashcards. lost a couple details but 90% of it was right and saved me like 2 hours",
+      author: "Liam B.",
+      initials: "L",
+      color: "#e11d48",
+      flag: "🇮🇪",
+      location: "A-Level student",
+    },
+  ];
+  
+  // Carousel handlers
+  const handleCarouselPrev = () => {
+    setCarouselIndex((prev) => (prev - 1 + reviews.length) % reviews.length);
+  };
+  
+  const handleCarouselNext = () => {
+    setCarouselIndex((prev) => (prev + 1) % reviews.length);
+  };
+  
   // Navigation history for proper back button behavior
   const navigationHistory = useRef<ViewMode[]>([]);
 
@@ -588,11 +658,8 @@ export default function Home() {
   };
 
   const handleCreateNew = () => {
-    // Require login to access dashboard
-    if (!user) {
-      handleOpenSignUpModal();
-      return;
-    }
+    // Everyone goes to the dashboard — guests can browse and try creating once.
+    // The login gate fires when they click "Create Study Set" inside the dashboard.
     navigateTo("dashboard", "/dashboard");
   };
 
@@ -757,7 +824,7 @@ export default function Home() {
                       color: '#ffffff',
                     }}
                   >
-                    Get Started Free
+                    Ascend Your Grades
                   </button>
                 </>
               )}
@@ -784,29 +851,33 @@ export default function Home() {
 
             {/* Main Headline */}
             <h1 className="text-5xl md:text-7xl font-bold text-center max-w-4xl mb-6 leading-[1.1] animate-fade-in-up animation-delay-100">
-              <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>Study less.</span>
+              <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>Stop rereading.</span>
               <br />
               <span style={{ color: '#06b6d4' }}>
-                Remember everything.
+                Start remembering.
               </span>
             </h1>
             
             {/* Subheadline */}
-            <p className="text-lg md:text-xl text-center max-w-2xl mb-10 animate-fade-in-up animation-delay-200" style={{ color: '#5f6368' }}>
-              Turn your notes, PDFs, or YouTube links into flashcards and quizzes — in seconds.
+            <p className="text-lg md:text-xl text-center max-w-2xl mb-3 animate-fade-in-up animation-delay-200" style={{ color: '#5f6368' }}>
+              Paste your notes, upload a PDF, or drop a YouTube link — StudyMaxx creates complete study sets with flashcards, quizzes, and games in seconds.
+            </p>
+            <p className="text-base text-center max-w-xl mb-10 animate-fade-in-up animation-delay-200 font-medium" style={{ color: isDarkMode ? '#94a3b8' : '#475569' }}>
+              The fastest way from raw notes to exam-ready.
             </p>
 
             {/* Primary CTA */}
             <div className="flex flex-col items-center gap-4 mb-8 animate-fade-in-up animation-delay-300">
               <button
                 onClick={handleCreateNew}
-                className="group px-10 py-5 rounded-full text-lg font-medium transition-all duration-300 hover:shadow-2xl hover:scale-105 active:scale-100 flex items-center gap-3"
+                className="group px-10 py-5 rounded-full text-lg font-semibold transition-all duration-300 hover:shadow-2xl hover:scale-105 active:scale-100 flex items-center gap-3"
                 style={{ 
-                  backgroundColor: '#06b6d4',
+                  background: 'linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%)',
                   color: '#ffffff',
+                  boxShadow: '0 4px 24px rgba(6,182,212,0.45)'
                 }}
               >
-                <span>Start Studying Smarter</span>
+                <span>Ascend Your Grades</span>
                 <svg className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -816,7 +887,7 @@ export default function Home() {
                 <svg className="w-4 h-4" style={{ color: '#34a853' }} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span>Free to use · No credit card required</span>
+                <span>Free forever · No credit card required</span>
               </p>
             </div>
 
@@ -836,10 +907,10 @@ export default function Home() {
             )}
 
             {/* Social Proof */}
-            <div className="flex items-center gap-4 mt-12 mb-16 animate-fade-in-up animation-delay-500">
+            <div className="flex items-center gap-4 mt-6 mb-14 animate-fade-in-up animation-delay-500">
               <div className="flex -space-x-3">
                 {[
-                  { color: '#06b6d4', letter: 'J' },
+                  { color: '#06b6d4', letter: 'E' },
                   { color: '#ea4335', letter: 'M' },
                   { color: '#fbbc04', letter: 'S' },
                   { color: '#34a853', letter: 'K' },
@@ -852,7 +923,6 @@ export default function Home() {
                       backgroundColor: avatar.color, 
                       color: '#ffffff', 
                       border: `3px solid ${isDarkMode ? '#1a1a2e' : '#f1f5f9'}`,
-                      animationDelay: `${i * 0.1}s`
                     }}
                   >
                     {avatar.letter}
@@ -860,13 +930,133 @@ export default function Home() {
                 ))}
               </div>
               <div className="text-sm">
-                <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }} className="font-bold">1,000+</span>
-                <span style={{ color: '#5f6368' }}> students studying smarter</span>
+                <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }} className="font-bold">1,700+</span>
+                <span style={{ color: '#5f6368' }}> students already studying smarter</span>
               </div>
             </div>
 
+            {/* Testimonials */}
+            <div className="w-full max-w-5xl mb-14 animate-fade-in-up animation-delay-500">
+              <p className="text-center text-xs font-semibold uppercase tracking-widest mb-7" style={{ color: '#5f6368' }}>What students are saying</p>
+
+              {/* Desktop carousel — arrows + single card */}
+              <div className="hidden md:flex items-stretch gap-4">
+                {/* Left Arrow */}
+                <button
+                  onClick={handleCarouselPrev}
+                  className="flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0 self-center transition-all duration-200 hover:scale-110 hover:opacity-100 opacity-60"
+                  style={{ background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)' }}
+                  aria-label="Previous review"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+
+                {/* Single active card */}
+                <div
+                  key={carouselIndex}
+                  className="flex-1 p-7 rounded-2xl flex flex-col"
+                  style={{
+                    background: isDarkMode ? 'rgba(6,182,212,0.07)' : 'rgba(6,182,212,0.05)',
+                    border: isDarkMode ? '1px solid rgba(6,182,212,0.2)' : '1px solid rgba(6,182,212,0.2)',
+                  }}
+                >
+                  <div className="flex gap-0.5 mb-4">
+                    {reviews[carouselIndex].stars.split('').map((s, i) => (
+                      <span key={i} style={{ color: '#fbbc04', fontSize: '16px' }}>{s}</span>
+                    ))}
+                  </div>
+                  <p className="text-base leading-relaxed mb-6 flex-1" style={{ color: isDarkMode ? '#e2e8f0' : '#1e293b' }}>
+                    &ldquo;{reviews[carouselIndex].quote}&rdquo;
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                      style={{ background: reviews[carouselIndex].color, color: '#fff' }}
+                    >
+                      {reviews[carouselIndex].initials}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: isDarkMode ? '#ffffff' : '#000' }}>
+                        {reviews[carouselIndex].author}
+                      </p>
+                      <p className="text-xs flex items-center gap-1" style={{ color: '#5f6368' }}>
+                        <span>{reviews[carouselIndex].flag}</span>
+                        <span>{reviews[carouselIndex].location}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Arrow */}
+                <button
+                  onClick={handleCarouselNext}
+                  className="flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0 self-center transition-all duration-200 hover:scale-110 hover:opacity-100 opacity-60"
+                  style={{ background: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.07)' }}
+                  aria-label="Next review"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              </div>
+
+              {/* Dot indicators (desktop) */}
+              <div className="hidden md:flex justify-center gap-2 mt-4">
+                {reviews.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCarouselIndex(idx)}
+                    className="h-2 rounded-full transition-all duration-200"
+                    style={{
+                      width: idx === carouselIndex ? '24px' : '8px',
+                      background: idx === carouselIndex ? '#06b6d4' : isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)',
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Mobile — horizontal scroll */}
+              <div
+                className="md:hidden flex gap-4 overflow-x-auto pb-3"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {reviews.map((review, idx) => (
+                  <div
+                    key={idx}
+                    className="p-5 rounded-2xl flex-shrink-0 w-72 flex flex-col"
+                    style={{
+                      background: isDarkMode ? 'rgba(6,182,212,0.07)' : 'rgba(6,182,212,0.05)',
+                      border: isDarkMode ? '1px solid rgba(6,182,212,0.2)' : '1px solid rgba(6,182,212,0.2)',
+                    }}
+                  >
+                    <div className="flex gap-0.5 mb-3">
+                      {review.stars.split('').map((s, i) => <span key={i} style={{ color: '#fbbc04', fontSize: '14px' }}>{s}</span>)}
+                    </div>
+                    <p className="text-sm leading-relaxed mb-4 flex-1" style={{ color: isDarkMode ? '#e2e8f0' : '#1e293b' }}>
+                      &ldquo;{review.quote}&rdquo;
+                    </p>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0" style={{ background: review.color, color: '#fff' }}>
+                        {review.initials}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold" style={{ color: isDarkMode ? '#ffffff' : '#000' }}>{review.author}</p>
+                        <p className="text-xs flex items-center gap-1" style={{ color: '#5f6368' }}>
+                          <span>{review.flag}</span>
+                          <span>{review.location}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-center text-xs mt-2 md:hidden" style={{ color: isDarkMode ? '#475569' : '#94a3b8' }}>← swipe for more →</p>
+            </div>
+
             {/* How It Works - NotebookLM Style */}
-            <div className="w-full max-w-4xl animate-fade-in-up animation-delay-600">
+            <div className="w-full max-w-5xl animate-fade-in-up animation-delay-600">
               <h3 className="text-center text-sm font-medium uppercase tracking-wider mb-8" style={{ color: '#5f6368' }}>
                 How it works
               </h3>
@@ -912,7 +1102,7 @@ export default function Home() {
 
           {/* Features Section */}
           <div className="relative px-6 py-20" style={{ borderTop: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}>
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-5xl mx-auto">
               <h2 className="text-3xl md:text-4xl font-bold text-center mb-4" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
                 Everything you need to <span style={{ color: '#06b6d4' }}>ace your exams</span>
               </h2>
@@ -956,7 +1146,7 @@ export default function Home() {
 
           {/* Pricing Section */}
           <div className="relative px-6 py-20" style={{ borderTop: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}>
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-5xl mx-auto">
               {isPremium && user ? (
                 <div className="text-center">
                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 animate-bounce-in" style={{ backgroundColor: 'rgba(6, 182, 212, 0.1)', border: '2px solid #06b6d4' }}>
@@ -971,88 +1161,80 @@ export default function Home() {
               ) : (
                 <>
                   <div className="text-center mb-12">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6" style={{ backgroundColor: 'rgba(6, 182, 212, 0.1)', border: '2px solid #06b6d4' }}>
-                      <span style={{ color: '#06b6d4' }} className="font-medium">🎓 Premium Plan</span>
-                    </div>
-                    <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-                      Unlock <span style={{ color: '#06b6d4' }}>everything</span> for $8.99/mo
+                    <h2 className="text-3xl md:text-4xl font-bold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                      The plan serious students use
                     </h2>
-                    <p style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Or save 26% with the annual plan at $79.99/year.</p>
+                    <p className="text-lg" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>When you have more than 2 subjects to study this week.</p>
                   </div>
                   
                   <div className="grid md:grid-cols-2 gap-6">
                     {/* Free Plan */}
                     <div className="p-8 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-xl card-3d" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: isDarkMode ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.1)' }}>
-                      <h3 className="text-xl font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Free</h3>
-                      <p className="text-sm mb-6" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Perfect for trying out</p>
+                      <h3 className="text-xl font-bold mb-1" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Free</h3>
+                      <p className="text-sm mb-6" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Good for getting started</p>
                       <div className="text-4xl font-bold mb-6" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>$0</div>
-                      <ul className="space-y-3 mb-8">
-                        <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }} fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          <span>2 study sets per day</span>
-                        </li>
-                        <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }} fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          <span>Paste notes</span>
-                        </li>
-                        <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }} fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          <span>All study modes</span>
-                        </li>
+                      <ul className="space-y-3 mb-3">
+                        {["2 study sets per day", "Paste text only", "Up to 20 cards per set", "All study modes (flashcards, quiz, match)"].map(item => (
+                          <li key={item} className="flex items-start gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }} fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                        {["PDF & image uploads", "YouTube & audio import", "AI chat assistant"].map(item => (
+                          <li key={item} className="flex items-start gap-3 text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.3)' }}>
+                            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            <span className="line-through">{item}</span>
+                          </li>
+                        ))}
                       </ul>
-                      <button
-                        onClick={handleCreateNew}
-                        className="w-full py-3 px-6 font-medium rounded-xl transition-all duration-300 hover:scale-105 active:scale-100"
-                        style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', color: isDarkMode ? '#ffffff' : '#000000', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}
-                      >
-                        Get Started Free
-                      </button>
+                      <div className="mt-6">
+                        <button
+                          onClick={handleCreateNew}
+                          className="w-full py-3 px-6 font-medium rounded-xl transition-all duration-300 hover:scale-105 active:scale-100"
+                          style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', color: isDarkMode ? '#ffffff' : '#000000', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}
+                        >
+                          Ascend Your Grades
+                        </button>
+                      </div>
                     </div>
 
                     {/* Premium Plan */}
-                    <div className="p-8 rounded-2xl relative transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl card-3d" style={{ backgroundColor: isDarkMode ? 'rgba(6, 182, 212, 0.05)' : 'rgba(6, 182, 212, 0.05)', border: '2px solid #06b6d4', zIndex: 10 }}>
+                    <div className="p-8 rounded-2xl relative transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl card-3d" style={{ backgroundColor: isDarkMode ? 'rgba(6, 182, 212, 0.05)' : 'rgba(6, 182, 212, 0.03)', border: '2px solid #06b6d4', zIndex: 10 }}>
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                         <span className="px-3 py-1 text-xs font-bold rounded-full" style={{ backgroundColor: '#06b6d4', color: '#ffffff' }}>
                           MOST POPULAR
                         </span>
                       </div>
-                      <h3 className="text-xl font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Premium</h3>
-                      <p className="text-sm mb-6" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>For serious students</p>
-                      <div className="mb-6">
-                        <span className="text-4xl font-bold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>$8.99</span>
-                        <span style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>/month</span>
+                      <h3 className="text-xl font-bold mb-1" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Premium</h3>
+                      <p className="text-sm mb-4" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>When you have more than 2 subjects to crush</p>
+                      <div className="mb-1">
+                        <div className="text-xs mb-1" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>Less than one coffee per month</div>
+                        <div>
+                          <span className="text-4xl font-bold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>$8.99</span>
+                          <span style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>/month</span>
+                        </div>
+                        <p className="text-xs mt-1" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Or $79.99/year — save 26%</p>
                       </div>
-                      <ul className="space-y-3 mb-8">
-                        <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: '#06b6d4' }} fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          <span><strong style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Unlimited</strong> study sets</span>
-                        </li>
-                        <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: '#06b6d4' }} fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          <span>PDF & image uploads</span>
-                        </li>
-                        <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: '#06b6d4' }} fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          <span>Priority AI processing</span>
-                        </li>
-                        <li className="flex items-center gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-                          <svg className="w-5 h-5 flex-shrink-0" style={{ color: '#06b6d4' }} fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          <span>Cross-device sync</span>
-                        </li>
+                      <ul className="space-y-3 mt-5 mb-6">
+                        {[
+                          { text: "Unlimited study sets, every day", highlight: true },
+                          { text: "Up to 50 cards per set", highlight: false },
+                          { text: "PDF, images, Word & PowerPoint uploads", highlight: false },
+                          { text: "YouTube & audio → flashcards", highlight: false },
+                          { text: "AI chat about your material", highlight: false },
+                          { text: "Priority AI processing", highlight: false },
+                        ].map(item => (
+                          <li key={item.text} className="flex items-start gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#06b6d4' }} fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            <span>{item.highlight ? <strong>{item.text}</strong> : item.text}</span>
+                          </li>
+                        ))}
                       </ul>
                       <button
                         onClick={() => {
@@ -1062,12 +1244,12 @@ export default function Home() {
                             window.location.href = '/pricing';
                           }
                         }}
-                        className="w-full py-3 px-6 font-semibold rounded-xl transition-all duration-300 hover:opacity-90 hover:scale-105 active:scale-100"
-                        style={{ backgroundColor: '#06b6d4', color: '#ffffff' }}
+                        className="w-full py-3.5 px-6 font-bold rounded-xl transition-all duration-300 hover:opacity-90 hover:scale-105 active:scale-100"
+                        style={{ backgroundColor: '#06b6d4', color: '#ffffff', boxShadow: '0 4px 16px rgba(6,182,212,0.3)' }}
                       >
-                        Get Premium
+                        Upgrade to Premium
                       </button>
-                      <p className="text-center text-xs mt-3" style={{ color: '#5f6368' }}>Cancel anytime · No commitment</p>
+                      <p className="text-center text-xs mt-3" style={{ color: '#5f6368' }}>Cancel in one click · No commitment</p>
                     </div>
                   </div>
                 </>
@@ -1078,7 +1260,7 @@ export default function Home() {
           {/* Final CTA Section */}
           {!isPremium && (
             <div className="relative px-6 py-20" style={{ borderTop: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}>
-              <div className="max-w-2xl mx-auto text-center">
+              <div className="max-w-5xl mx-auto text-center">
                 <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
                   Your next exam is closer than you think.
                 </h2>
@@ -1114,7 +1296,7 @@ export default function Home() {
 
           {/* Footer */}
           <footer className="relative px-6 py-8" style={{ borderTop: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}>
-            <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>© 2026 StudyMaxx</div>
               <div className="flex items-center gap-6 text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
                 <a href="/pricing" className="hover:text-blue-500 transition-colors">Upgrade to Premium</a>
@@ -1157,6 +1339,7 @@ export default function Home() {
             onMathMaxx={() => { setViewMode('mathmaxx'); window.history.pushState({}, '', '/mathmaxx'); }}
             onSummarizer={() => { setViewMode('summarizer'); window.history.pushState({}, '', '/summarizer'); }}
             onDeleteSet={async () => { const sets = await getSavedFlashcardSets(); setSavedSets(sets); }}
+            onRequestLogin={handleOpenSignUpModal}
           />
         </>
       )}
@@ -1222,6 +1405,7 @@ export default function Home() {
             isPremium={isPremium}
             user={user}
             initialSubject={initialSubject}
+            onRequestLogin={handleOpenSignUpModal}
           />
         </>
       )}
@@ -1260,6 +1444,7 @@ export default function Home() {
             isPremium={isPremium}
             user={user}
             initialSubject={initialSubject}
+            onRequestLogin={handleOpenSignUpModal}
           />
         </>
       )}
@@ -1292,6 +1477,7 @@ export default function Home() {
             isPremium={isPremium}
             user={user}
             initialSubject={initialSubject}
+            onRequestLogin={handleOpenSignUpModal}
           />
         </>
       )}
@@ -1323,6 +1509,7 @@ export default function Home() {
             user={user}
             initialText={pendingTranscription?.text || pendingExtraction?.text || ""}
             initialSubject={pendingTranscription?.subject || pendingExtraction?.subject || initialSubject || ""}
+            onRequestLogin={handleOpenSignUpModal}
           />
         </>
       )}

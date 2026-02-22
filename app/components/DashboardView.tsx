@@ -19,6 +19,7 @@ interface DashboardViewProps {
   onMathMaxx?: () => void;
   onSummarizer?: () => void;
   onDeleteSet?: () => void;
+  onRequestLogin?: () => void;
 }
 
 // Custom SVG icon components
@@ -97,7 +98,8 @@ export default function DashboardView({
   savedSets,
   onMathMaxx,
   onSummarizer,
-  onDeleteSet
+  onDeleteSet,
+  onRequestLogin
 }: DashboardViewProps) {
   const { settings } = useSettings();
   const [activeTab, setActiveTab] = useState<"my-notes" | "shared">("my-notes");
@@ -148,6 +150,11 @@ export default function DashboardView({
     (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   const handleOptionClick = (option: typeof INPUT_OPTIONS[0]) => {
+    // Guest gate — require login before creating anything
+    if (!user) {
+      onRequestLogin?.();
+      return;
+    }
     // If trial is used for upload features, redirect to pricing
     if (!isPremium && uploadTrialUsed) {
       if (option.id === 'document' || option.id === 'audio') {
@@ -429,40 +436,51 @@ export default function DashboardView({
         {/* Premium Upgrade Banner - show only for free users */}
         {!isPremium && (
           <div 
-            className="mb-10 p-5 rounded-2xl relative overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer"
+            className="mb-10 p-5 rounded-2xl relative overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
             onClick={() => window.location.href = '/pricing'}
             style={{ 
               background: isDarkMode 
-                ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%)' 
-                : 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%)',
-              border: isDarkMode ? '1px solid rgba(6, 182, 212, 0.3)' : '1px solid rgba(6, 182, 212, 0.2)',
+                ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.18) 0%, rgba(59, 130, 246, 0.18) 100%)' 
+                : 'linear-gradient(135deg, rgba(6, 182, 212, 0.09) 0%, rgba(59, 130, 246, 0.09) 100%)',
+              border: isDarkMode ? '1px solid rgba(6, 182, 212, 0.35)' : '1px solid rgba(6, 182, 212, 0.25)',
             }}
           >
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #06b6d4, #3b82f6)' }}>
+            {/* Decorative glow */}
+            <div className="pointer-events-none absolute -top-6 -right-6 w-32 h-32 rounded-full blur-3xl opacity-25" style={{ background: 'radial-gradient(circle, #06b6d4, #3b82f6)' }} />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #06b6d4, #3b82f6)' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/>
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-sm" style={{ color: isDarkMode ? '#e2e8f0' : '#0f172a' }}>
-                    Study smarter with Premium — unlimited sets, 50 cards, custom difficulty
-                  </h3>
-                  <p className="text-xs mt-0.5" style={{ color: isDarkMode ? '#94a3b8' : '#475569' }}>
-                    Students who study more, score higher. Upgrade to unlock your full potential.
-                  </p>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <h3 className="font-bold text-sm" style={{ color: isDarkMode ? '#e2e8f0' : '#0f172a' }}>
+                      Unlock Premium — study without limits
+                    </h3>
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5">
+                    {['Unlimited study sets', '50 cards per set', 'Upload PDFs & audio', 'AI difficulty tuning'].map((feat) => (
+                      <span key={feat} className="flex items-center gap-1 text-xs" style={{ color: isDarkMode ? '#94a3b8' : '#475569' }}>
+                        <svg className="w-3 h-3 flex-shrink-0" style={{ color: '#06b6d4' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                        {feat}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
               <button 
-                className="px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all hover:shadow-md hover:scale-105"
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all hover:shadow-lg hover:scale-105 active:scale-100 flex-shrink-0"
                 style={{ 
                   background: 'linear-gradient(135deg, #06b6d4, #3b82f6)', 
                   color: '#ffffff',
-                  boxShadow: '0 4px 14px rgba(6, 182, 212, 0.3)',
+                  boxShadow: '0 4px 16px rgba(6, 182, 212, 0.4)',
                 }}
               >
-                Upgrade →
+                Get Premium →
               </button>
             </div>
           </div>
@@ -580,7 +598,7 @@ export default function DashboardView({
               Create your first study set by choosing an option above
             </p>
             <button
-              onClick={onCreateFlashcards}
+              onClick={() => { if (!user) { onRequestLogin?.(); return; } onCreateFlashcards(); }}
               className="px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:shadow-lg hover:scale-105"
               style={{ backgroundColor: '#1a73e8', color: '#ffffff', boxShadow: '0 2px 8px rgba(26, 115, 232, 0.3)' }}
             >

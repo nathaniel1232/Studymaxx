@@ -111,7 +111,7 @@ export async function GET(req: NextRequest) {
           
           if (resend) {
             await resend.emails.send({
-              from: 'StudyMaxx <noreply@studymaxx.com>', // Update with your verified domain
+              from: 'StudyMaxx <noreply@studymaxx.net>',
               to: user.user.email,
               subject: template.subject,
               html: template.html,

@@ -15,6 +15,7 @@ interface AudioRecordingViewProps {
   isPremium?: boolean;
   user?: any;
   initialSubject?: string;
+  onRequestLogin?: () => void;
 }
 
 interface SavedNote {
@@ -74,7 +75,8 @@ export default function AudioRecordingView({
   onGenerateMatch,
   isPremium,
   user,
-  initialSubject = ""
+  initialSubject = "",
+  onRequestLogin
 }: AudioRecordingViewProps) {
   const { settings } = useSettings();
   const isDarkMode = settings.theme === 'dark' || 
@@ -442,6 +444,8 @@ export default function AudioRecordingView({
     const textToUse = isEditing ? editContent : (summary || transcription);
     if (!textToUse.trim()) { setError("Please transcribe your recording first"); return; }
     if (textToUse.length < 50) { setError("Content too short. Please record more."); return; }
+    // Guest gate
+    if (!user) { onRequestLogin?.(); return; }
     setPendingGenerationType(type);
     setShowCustomizeModal(true);
     setError("");
