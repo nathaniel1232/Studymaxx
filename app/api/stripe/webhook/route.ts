@@ -87,6 +87,21 @@ export async function POST(request: NextRequest) {
         break;
       }
 
+      case "invoice.payment_succeeded":
+      case "invoice.paid": {
+        const invoice = event.data.object as Stripe.Invoice;
+        console.log("[Webhook] Invoice payment succeeded");
+        await handleInvoicePaymentSucceeded(invoice);
+        break;
+      }
+
+      case "invoice.payment_failed": {
+        // Log only — don't remove premium on first failure; Stripe will retry
+        const invoice = event.data.object as Stripe.Invoice;
+        console.log("[Webhook] Invoice payment failed for customer:", invoice.customer);
+        break;
+      }
+
       default:
         console.log("[Webhook] Unhandled event type:", event.type);
     }
@@ -396,7 +411,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     return;
   }
 
-  const isActive = subscription.status === "active" || subscription.status === "trialing";
+  // past_due = payment is overdue but Stripe is still retrying — keep premium during grace period
+  const isActive = subscription.status === "active" || subscription.status === "trialing" || subscription.status === "past_due";
   const isCanceled = subscription.cancel_at_period_end;
   
   // Calculate expiration date - check multiple sources
@@ -450,5 +466,91 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     }
   } catch (error: any) {
     console.error("[Webhook] ❌ Error in handleSubscriptionUpdated:", error.message);
+  }
+}
+
+/**
+ * Handle successful invoice payment (fires on every renewal)
+ * This is the most reliable signal that a user has paid and should have premium access.
+ */
+async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
+  const customerId = invoice.customer as string;
+  const invoiceData = invoice as any;
+  const subscriptionId = invoiceData.subscription as string | null;
+
+  console.log("[Webhook] ========================================");
+  console.log("[Webhook] INVOICE PAYMENT SUCCEEDED");
+  console.log("[Webhook] - Customer ID:", customerId);
+  console.log("[Webhook] - Subscription ID:", subscriptionId);
+  console.log("[Webhook] ========================================");
+
+  if (!subscriptionId) {
+    console.log("[Webhook] No subscription on this invoice (one-time charge?), skipping.");
+    return;
+  }
+
+  // Look up the user by stripe_customer_id
+  const { data: user, error: lookupError } = await supabase
+    .from("users")
+    .select("id, email")
+    .eq("stripe_customer_id", customerId)
+    .single();
+
+  if (lookupError || !user) {
+    // Try by subscription id as fallback
+    const { data: userBySub, error: subLookupError } = await supabase
+      .from("users")
+      .select("id, email")
+      .eq("stripe_subscription_id", subscriptionId)
+      .single();
+
+    if (subLookupError || !userBySub) {
+      console.error("[Webhook] ❌ Cannot find user for customer:", customerId, "sub:", subscriptionId);
+      return;
+    }
+
+    // Use the user found by subscription id and fall through
+    const userId = userBySub.id;
+    await applyPremiumFromSubscription(userId, subscriptionId);
+    return;
+  }
+
+  await applyPremiumFromSubscription(user.id, subscriptionId);
+}
+
+/**
+ * Fetch the subscription from Stripe and set is_premium=true with correct expiry.
+ */
+async function applyPremiumFromSubscription(userId: string, subscriptionId: string) {
+  try {
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const subData = subscription as any;
+
+    let periodEnd: number | null = null;
+    if (subData.items?.data?.[0]?.current_period_end) {
+      periodEnd = subData.items.data[0].current_period_end;
+    } else if (subData.current_period_end) {
+      periodEnd = subData.current_period_end;
+    }
+
+    const premiumExpiresAt = periodEnd ? new Date(periodEnd * 1000).toISOString() : null;
+
+    const { error } = await supabase
+      .from("users")
+      .update({
+        is_premium: true,
+        premium_expires_at: premiumExpiresAt,
+        stripe_subscription_id: subscriptionId,
+        subscription_tier: "premium",
+      })
+      .eq("id", userId);
+
+    if (error) {
+      console.error("[Webhook] ❌ applyPremiumFromSubscription failed:", error);
+    } else {
+      console.log(`[Webhook] ✅ User ${userId} confirmed premium via invoice — expires ${premiumExpiresAt}`);
+    }
+  } catch (err: any) {
+    console.error("[Webhook] ❌ Error in applyPremiumFromSubscription:", err.message);
   }
 }
