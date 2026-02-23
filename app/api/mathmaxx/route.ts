@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { VertexAI } from '@google-cloud/vertexai';
 import { buildMathContext } from './mathEngine';
 import { getSystemPrompt } from './systemPrompt';
+import { checkServerRateLimit, getClientIP } from '../../utils/serverRateLimit';
 
 // --- Vertex AI initialization (lazy, singleton) ---
 let vertexAI: VertexAI | null = null;
@@ -48,6 +49,16 @@ function getVertexAI(): VertexAI {
 
 export async function POST(request: NextRequest) {
   try {
+    // Basic server-side rate limiting: 15 MathMaxx messages per IP per day
+    const clientIP = getClientIP(request);
+    const rateCheck = checkServerRateLimit(`mathmaxx:${clientIP}`, 15);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: 'Daily MathMaxx limit reached. Upgrade to Premium for unlimited use.' },
+        { status: 429 }
+      );
+    }
+
     const { message, image, history, userId, language, schoolLevel } = await request.json();
 
     if (!message || !message.trim()) {

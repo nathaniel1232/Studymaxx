@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { Analytics } from "@vercel/analytics/next";
-import InputView from "./components/InputView";
 import LoginModal from "./components/LoginModal";
 import UserProfileDropdown from "./components/UserProfileDropdown";
 import StudyFactBadge from "./components/StudyFactBadge";
@@ -20,6 +19,7 @@ import { usePersonalization } from "./contexts/PersonalizationContext";
 import ArrowIcon from "./components/icons/ArrowIcon";
 import { getCurrentUser, onAuthStateChange, supabase } from "./utils/supabase";
 import Sidebar from "./components/Sidebar";
+import PremiumModal from "./components/PremiumModal";
 
 // Lazy load heavy components that aren't needed on initial render
 const CreateFlowView = dynamic(() => import("./components/CreateFlowView"), { ssr: false });
@@ -61,7 +61,7 @@ const TargetIcon = () => (
   </svg>
 );
 
-type ViewMode = "home" | "input" | "createFlow" | "dashboard" | "studying" | "saved" | "settings" | "audio" | "youtube" | "document" | "notes" | "quiz" | "match" | "pricing" | "tips" | "about" | "mathmaxx" | "summarizer";
+type ViewMode = "home" | "createFlow" | "dashboard" | "studying" | "saved" | "settings" | "audio" | "youtube" | "document" | "notes" | "quiz" | "match" | "pricing" | "tips" | "about" | "mathmaxx" | "summarizer";
 type MaterialType = "notes" | "audio" | "document" | "youtube" | null;
 
 export default function Home() {
@@ -84,6 +84,9 @@ export default function Home() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginModalMode, setLoginModalMode] = useState<'signin' | 'signup'>('signin');
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [landingBillingInterval, setLandingBillingInterval] = useState<'month' | 'year'>('month');
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" | "warning" } | null>(null);
   const [selectedMaterialType, setSelectedMaterialType] = useState<MaterialType>(null);
   const [pendingTranscription, setPendingTranscription] = useState<{ text: string; subject: string } | null>(null);
@@ -189,10 +192,10 @@ export default function Home() {
       setViewMode('settings');
       window.history.pushState({}, '', '/settings');
     } else if (view === 'pricing') {
-      window.location.href = '/pricing';
-    } else if (view === 'mathmaxx') {
-      setViewMode('mathmaxx');
-      window.history.pushState({}, '', '/mathmaxx');
+      setShowPremiumModal(true);
+    } else if (view === 'audio') {
+      setViewMode('audio');
+      window.history.pushState({}, '', '/audio');
     } else if (view === 'summarizer') {
       setViewMode('summarizer');
       window.history.pushState({}, '', '/summarizer');
@@ -228,7 +231,6 @@ export default function Home() {
         audio: '/audio',
         youtube: '/youtube',
         document: '/document',
-        input: '/input',
         pricing: '/pricing',
         tips: '/tips',
         about: '/about',
@@ -254,13 +256,20 @@ export default function Home() {
     // Handle ?signin=true redirect from pricing page when user isn't logged in
     if (urlParams.get('signin') === 'true') {
       window.history.replaceState({}, '', '/');
-      sessionStorage.setItem('returnAfterLogin', '/pricing');
+      sessionStorage.setItem('returnAfterLogin', '/');
       setShowLoginModal(true);
       setLoginModalMode('signin');
       return;
     }
+    // Handle ?upgrade=true to show premium modal
+    if (urlParams.get('upgrade') === 'true') {
+      window.history.replaceState({}, '', user ? '/dashboard' : '/');
+      if (user) setViewMode('dashboard');
+      setShowPremiumModal(true);
+      return;
+    }
     const viewParam = urlParams.get('view');
-    if (viewParam === 'create') {
+    if (viewParam === 'create' || viewParam === 'createFlow') {
       // Only redirect to dashboard if user is logged in
       if (user) {
         setViewMode('dashboard');
@@ -590,6 +599,14 @@ export default function Home() {
           window.location.href = returnTo;
           return;
         }
+        // If user just signed up from the demo section, restore the demo text
+        const demoText = sessionStorage.getItem('demoText');
+        if (demoText) {
+          sessionStorage.removeItem('demoText');
+          setPendingTranscription({ text: demoText, subject: '' });
+          setSelectedMaterialType('notes');
+          navigateTo('createFlow', '/create');
+        }
         // Sync user to database
         fetch('/api/auth/sync-user', {
           method: 'POST',
@@ -630,7 +647,12 @@ export default function Home() {
   // Listen for custom events from other components
   useEffect(() => {
     const handleShowLogin = () => handleOpenLoginModal();
-    const handleShowPremium = () => { window.location.href = '/pricing'; };
+    const handleShowPremium = () => { 
+      // Never show premium popup to premium users
+      if (!isPremium) {
+        setShowPremiumModal(true); 
+      }
+    };
 
     window.addEventListener('showLogin', handleShowLogin);
     window.addEventListener('showPremium', handleShowPremium);
@@ -639,7 +661,7 @@ export default function Home() {
       window.removeEventListener('showLogin', handleShowLogin);
       window.removeEventListener('showPremium', handleShowPremium);
     };
-  }, []);
+  }, [isPremium]);
 
   const handleGenerateFlashcards = (cards: Flashcard[], subject?: string, grade?: string) => {
     setFlashcards(cards);
@@ -654,12 +676,6 @@ export default function Home() {
     setCurrentSetId(setId);
     updateLastStudied(setId);
     navigateTo("studying", "/study");
-  };
-
-  const handleBackToInput = () => {
-    goBack();
-    setFlashcards([]);
-    setCurrentSetId(null);
   };
 
   const handleBackToHome = () => {
@@ -721,7 +737,7 @@ export default function Home() {
       } else if (path === '/document') {
         setViewMode('document');
       } else if (path === '/pricing') {
-        window.location.href = '/pricing';
+        setShowPremiumModal(true);
       } else if (path === '/' || path === '') {
         // If user is logged in, go to dashboard. Otherwise, go to home.
         if (user) {
@@ -749,6 +765,9 @@ export default function Home() {
   // Determine if dark mode should be applied
   const isDarkMode = settings.theme === 'dark' || 
     (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+  // Dynamic sidebar margin class
+  const sidebarMarginClass = sidebarCollapsed ? 'md:ml-16' : 'md:ml-64';
 
   // Track scroll position before login modal opens and restore after close
   const scrollPositionRef = useRef(0);
@@ -790,7 +809,9 @@ export default function Home() {
                 <span style={{ color: '#06b6d4' }}>Study</span>Maxx
               </div>
               <div className="hidden md:flex items-center gap-6">
-                <a href="/pricing" style={{ color: '#5f6368' }} className="text-sm hover:text-blue-600 transition-colors">Upgrade to Premium</a>
+                {!isPremium && (
+                  <button onClick={() => setShowPremiumModal(true)} style={{ color: '#5f6368' }} className="text-sm hover:text-blue-600 transition-colors">Upgrade to Premium</button>
+                )}
               </div>
             </div>
             
@@ -819,7 +840,7 @@ export default function Home() {
                     isPremium={isPremium}
                     isOwner={isOwner}
                     onNavigateSettings={handleViewSettings}
-                    onUpgradePremium={() => { window.location.href = '/pricing'; }}
+                    onUpgradePremium={() => { setShowPremiumModal(true); }}
                   />
                 </>
               ) : (
@@ -839,7 +860,7 @@ export default function Home() {
                       color: '#ffffff',
                     }}
                   >
-                    Ascend Your Grades
+                    Try It Now
                   </button>
                 </>
               )}
@@ -866,19 +887,19 @@ export default function Home() {
 
             {/* Main Headline */}
             <h1 className="text-5xl md:text-7xl font-bold text-center max-w-4xl mb-6 leading-[1.1] animate-fade-in-up animation-delay-100">
-              <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>Stop rereading.</span>
+              <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>Turn anything into</span>
               <br />
               <span style={{ color: '#06b6d4' }}>
-                Start remembering.
+                study sets.
               </span>
             </h1>
             
             {/* Subheadline */}
             <p className="text-lg md:text-xl text-center max-w-2xl mb-3 animate-fade-in-up animation-delay-200" style={{ color: '#5f6368' }}>
-              Paste your notes, upload a PDF, or drop a YouTube link — StudyMaxx creates complete study sets with flashcards, quizzes, and games in seconds.
+              Notes, PDFs, YouTube videos, audio — drop anything in and get flashcards, quizzes, and study material optimized for how your brain actually learns.
             </p>
             <p className="text-base text-center max-w-xl mb-10 animate-fade-in-up animation-delay-200 font-medium" style={{ color: isDarkMode ? '#94a3b8' : '#475569' }}>
-              The fastest way from raw notes to exam-ready.
+              Study less. Remember more.
             </p>
 
             {/* Primary CTA */}
@@ -902,7 +923,7 @@ export default function Home() {
                 <svg className="w-4 h-4" style={{ color: '#34a853' }} fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span>Free forever · No credit card required</span>
+                <span>No credit card needed · 30 seconds to start</span>
               </p>
             </div>
 
@@ -945,7 +966,7 @@ export default function Home() {
                 ))}
               </div>
               <div className="text-sm">
-                <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }} className="font-bold">1,700+</span>
+                <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }} className="font-bold">2,000+</span>
                 <span style={{ color: '#5f6368' }}> students already studying smarter</span>
               </div>
             </div>
@@ -1067,7 +1088,32 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-              <p className="text-center text-xs mt-2 md:hidden" style={{ color: isDarkMode ? '#475569' : '#94a3b8' }}>← swipe for more →</p>
+              <p className="text-center text-xs mt-2 md:hidden" style={{ color: isDarkMode ? '#475569' : '#94a3b8' }}>â† swipe for more →</p>
+            </div>
+
+            {/* Backed by Science - Study Stats */}
+            <div className="w-full max-w-5xl mb-14 animate-fade-in-up animation-delay-500">
+              <h3 className="text-center text-sm font-medium uppercase tracking-wider mb-8" style={{ color: '#5f6368' }}>
+                Backed by research
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { stat: '150%', label: 'better retention with active recall vs rereading', source: 'Karpicke & Blunt, 2011', icon: '🧠' },
+                  { stat: '2.5x', label: 'higher exam scores with spaced repetition', source: 'Cepeda et al., 2006', icon: '📈' },
+                  { stat: '50%', label: 'less study time needed with flashcard testing', source: 'Roediger & Butler, 2011', icon: '⏱️' },
+                  { stat: '90%', label: 'of top students use active recall methods', source: 'Dunlosky et al., 2013', icon: '🏆' },
+                ].map((item, i) => (
+                  <div key={i} className="text-center p-5 rounded-2xl" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#ffffff', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0' }}>
+                    <div className="text-2xl mb-2">{item.icon}</div>
+                    <div className="text-2xl md:text-3xl font-bold mb-1" style={{ color: '#06b6d4' }}>{item.stat}</div>
+                    <p className="text-xs leading-tight mb-2" style={{ color: isDarkMode ? '#e2e8f0' : '#1e293b' }}>{item.label}</p>
+                    <p className="text-[10px]" style={{ color: '#94a3b8' }}>{item.source}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-center text-xs mt-4" style={{ color: '#94a3b8' }}>
+                StudyMaxx uses these proven techniques — active recall, spaced repetition, and self-testing — so you study less and remember more.
+              </p>
             </div>
 
             {/* How It Works - NotebookLM Style */}
@@ -1159,6 +1205,8 @@ export default function Home() {
             </div>
           </div>
 
+
+
           {/* Pricing Section */}
           <div className="relative px-6 py-20" style={{ borderTop: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}>
             <div className="max-w-5xl mx-auto">
@@ -1171,7 +1219,20 @@ export default function Home() {
                     <span style={{ color: '#06b6d4' }} className="font-medium">Premium Active</span>
                   </div>
                   <h2 className="text-3xl font-bold mb-4" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>You're all set!</h2>
-                  <p className="mb-8" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Enjoy unlimited study sets and all premium features.</p>
+                  <p className="mb-6" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Enjoy unlimited study sets and all premium features.</p>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('/api/stripe/portal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id }) });
+                        const d = await res.json();
+                        if (d.url) window.location.href = d.url;
+                      } catch {}
+                    }}
+                    className="px-6 py-2.5 rounded-xl text-sm font-medium transition-all hover:opacity-80"
+                    style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)', color: isDarkMode ? '#e2e8f0' : '#374151', border: isDarkMode ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.1)' }}
+                  >
+                    Manage Subscription
+                  </button>
                 </div>
               ) : (
                 <>
@@ -1182,42 +1243,8 @@ export default function Home() {
                     <p className="text-lg" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>When you have more than 2 subjects to study this week.</p>
                   </div>
                   
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {/* Free Plan */}
-                    <div className="p-8 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-xl card-3d" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: isDarkMode ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.1)' }}>
-                      <h3 className="text-xl font-bold mb-1" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Free</h3>
-                      <p className="text-sm mb-6" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Good for getting started</p>
-                      <div className="text-4xl font-bold mb-6" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>$0</div>
-                      <ul className="space-y-3 mb-3">
-                        {["2 study sets per day", "Paste text only", "Up to 20 cards per set", "All study modes (flashcards, quiz, match)"].map(item => (
-                          <li key={item} className="flex items-start gap-3 text-sm" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
-                            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }} fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                        {["PDF & image uploads", "YouTube & audio import", "AI chat assistant"].map(item => (
-                          <li key={item} className="flex items-start gap-3 text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.3)' }}>
-                            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            <span className="line-through">{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="mt-6">
-                        <button
-                          onClick={handleCreateNew}
-                          className="w-full py-3 px-6 font-medium rounded-xl transition-all duration-300 hover:scale-105 active:scale-100"
-                          style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)', color: isDarkMode ? '#ffffff' : '#000000', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)' }}
-                        >
-                          Ascend Your Grades
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Premium Plan */}
+                  <div className="max-w-lg mx-auto">
+                    {/* Premium Plan — Single Card */}
                     <div className="p-8 rounded-2xl relative transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl card-3d" style={{ backgroundColor: isDarkMode ? 'rgba(6, 182, 212, 0.05)' : 'rgba(6, 182, 212, 0.03)', border: '2px solid #06b6d4', zIndex: 10 }}>
                       <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                         <span className="px-3 py-1 text-xs font-bold rounded-full" style={{ backgroundColor: '#06b6d4', color: '#ffffff' }}>
@@ -1225,20 +1252,52 @@ export default function Home() {
                         </span>
                       </div>
                       <h3 className="text-xl font-bold mb-1" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>Premium</h3>
-                      <p className="text-sm mb-4" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>When you have more than 2 subjects to crush</p>
-                      <div className="mb-1">
-                        <div className="text-xs mb-1" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>Less than one coffee per month</div>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-xl line-through" style={{ color: isDarkMode ? '#475569' : '#94a3b8' }}>$5.99</span>
-                          <span className="text-4xl font-bold" style={{ color: isDarkMode ? '#22d3ee' : '#06b6d4' }}>$4.42</span>
-                          <span style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>/month</span>
+                      <p className="text-sm mb-4" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>Everything you need to ace your exams</p>
+                      
+                      {/* Billing Toggle */}
+                      <div className="flex justify-center mb-4">
+                        <div className="inline-flex items-center gap-1 p-1 rounded-full" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : '#f1f5f9' }}>
+                          <button
+                            onClick={() => setLandingBillingInterval('month')}
+                            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${landingBillingInterval === 'month' ? 'shadow-sm' : ''}`}
+                            style={{ 
+                              backgroundColor: landingBillingInterval === 'month' ? (isDarkMode ? '#1e293b' : '#ffffff') : 'transparent',
+                              color: landingBillingInterval === 'month' ? (isDarkMode ? '#ffffff' : '#0f172a') : (isDarkMode ? '#94a3b8' : '#64748b')
+                            }}
+                          >
+                            Monthly
+                          </button>
+                          <button
+                            onClick={() => setLandingBillingInterval('year')}
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${landingBillingInterval === 'year' ? 'bg-cyan-500 text-white shadow-sm' : ''}`}
+                            style={landingBillingInterval !== 'year' ? { color: isDarkMode ? '#94a3b8' : '#64748b' } : undefined}
+                          >
+                            Yearly
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${landingBillingInterval === 'year' ? 'bg-white/25 text-white' : (isDarkMode ? 'bg-green-900/40 text-green-400' : 'bg-green-100 text-green-600')}`}>-26%</span>
+                          </button>
                         </div>
-                        <p className="text-xs mt-1" style={{ color: '#22c55e' }}>Billed as $52.99/year — 2 months free</p>
+                      </div>
+                      
+                      {/* Price */}
+                      <div className="text-center mb-5">
+                        {landingBillingInterval === 'month' ? (
+                          <div>
+                            <span className="text-4xl font-bold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>$5.99</span>
+                            <span className="text-base ml-1" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>/month</span>
+                          </div>
+                        ) : (
+                          <div>
+                            <span className="text-4xl font-bold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>$4.42</span>
+                            <span className="text-base ml-1" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>/month</span>
+                            <p className="text-xs mt-1" style={{ color: '#22c55e' }}>Billed $52.99/year · Save $18.89</p>
+                          </div>
+                        )}
+                        <p className="text-xs mt-1" style={{ color: '#22c55e' }}>Less than a coffee a week · Cancel anytime</p>
                       </div>
                       <ul className="space-y-3 mt-5 mb-6">
                         {[
                           { text: "Unlimited study sets, every day", highlight: true },
-                          { text: "Up to 50 cards per set", highlight: false },
+                          { text: "Up to 75 cards per set", highlight: false },
                           { text: "PDF, images, Word & PowerPoint uploads", highlight: false },
                           { text: "YouTube & audio → flashcards", highlight: false },
                           { text: "AI chat about your material", highlight: false },
@@ -1257,13 +1316,13 @@ export default function Home() {
                           if (!user) {
                             handleOpenLoginModal();
                           } else {
-                            window.location.href = '/pricing';
+                            setShowPremiumModal(true);
                           }
                         }}
                         className="w-full py-3.5 px-6 font-bold rounded-xl transition-all duration-300 hover:opacity-90 hover:scale-105 active:scale-100"
                         style={{ backgroundColor: '#06b6d4', color: '#ffffff', boxShadow: '0 4px 16px rgba(6,182,212,0.3)' }}
                       >
-                        Upgrade to Premium
+                        {landingBillingInterval === 'month' ? 'Get Premium — $5.99/mo' : 'Get Premium — $4.42/mo'}
                       </button>
                       <p className="text-center text-xs mt-3" style={{ color: '#5f6368' }}>Cancel in one click · No commitment</p>
                     </div>
@@ -1281,7 +1340,7 @@ export default function Home() {
                   Your next exam is closer than you think.
                 </h2>
                 <p className="text-lg mb-6" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
-                  Students using active recall score 50% higher. Join 1,000+ students studying smarter — it takes 30 seconds.
+                  Students using active recall score 50% higher. Join 2,000+ students studying smarter — it takes 30 seconds.
                 </p>
                 <div className="flex flex-wrap justify-center gap-3 mb-8">
                   {['Flashcards from any source', 'AI math tutor', 'Smart quizzes', '20+ languages'].map((feature) => (
@@ -1301,7 +1360,7 @@ export default function Home() {
                     color: '#ffffff'
                   }}
                 >
-                  <span>Get Started — It's Free</span>
+                  <span>Get Started Now</span>
                   <svg className="w-6 h-6 inline-block ml-2 group-hover:translate-x-2 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
@@ -1315,7 +1374,7 @@ export default function Home() {
             <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>© 2026 StudyMaxx</div>
               <div className="flex items-center gap-6 text-sm" style={{ color: isDarkMode ? '#9aa0a6' : '#5f6368' }}>
-                <a href="/pricing" className="hover:text-blue-500 transition-colors">Upgrade to Premium</a>
+                {!isPremium && <button onClick={() => setShowPremiumModal(true)} className="hover:text-blue-500 transition-colors">Upgrade to Premium</button>}
                 <a href="/help" className="hover:text-blue-500 transition-colors">Help</a>
                 <a href="/privacy" className="hover:text-blue-500 transition-colors">Privacy</a>
                 <a href="/terms" className="hover:text-blue-500 transition-colors">Terms</a>
@@ -1325,13 +1384,6 @@ export default function Home() {
         </div>
       )}
       
-      {viewMode === "input" && (
-        <InputView 
-          onGenerateFlashcards={handleGenerateFlashcards}
-          onViewSavedSets={handleViewSavedSets}
-          onBack={handleBackToHome}
-        />
-      )}
       {viewMode === "dashboard" && (
         <>
           <Sidebar
@@ -1341,22 +1393,24 @@ export default function Home() {
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}
+            onCollapsedChange={setSidebarCollapsed}
           />
-          <DashboardView
-            onSelectOption={handleGoToCreate}
-            onCreateFlashcards={() => handleGoToCreate("notes")}
-            onLoadSet={handleLoadSet}
-            isPremium={isPremium}
-            userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
-            user={user}
-            onBack={goBack}
-            onSettings={handleViewSettings}
-            savedSets={savedSets}
-            onMathMaxx={() => { setViewMode('mathmaxx'); window.history.pushState({}, '', '/mathmaxx'); }}
-            onSummarizer={() => { setViewMode('summarizer'); window.history.pushState({}, '', '/summarizer'); }}
-            onDeleteSet={async () => { const sets = await getSavedFlashcardSets(); setSavedSets(sets); }}
-            onRequestLogin={handleOpenSignUpModal}
-          />
+          <div className={`${sidebarMarginClass} transition-all duration-300`}>
+            <DashboardView
+              onSelectOption={handleGoToCreate}
+              onCreateFlashcards={() => handleGoToCreate("notes")}
+              onLoadSet={handleLoadSet}
+              isPremium={isPremium}
+              userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+              user={user}
+              onBack={goBack}
+              onSettings={handleViewSettings}
+              savedSets={savedSets}
+              onSummarizer={() => { setViewMode('summarizer'); window.history.pushState({}, '', '/summarizer'); }}
+              onDeleteSet={async () => { const sets = await getSavedFlashcardSets(); setSavedSets(sets); }}
+              onRequestLogin={handleOpenSignUpModal}
+            />
+          </div>
         </>
       )}
       {viewMode === "createFlow" && (
@@ -1368,15 +1422,18 @@ export default function Home() {
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}
+            onCollapsedChange={setSidebarCollapsed}
           />
-          <CreateFlowView
-            onGenerateFlashcards={handleGenerateFlashcards}
-            onBack={goBack}
-            onRequestLogin={() => handleOpenLoginModal()}
-            initialMaterialType={selectedMaterialType}
-            initialText={pendingTranscription?.text || pendingExtraction?.text}
-            initialSubject={pendingTranscription?.subject || pendingExtraction?.subject}
-          />
+          <div className={`${sidebarMarginClass} transition-all duration-300`}>
+            <CreateFlowView
+              onGenerateFlashcards={handleGenerateFlashcards}
+              onBack={goBack}
+              onRequestLogin={() => handleOpenLoginModal()}
+              initialMaterialType={selectedMaterialType}
+              initialText={pendingTranscription?.text || pendingExtraction?.text}
+              initialSubject={pendingTranscription?.subject || pendingExtraction?.subject}
+            />
+          </div>
         </>
       )}
       {viewMode === "studying" && (
@@ -1396,9 +1453,11 @@ export default function Home() {
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}
+            onCollapsedChange={setSidebarCollapsed}
           />
-          <AudioRecordingView
-            onBack={goBack}
+          <div className={`${sidebarMarginClass} transition-all duration-300`}>
+            <AudioRecordingView
+              onBack={goBack}
             onTranscriptionComplete={(text, subject) => {
               setPendingTranscription({ text, subject });
               setViewMode('notes');
@@ -1421,8 +1480,9 @@ export default function Home() {
             isPremium={isPremium}
             user={user}
             initialSubject={initialSubject}
-            onRequestLogin={handleOpenSignUpModal}
-          />
+              onRequestLogin={handleOpenSignUpModal}
+            />
+          </div>
         </>
       )}
       {viewMode === "youtube" && (
@@ -1434,9 +1494,11 @@ export default function Home() {
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}
+            onCollapsedChange={setSidebarCollapsed}
           />
-          <YouTubeView
-            onBack={goBack}
+          <div className={`${sidebarMarginClass} transition-all duration-300`}>
+            <YouTubeView
+              onBack={goBack}
             onContentExtracted={(text, subject, title) => {
               setPendingExtraction({ text, subject, title });
               setSelectedMaterialType('notes');
@@ -1460,8 +1522,9 @@ export default function Home() {
             isPremium={isPremium}
             user={user}
             initialSubject={initialSubject}
-            onRequestLogin={handleOpenSignUpModal}
-          />
+              onRequestLogin={handleOpenSignUpModal}
+            />
+          </div>
         </>
       )}
       {viewMode === "document" && (
@@ -1473,9 +1536,11 @@ export default function Home() {
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}
+            onCollapsedChange={setSidebarCollapsed}
           />
-          <DocumentView
-            onBack={goBack}
+          <div className={`${sidebarMarginClass} transition-all duration-300`}>
+            <DocumentView
+              onBack={goBack}
             onGenerateFlashcards={handleGenerateFlashcards}
             onGenerateQuiz={(questions, subject) => {
               setQuizQuestions(questions);
@@ -1493,8 +1558,9 @@ export default function Home() {
             isPremium={isPremium}
             user={user}
             initialSubject={initialSubject}
-            onRequestLogin={handleOpenSignUpModal}
-          />
+              onRequestLogin={handleOpenSignUpModal}
+            />
+          </div>
         </>
       )}
       {viewMode === "notes" && (
@@ -1506,9 +1572,11 @@ export default function Home() {
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}
+            onCollapsedChange={setSidebarCollapsed}
           />
-          <NotesEditorView
-            onBack={goBack}
+          <div className={`${sidebarMarginClass} transition-all duration-300`}>
+            <NotesEditorView
+              onBack={goBack}
             onGenerateFlashcards={handleGenerateFlashcards}
             onGenerateQuiz={(questions, subject) => {
               setQuizQuestions(questions);
@@ -1525,8 +1593,9 @@ export default function Home() {
             user={user}
             initialText={pendingTranscription?.text || pendingExtraction?.text || ""}
             initialSubject={pendingTranscription?.subject || pendingExtraction?.subject || initialSubject || ""}
-            onRequestLogin={handleOpenSignUpModal}
-          />
+              onRequestLogin={handleOpenSignUpModal}
+            />
+          </div>
         </>
       )}
       {viewMode === "saved" && (
@@ -1544,12 +1613,15 @@ export default function Home() {
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}
+            onCollapsedChange={setSidebarCollapsed}
           />
-          <MathMaxxView
-            onBack={goBack}
-            isPremium={isPremium}
-            user={user}
-          />
+          <div className={`${sidebarMarginClass} transition-all duration-300`}>
+            <MathMaxxView
+              onBack={goBack}
+              isPremium={isPremium}
+              user={user}
+            />
+          </div>
         </>
       )}
       {viewMode === "summarizer" && (
@@ -1561,12 +1633,15 @@ export default function Home() {
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}
+            onCollapsedChange={setSidebarCollapsed}
           />
-          <SummarizerView
-            onBack={goBack}
-            isPremium={isPremium}
-            user={user}
-          />
+          <div className={`${sidebarMarginClass} transition-all duration-300`}>
+            <SummarizerView
+              onBack={goBack}
+              isPremium={isPremium}
+              user={user}
+            />
+          </div>
         </>
       )}
       {viewMode === "settings" && (
@@ -1578,13 +1653,16 @@ export default function Home() {
             isPremium={isPremium}
             userName={user?.user_metadata?.full_name || user?.email?.split('@')[0]}
             userEmail={user?.email}
+            onCollapsedChange={setSidebarCollapsed}
           />
-          <SettingsView 
-            onBack={() => {
-              setViewMode('dashboard');
-              window.history.pushState({}, '', '/dashboard');
-            }}
-          />
+          <div className={`${sidebarMarginClass} transition-all duration-300`}>
+            <SettingsView 
+              onBack={() => {
+                setViewMode('dashboard');
+                window.history.pushState({}, '', '/dashboard');
+              }}
+            />
+          </div>
         </>
       )}
 
@@ -1654,6 +1732,17 @@ export default function Home() {
             navigateTo("notes", "/notes");
           }
           setPendingView(null);
+        }}
+      />
+
+      {/* Premium Modal */}
+      <PremiumModal
+        isOpen={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        isPremium={isPremium}
+        onRequestLogin={() => {
+          setShowPremiumModal(false);
+          handleOpenLoginModal();
         }}
       />
     </main>

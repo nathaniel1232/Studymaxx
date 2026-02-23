@@ -103,13 +103,14 @@ interface Flashcard {
  */
 async function getOrCreateUser(userId: string): Promise<UserStatus | null> {
   // For anonymous users, return default free tier status without database
+  // Note: actual rate limiting for anon users is handled by IP-based server rate limiter
   if (userId.startsWith('anon_') || userId.startsWith('anon-')) {
     console.log("[API /generate] Anonymous user detected, using local limits");
     return {
       id: userId,
       isPremium: false,
       studySetCount: 0,
-      dailyAiCount: 0,
+      dailyAiCount: 1, // Start at 1 to be conservative - anon users get 1 generation
       lastAiReset: new Date(),
     };
   }

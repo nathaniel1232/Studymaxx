@@ -85,6 +85,28 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
     );
   };
 
+  const handleManageSubscription = async () => {
+    try {
+      const { getCurrentUser } = await import("../utils/supabase");
+      const currentUser = await getCurrentUser();
+      if (!currentUser?.id) return;
+      const response = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id })
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Could not open subscription portal.");
+      }
+    } catch (error) {
+      console.error('Failed to open portal:', error);
+      alert("Could not open subscription management.");
+    }
+  };
+
   return (
     <div className="relative" ref={dropdownRef} style={{ zIndex: 1001 }}>
       <button
@@ -206,6 +228,24 @@ export default function UserProfileDropdown({ user, isPremium, isOwner, onNaviga
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                 </svg>
                 <span>{t("upgrade_premium") || "Upgrade to Premium"}</span>
+              </button>
+            )}
+
+            {isPremium && (
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  handleManageSubscription();
+                }}
+                className="w-full px-4 py-3 rounded-md text-left text-sm font-semibold flex items-center gap-3 transition-colors"
+                style={{ color: '#06b6d4' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                <span>Manage Subscription</span>
               </button>
             )}
 

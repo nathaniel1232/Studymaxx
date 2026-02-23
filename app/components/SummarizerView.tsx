@@ -101,7 +101,7 @@ const LENGTH_OPTIONS: { value: SummaryLength; label: string; desc: string }[] = 
   { value: "long", label: "Detailed", desc: "5 min read" },
 ];
 
-const FREE_DAILY_LIMIT = 2;
+const FREE_DAILY_LIMIT = 1;
 const ACCENT = "#06b6d4";
 
 export default function SummarizerView({ onBack, isPremium, user }: SummarizerViewProps) {
@@ -792,7 +792,7 @@ export default function SummarizerView({ onBack, isPremium, user }: SummarizerVi
                 style={{ flex: 1, padding: "12px", borderRadius: "12px", border: `1px solid ${border}`, backgroundColor: "transparent", color: text2, cursor: "pointer", fontSize: "14px", fontWeight: 500 }}>
                 Later
               </button>
-              <button onClick={() => { window.location.href = "/pricing"; }}
+              <button onClick={() => { window.dispatchEvent(new Event('showPremium')); }}
                 style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "none", background: `linear-gradient(135deg, ${ACCENT}, #0891b2)`, color: "#fff", cursor: "pointer", fontSize: "14px", fontWeight: 600 }}>
                 Upgrade
               </button>

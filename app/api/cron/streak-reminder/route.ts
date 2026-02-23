@@ -1,7 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { Resend } from "resend";
 import { emailTemplates } from "@/app/utils/emailTemplates";
+
+async function sendEmail(to: string, subject: string, html: string) {
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'api-key': process.env.BREVO_API_KEY || '',
+    },
+    body: JSON.stringify({
+      sender: { name: 'StudyMaxx', email: 'noreply@studymaxx.net' },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+  });
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(err);
+  }
+}
 
 /**
  * Cron endpoint: Send streak-break reminder emails
@@ -17,18 +36,6 @@ import { emailTemplates } from "@/app/utils/emailTemplates";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-let resend: Resend | null = null;
-
-function initializeResend() {
-  if (!resend && process.env.RESEND_API_KEY) {
-    try {
-      resend = new Resend(process.env.RESEND_API_KEY);
-    } catch (e) {
-      console.error('[Streak Reminder] Failed to initialize Resend:', e);
-    }
-  }
-}
-
 export async function GET(req: NextRequest) {
   // Verify cron secret
   const authHeader = req.headers.get("authorization");
@@ -36,14 +43,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Initialize Resend at runtime
-  initializeResend();
-
-  // Check if Resend is configured
-  if (!resend || !process.env.RESEND_API_KEY) {
-    console.warn('[Streak Reminder] RESEND_API_KEY not configured');
+  // Check if Brevo is configured
+  if (!process.env.BREVO_API_KEY) {
+    console.warn('[Streak Reminder] BREVO_API_KEY not configured');
     return NextResponse.json({ 
-      message: "Email service not configured. Add RESEND_API_KEY to environment variables.",
+      message: "Email service not configured. Add BREVO_API_KEY to environment variables.",
       sent: 0 
     });
   }
@@ -109,14 +113,7 @@ export async function GET(req: NextRequest) {
             'your study set' // Could be fetched from database
           );
           
-          if (resend) {
-            await resend.emails.send({
-              from: 'StudyMaxx <noreply@studymaxx.net>',
-              to: user.user.email,
-              subject: template.subject,
-              html: template.html,
-            });
-          }
+          await sendEmail(user.user.email, template.subject, template.html);
           
           console.log(`[Streak Reminder] ✅ Sent email to ${user.user.email}`);
           emailsSent++;

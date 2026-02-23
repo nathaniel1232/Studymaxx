@@ -1,6 +1,6 @@
 /**
  * Rate limiting utilities for AI generation
- * Free users: 3 generations per day (resets at 00:01 GMT+1/CET)
+ * Free users: 2 generations per day (resets at 00:01 GMT+1/CET)
  * Premium users: Unlimited
  */
 
@@ -11,7 +11,7 @@ interface RateLimitInfo {
   reason?: string;
 }
 
-const FREE_DAILY_LIMIT = 3;
+const FREE_DAILY_LIMIT = 2;
 const RATE_LIMIT_KEY_PREFIX = 'ai_rate_limit_';
 const RATE_LIMIT_DATE_PREFIX = 'ai_rate_limit_date_';
 const DEVICE_ID_KEY = 'studymaxx_device_id';
@@ -98,7 +98,7 @@ export function checkAIRateLimit(userId: string | null, isPremium: boolean): Rat
       allowed: false,
       remaining: 0,
       resetTime: getNextResetTime(),
-      reason: 'You\'ve reached your daily limit (3/3). Upgrade to Premium for unlimited generations!',
+      reason: 'You\'ve used your 2 free generations today. Upgrade to Premium for unlimited!',
     };
   }
 

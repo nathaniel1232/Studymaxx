@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSettings } from "../contexts/SettingsContext";
 
 interface SidebarProps {
   currentView: string;
-  onNavigate: (view: "dashboard" | "settings" | "pricing" | "about" | "tips" | "mathmaxx" | "summarizer") => void;
+  onNavigate: (view: "dashboard" | "settings" | "pricing" | "about" | "tips" | "audio" | "summarizer") => void;
   onSignOut: () => void;
   isPremium: boolean;
   userName?: string;
   userEmail?: string;
+  onCollapsedChange?: (collapsed: boolean) => void;
 }
 
 // Custom SVG Icons
@@ -70,22 +71,23 @@ const LogOutIcon = () => (
   </svg>
 );
 
-const MathIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
-    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
-  </svg>
-);
-
 const SummarizerIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M4 6h16M4 12h16M4 18h10" />
   </svg>
 );
 
+const MicIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+    <line x1="12" x2="12" y1="19" y2="22"/>
+  </svg>
+);
+
 const NAV_ITEMS_BASE = [
   { id: "dashboard" as const, label: "Dashboard", Icon: HomeIcon },
-  { id: "mathmaxx" as const, label: "MathMaxx", Icon: MathIcon },
+  { id: "audio" as const, label: "AI Note Taker", Icon: MicIcon },
   { id: "summarizer" as const, label: "Summarizer", Icon: SummarizerIcon },
   { id: "settings" as const, label: "Settings", Icon: SettingsIcon },
   { id: "tips" as const, label: "Study Tips", Icon: LightbulbIcon },
@@ -98,38 +100,37 @@ export default function Sidebar({
   onSignOut, 
   isPremium,
   userName,
-  userEmail 
+  userEmail,
+  onCollapsedChange
 }: SidebarProps) {
   const { settings } = useSettings();
   const isDarkMode = settings.theme === 'dark' || 
     (settings.theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   
-  const [isOpen, setIsOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
-  const [showAffiliate, setShowAffiliate] = useState(false);
-  const [affiliateForm, setAffiliateForm] = useState({ fullName: '', email: '', tiktokHandle: '', message: '' });
-  const [affiliateSubmitting, setAffiliateSubmitting] = useState(false);
-  const [affiliateSubmitted, setAffiliateSubmitted] = useState(false);
-  const [affiliateError, setAffiliateError] = useState('');
-  
-  // Debug logging for premium status
-  console.log('[Sidebar] 🔍 isPremium:', isPremium, '| type:', typeof isPremium, '| email:', userEmail);
+
+  // Notify parent of collapsed state changes
+  useEffect(() => {
+    onCollapsedChange?.(collapsed);
+  }, [collapsed, onCollapsedChange]);
 
   const NAV_ITEMS = isPremium 
     ? [
-        NAV_ITEMS_BASE[0], // Dashboard
-        NAV_ITEMS_BASE[1], // MathMaxx
-        NAV_ITEMS_BASE[2], // Summarizer
-        ...NAV_ITEMS_BASE.slice(3), // Settings, Tips, About
+        NAV_ITEMS_BASE[0],
+        NAV_ITEMS_BASE[1],
+        NAV_ITEMS_BASE[2],
+        ...NAV_ITEMS_BASE.slice(3),
       ]
     : [
-        NAV_ITEMS_BASE[0], // Dashboard
-        NAV_ITEMS_BASE[1], // MathMaxx
-        NAV_ITEMS_BASE[2], // Summarizer
-        { id: "pricing" as const, label: "Upgrade to Premium", Icon: DiamondIcon },
-        ...NAV_ITEMS_BASE.slice(3), // Settings, Tips, About
+        NAV_ITEMS_BASE[0],
+        NAV_ITEMS_BASE[1],
+        NAV_ITEMS_BASE[2],
+        { id: "pricing" as const, label: "Upgrade", Icon: DiamondIcon },
+        ...NAV_ITEMS_BASE.slice(3),
       ];
 
   const handleManageSubscription = async () => {
@@ -150,338 +151,185 @@ export default function Sidebar({
       }
     } catch (error) {
       console.error('Failed to open portal:', error);
-      alert("Could not open subscription management. Your premium may have been granted manually — there's no subscription to manage.");
+      alert("Could not open subscription management.");
     }
   };
 
   const handleSendFeedback = async () => {
     if (!feedbackText.trim()) return;
-    
     try {
       await fetch('/api/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          message: feedbackText,
-          email: userEmail,
-          type: 'general'
-        })
+        body: JSON.stringify({ message: feedbackText, email: userEmail, type: 'general' })
       });
       setFeedbackSent(true);
       setFeedbackText("");
-      setTimeout(() => {
-        setFeedbackSent(false);
-        setShowFeedback(false);
-      }, 2000);
+      setTimeout(() => { setFeedbackSent(false); setShowFeedback(false); }, 2000);
     } catch (e) {
       console.error('Failed to send feedback:', e);
     }
   };
 
-  return (
-    <>
-      {/* Toggle Button - NotebookLM Style */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 left-6 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105"
-        style={{ 
-          backgroundColor: '#1a73e8',
-          boxShadow: '0 2px 8px rgba(26, 115, 232, 0.3)'
-        }}
-      >
-        <svg className="w-6 h-6" fill="none" stroke="white" viewBox="0 0 24 24">
-          {isOpen ? (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          ) : (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          )}
-        </svg>
-      </button>
+  const handleNavClick = (item: typeof NAV_ITEMS[0]) => {
+    if (item.id === "pricing") {
+      onNavigate("pricing");
+    } else if (item.id === "about") {
+      window.location.href = "/about";
+    } else {
+      onNavigate(item.id);
+    }
+    setMobileOpen(false);
+  };
 
-      {/* Overlay */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
-      {/* Sidebar Panel - NotebookLM Style */}
-      <div 
-        className={`fixed left-0 top-0 h-full w-72 z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-        style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#f1f5f9', borderRight: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0' }}
-      >
-        {/* Header */}
-        <div className="p-6 border-b flex-shrink-0" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0' }}>
-          <div className="text-xl font-bold mb-1">
-            <span style={{ color: '#06b6d4' }}>Study</span>
-            <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>Maxx</span>
+  const sidebarContent = (
+    <div className="flex flex-col h-full">
+      <div className="p-5 border-b flex-shrink-0" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0' }}>
+        {collapsed ? (
+          <div className="text-xl font-bold text-center">
+            <span style={{ color: '#06b6d4' }}>S</span>
           </div>
-          {userName && (
-            <p className="text-sm" style={{ color: '#5f6368' }}>
-              {userName}
-            </p>
-          )}
-          {isPremium && (
-            <span 
-              className="inline-block mt-2 px-2 py-1 rounded text-xs font-bold"
-              style={{ backgroundColor: 'rgba(251, 188, 4, 0.15)', color: '#fbbc04' }}
-            >
-              PRO
-            </span>
-          )}
-        </div>
-
-        {/* Navigation - flex-1 so it fills remaining space, min-h-0 so it can shrink and scroll only when truly needed */}
-        <nav className="p-4 flex-1 overflow-y-auto min-h-0">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => {
-                if (item.id === "pricing") {
-                  window.location.href = "/pricing";
-                } else if (item.id === "about") {
-                  window.location.href = "/about";
-                } else {
-                  onNavigate(item.id);
-                }
-                setIsOpen(false);
-              }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left"
-              style={item.id === "pricing" ? {
-                background: 'rgba(6, 182, 212, 0.12)',
-                color: '#06b6d4',
-                border: '1px solid rgba(6, 182, 212, 0.3)',
-              } : { 
-                backgroundColor: currentView === item.id ? (isDarkMode ? 'rgba(26, 115, 232, 0.2)' : 'rgba(26, 115, 232, 0.1)') : 'transparent',
-                color: currentView === item.id ? '#1a73e8' : '#5f6368'
-              }}
-              onMouseEnter={(e) => {
-                if (currentView !== item.id) {
-                  e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)';
-                  e.currentTarget.style.color = isDarkMode ? '#e2e8f0' : '#000000';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (currentView !== item.id) {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = '#5f6368';
-                }
-              }}
-            >
-              <span className="text-lg"><item.Icon /></span>
-              <span className="font-medium">{item.label}</span>
-            </button>
-          ))}
-
-          {/* Manage Subscription - Premium users */}
-          {isPremium && (
-            <button
-              onClick={() => {
-                handleManageSubscription();
-                setIsOpen(false);
-              }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left"
-              style={{
-                background: 'rgba(251, 188, 4, 0.08)',
-                color: '#f59e0b',
-                border: '1px solid rgba(251, 188, 4, 0.2)',
-              }}
-            >
-              <span className="text-lg"><DiamondIcon /></span>
-              <span className="font-medium">Manage Subscription</span>
-            </button>
-          )}
-          
-          {/* Feedback Button */}
+        ) : (
+          <>
+            <div className="text-xl font-bold mb-1">
+              <span style={{ color: '#06b6d4' }}>Study</span>
+              <span style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>Maxx</span>
+            </div>
+            {userName && <p className="text-sm" style={{ color: '#5f6368' }}>{userName}</p>}
+            {isPremium && (
+              <span className="inline-block mt-2 px-2 py-1 rounded text-xs font-bold" style={{ backgroundColor: 'rgba(251, 188, 4, 0.15)', color: '#fbbc04' }}>PRO</span>
+            )}
+          </>
+        )}
+      </div>
+      <nav className="p-3 flex-1 overflow-y-auto min-h-0">
+        {NAV_ITEMS.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => handleNavClick(item)}
+            className={`w-full flex items-center ${collapsed ? 'justify-center' : ''} gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left`}
+            title={collapsed ? item.label : undefined}
+            style={item.id === "pricing" ? {
+              background: 'rgba(6, 182, 212, 0.12)',
+              color: '#06b6d4',
+              border: '1px solid rgba(6, 182, 212, 0.3)',
+            } : { 
+              backgroundColor: currentView === item.id ? (isDarkMode ? 'rgba(26, 115, 232, 0.2)' : 'rgba(26, 115, 232, 0.1)') : 'transparent',
+              color: currentView === item.id ? '#1a73e8' : '#5f6368'
+            }}
+          >
+            <span className="text-lg flex-shrink-0"><item.Icon /></span>
+            {!collapsed && <span className="font-medium text-sm">{item.label}</span>}
+          </button>
+        ))}
+        {isPremium && (
+          <button
+            onClick={() => { handleManageSubscription(); setMobileOpen(false); }}
+            className={`w-full flex items-center ${collapsed ? 'justify-center' : ''} gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left`}
+            title={collapsed ? 'Manage Subscription' : undefined}
+            style={{ background: 'rgba(251, 188, 4, 0.08)', color: '#f59e0b', border: '1px solid rgba(251, 188, 4, 0.2)' }}
+          >
+            <span className="text-lg flex-shrink-0"><DiamondIcon /></span>
+            {!collapsed && <span className="font-medium text-sm">Manage Subscription</span>}
+          </button>
+        )}
+        {!collapsed && (
           <button
             onClick={() => setShowFeedback(true)}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left"
             style={{ color: isDarkMode ? '#94a3b8' : '#5f6368' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)';
-              e.currentTarget.style.color = isDarkMode ? '#e2e8f0' : '#000000';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = isDarkMode ? '#94a3b8' : '#5f6368';
-            }}
           >
             <span><MessageIcon /></span>
-            <span className="font-medium">Send Feedback</span>
+            <span className="font-medium text-sm">Send Feedback</span>
           </button>
-
-          {/* Affiliate Program Button */}
+        )}
+        {collapsed && (
           <button
-            onClick={() => {
-              setShowAffiliate(true);
-              setIsOpen(false);
-            }}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left"
+            onClick={() => setShowFeedback(true)}
+            className="w-full flex items-center justify-center px-4 py-3 rounded-xl mb-1 transition-all duration-200"
+            title="Send Feedback"
             style={{ color: isDarkMode ? '#94a3b8' : '#5f6368' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)';
-              e.currentTarget.style.color = isDarkMode ? '#e2e8f0' : '#000000';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = isDarkMode ? '#94a3b8' : '#5f6368';
-            }}
           >
-            <span>💼</span>
-            <span className="font-medium">Become an Affiliate</span>
+            <span><MessageIcon /></span>
           </button>
+        )}
+        <div className="mt-3 pt-3 border-t" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0' }}>
+          <button
+            onClick={() => { onSignOut(); setMobileOpen(false); }}
+            className={`w-full flex items-center ${collapsed ? 'justify-center' : ''} gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-left`}
+            title={collapsed ? 'Sign Out' : undefined}
+            style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }}
+          >
+            <span className="text-lg flex-shrink-0"><LogOutIcon /></span>
+            {!collapsed && <span className="font-bold text-sm">Sign Out</span>}
+          </button>
+        </div>
+      </nav>
+    </div>
+  );
 
-          {/* Sign Out - inside nav, below Send Feedback */}
-          <div className="mt-3 pt-3 border-t" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0' }}>
-            <button
-              onClick={() => {
-                onSignOut();
-                setIsOpen(false);
-              }}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-left"
-              style={{ 
-                background: 'rgba(239, 68, 68, 0.1)',
-                color: '#ef4444',
-                border: '1px solid rgba(239, 68, 68, 0.2)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
-                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.2)';
-              }}
-            >
-              <span className="text-lg"><LogOutIcon /></span>
-              <span className="font-bold">Sign Out</span>
-            </button>
-          </div>
-        </nav>
+  return (
+    <>
+      {/* Desktop: collapsible sidebar */}
+      <div 
+        className={`hidden md:block fixed left-0 top-0 h-full z-40 transition-all duration-300 ${collapsed ? 'w-16' : 'w-64'}`}
+        style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#f8fafc', borderRight: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0' }}
+      >
+        {sidebarContent}
+        {/* Collapse/Expand toggle button */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="hidden md:flex absolute -right-3 top-7 w-6 h-6 rounded-full items-center justify-center z-50 transition-all duration-200 hover:scale-110"
+          style={{ 
+            backgroundColor: isDarkMode ? '#2a2a4e' : '#ffffff', 
+            border: isDarkMode ? '1px solid rgba(255,255,255,0.15)' : '1px solid #e2e8f0',
+            color: isDarkMode ? '#94a3b8' : '#5f6368',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.1)'
+          }}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            {collapsed ? <path d="M9 18l6-6-6-6" /> : <path d="M15 18l-6-6 6-6" />}
+          </svg>
+        </button>
       </div>
 
-      {/* Affiliate Modal */}
-      {showAffiliate && (
-        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => { setShowAffiliate(false); setAffiliateSubmitted(false); setAffiliateError(''); }} />
-          <div
-            className="relative w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl overflow-y-auto"
-            style={{ backgroundColor: isDarkMode ? '#0f1629' : '#ffffff', border: isDarkMode ? '1px solid rgba(6,182,212,0.2)' : '1px solid #e2e8f0', boxShadow: '0 8px 40px rgba(0,0,0,0.3)', maxHeight: '90vh' }}
-          >
-            {/* Header */}
-            <div className="sticky top-0 px-6 py-5 flex items-center justify-between" style={{ background: isDarkMode ? 'linear-gradient(135deg, rgba(6,182,212,0.15), rgba(37,99,235,0.15))' : 'linear-gradient(135deg, rgba(6,182,212,0.08), rgba(37,99,235,0.08))', borderBottom: isDarkMode ? '1px solid rgba(6,182,212,0.2)' : '1px solid rgba(6,182,212,0.15)' }}>
-              <div>
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span style={{ color: '#06b6d4', fontSize: '20px' }}>💼</span>
-                  <h3 className="text-xl font-bold" style={{ color: isDarkMode ? '#e2e8f0' : '#000' }}>Affiliate Program</h3>
-                </div>
-                <p style={{ fontSize: '13px', color: isDarkMode ? '#94a3b8' : '#64748b' }}>Earn 20% recurring — every month they stay subscribed</p>
-              </div>
-              <button onClick={() => { setShowAffiliate(false); setAffiliateSubmitted(false); setAffiliateError(''); }} style={{ color: isDarkMode ? '#94a3b8' : '#64748b', fontSize: '20px', lineHeight: 1 }}>✕</button>
-            </div>
+      {/* Dispatch sidebar state via custom event for parent layout */}
+      <input type="hidden" data-sidebar-collapsed={collapsed ? 'true' : 'false'} />
 
-            <div className="px-6 py-5">
-              {affiliateSubmitted ? (
-                <div className="text-center py-10">
-                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>✅</div>
-                  <h4 className="text-xl font-bold mb-2" style={{ color: isDarkMode ? '#e2e8f0' : '#000' }}>Application Sent!</h4>
-                  <p style={{ color: isDarkMode ? '#94a3b8' : '#64748b', fontSize: '14px' }}>We'll review it and get back to you within 48 hours.</p>
-                  <button onClick={() => { setShowAffiliate(false); setAffiliateSubmitted(false); }} className="mt-6 px-6 py-2 rounded-xl font-semibold" style={{ background: 'linear-gradient(135deg, #06b6d4, #2563eb)', color: '#fff' }}>Close</button>
-                </div>
-              ) : (
-                <>
-                  {/* Commission Cards */}
-                  <div className="grid grid-cols-2 gap-3 mb-5">
-                    <div className="p-4 rounded-xl" style={{ background: isDarkMode ? 'rgba(6,182,212,0.1)' : 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.2)' }}>
-                      <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#06b6d4', marginBottom: '4px' }}>Your Code Gives</div>
-                      <div className="font-bold text-lg" style={{ color: isDarkMode ? '#e2e8f0' : '#000' }}>15% off</div>
-                      <div style={{ fontSize: '12px', color: isDarkMode ? '#94a3b8' : '#64748b' }}>first month for customers</div>
-                    </div>
-                    <div className="p-4 rounded-xl" style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.12), rgba(37,99,235,0.12))', border: '1px solid rgba(6,182,212,0.25)' }}>
-                      <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#06b6d4', marginBottom: '4px' }}>You Earn</div>
-                      <div className="font-bold text-lg" style={{ color: isDarkMode ? '#e2e8f0' : '#000' }}>20% monthly</div>
-                      <div style={{ fontSize: '12px', color: isDarkMode ? '#94a3b8' : '#64748b' }}>recurring commission</div>
-                    </div>
-                  </div>
+      {/* Mobile: hamburger toggle */}
+      <button
+        onClick={() => setMobileOpen(!mobileOpen)}
+        className="md:hidden fixed top-4 left-4 z-50 w-10 h-10 rounded-xl flex items-center justify-center transition-all"
+        style={{ 
+          backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+          border: isDarkMode ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(0,0,0,0.1)',
+          color: isDarkMode ? '#e2e8f0' : '#334155'
+        }}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {mobileOpen ? <path d="M6 18L18 6M6 6l12 12" /> : <path d="M4 6h16M4 12h16M4 18h16" />}
+        </svg>
+      </button>
 
-                  {/* Form */}
-                  <div className="space-y-3">
-                    {affiliateError && (
-                      <div className="p-3 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>{affiliateError}</div>
-                    )}
-                    <div>
-                      <label className="block text-sm font-semibold mb-1" style={{ color: isDarkMode ? '#94a3b8' : '#475569' }}>Full Name</label>
-                      <input type="text" value={affiliateForm.fullName} onChange={e => setAffiliateForm(p => ({...p, fullName: e.target.value}))} placeholder="John Doe" className="w-full px-4 py-3 rounded-xl outline-none transition-all" style={{ background: isDarkMode ? 'rgba(255,255,255,0.06)' : '#f8fafc', border: isDarkMode ? '1px solid rgba(6,182,212,0.2)' : '1px solid #e2e8f0', color: isDarkMode ? '#e2e8f0' : '#000', fontSize: '15px' }} />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold mb-1" style={{ color: isDarkMode ? '#94a3b8' : '#475569' }}>Email Address</label>
-                      <input type="email" value={affiliateForm.email} onChange={e => setAffiliateForm(p => ({...p, email: e.target.value}))} placeholder="your@email.com" className="w-full px-4 py-3 rounded-xl outline-none transition-all" style={{ background: isDarkMode ? 'rgba(255,255,255,0.06)' : '#f8fafc', border: isDarkMode ? '1px solid rgba(6,182,212,0.2)' : '1px solid #e2e8f0', color: isDarkMode ? '#e2e8f0' : '#000', fontSize: '15px' }} />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold mb-1" style={{ color: isDarkMode ? '#94a3b8' : '#475569' }}>TikTok / Social Handle</label>
-                      <input type="text" value={affiliateForm.tiktokHandle} onChange={e => setAffiliateForm(p => ({...p, tiktokHandle: e.target.value}))} placeholder="@yourhandle" className="w-full px-4 py-3 rounded-xl outline-none transition-all" style={{ background: isDarkMode ? 'rgba(255,255,255,0.06)' : '#f8fafc', border: isDarkMode ? '1px solid rgba(6,182,212,0.2)' : '1px solid #e2e8f0', color: isDarkMode ? '#e2e8f0' : '#000', fontSize: '15px' }} />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold mb-1" style={{ color: isDarkMode ? '#94a3b8' : '#475569' }}>Tell us about yourself <span style={{ fontWeight: 400, opacity: 0.6 }}>(optional)</span></label>
-                      <textarea value={affiliateForm.message} onChange={e => setAffiliateForm(p => ({...p, message: e.target.value}))} placeholder="Audience size, content style, why you'd be a great fit..." rows={3} className="w-full px-4 py-3 rounded-xl outline-none resize-none transition-all" style={{ background: isDarkMode ? 'rgba(255,255,255,0.06)' : '#f8fafc', border: isDarkMode ? '1px solid rgba(6,182,212,0.2)' : '1px solid #e2e8f0', color: isDarkMode ? '#e2e8f0' : '#000', fontSize: '15px' }} />
-                    </div>
-                    <button
-                      disabled={affiliateSubmitting || !affiliateForm.fullName || !affiliateForm.email || !affiliateForm.tiktokHandle}
-                      onClick={async () => {
-                        setAffiliateSubmitting(true);
-                        setAffiliateError('');
-                        try {
-                          const res = await fetch('/api/affiliate', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(affiliateForm)
-                          });
-                          const d = await res.json();
-                          if (res.ok) {
-                            setAffiliateSubmitted(true);
-                            setAffiliateForm({ fullName: '', email: '', tiktokHandle: '', message: '' });
-                          } else {
-                            setAffiliateError(d?.details || d?.error || 'Something went wrong. Please try again.');
-                          }
-                        } catch {
-                          setAffiliateError('Network error. Please check your connection.');
-                        } finally {
-                          setAffiliateSubmitting(false);
-                        }
-                      }}
-                      className="w-full py-3.5 rounded-xl font-bold text-white transition-all"
-                      style={{ background: (affiliateSubmitting || !affiliateForm.fullName || !affiliateForm.email || !affiliateForm.tiktokHandle) ? 'rgba(6,182,212,0.4)' : 'linear-gradient(135deg, #06b6d4, #2563eb)', cursor: (affiliateSubmitting || !affiliateForm.fullName || !affiliateForm.email || !affiliateForm.tiktokHandle) ? 'not-allowed' : 'pointer', fontSize: '15px' }}
-                    >
-                      {affiliateSubmitting ? 'Submitting...' : 'Submit Application'}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {mobileOpen && <div className="md:hidden fixed inset-0 bg-black/50 z-40" onClick={() => setMobileOpen(false)} />}
 
-      {/* Feedback Modal - NotebookLM Style */}
+      <div 
+        className={`md:hidden fixed left-0 top-0 h-full w-72 z-50 transform transition-transform duration-300 ease-in-out ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#f8fafc', borderRight: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0' }}
+      >
+        {sidebarContent}
+      </div>
+
+      {/* Feedback Modal */}
       {showFeedback && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowFeedback(false)} />
-          <div 
-            className="relative w-full max-w-md rounded-2xl p-6"
-            style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#ffffff', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0', boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}
-          >
-            <h3 className="text-xl font-bold mb-4" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>
-              Send Feedback
-            </h3>
-            
+          <div className="relative w-full max-w-md rounded-2xl p-6" style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#ffffff', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0', boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}>
+            <h3 className="text-xl font-bold mb-4" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>Send Feedback</h3>
             {feedbackSent ? (
               <div className="text-center py-8">
-                <div className="mx-auto mb-4" style={{ color: '#34a853', width: '48px' }}>
-                  <CheckCircleIcon />
-                </div>
+                <div className="mx-auto mb-4" style={{ color: '#34a853', width: '48px' }}><CheckCircleIcon /></div>
                 <p style={{ color: '#34a853' }}>Thanks for your feedback!</p>
               </div>
             ) : (
@@ -491,27 +339,11 @@ export default function Sidebar({
                   onChange={(e) => setFeedbackText(e.target.value)}
                   placeholder="Tell us what you think, report bugs, or suggest features..."
                   className="w-full h-32 p-4 rounded-xl resize-none outline-none"
-                  style={{ 
-                    backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f1f5f9', 
-                    color: isDarkMode ? '#e2e8f0' : '#000000',
-                    border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0'
-                  }}
+                  style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f1f5f9', color: isDarkMode ? '#e2e8f0' : '#000000', border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0' }}
                 />
                 <div className="flex gap-3 mt-4">
-                  <button
-                    onClick={() => setShowFeedback(false)}
-                    className="flex-1 px-4 py-3 rounded-xl font-medium transition-colors"
-                    style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f1f5f9', color: isDarkMode ? '#94a3b8' : '#475569' }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSendFeedback}
-                    className="flex-1 px-4 py-3 rounded-xl font-medium transition-colors"
-                    style={{ backgroundColor: '#1a73e8', color: '#ffffff' }}
-                  >
-                    Send
-                  </button>
+                  <button onClick={() => setShowFeedback(false)} className="flex-1 px-4 py-3 rounded-xl font-medium transition-colors" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#f1f5f9', color: isDarkMode ? '#94a3b8' : '#475569' }}>Cancel</button>
+                  <button onClick={handleSendFeedback} className="flex-1 px-4 py-3 rounded-xl font-medium transition-colors" style={{ backgroundColor: '#1a73e8', color: '#ffffff' }}>Send</button>
                 </div>
               </>
             )}
@@ -521,4 +353,3 @@ export default function Sidebar({
     </>
   );
 }
-

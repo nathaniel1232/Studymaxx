@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { checkServerRateLimit, getClientIP } from '../../utils/serverRateLimit';
 
 export const maxDuration = 120;
 
@@ -9,6 +10,16 @@ const openai = new OpenAI({
 
 export async function POST(request: NextRequest) {
   try {
+    // Basic server-side rate limiting: 3 summarizations per IP per day
+    const clientIP = getClientIP(request);
+    const rateCheck = checkServerRateLimit(`summarize:${clientIP}`, 3);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: 'Daily summary limit reached. Upgrade to Premium for unlimited summaries.' },
+        { status: 429 }
+      );
+    }
+
     const { text, length = 'medium', sourceType = 'text', outputLanguage } = await request.json();
 
     if (!text || !text.trim()) {

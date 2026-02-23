@@ -3,6 +3,8 @@ import { VertexAI } from '@google-cloud/vertexai';
 import { createClient } from '@deepgram/sdk';
 import OpenAI from 'openai';
 
+export const maxDuration = 60; // Allow up to 60s for transcription + summary
+
 // Lazy initialization to avoid build-time errors
 let vertexAI: VertexAI | null = null;
 let deepgram: any = null;

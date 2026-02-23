@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
 import { createClient } from "@supabase/supabase-js";
 import {
   getWelcomeTemplate,
@@ -7,7 +6,26 @@ import {
   getPremiumUpgradeTemplate,
 } from "@/app/lib/email-templates";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+async function sendEmail(to: string, subject: string, html: string) {
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'api-key': process.env.BREVO_API_KEY || '',
+    },
+    body: JSON.stringify({
+      sender: { name: 'StudyMaxx', email: 'noreply@studymaxx.net' },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(errText);
+  }
+}
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "",
   process.env.SUPABASE_SERVICE_ROLE_KEY || ""
@@ -76,15 +94,13 @@ export async function POST(request: NextRequest) {
             break;
         }
 
-        const { error } = await resend.emails.send({
-          from: "StudyMaxx <noreply@studymaxx.net>",
-          to: user.email,
-          subject,
-          html,
-        });
+        const { error: sendError } = await (async () => {
+          try { await sendEmail(user.email, subject, html); return { error: null }; }
+          catch (e: any) { return { error: e }; }
+        })();
 
-        if (error) {
-          console.error(`[Email] Failed ${user.email}:`, error.message);
+        if (sendError) {
+          console.error(`[Email] Failed ${user.email}:`, sendError.message);
           failed++;
         } else {
           console.log(`[Email] ✅ Sent to ${user.email}`);

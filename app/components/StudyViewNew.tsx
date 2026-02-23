@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Flashcard, saveFlashcardSet, shuffleArray, getSavedFlashcardSets } from "../utils/storage";
 import { useSettings } from "../contexts/SettingsContext";
 import { getCurrentUser } from "../utils/supabase";
-import { recordStudySession } from "../utils/streak";
 import LoginModal from "./LoginModal";
 
 // ─── Types ───────────────────────────────────────────────────
@@ -250,13 +249,6 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
     return () => clearTimeout(t);
   }, [toast]);
 
-  // ─── Record study session for streak tracking ─────────────
-  useEffect(() => {
-    const setId = currentSetId || `temp-${Date.now()}`;
-    const setName = originalFlashcards[0]?.question?.slice(0, 30) || "Study Set";
-    recordStudySession(setId, setName);
-  }, []);
-
   const initMatch = () => {
     const pairs = flashcards.slice(0, Math.min(matchCardCount, flashcards.length));
     const cards = pairs.flatMap(card => [
@@ -480,7 +472,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
       )}
 
       {/* Login Modal */}
-      {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
+      {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} initialMode="signup" />}
 
       {/* ─── Top Bar ─── */}
       <header className="flex items-center justify-between px-4 md:px-6 py-3"
@@ -860,7 +852,7 @@ export default function StudyView({ flashcards: initialFlashcards, currentSetId,
               {quizComplete && !isPremium && (
                 <div 
                   className="mt-6 p-4 rounded-2xl cursor-pointer transition-all hover:shadow-lg"
-                  onClick={() => window.location.href = '/pricing'}
+                  onClick={() => window.dispatchEvent(new Event('showPremium'))}
                   style={{
                     background: isDark 
                       ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(59, 130, 246, 0.08) 100%)'

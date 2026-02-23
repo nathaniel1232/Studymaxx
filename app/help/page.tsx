@@ -20,7 +20,7 @@ const faqs = [
   },
   {
     question: "What's the difference between Free and Premium?",
-    answer: "Free users can create up to 2 study sets per day with basic features (10 cards, Medium difficulty, auto language). Premium unlocks unlimited study sets, up to 50 cards per set, custom difficulty, language selection, and exclusive features like math problem support and custom study modes."
+    answer: "Free users can create up to 2 study sets per day (20 cards per set) with all input methods including a free upload trial. Premium unlocks unlimited study sets, up to 75 cards per set, unlimited uploads, unlimited AI chat, cross-device sync, custom difficulty, and more."
   },
   {
     question: "How do quizzes work?",

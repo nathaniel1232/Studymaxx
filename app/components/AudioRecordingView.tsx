@@ -308,7 +308,7 @@ export default function AudioRecordingView({
       };
       updateAudioLevel();
       
-      const options: MediaRecorderOptions = { mimeType: 'audio/webm;codecs=opus', audioBitsPerSecond: 256000 };
+      const options: MediaRecorderOptions = { mimeType: 'audio/webm;codecs=opus', audioBitsPerSecond: 64000 };
       if (!MediaRecorder.isTypeSupported(options.mimeType!)) {
         options.mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
       }
@@ -413,9 +413,11 @@ export default function AudioRecordingView({
       setTranscribeProgress(70);
 
       if (!response.ok) {
-        const errorData = await response.json();
+        if (response.status === 413) throw new Error('Recording is too long. Please keep recordings under 10 minutes.');
         if (response.status === 429) throw new Error('AI service is temporarily busy. Please wait 5-10 seconds and try again.');
-        throw new Error(errorData.error || 'Transcription failed');
+        let errorMsg = 'Transcription failed';
+        try { const errorData = await response.json(); errorMsg = errorData.error || errorMsg; } catch { /* non-JSON error page */ }
+        throw new Error(errorMsg);
       }
 
       const data = await response.json();

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { VertexAI } from '@google-cloud/vertexai';
+import { checkServerRateLimit, getClientIP } from '../../utils/serverRateLimit';
 
 // Lazy-initialize Vertex AI at runtime (not build time)
 let vertexAI: VertexAI | null = null;
@@ -42,6 +43,16 @@ function getVertexAI() {
 
 export async function POST(request: NextRequest) {
   try {
+    // Basic server-side rate limiting: 15 chat messages per IP per day
+    const clientIP = getClientIP(request);
+    const rateCheck = checkServerRateLimit(`chat:${clientIP}`, 15);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        { error: 'Daily chat limit reached. Upgrade to Premium for unlimited chat.' },
+        { status: 429 }
+      );
+    }
+
     const { message, userId, context, history, outputLanguage } = await request.json();
 
     if (!message || !message.trim()) {

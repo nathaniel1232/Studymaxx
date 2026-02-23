@@ -95,7 +95,7 @@ export default function StudyTipsPage() {
           {/* Premium CTA */}
           <div 
             className="p-6 rounded-2xl cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
-            onClick={() => router.push('/pricing')}
+            onClick={() => window.dispatchEvent(new Event('showPremium'))}
             style={{ 
               background: isDarkMode 
                 ? 'rgba(6, 182, 212, 0.1)'

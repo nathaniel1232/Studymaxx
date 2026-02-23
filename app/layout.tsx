@@ -11,8 +11,21 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "StudyMaxx - Turn Notes into Flashcards",
-  description: "Generate flashcards from your notes instantly. Study smarter, not harder.",
+  title: "StudyMaxx - Turn Notes into Flashcards in Seconds",
+  description: "Paste your notes, upload a PDF, or drop a YouTube link — StudyMaxx creates flashcards, quizzes, and study games instantly with AI. Used by 2,000+ students.",
+  openGraph: {
+    title: "StudyMaxx - Turn Notes into Flashcards in Seconds",
+    description: "Paste notes, upload a PDF or YouTube link → AI creates flashcards, quizzes & games. Free to start.",
+    siteName: "StudyMaxx",
+    type: "website",
+    url: "https://studymaxx.net",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "StudyMaxx - Turn Notes into Flashcards in Seconds",
+    description: "Paste notes, upload a PDF or YouTube link → AI creates flashcards, quizzes & games. Free to start.",
+  },
+  keywords: ["flashcards", "study", "AI flashcards", "quizlet alternative", "study tool", "flashcard maker", "AI study", "exam prep"],
   viewport: {
     width: "device-width",
     initialScale: 1,

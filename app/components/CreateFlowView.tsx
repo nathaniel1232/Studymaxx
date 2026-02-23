@@ -131,7 +131,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   const [isDailyLimit, setIsDailyLimit] = useState(false);
   const [premiumCheckLoading, setPremiumCheckLoading] = useState(true);
   const [hasSession, setHasSession] = useState(false);
-  const [remainingGenerations, setRemainingGenerations] = useState(3);
+  const [remainingGenerations, setRemainingGenerations] = useState(2);
 
   // Check premium status on mount AND when session changes
   useEffect(() => {
@@ -625,7 +625,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         
         // Use the server-side daily count if available, otherwise fallback to client-side check
         if (data.remainingDailyGenerations !== undefined) {
-          setRemainingGenerations(data.isPremium ? 3 : Math.max(0, 3 - data.dailyAiCount));
+          setRemainingGenerations(data.isPremium ? 999 : Math.max(0, 2 - data.dailyAiCount));
         } else {
           const remaining = getRemainingGenerations(session?.user?.id || '', data.isPremium);
           setRemainingGenerations(remaining);
@@ -647,7 +647,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         setSetsCreated(userSets.length);
         const remaining = getRemainingGenerations(userId, false);
         setRemainingGenerations(remaining);
-        setCanCreateMore(userSets.length < 3);
+        setCanCreateMore(userSets.length < 2);
         setIsPremium(false);
       }
     } catch (error) {
@@ -1107,8 +1107,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       const userSets = savedSets.filter(set => set.userId === userId);
       
       if (userSets.length >= 2) {
-        setError("You've reached your daily limit of 2 free study sets. Upgrade to Premium for unlimited study sets!");
-        setTimeout(() => window.location.href = '/pricing', 500);
+        setError("You've reached your daily limit. Upgrade to Premium for unlimited study sets!");
+        setTimeout(() => window.dispatchEvent(new Event('showPremium')), 2500);
         setCurrentStep(1); // Go back to step 1
         return;
       }
@@ -1143,7 +1143,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     
     if (!rateLimit.allowed) {
       setError(rateLimit.reason || messages.errors.generationTooShort);
-      setTimeout(() => window.location.href = '/pricing', 500);
+      setTimeout(() => window.dispatchEvent(new Event('showPremium')), 500);
       // Don't continue to generation if rate limited
       setCurrentStep(1);
       return;
@@ -1191,7 +1191,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         const latestSets = await getSavedFlashcardSets();
         const latestUserSets = latestSets.filter(set => set.userId === userIdForGen);
         if (latestUserSets.length >= 2) {
-          throw new Error("You've reached your limit of 2 free study sets. Upgrade to Premium for unlimited study sets!");
+          throw new Error("You've reached your daily limit. Upgrade to Premium for unlimited study sets!");
         }
       }
 
@@ -1241,7 +1241,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       // Handle premium-related errors
       if (err.message === "PREMIUM_REQUIRED" || err.message.includes("Upgrade to Premium")) {
         setIsDailyLimit(false);
-        setTimeout(() => window.location.href = '/pricing', 500);
+        setTimeout(() => window.dispatchEvent(new Event('showPremium')), 2500);
         setIsGenerating(false);
         setCurrentStep(2);
         return;
@@ -1252,7 +1252,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         setIsGenerating(false);
         setCurrentStep(2);
         setIsDailyLimit(true);
-        setTimeout(() => window.location.href = '/pricing', 500);
+        setTimeout(() => window.dispatchEvent(new Event('showPremium')), 2500);
         return;
       }
 
@@ -1324,7 +1324,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
             </div>
             {hasSession && (
               <div className="text-sm font-semibold" style={{ color: '#5f6368' }}>
-                {isPremium ? "⭐ Premium" : `${remainingGenerations}/3 free`}
+                {isPremium ? "⭐ Premium" : `${remainingGenerations}/2 left`}
               </div>
             )}
           </div>
@@ -1399,10 +1399,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
           {currentStep === 1 && (
             <div className="space-y-3">
               {/* Daily limit banner - only show when needed */}
-              {!premiumCheckLoading && !isPremium && hasSession && remainingGenerations < 3 && remainingGenerations >= 0 && (
+              {!premiumCheckLoading && !isPremium && hasSession && remainingGenerations < 2 && remainingGenerations >= 0 && (
                 <div className="p-2 rounded-lg border bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
                   <p className="text-xs font-medium text-blue-800 dark:text-blue-200">
-                    {remainingGenerations} of 3 free generations left today
+                    {remainingGenerations} of 2 generations left today
                   </p>
                 </div>
               )}
@@ -1582,14 +1582,14 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         </div>
                       </div>
                       <span className="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-md border border-emerald-200 dark:border-emerald-800">
-                        ✓ Free
+                        ✓ Ready
                       </span>
                     </CardContent>
                   </Card>
 
                   {!isPremium ? (
                     <Card
-                      onClick={() => window.location.href = '/pricing'}
+                      onClick={() => window.dispatchEvent(new Event('showPremium'))}
                       className="cursor-pointer transition-all duration-300 border-2 rounded-md overflow-hidden"
                       style={{
                         background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.05) 100%)',
@@ -2249,7 +2249,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       type="button"
                       onClick={() => {
                         if (locked) {
-                           window.location.href = '/pricing';
+                           window.dispatchEvent(new Event('showPremium'));
                            return;
                         }
                         setDifficulty(level);
@@ -2300,7 +2300,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                    {t("number_of_flashcards")}: {targetGrade === 'A' ? 50 : targetGrade === 'B' ? 35 : targetGrade === 'C' ? 20 : targetGrade === 'D' ? 15 : 10}
                    {!isPremium && (
                      <span className="ml-2 text-xs text-amber-600 dark:text-amber-400 font-normal">
-                       (Max 20 for free users)
+                       (Max 20 cards)
                      </span>
                    )}
                  </label>
@@ -2315,8 +2315,8 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                      value={targetGrade === 'A' ? 50 : targetGrade === 'B' ? 35 : targetGrade === 'C' ? 20 : targetGrade === 'D' ? 15 : 10}
                      onChange={(e) => {
                        const value = parseInt(e.target.value);
-                       if (!isPremium && value > 20) {
-                         window.location.href = '/pricing';
+                       if (!isPremium && value > 15) {
+                         window.dispatchEvent(new Event('showPremium'));
                          return;
                        }
                        const gradeMap: Record<number, Grade> = { 10: "E", 15: "D", 20: "C", 35: "B", 50: "A" };
@@ -2349,7 +2349,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                   {[
                     { count: 10, label: "10 cards", grade: "Pass", locked: false, desc: null },
                     { count: 15, label: "15 cards", grade: "Good", locked: false, desc: null },
-                    { count: 20, label: "20 cards", grade: "Very Good", locked: false, desc: null },
+                    { count: 20, label: "20 cards", grade: "Very Good", locked: !isPremium, desc: !isPremium ? "Premium" : null },
                     { count: 35, label: "35 cards", grade: "Excellent", locked: !isPremium, desc: !isPremium ? "Premium" : "Better grades" },
                     { count: 50, label: "50 cards", grade: "Top Grade", locked: !isPremium, desc: !isPremium ? "Premium" : "Top results" }
                   ].map(({ count, label, grade: gradeText, locked, desc }) => {
@@ -2364,7 +2364,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                         type="button"
                         onClick={() => {
                           if (locked) {
-                            window.location.href = '/pricing';
+                            window.dispatchEvent(new Event('showPremium'));
                           } else {
                             setTargetGrade(gradeValue);
                           }
@@ -2426,7 +2426,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                 <div 
                   onClick={() => {
                     if (!isPremium) {
-                      window.location.href = '/pricing';
+                      window.dispatchEvent(new Event('showPremium'));
                     } else {
                       setIncludeMathProblems(!includeMathProblems);
                     }

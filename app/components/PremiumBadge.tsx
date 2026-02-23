@@ -142,27 +142,23 @@ export function FeatureComparison({ onUpgrade }: FeatureComparisonProps) {
         <ul className="space-y-2 text-sm">
           <li className="flex items-center gap-2">
             <span className="text-green-500">✓</span>
-            <span className="text-gray-700 dark:text-gray-300">1 study set total</span>
+            <span className="text-gray-700 dark:text-gray-300">2 study sets per day</span>
           </li>
           <li className="flex items-center gap-2">
             <span className="text-green-500">✓</span>
-            <span className="text-gray-700 dark:text-gray-300">1 AI generation/day</span>
+            <span className="text-gray-700 dark:text-gray-300">2 AI generations/day</span>
           </li>
           <li className="flex items-center gap-2">
             <span className="text-green-500">✓</span>
-            <span className="text-gray-700 dark:text-gray-300">Up to 15 flashcards</span>
+            <span className="text-gray-700 dark:text-gray-300">Up to 20 flashcards per set</span>
           </li>
           <li className="flex items-center gap-2">
             <span className="text-red-500">✗</span>
-            <span className="text-gray-500 dark:text-gray-500 line-through">PDF uploads</span>
+            <span className="text-gray-500 dark:text-gray-500 line-through">Cross-device sync</span>
           </li>
           <li className="flex items-center gap-2">
             <span className="text-red-500">✗</span>
-            <span className="text-gray-500 dark:text-gray-500 line-through">YouTube support</span>
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-red-500">✗</span>
-            <span className="text-gray-500 dark:text-gray-500 line-through">Cloud sync</span>
+            <span className="text-gray-500 dark:text-gray-500 line-through">Difficulty customization</span>
           </li>
         </ul>
       </div>
@@ -188,7 +184,7 @@ export function FeatureComparison({ onUpgrade }: FeatureComparisonProps) {
           </li>
           <li className="flex items-center gap-2">
             <span className="text-green-500">✓</span>
-            <span className="font-medium text-gray-900 dark:text-white">Unlimited flashcards</span>
+            <span className="font-medium text-gray-900 dark:text-white">Up to 75 cards per set</span>
           </li>
           <li className="flex items-center gap-2">
             <span className="text-green-500">✓</span>
@@ -200,7 +196,7 @@ export function FeatureComparison({ onUpgrade }: FeatureComparisonProps) {
           </li>
           <li className="flex items-center gap-2">
             <span className="text-green-500">✓</span>
-            <span className="font-medium text-gray-900 dark:text-white">Cloud sync & sharing</span>
+            <span className="font-medium text-gray-900 dark:text-white">Cross-device sync</span>
           </li>
         </ul>
         <button

@@ -62,8 +62,8 @@ interface QuizResult {
 // CONSTANTS
 // ============================================================
 
-const FREE_MESSAGE_LIMIT = 3;
-const DAILY_LIMITS = { chatMessages: 100, quizzes: 15 };
+const FREE_MESSAGE_LIMIT = 5;
+const DAILY_LIMITS = { chatMessages: Infinity, quizzes: Infinity };
 
 // ============================================================
 // RATE LIMITING (localStorage)
@@ -792,8 +792,12 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
     (settings.theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   const appLang = settings.language || "en";
 
-  // Use app-wide language setting directly (no separate MathMaxx language picker)
-  const mathLang = appLang;
+  // Language state — defaults to app setting, user can override in MathMaxx
+  const [mathLang, setMathLang] = useState(() => {
+    if (typeof window === "undefined") return appLang;
+    return localStorage.getItem("mathmaxx_lang") || appLang;
+  });
+  const [showLangDropdown, setShowLangDropdown] = useState(false);
 
   // UI strings - fully translated for all 20 languages
   const s = getMathStrings(mathLang);
@@ -1266,7 +1270,7 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
             ))}
           </div>
           <button
-            onClick={() => window.location.href = "/pricing"}
+            onClick={() => window.dispatchEvent(new Event('showPremium'))}
             className="w-full py-3 rounded-xl font-bold text-white transition-all hover:scale-[1.02]"
             style={{ background: "#3b82f6" }}
           >
@@ -1319,6 +1323,54 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Language Selector */}
+        <div className="relative">
+          <button
+            onClick={() => setShowLangDropdown(!showLangDropdown)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all"
+            style={{
+              backgroundColor: isDarkMode ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+              color: isDarkMode ? "#e2e8f0" : "#334155",
+              border: `1px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
+            }}
+          >
+            <span>{MATH_LANGUAGES.find(l => l.code === mathLang)?.flag || "🌐"}</span>
+            <span className="hidden sm:inline">{MATH_LANGUAGES.find(l => l.code === mathLang)?.label || "English"}</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          {showLangDropdown && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowLangDropdown(false)} />
+              <div
+                className="absolute right-0 top-full mt-1 w-48 max-h-64 overflow-y-auto rounded-xl shadow-xl z-50"
+                style={{
+                  backgroundColor: isDarkMode ? "#1a2332" : "#ffffff",
+                  border: `1px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
+                }}
+              >
+                {MATH_LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      setMathLang(lang.code);
+                      localStorage.setItem("mathmaxx_lang", lang.code);
+                      setShowLangDropdown(false);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-all text-left"
+                    style={{
+                      backgroundColor: mathLang === lang.code ? (isDarkMode ? "rgba(6,182,212,0.15)" : "rgba(6,182,212,0.08)") : "transparent",
+                      color: mathLang === lang.code ? "#06b6d4" : (isDarkMode ? "#e2e8f0" : "#334155"),
+                    }}
+                  >
+                    <span>{lang.flag}</span>
+                    <span className="font-medium">{lang.label}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Tab Switcher — only show quiz tab for premium users */}
@@ -1505,7 +1557,19 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
             }}
           >
             <div className="max-w-2xl mx-auto">
-              {/* Image preview - hidden for now */}
+              {/* Image preview */}
+              {imagePreview && (
+                <div className="mb-2 relative inline-block">
+                  <img src={imagePreview} alt="Upload preview" className="h-20 rounded-lg border" style={{ borderColor: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)" }} />
+                  <button
+                    onClick={handleRemoveImage}
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: "#ef4444", color: "#fff" }}
+                  >
+                    <XIcon />
+                  </button>
+                </div>
+              )}
               
               <div
                 className="flex items-end gap-2 rounded-xl px-4 py-2"
@@ -1514,7 +1578,16 @@ export default function MathMaxxView({ onBack, isPremium, user }: MathMaxxViewPr
                   border: `1px solid ${isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)"}`,
                 }}
               >
-                {/* Image upload button - hidden for now */}
+                {/* Image upload button */}
+                <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-2 rounded-lg transition-all hover:scale-110 flex-shrink-0 mb-0.5"
+                  style={{ color: isDarkMode ? "#64748b" : "#94a3b8" }}
+                  title="Upload image of math problem"
+                >
+                  <ImageIcon />
+                </button>
                 
                 <textarea
                   ref={inputRef}

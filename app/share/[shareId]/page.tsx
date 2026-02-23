@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getFlashcardSetByShareId, copySharedSet, FlashcardSet } from "../../utils/storage";
-import StudyView from "../../components/StudyView";
+import StudyView from "../../components/StudyViewNew";
 
 // Custom SVG Icons
 const LinkIcon = () => (

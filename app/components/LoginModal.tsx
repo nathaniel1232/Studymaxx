@@ -147,7 +147,7 @@ export default function LoginModal({ onClose, onSkip, initialMode = 'signin' }: 
         backdropFilter: 'blur(8px)',
         zIndex: 10000,
       }}
-      onClick={onClose}
+      onClick={isLoading ? undefined : onClose}
     >
       <div 
         className="w-full max-w-[380px] rounded-2xl shadow-2xl overflow-hidden"
@@ -247,7 +247,7 @@ export default function LoginModal({ onClose, onSkip, initialMode = 'signin' }: 
               <div className="text-2xl font-bold mb-1" style={{ color: isDarkMode ? '#f1f5f9' : '#0f172a' }}>
                 <span style={{ color: '#06b6d4' }}>Study</span>Maxx
               </div>
-              <p className="text-sm" style={{ color: isDarkMode ? '#64748b' : '#94a3b8' }}>
+              <p className="text-sm" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
                 {isSignUp ? 'Create your account' : 'Sign in to your account'}
               </p>
             </div>
@@ -267,18 +267,20 @@ export default function LoginModal({ onClose, onSkip, initialMode = 'signin' }: 
             {/* Google Button */}
             <button
               onClick={handleGoogleLogin}
-              className="w-full py-2.5 px-4 rounded-xl font-medium flex items-center justify-center gap-2.5 mb-4 transition-all duration-150 hover:shadow-sm active:scale-[0.98]"
+              className="w-full py-2.5 px-4 rounded-xl font-medium flex items-center justify-center gap-2.5 mb-4 transition-all duration-150 hover:shadow-md active:scale-[0.98]"
               style={{ 
                 backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#ffffff', 
-                border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
+                border: `2px solid ${isDarkMode ? 'rgba(6,182,212,0.4)' : '#06b6d4'}`,
                 color: isDarkMode ? '#e2e8f0' : '#334155',
                 fontSize: '14px',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = isDarkMode ? 'rgba(255,255,255,0.2)' : '#cbd5e1';
+                e.currentTarget.style.borderColor = isDarkMode ? 'rgba(6,182,212,0.6)' : '#0891b2';
+                e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(6,182,212,0.08)' : 'rgba(6,182,212,0.04)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0';
+                e.currentTarget.style.borderColor = isDarkMode ? 'rgba(6,182,212,0.4)' : '#06b6d4';
+                e.currentTarget.style.backgroundColor = isDarkMode ? 'rgba(255,255,255,0.1)' : '#ffffff';
               }}
             >
               <svg className="w-[18px] h-[18px] flex-shrink-0" viewBox="0 0 24 24">
@@ -300,7 +302,7 @@ export default function LoginModal({ onClose, onSkip, initialMode = 'signin' }: 
             {/* Email Form */}
             <form onSubmit={handleEmailAuth} className="space-y-3">
               <div>
-                <label className="block text-xs font-medium mb-1.5 uppercase tracking-wide" style={{ color: isDarkMode ? '#64748b' : '#94a3b8' }}>
+                <label className="block text-xs font-medium mb-1.5 uppercase tracking-wide" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
                   Email
                 </label>
                 <input
@@ -322,7 +324,7 @@ export default function LoginModal({ onClose, onSkip, initialMode = 'signin' }: 
 
               {!isMagicLink && (
                 <div>
-                  <label className="block text-xs font-medium mb-1.5 uppercase tracking-wide" style={{ color: isDarkMode ? '#64748b' : '#94a3b8' }}>
+                  <label className="block text-xs font-medium mb-1.5 uppercase tracking-wide" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
                     Password
                   </label>
                   <input
@@ -401,6 +403,7 @@ export default function LoginModal({ onClose, onSkip, initialMode = 'signin' }: 
                   setIsMagicLink(!isMagicLink);
                   setError(null);
                   setPassword("");
+                  setResetSent(false);
                 }}
                 className="text-xs transition-colors hover:underline"
                 style={{ color: isDarkMode ? '#475569' : '#94a3b8' }}
@@ -413,6 +416,7 @@ export default function LoginModal({ onClose, onSkip, initialMode = 'signin' }: 
                   onClick={() => {
                     setIsSignUp(!isSignUp);
                     setError(null);
+                    setResetSent(false);
                   }}
                   className="block w-full text-xs transition-colors"
                   style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}

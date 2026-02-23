@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { FlashcardSet, deleteFlashcardSet } from "../utils/storage";
 import { useSettings } from "../contexts/SettingsContext";
-import { getStreakStatus, getWeeklyActivity, getStreaksAtRisk } from "../utils/streak";
 // WelcomeCard removed - personalization disabled
 
 interface DashboardViewProps {
@@ -36,7 +35,7 @@ const MicrophoneIcon = () => (
 );
 
 const LinkIcon = () => (
-  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="#000000" strokeWidth={1.5}>
+  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
   </svg>
 );
@@ -44,6 +43,15 @@ const LinkIcon = () => (
 const PencilIcon = () => (
   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+  </svg>
+);
+
+const MathIcon = () => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+    <line x1="3" y1="12" x2="12" y2="12" />
+    <line x1="7.5" y1="7.5" x2="7.5" y2="16.5" />
   </svg>
 );
 
@@ -58,13 +66,13 @@ const INPUT_OPTIONS = [
     hoverBg: "rgba(26, 115, 232, 0.15)",
   },
   {
-    id: "audio" as const,
-    Icon: MicrophoneIcon,
-    title: "AI Note Taker",
-    subtitle: "Record lectures, take notes, generate study sets",
-    color: "#ea4335",
-    bgColor: "rgba(234, 67, 53, 0.1)",
-    hoverBg: "rgba(234, 67, 53, 0.15)",
+    id: "mathmaxx" as const,
+    Icon: MathIcon,
+    title: "MathMaxx",
+    subtitle: "AI math tutor — get help with any problem",
+    color: "#8b5cf6",
+    bgColor: "rgba(139, 92, 246, 0.1)",
+    hoverBg: "rgba(139, 92, 246, 0.15)",
   },
   {
     id: "youtube" as const,
@@ -102,7 +110,6 @@ export default function DashboardView({
   onRequestLogin
 }: DashboardViewProps) {
   const { settings } = useSettings();
-  const [activeTab, setActiveTab] = useState<"my-notes" | "shared">("my-notes");
   const [deletingSetId, setDeletingSetId] = useState<string | null>(null);
   const [isDeletingSet, setIsDeletingSet] = useState(false);
 
@@ -125,24 +132,8 @@ export default function DashboardView({
   const [chatMessages, setChatMessages] = useState<Array<{role: 'user' | 'ai', text: string}>>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
 
-  // Track whether free trial has been used (1 upload trial for files OR audio)
-  const [uploadTrialUsed, setUploadTrialUsed] = useState(false);
-
   useEffect(() => {
     console.log('[DashboardView] isPremium prop received:', isPremium);
-    console.log('[DashboardView] isPremium type:', typeof isPremium);
-    console.log('[DashboardView] User:', user?.email);
-    
-    if (!isPremium) {
-      // Combined trial key for both document and audio uploads
-      const uploadKey = `upload_trial_used_${user?.id || 'anon'}`;
-      const trialUsed = localStorage.getItem(uploadKey) === 'true';
-      setUploadTrialUsed(trialUsed);
-      console.log('[DashboardView] Free user - trial used:', trialUsed);
-    } else {
-      console.log('[DashboardView] ✅ PREMIUM USER - No upload restrictions');
-      setUploadTrialUsed(false); // Reset for premium users
-    }
   }, [isPremium, user]);
 
   // Determine if dark mode
@@ -155,26 +146,10 @@ export default function DashboardView({
       onRequestLogin?.();
       return;
     }
-    // If trial is used for upload features, redirect to pricing
-    if (!isPremium && uploadTrialUsed) {
-      if (option.id === 'document' || option.id === 'audio') {
-        window.location.href = '/pricing';
-        return;
-      }
-    }
     onSelectOption(option.id);
   };
 
-  // Streak data
-  const [streakData, setStreakData] = useState<ReturnType<typeof getStreakStatus> | null>(null);
-  const [weeklyActivity, setWeeklyActivity] = useState<ReturnType<typeof getWeeklyActivity>>([]);
-  const [atRiskStreaks, setAtRiskStreaks] = useState<ReturnType<typeof getStreaksAtRisk>>([]);
 
-  useEffect(() => {
-    setStreakData(getStreakStatus());
-    setWeeklyActivity(getWeeklyActivity());
-    setAtRiskStreaks(getStreaksAtRisk());
-  }, []);
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -274,107 +249,12 @@ export default function DashboardView({
 
         {/* Welcome & Personalization Card removed */}
 
-        {/* Study Streak Banner - only show after user has created at least one study set */}
-        {streakData && savedSets.length > 0 && (
-          <div 
-            className="mb-8 p-5 rounded-2xl transition-all duration-300"
-            style={{
-              background: streakData.studiedToday
-                ? isDarkMode 
-                  ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%)'
-                  : 'linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(16, 185, 129, 0.04) 100%)'
-                : isDarkMode
-                  ? 'linear-gradient(135deg, rgba(251, 146, 60, 0.12) 0%, rgba(245, 158, 11, 0.08) 100%)'
-                  : 'linear-gradient(135deg, rgba(251, 146, 60, 0.08) 0%, rgba(245, 158, 11, 0.04) 100%)',
-              border: streakData.studiedToday
-                ? '1px solid rgba(34, 197, 94, 0.25)'
-                : '1px solid rgba(251, 146, 60, 0.25)',
-            }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {/* Streak Fire Emoji */}
-                <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-3xl"
-                  style={{
-                    background: streakData.studiedToday
-                      ? 'rgba(34, 197, 94, 0.15)'
-                      : 'rgba(251, 146, 60, 0.15)',
-                  }}
-                >
-                  {streakData.studiedToday ? '⚡' : '📚'}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-sm" style={{ color: isDarkMode ? '#e2e8f0' : '#0f172a' }}>
-                    {streakData.studiedToday 
-                      ? streakData.overallStreak > 1 
-                        ? `${streakData.overallStreak} day streak! Keep it up!`
-                        : "Great job studying today!"
-                      : streakData.overallStreak > 0
-                        ? `Don't break your ${streakData.overallStreak} day streak!`
-                        : "You haven't studied today yet"
-                    }
-                  </h3>
-                  <p className="text-xs mt-0.5" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
-                    {streakData.studiedToday 
-                      ? `Current streak: ${streakData.overallStreak} days`
-                      : "Open a study set to keep your streak going"
-                    }
-                  </p>
-                </div>
-              </div>
 
-              {/* Weekly Activity Dots */}
-              <div className="hidden sm:flex items-center gap-1.5">
-                {weeklyActivity.map((day, i) => (
-                  <div key={i} className="flex flex-col items-center gap-1">
-                    <div 
-                      className="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
-                      style={{
-                        backgroundColor: day.studied
-                          ? 'rgba(34, 197, 94, 0.25)'
-                          : isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                        border: day.studied
-                          ? '1.5px solid rgba(34, 197, 94, 0.4)'
-                          : `1.5px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
-                      }}
-                    >
-                      {day.studied && (
-                        <svg className="w-3.5 h-3.5" style={{ color: '#22c55e' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                    <span className="text-[10px]" style={{ color: isDarkMode ? '#64748b' : '#94a3b8' }}>{day.day}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* At-risk streaks warning */}
-            {atRiskStreaks.length > 0 && !streakData.studiedToday && (
-              <div className="mt-3 pt-3 border-t" style={{ borderColor: 'rgba(251, 146, 60, 0.15)' }}>
-                <p className="text-xs" style={{ color: '#f59e0b' }}>
-                  ⚡ Streak at risk: {atRiskStreaks.map(s => s.setName).join(', ')} — study now to keep your streak!
-                </p>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Input Options - NotebookLM Style */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
           {INPUT_OPTIONS.map((option) => {
             const IconComponent = option.Icon;
-            const isLocked = !isPremium && (
-              (option.id === 'document' || option.id === 'audio') && uploadTrialUsed
-            );
-            const isFreeTrial = !isPremium && !isLocked && (option.id === 'document' || option.id === 'audio');
-            
-            // Debug logging for each option
-            if (option.id === 'document' || option.id === 'audio') {
-              console.log(`[DashboardView] ${option.id}: isPremium=${isPremium}, isLocked=${isLocked}, isFreeTrial=${isFreeTrial}`);
-            }
             return (
               <button
                 key={option.id}
@@ -384,24 +264,8 @@ export default function DashboardView({
                   backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#ffffff', 
                   border: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0',
                   boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.04)',
-                  opacity: isLocked ? 0.7 : 1,
                 }}
               >
-                {/* Lock badge */}
-                {isLocked && (
-                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold"
-                    style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
-                    Premium
-                  </div>
-                )}
-                {/* Free trial badge */}
-                {isFreeTrial && (
-                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold"
-                    style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', color: '#22c55e' }}>
-                    1 free try
-                  </div>
-                )}
                 <div className="flex items-start gap-4">
                   {/* Icon */}
                   <div 
@@ -415,16 +279,12 @@ export default function DashboardView({
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm md:text-base font-medium mb-1 flex items-center gap-2" style={{ color: isDarkMode ? '#e2e8f0' : '#0f172a' }}>
                       {option.title}
-                      {isLocked ? (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#ef4444' }}><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
-                      ) : (
-                        <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" style={{ color: option.color }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      )}
+                      <svg className="w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" style={{ color: option.color }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
                     </h3>
                     <p className="text-xs md:text-sm" style={{ color: isDarkMode ? '#9ca3af' : '#475569' }}>
-                      {isLocked ? 'Upgrade to Premium to unlock' : option.subtitle}
+                      {option.subtitle}
                     </p>
                   </div>
                 </div>
@@ -433,55 +293,40 @@ export default function DashboardView({
           })}
         </div>
 
-        {/* Premium Upgrade Banner - show only for free users */}
+        {/* Premium Upgrade Banner — shown only for free users */}
         {!isPremium && (
-          <div 
-            className="mb-10 p-5 rounded-2xl relative overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
-            onClick={() => window.location.href = '/pricing'}
+          <div
+            className="mb-10 rounded-2xl overflow-hidden cursor-pointer group"
+            onClick={() => window.dispatchEvent(new Event('showPremium'))}
             style={{ 
-              background: isDarkMode 
-                ? 'linear-gradient(135deg, rgba(6, 182, 212, 0.18) 0%, rgba(59, 130, 246, 0.18) 100%)' 
-                : 'linear-gradient(135deg, rgba(6, 182, 212, 0.09) 0%, rgba(59, 130, 246, 0.09) 100%)',
-              border: isDarkMode ? '1px solid rgba(6, 182, 212, 0.35)' : '1px solid rgba(6, 182, 212, 0.25)',
+              background: 'linear-gradient(135deg, #0e7490 0%, #06b6d4 50%, #67e8f9 100%)',
+              boxShadow: '0 8px 32px rgba(6, 182, 212, 0.25)',
             }}
           >
-            {/* Decorative glow */}
-            <div className="pointer-events-none absolute -top-6 -right-6 w-32 h-32 rounded-full blur-3xl opacity-25" style={{ background: 'radial-gradient(circle, #06b6d4, #3b82f6)' }} />
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #06b6d4, #3b82f6)' }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/>
+            <div className="px-6 py-5 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <h3 className="font-bold text-sm" style={{ color: isDarkMode ? '#e2e8f0' : '#0f172a' }}>
-                      Unlock Premium — study without limits
-                    </h3>
-                  </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1.5">
-                    {['Unlimited study sets', '50 cards per set', 'Upload PDFs & audio', 'AI difficulty tuning'].map((feat) => (
-                      <span key={feat} className="flex items-center gap-1 text-xs" style={{ color: isDarkMode ? '#94a3b8' : '#475569' }}>
-                        <svg className="w-3 h-3 flex-shrink-0" style={{ color: '#06b6d4' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                        {feat}
-                      </span>
-                    ))}
-                  </div>
+                <div className="min-w-0">
+                  <p className="text-white font-bold text-base leading-tight">You're on the free plan</p>
+                  <p className="text-cyan-100 text-sm mt-0.5 truncate">Limited to 1 summary &amp; 5 chats/day · 15 cards max · No file uploads</p>
                 </div>
               </div>
-              <button 
-                className="px-5 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all hover:shadow-lg hover:scale-105 active:scale-100 flex-shrink-0"
-                style={{ 
-                  background: 'linear-gradient(135deg, #06b6d4, #3b82f6)', 
-                  color: '#ffffff',
-                  boxShadow: '0 4px 16px rgba(6, 182, 212, 0.4)',
-                }}
-              >
-                Get Premium →
-              </button>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="hidden sm:block text-right">
+                  <p className="text-white font-bold text-sm">From $4.42<span className="text-cyan-200 font-normal">/mo</span></p>
+                  <p className="text-cyan-100 text-xs">Unlimited everything</p>
+                </div>
+                <div
+                  className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 group-hover:shadow-lg group-hover:scale-105 whitespace-nowrap"
+                  style={{ backgroundColor: '#ffffff', color: '#0e7490' }}
+                >
+                  Unlock Premium →
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -496,30 +341,9 @@ export default function DashboardView({
           )}
         </div>
 
-        {/* Tabs - NotebookLM Style */}
-        <div className="flex gap-1 mb-6 p-1 rounded-xl" style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : '#e8eef5' }}>
-          <button
-            onClick={() => setActiveTab("my-notes")}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-            style={{ 
-              backgroundColor: activeTab === "my-notes" ? (isDarkMode ? 'rgba(255,255,255,0.1)' : '#ffffff') : 'transparent',
-              color: activeTab === "my-notes" ? (isDarkMode ? '#e2e8f0' : '#000000') : '#5f6368',
-              boxShadow: activeTab === "my-notes" ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-            }}
-          >
-            My Sets
-          </button>
-          <button
-            onClick={() => setActiveTab("shared")}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-            style={{ 
-              backgroundColor: activeTab === "shared" ? (isDarkMode ? 'rgba(255,255,255,0.1)' : '#ffffff') : 'transparent',
-              color: activeTab === "shared" ? (isDarkMode ? '#e2e8f0' : '#000000') : '#5f6368',
-              boxShadow: activeTab === "shared" ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-            }}
-          >
-            Shared with Me
-          </button>
+        {/* Section Header */}
+        <div className="flex items-center gap-2 mb-6">
+          <h3 className="text-sm font-semibold" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>My Sets</h3>
         </div>
 
         {/* Study Sets List or Empty State - NotebookLM Style */}
@@ -637,7 +461,7 @@ export default function DashboardView({
           <div 
             className="fixed bottom-4 right-4 left-4 sm:left-auto sm:w-80 sm:bottom-6 sm:right-6 rounded-2xl overflow-hidden shadow-2xl z-50"
             style={{ 
-              backgroundColor: isDarkMode ? 'rgba(15, 29, 50, 0.95)' : 'rgba(255, 255, 255, 0.95)', 
+              backgroundColor: isDarkMode ? '#0f1d32' : '#ffffff', 
               border: '1px solid rgba(6, 182, 212, 0.2)' 
             }}
           >
@@ -660,7 +484,7 @@ export default function DashboardView({
               {chatMessages.length === 0 ? (
                 <div 
                   className="flex items-center gap-3 px-4 py-3 rounded-xl"
-                  style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)' }}
+                  style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', border: isDarkMode ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.1)' }}
                 >
                   <input
                     type="text"
@@ -670,7 +494,8 @@ export default function DashboardView({
                     onKeyDown={(e) => e.key === 'Enter' && handleChatSubmit()}
                   className="flex-1 outline-none text-sm bg-transparent"
                   style={{ 
-                    color: isDarkMode ? '#ffffff' : '#000000'
+                    color: isDarkMode ? '#ffffff' : '#000000',
+                    caretColor: isDarkMode ? '#ffffff' : '#000000'
                   }}
                   />
                   <button 
@@ -712,7 +537,7 @@ export default function DashboardView({
                   </div>
                   <div 
                     className="flex items-center gap-3 px-4 py-3 rounded-xl sticky bottom-0"
-                    style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: isDarkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)' }}
+                    style={{ backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', border: isDarkMode ? '1px solid rgba(255,255,255,0.12)' : '1px solid rgba(0,0,0,0.1)' }}
                   >
                     <input
                       type="text"
@@ -722,7 +547,8 @@ export default function DashboardView({
                       onKeyDown={(e) => e.key === 'Enter' && handleChatSubmit()}
                       className="flex-1 outline-none text-sm bg-transparent"
                       style={{ 
-                        color: isDarkMode ? '#ffffff' : '#000000'
+                        color: isDarkMode ? '#ffffff' : '#000000',
+                        caretColor: isDarkMode ? '#ffffff' : '#000000'
                       }}
                     />
                     <button 

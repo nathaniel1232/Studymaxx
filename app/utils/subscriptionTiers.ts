@@ -40,8 +40,8 @@ export const TIERS: Record<TierName, SubscriptionTier> = {
     monthly_price_cents: 0,
     yearly_price_cents: 0,
     max_daily_sets: 2,
-    max_cards_per_set: 20,
-    max_folders: 5,
+    max_cards_per_set: 15,
+    max_folders: 3,
     features: {
       pdf: false,
       youtube: false,
