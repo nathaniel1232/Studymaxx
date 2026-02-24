@@ -49,12 +49,14 @@ interface GradeAscendOnboardingProps {
   onComplete: (data: OnboardingData) => void;
   onSkip: () => void;
   onLogin: () => void;
+  isPremium?: boolean;
 }
 
 export default function GradeAscendOnboarding({
   onComplete,
   onSkip,
   onLogin,
+  isPremium = false,
 }: GradeAscendOnboardingProps) {
   const [step, setStep] = useState(0);
   const [data, setData] = useState<OnboardingData>({ ...EMPTY_ONBOARDING });
@@ -437,6 +439,7 @@ export default function GradeAscendOnboarding({
         paywallData={paywallData}
         onContinueFree={handleFinish}
         onLogin={onLogin}
+        isPremium={isPremium}
       />
     );
   }

@@ -30,6 +30,7 @@ interface GradeAscendPaywallProps {
   paywallData: PaywallData;
   onContinueFree: () => void;
   onLogin: () => void;
+  isPremium?: boolean;
 }
 
 // ── Colour palette ──────────────────────────────────────────────────────────
@@ -48,6 +49,7 @@ export default function GradeAscendPaywall({
   paywallData,
   onContinueFree,
   onLogin,
+  isPremium = false,
 }: GradeAscendPaywallProps) {
   const [billingInterval, setBillingInterval] = useState<"month" | "year">("month");
   const [isLoading, setIsLoading] = useState(false);
@@ -86,7 +88,8 @@ export default function GradeAscendPaywall({
       }
       const elapsed = Date.now() - parseInt(firstVisit, 10);
       const CAMPAIGN_WINDOW = 24 * 60 * 60 * 1000; // 24 hours
-      setIsIntroCampaign(elapsed < CAMPAIGN_WINDOW);
+      // Never show campaign to existing premium users
+      setIsIntroCampaign(!isPremium && elapsed < CAMPAIGN_WINDOW);
     } catch { /* ignore */ }
   }, []);
 

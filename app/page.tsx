@@ -1840,6 +1840,7 @@ export default function Home() {
         <GradeAscendOnboarding
           onComplete={handleGradeAscendComplete}
           onSkip={handleGradeAscendSkip}
+          isPremium={isPremium}
           onLogin={() => {
             // Save pending state so flow can be restored after login
             // (Google OAuth will redirect, email login now propagates via auth state)
