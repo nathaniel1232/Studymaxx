@@ -95,9 +95,11 @@ export default function LoginModal({ onClose, onSkip, initialMode = 'signin' }: 
         const result = await signInWithEmail(email, password);
         if (result.user) {
           setSuccess(true);
+          // Let Supabase onAuthStateChange propagate to parent components
+          // No reload needed — parent listeners will update the UI
           setTimeout(() => {
-            window.location.reload();
-          }, 1500);
+            onClose();
+          }, 1200);
         }
       }
     } catch (err: any) {

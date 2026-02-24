@@ -16,11 +16,13 @@ export async function POST(req: Request) {
       );
     }
 
-    // Use service role key for admin operations
-    const supabase = createClient(
-      supabaseUrl,
-      supabaseServiceKey || supabaseAnonKey
-    );
+    if (!supabaseServiceKey) {
+      console.error('[sync-user] SUPABASE_SERVICE_ROLE_KEY is not set — cannot create user row');
+      return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+    }
+
+    // Always use service role key so RLS doesn't block user row creation
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check if user record exists
     const { data: existingUser } = await supabase

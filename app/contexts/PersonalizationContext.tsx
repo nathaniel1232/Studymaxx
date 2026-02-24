@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { supabase, getCurrentUser } from "../utils/supabase";
+import { buildAIContext as buildAIContextFromEngine } from "../utils/personalizationEngine";
 
 // Personalization types
 export type StudyLevel = "high_school" | "university" | "exam_prep" | "professional";
@@ -372,13 +373,24 @@ export function PersonalizationProvider({ children }: { children: ReactNode }) {
     return diffDays > 0 ? diffDays : null;
   }, [profile?.exam_date]);
 
-  // Get personalized greeting
+  // Get personalized greeting — uses Grade Ascend name if available
   const getPersonalizedGreeting = useCallback(() => {
-    if (!profile) return "Welcome";
+    let name: string | undefined;
     
-    const name = profile.name?.split(" ")[0];
+    // Try Grade Ascend data first
+    if (typeof window !== 'undefined') {
+      try {
+        const savedName = localStorage.getItem('studymaxx_user_name');
+        if (savedName) name = savedName;
+      } catch { /* ignore */ }
+    }
+    
+    // Fall back to profile
+    if (!name && profile?.name) {
+      name = profile.name.split(" ")[0];
+    }
+    
     const hour = new Date().getHours();
-    
     let timeGreeting = "Hello";
     if (hour < 12) timeGreeting = "Good morning";
     else if (hour < 17) timeGreeting = "Good afternoon";
@@ -428,6 +440,23 @@ export function useAIPromptContext() {
   const { profile, daysUntilExam } = usePersonalization();
 
   return React.useMemo(() => {
+    // First try Grade Ascend personalization data (new onboarding)
+    if (typeof window !== 'undefined') {
+      try {
+        const ascendData = localStorage.getItem('studymaxx_grade_ascend_data');
+        const personalizationData = localStorage.getItem('studymaxx_personalization');
+        if (ascendData && personalizationData) {
+          const onboardingData = JSON.parse(ascendData);
+          const profile_ = JSON.parse(personalizationData);
+          const context = buildAIContextFromEngine(onboardingData, profile_);
+          if (context) return context;
+        }
+      } catch {
+        // Fall through to legacy
+      }
+    }
+
+    // Legacy personalization from old onboarding
     if (!profile) return "";
 
     const parts: string[] = [];

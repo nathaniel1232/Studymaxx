@@ -383,7 +383,7 @@ export default function AudioRecordingView({
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('audio/')) { setError('Please upload an audio file (MP3, WAV, M4A, etc.)'); return; }
-    if (file.size > 25 * 1024 * 1024) { setError('File is too large. Maximum size is 25MB.'); return; }
+    if (file.size > 200 * 1024 * 1024) { setError('File is too large. Maximum size is 200MB.'); return; }
     setError("");
     setAudioBlob(file);
     setAudioUrl(URL.createObjectURL(file));
@@ -391,14 +391,6 @@ export default function AudioRecordingView({
 
   const transcribeAudio = async () => {
     if (!audioBlob) return;
-    
-    if (!isPremium) {
-      const trialUsed = localStorage.getItem(`upload_trial_used_${user?.id || 'anon'}`) === 'true';
-      if (trialUsed) {
-        setError("You've used your free upload trial. Upgrade to Premium for unlimited audio recordings!");
-        return;
-      }
-    }
     
     setIsTranscribing(true);
     setTranscribeProgress(10);
@@ -413,7 +405,7 @@ export default function AudioRecordingView({
       setTranscribeProgress(70);
 
       if (!response.ok) {
-        if (response.status === 413) throw new Error('Recording is too long. Please keep recordings under 10 minutes.');
+        if (response.status === 413) throw new Error('Recording file is too large to upload. Please try a shorter recording or compress the audio file.');
         if (response.status === 429) throw new Error('AI service is temporarily busy. Please wait 5-10 seconds and try again.');
         let errorMsg = 'Transcription failed';
         try { const errorData = await response.json(); errorMsg = errorData.error || errorMsg; } catch { /* non-JSON error page */ }
@@ -429,9 +421,6 @@ export default function AudioRecordingView({
       }
       setTranscribeProgress(100);
       
-      if (!isPremium) {
-        localStorage.setItem(`upload_trial_used_${user?.id || 'anon'}`, 'true');
-      }
     } catch (err: any) {
       setError(err.message || 'Failed to transcribe audio. Please try again.');
     } finally {

@@ -87,9 +87,10 @@ export async function POST(req: NextRequest) {
     // Get the origin for redirect URLs
     const origin = req.headers.get("origin") || "http://localhost:3000";
 
-    // Parse request body for interval preference (monthly or yearly) and promo code
+    // Parse request body for interval preference and promo code
     let interval = 'month';
     let promoCode: string | null = null;
+    let isIntroOffer = false;
     try {
       const body = await req.json();
       if (body.interval === 'year') {
@@ -97,6 +98,9 @@ export async function POST(req: NextRequest) {
       }
       if (body.promoCode) {
         promoCode = body.promoCode;
+      }
+      if (body.isIntroOffer === true) {
+        isIntroOffer = true;
       }
     } catch (e) {
       // Body might be empty, default to month
@@ -107,7 +111,7 @@ export async function POST(req: NextRequest) {
       ? 'price_1T3ewnPDFQXMY7ipSviaJLwb'  // Yearly: $52.99/year
       : 'price_1T3ewCPDFQXMY7ipIysE73qy'; // Monthly: $5.99/month
 
-    console.log(`[Checkout] Creating checkout for user ${userId}, interval: ${interval}, priceId: ${priceId}${promoCode ? `, promo: ${promoCode}` : ''}`);
+    console.log(`[Checkout] Creating checkout for user ${userId}, interval: ${interval}, priceId: ${priceId}${promoCode ? `, promo: ${promoCode}` : ''}${isIntroOffer ? ', introOffer: true' : ''}`);
 
     // Create Stripe Checkout Session with your product Price IDs
     const sessionParams: any = {
@@ -134,6 +138,14 @@ export async function POST(req: NextRequest) {
         },
       },
     };
+
+    // Apply intro offer promo ($4.99 first month campaign)
+    // Stripe promotion code: Studymaxxlaunch (ID: promo_1T4QZsPDFQXMY7ip7uxkC9dr)
+    if (isIntroOffer && interval === 'month' && !promoCode) {
+      console.log('[Checkout] Applying intro offer promo: Studymaxxlaunch');
+      delete sessionParams.allow_promotion_codes;
+      sessionParams.discounts = [{ promotion_code: 'promo_1T4QZsPDFQXMY7ip7uxkC9dr' }];
+    }
 
     // Apply coupon if provided.
     // NOTE: cannot use allow_promotion_codes + discounts simultaneously — remove the general

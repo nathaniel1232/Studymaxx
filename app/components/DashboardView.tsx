@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { FlashcardSet, deleteFlashcardSet } from "../utils/storage";
 import { useSettings } from "../contexts/SettingsContext";
-// WelcomeCard removed - personalization disabled
+
+const StudyPlanWidget = dynamic(() => import("./StudyPlanWidget"), { ssr: false });
 
 interface DashboardViewProps {
   onSelectOption: (option: "notes" | "audio" | "document" | "youtube" | "mathmaxx") => void;
@@ -247,9 +249,14 @@ export default function DashboardView({
           </h1>
         </div>
 
-        {/* Welcome & Personalization Card removed */}
-
-
+        {/* Study Plan Widget — premium users only */}
+        {isPremium && (
+          <StudyPlanWidget
+            isPremium={isPremium}
+            isDarkMode={isDarkMode}
+            onRequestPremium={() => window.dispatchEvent(new Event('showPremium'))}
+          />
+        )}
 
         {/* Input Options - NotebookLM Style */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
@@ -316,10 +323,6 @@ export default function DashboardView({
                 </div>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
-                <div className="hidden sm:block text-right">
-                  <p className="text-white font-bold text-sm">From $4.42<span className="text-cyan-200 font-normal">/mo</span></p>
-                  <p className="text-cyan-100 text-xs">Unlimited everything</p>
-                </div>
                 <div
                   className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 group-hover:shadow-lg group-hover:scale-105 whitespace-nowrap"
                   style={{ backgroundColor: '#ffffff', color: '#0e7490' }}
@@ -331,7 +334,7 @@ export default function DashboardView({
           </div>
         )}
 
-        {/* Section Header - NotebookLM Style */}
+        {/* Section Header */}
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-medium" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>Your Study Sets</h2>
           {savedSets.length > 0 && (
@@ -339,11 +342,6 @@ export default function DashboardView({
               {savedSets.length} {savedSets.length === 1 ? 'set' : 'sets'}
             </span>
           )}
-        </div>
-
-        {/* Section Header */}
-        <div className="flex items-center gap-2 mb-6">
-          <h3 className="text-sm font-semibold" style={{ color: isDarkMode ? '#e2e8f0' : '#000000' }}>My Sets</h3>
         </div>
 
         {/* Study Sets List or Empty State - NotebookLM Style */}

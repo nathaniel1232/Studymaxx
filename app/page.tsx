@@ -20,6 +20,9 @@ import ArrowIcon from "./components/icons/ArrowIcon";
 import { getCurrentUser, onAuthStateChange, supabase } from "./utils/supabase";
 import Sidebar from "./components/Sidebar";
 import PremiumModal from "./components/PremiumModal";
+import GradeAscendOnboarding from "./components/GradeAscendOnboarding";
+import { OnboardingData } from "./utils/onboardingTypes";
+import { buildPersonalizationProfile, buildAIContext } from "./utils/personalizationEngine";
 
 // Lazy load heavy components that aren't needed on initial render
 const CreateFlowView = dynamic(() => import("./components/CreateFlowView"), { ssr: false });
@@ -91,6 +94,9 @@ export default function Home() {
   const [selectedMaterialType, setSelectedMaterialType] = useState<MaterialType>(null);
   const [pendingTranscription, setPendingTranscription] = useState<{ text: string; subject: string } | null>(null);
   const [pendingExtraction, setPendingExtraction] = useState<{ text: string; subject: string; title: string } | null>(null);
+  
+  // Grade Ascend onboarding flow
+  const [showGradeAscendOnboarding, setShowGradeAscendOnboarding] = useState(false);
   
   // Quiz and Match game state
   const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
@@ -250,6 +256,15 @@ export default function Home() {
     }
   };
 
+  // ── Set first-visit timestamp on mount for campaign timer ─────────────────
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem('studymaxx_first_visit')) {
+        localStorage.setItem('studymaxx_first_visit', Date.now().toString());
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   // Check URL params for view on mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -291,15 +306,29 @@ export default function Home() {
     }
   }, [user]);
 
-  // Auto-redirect logged in users to dashboard (only on login, not manual navigation)
+  // Restore pending paywall flow if user logged in during onboarding
   const hasRedirected = useRef(false);
   useEffect(() => {
-    if (user && viewMode === 'home' && !hasRedirected.current) {
-      hasRedirected.current = true;
-      setViewMode('dashboard');
-      window.history.replaceState({}, '', '/dashboard');
+    if (user && viewMode === 'home' && !hasRedirected.current && !showGradeAscendOnboarding) {
+      try {
+        const pending = localStorage.getItem('studymaxx_pending_paywall');
+        if (pending) {
+          const parsed = JSON.parse(pending);
+          if (parsed.data && Date.now() - parsed.timestamp < 30 * 60 * 1000) {
+            // User logged in during onboarding — restore paywall flow
+            hasRedirected.current = true;
+            setShowGradeAscendOnboarding(true);
+            return;
+          } else {
+            localStorage.removeItem('studymaxx_pending_paywall');
+          }
+        }
+      } catch (e) {
+        localStorage.removeItem('studymaxx_pending_paywall');
+      }
+      // Do NOT auto-redirect to dashboard — let user click Ascend or Dashboard themselves
     }
-  }, [user, viewMode]);
+  }, [user, viewMode, showGradeAscendOnboarding]);
 
   // Onboarding redirect removed - users see landing page first
   // Personalization is handled inline on the dashboard instead
@@ -689,9 +718,69 @@ export default function Home() {
   };
 
   const handleCreateNew = () => {
-    // Everyone goes to the dashboard — guests can browse and try creating once.
-    // The login gate fires when they click "Create Study Set" inside the dashboard.
-    navigateTo("dashboard", "/dashboard");
+    // Check if grade-ascend onboarding has been completed (localStorage flag)
+    const ascendDone = typeof window !== 'undefined' && (
+      localStorage.getItem('studymaxx_grade_ascend_done') === 'true'
+    );
+
+    // Always show onboarding — the "Already have an account?" button handles existing users
+    setShowGradeAscendOnboarding(true);
+  };
+
+  const handleGradeAscendComplete = (onboardingData: OnboardingData) => {
+    // Build personalization profile from answers
+    const personalization = buildPersonalizationProfile(onboardingData);
+
+    // Save all onboarding data to localStorage
+    try {
+      localStorage.setItem('studymaxx_grade_ascend_done', 'true');
+      localStorage.setItem('studymaxx_grade_ascend_data', JSON.stringify(onboardingData));
+      localStorage.setItem('studymaxx_personalization', JSON.stringify(personalization));
+      
+      // Also set the old onboarding flag so the old flow doesn't re-trigger
+      localStorage.setItem('studymaxx_onboarding_skipped', 'true');
+
+      // If user name was provided, save it for greeting
+      if (onboardingData.firstName) {
+        localStorage.setItem('studymaxx_user_name', onboardingData.firstName);
+      }
+    } catch (e) {
+      console.warn('[GradeAscend] Could not save to localStorage:', e);
+    }
+
+    // If user is authenticated, also save to Supabase
+    if (user && supabase) {
+      supabase
+        .from('users')
+        .update({
+          onboarding_completed: true,
+          onboarding_completed_at: new Date().toISOString(),
+          name: onboardingData.firstName || undefined,
+          grade_ascend_data: JSON.stringify(onboardingData),
+          personalization_profile: JSON.stringify(personalization),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
+        .then(({ error }) => {
+          if (error) console.warn('[GradeAscend] DB save failed:', error.message);
+        });
+    }
+
+    // Close onboarding and navigate to dashboard
+    setShowGradeAscendOnboarding(false);
+    navigateTo('dashboard', '/dashboard');
+  };
+
+  const handleGradeAscendSkip = () => {
+    // Mark as done so it doesn't show again
+    try {
+      localStorage.setItem('studymaxx_grade_ascend_done', 'true');
+      localStorage.setItem('studymaxx_onboarding_skipped', 'true');
+    } catch (e) {
+      // ignore
+    }
+    setShowGradeAscendOnboarding(false);
+    navigateTo('dashboard', '/dashboard');
   };
 
   const handleGoToCreate = (option?: "notes" | "audio" | "document" | "youtube" | "mathmaxx") => {
@@ -826,7 +915,7 @@ export default function Home() {
                     Settings
                   </button>
                   <button
-                    onClick={handleCreateNew}
+                    onClick={() => { setViewMode('dashboard'); window.history.pushState({}, '', '/dashboard'); }}
                     className="px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-200 hover:shadow-md"
                     style={{ 
                       backgroundColor: '#06b6d4', 
@@ -1745,6 +1834,26 @@ export default function Home() {
           handleOpenLoginModal();
         }}
       />
+
+      {/* Grade Ascend Onboarding Flow */}
+      {showGradeAscendOnboarding && (
+        <GradeAscendOnboarding
+          onComplete={handleGradeAscendComplete}
+          onSkip={handleGradeAscendSkip}
+          onLogin={() => {
+            // Save pending state so flow can be restored after login
+            // (Google OAuth will redirect, email login now propagates via auth state)
+            try {
+              const savedData = localStorage.getItem('studymaxx_pending_paywall');
+              if (!savedData) {
+                localStorage.setItem('studymaxx_pending_paywall', JSON.stringify({ data: {}, timestamp: Date.now() }));
+              }
+            } catch (e) { /* ignore */ }
+            setShowGradeAscendOnboarding(false);
+            handleOpenLoginModal();
+          }}
+        />
+      )}
     </main>
   );
 }

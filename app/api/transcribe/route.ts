@@ -3,7 +3,7 @@ import { VertexAI } from '@google-cloud/vertexai';
 import { createClient } from '@deepgram/sdk';
 import OpenAI from 'openai';
 
-export const maxDuration = 60; // Allow up to 60s for transcription + summary
+export const maxDuration = 120; // Allow up to 120s for long audio transcription
 
 // Lazy initialization to avoid build-time errors
 let vertexAI: VertexAI | null = null;
@@ -96,10 +96,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check file size (max 25MB)
-    if (audioFile.size > 25 * 1024 * 1024) {
+    // Check file size (max 100MB)
+    if (audioFile.size > 100 * 1024 * 1024) {
       return NextResponse.json(
-        { error: 'File too large. Maximum size is 25MB.' },
+        { error: 'File too large. Maximum size is 100MB.' },
         { status: 400 }
       );
     }
