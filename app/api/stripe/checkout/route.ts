@@ -140,12 +140,13 @@ export async function POST(req: NextRequest) {
     };
 
     // Apply intro offer promo ($4.99 first month campaign)
+    // TEMPORARILY DISABLED — uncomment the block below to re-enable
     // Stripe promotion code: Studymaxxlaunch (ID: promo_1T4QZsPDFQXMY7ip7uxkC9dr)
-    if (isIntroOffer && interval === 'month' && !promoCode) {
-      console.log('[Checkout] Applying intro offer promo: Studymaxxlaunch');
-      delete sessionParams.allow_promotion_codes;
-      sessionParams.discounts = [{ promotion_code: 'promo_1T4QZsPDFQXMY7ip7uxkC9dr' }];
-    }
+    // if (isIntroOffer && interval === 'month' && !promoCode) {
+    //   console.log('[Checkout] Applying intro offer promo: Studymaxxlaunch');
+    //   delete sessionParams.allow_promotion_codes;
+    //   sessionParams.discounts = [{ promotion_code: 'promo_1T4QZsPDFQXMY7ip7uxkC9dr' }];
+    // }
 
     // Apply coupon if provided.
     // NOTE: cannot use allow_promotion_codes + discounts simultaneously — remove the general

@@ -76,6 +76,7 @@ export default function GradeAscendPaywall({
   }, []);
 
   // ── Intro campaign: $4.99 for first 24 hours from user's first visit ──────
+  // TEMPORARILY DISABLED — re-enable by uncommenting the setIsIntroCampaign line below
 
   const [isIntroCampaign, setIsIntroCampaign] = useState(false);
 
@@ -86,10 +87,10 @@ export default function GradeAscendPaywall({
         firstVisit = Date.now().toString();
         localStorage.setItem('studymaxx_first_visit', firstVisit);
       }
-      const elapsed = Date.now() - parseInt(firstVisit, 10);
-      const CAMPAIGN_WINDOW = 24 * 60 * 60 * 1000; // 24 hours
-      // Never show campaign to existing premium users
-      setIsIntroCampaign(!isPremium && elapsed < CAMPAIGN_WINDOW);
+      // const elapsed = Date.now() - parseInt(firstVisit, 10);
+      // const CAMPAIGN_WINDOW = 24 * 60 * 60 * 1000; // 24 hours
+      // setIsIntroCampaign(!isPremium && elapsed < CAMPAIGN_WINDOW);
+      setIsIntroCampaign(false); // DISABLED
     } catch { /* ignore */ }
   }, []);
 
