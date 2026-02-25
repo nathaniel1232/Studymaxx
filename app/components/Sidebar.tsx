@@ -113,6 +113,7 @@ export default function Sidebar({
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   // Notify parent of collapsed state changes
   useEffect(() => {
@@ -186,11 +187,15 @@ export default function Sidebar({
   const sidebarContent = (
     <div className="flex flex-col h-full">
       <style>{`
-        .sidebar-nav-btn:hover { filter: brightness(1.1); opacity: 0.85; }
+        .sidebar-nav-btn:not(.active):hover {
+          background-color: rgba(26,115,232,0.1) !important;
+          color: #1a73e8 !important;
+          transform: translateY(-1px);
+        }
         .sidebar-nav-btn.active { opacity: 1; }
-        .sidebar-upgrade-btn:hover { filter: brightness(1.12); box-shadow: 0 4px 14px rgba(6,182,212,0.35) !important; transform: translateY(-1px); }
-        .sidebar-premium-btn:hover { filter: brightness(1.1); box-shadow: 0 4px 12px rgba(251,188,4,0.3) !important; transform: translateY(-1px); }
-        .sidebar-signout-btn:hover { filter: brightness(1.1); box-shadow: 0 4px 12px rgba(239,68,68,0.3) !important; transform: translateY(-1px); }
+        .sidebar-upgrade-btn:hover { background: rgba(6,182,212,0.2) !important; box-shadow: 0 4px 14px rgba(6,182,212,0.35) !important; transform: translateY(-1px); }
+        .sidebar-premium-btn:hover { background: rgba(251,188,4,0.16) !important; box-shadow: 0 4px 12px rgba(251,188,4,0.3) !important; transform: translateY(-1px); }
+        .sidebar-signout-btn:hover { background: rgba(239,68,68,0.18) !important; box-shadow: 0 4px 12px rgba(239,68,68,0.3) !important; transform: translateY(-1px); }
         .sidebar-feedback-btn:hover { background: rgba(6,182,212,0.08) !important; color: #06b6d4 !important; }
         .sidebar-nav-btn, .sidebar-upgrade-btn, .sidebar-premium-btn, .sidebar-signout-btn, .sidebar-feedback-btn {
           transition: all 0.18s ease;
@@ -219,15 +224,24 @@ export default function Sidebar({
           <button
             key={item.id}
             onClick={() => handleNavClick(item)}
-            className={`sidebar-nav-btn ${item.id === currentView ? 'active' : ''} ${item.id === 'pricing' ? 'sidebar-upgrade-btn' : ''} w-full flex items-center ${collapsed ? 'justify-center' : ''} gap-3 px-4 py-3 rounded-xl mb-1 text-left`}
+            onMouseEnter={() => setHoveredItem(item.id)}
+            onMouseLeave={() => setHoveredItem(null)}
+            className={`w-full flex items-center ${collapsed ? 'justify-center' : ''} gap-3 px-4 py-3 rounded-xl mb-1 text-left`}
             title={collapsed ? item.label : undefined}
             style={item.id === "pricing" ? {
-              background: 'rgba(6, 182, 212, 0.12)',
+              background: hoveredItem === item.id ? 'rgba(6, 182, 212, 0.22)' : 'rgba(6, 182, 212, 0.12)',
               color: '#06b6d4',
               border: '1px solid rgba(6, 182, 212, 0.3)',
-            } : { 
-              backgroundColor: currentView === item.id ? (isDarkMode ? 'rgba(26, 115, 232, 0.2)' : 'rgba(26, 115, 232, 0.1)') : 'transparent',
-              color: currentView === item.id ? '#1a73e8' : '#5f6368'
+              transform: hoveredItem === item.id ? 'translateY(-1px)' : 'none',
+              boxShadow: hoveredItem === item.id ? '0 4px 14px rgba(6,182,212,0.35)' : 'none',
+              transition: 'all 0.18s ease',
+            } : {
+              backgroundColor: currentView === item.id
+                ? (isDarkMode ? 'rgba(26, 115, 232, 0.2)' : 'rgba(26, 115, 232, 0.1)')
+                : hoveredItem === item.id ? 'rgba(26, 115, 232, 0.1)' : 'transparent',
+              color: currentView === item.id || hoveredItem === item.id ? '#1a73e8' : (isDarkMode ? '#94a3b8' : '#5f6368'),
+              transform: hoveredItem === item.id && currentView !== item.id ? 'translateY(-1px)' : 'none',
+              transition: 'all 0.18s ease',
             }}
           >
             <span className="text-lg flex-shrink-0"><item.Icon /></span>

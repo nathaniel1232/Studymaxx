@@ -26,20 +26,6 @@ export default function PremiumModal({
   const [error, setError] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
-  const [isIntroCampaign, setIsIntroCampaign] = useState(false);
-
-  // Check 24-hour intro campaign
-  useEffect(() => {
-    try {
-      let firstVisit = localStorage.getItem('studymaxx_first_visit');
-      if (!firstVisit) {
-        firstVisit = Date.now().toString();
-        localStorage.setItem('studymaxx_first_visit', firstVisit);
-      }
-      const elapsed = Date.now() - parseInt(firstVisit, 10);
-      setIsIntroCampaign(elapsed < 24 * 60 * 60 * 1000);
-    } catch { /* ignore */ }
-  }, []);
 
   // Monitor auth state continuously
   useEffect(() => {
@@ -101,7 +87,6 @@ export default function PremiumModal({
       }
 
       const body: any = { interval: billingInterval };
-      if (isIntroCampaign && billingInterval === 'month') body.isIntroOffer = true;
 
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
@@ -181,30 +166,12 @@ export default function PremiumModal({
         {/* Content */}
         <div className="p-4 flex flex-col gap-3">
 
-          {/* Campaign banner */}
-          {isIntroCampaign && billingInterval === 'month' && (
-            <div className="rounded-xl px-3 py-2 text-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)', color: '#fff' }}>
-              <p className="text-xs font-black tracking-wide uppercase">Launch Special</p>
-              <p className="text-[11px] font-medium opacity-90">First month $4.99 · then $5.99/mo</p>
-            </div>
-          )}
-
           {/* Price display */}
           <div className="text-center py-2">
             {billingInterval === 'month' ? (
               <div>
-                {isIntroCampaign ? (
-                  <>
-                    <span className="text-3xl font-bold" style={{ color: 'var(--modal-text, #0f172a)' }}>$4.99</span>
-                    <span className="text-sm ml-1" style={{ color: 'var(--modal-muted, #64748b)' }}>/first month</span>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--modal-muted, #64748b)' }}>then $5.99/mo</p>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-3xl font-bold" style={{ color: 'var(--modal-text, #0f172a)' }}>$5.99</span>
-                    <span className="text-sm ml-1" style={{ color: 'var(--modal-muted, #64748b)' }}>/month</span>
-                  </>
-                )}
+                <span className="text-3xl font-bold" style={{ color: 'var(--modal-text, #0f172a)' }}>$5.99</span>
+                <span className="text-sm ml-1" style={{ color: 'var(--modal-muted, #64748b)' }}>/month</span>
               </div>
             ) : (
               <div>
@@ -302,7 +269,7 @@ export default function PremiumModal({
                 ) : !isLoggedIn ? (
                   <span>Sign in to upgrade</span>
                 ) : (
-                  <span>Upgrade for {billingInterval === 'month' ? (isIntroCampaign ? '$4.99 first month' : '$5.99/mo') : '$4.42/mo'}</span>
+                  <span>Upgrade for {billingInterval === 'month' ? '$5.99/mo' : '$4.42/mo'}</span>
                 )}
               </button>
               

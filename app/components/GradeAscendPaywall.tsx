@@ -70,7 +70,13 @@ export default function GradeAscendPaywall({
     check();
     const { data: { subscription } } = supabase!.auth.onAuthStateChange((_e, session) => {
       setIsLoggedIn(!!session);
-      if (session) setShowInlineLogin(false); // dismiss login overlay after sign-in
+      if (session) {
+        setShowInlineLogin(false);
+        // If user just signed in (not initial page load), send them to dashboard
+        if (_e === 'SIGNED_IN') {
+          onContinueFree();
+        }
+      }
     });
     return () => subscription?.unsubscribe();
   }, []);
