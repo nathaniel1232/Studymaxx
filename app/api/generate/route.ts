@@ -678,7 +678,7 @@ CORE RULES:
    - If the provided text has limited information, EXPAND on the topic with additional related facts within the same theme.
    - All added information MUST be factually accurate and directly related to the main topic.
    - ALWAYS deliver the full ${bufferedCount} flashcards requested.
-3. LANGUAGE (CRITICAL - SEE ABOVE): ${outputLanguage === 'auto' ? (language && language !== 'Unknown' ? `ALL questions, answers, and distractors MUST be in ${language}. DO NOT use any other language.` : 'Match the exact language of the input text. DO NOT translate or switch languages.') : `ALL questions, answers, and distractors MUST be in ${language}. DO NOT use any other language.`}.
+3. LANGUAGE (CRITICAL - SEE ABOVE): ${outputLanguage === 'auto' ? (language && language !== 'Unknown' ? `ALL questions, answers, and distractors MUST be in ${language}. The input text is in ${language} — match it exactly. If you are unsure, always default to the language of the input text. DO NOT translate or switch languages.` : 'Match the EXACT language of the input text. Look at what language the input text is written in and use THAT language. DO NOT translate or switch languages.') : `ALL questions, answers, and distractors MUST be in ${language}. DO NOT use any other language.`}.
 
 ${difficultyInstructions}
 

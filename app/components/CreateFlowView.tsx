@@ -424,14 +424,14 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
     // Get languages with significant scores
     const sortedLangs = Object.entries(scores)
       .sort((a, b) => b[1] - a[1])
-      .filter(([_, score]) => score >= 1); // Lower threshold to detect more languages
+      .filter(([_, score]) => score >= 4); // Require at least 4 matching words to avoid noise
     
     console.log('[detectLanguages] All scores:', scores);
     console.log('[detectLanguages] Sorted langs:', sortedLangs);
     
     // If bilingual content, return top 2, otherwise top 1
-    if (sortedLangs.length >= 2 && sortedLangs[1][1] >= sortedLangs[0][1] * 0.15) {
-      // Second language has at least 15% of top score - likely bilingual
+    if (sortedLangs.length >= 2 && sortedLangs[1][1] >= sortedLangs[0][1] * 0.40) {
+      // Second language has at least 40% of top score - likely bilingual
       console.log('[detectLanguages] Detected BILINGUAL:', sortedLangs[0][0], '+', sortedLangs[1][0]);
       return [sortedLangs[0][0], sortedLangs[1][0]];
     } else if (sortedLangs.length > 0) {

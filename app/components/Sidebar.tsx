@@ -184,6 +184,17 @@ export default function Sidebar({
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
+      <style>{`
+        .sidebar-nav-btn:hover { filter: brightness(1.1); opacity: 0.85; }
+        .sidebar-nav-btn.active { opacity: 1; }
+        .sidebar-upgrade-btn:hover { filter: brightness(1.12); box-shadow: 0 4px 14px rgba(6,182,212,0.35) !important; transform: translateY(-1px); }
+        .sidebar-premium-btn:hover { filter: brightness(1.1); box-shadow: 0 4px 12px rgba(251,188,4,0.3) !important; transform: translateY(-1px); }
+        .sidebar-signout-btn:hover { filter: brightness(1.1); box-shadow: 0 4px 12px rgba(239,68,68,0.3) !important; transform: translateY(-1px); }
+        .sidebar-feedback-btn:hover { background: rgba(6,182,212,0.08) !important; color: #06b6d4 !important; }
+        .sidebar-nav-btn, .sidebar-upgrade-btn, .sidebar-premium-btn, .sidebar-signout-btn, .sidebar-feedback-btn {
+          transition: all 0.18s ease;
+        }
+      `}</style>
       <div className="p-5 border-b flex-shrink-0" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0' }}>
         {collapsed ? (
           <div className="text-xl font-bold text-center">
@@ -207,7 +218,7 @@ export default function Sidebar({
           <button
             key={item.id}
             onClick={() => handleNavClick(item)}
-            className={`w-full flex items-center ${collapsed ? 'justify-center' : ''} gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left`}
+            className={`sidebar-nav-btn ${item.id === currentView ? 'active' : ''} ${item.id === 'pricing' ? 'sidebar-upgrade-btn' : ''} w-full flex items-center ${collapsed ? 'justify-center' : ''} gap-3 px-4 py-3 rounded-xl mb-1 text-left`}
             title={collapsed ? item.label : undefined}
             style={item.id === "pricing" ? {
               background: 'rgba(6, 182, 212, 0.12)',
@@ -225,7 +236,7 @@ export default function Sidebar({
         {isPremium && (
           <button
             onClick={() => { handleManageSubscription(); setMobileOpen(false); }}
-            className={`w-full flex items-center ${collapsed ? 'justify-center' : ''} gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left`}
+            className={`sidebar-premium-btn w-full flex items-center ${collapsed ? 'justify-center' : ''} gap-3 px-4 py-3 rounded-xl mb-1 text-left`}
             title={collapsed ? 'Manage Subscription' : undefined}
             style={{ background: 'rgba(251, 188, 4, 0.08)', color: '#f59e0b', border: '1px solid rgba(251, 188, 4, 0.2)' }}
           >
@@ -236,7 +247,7 @@ export default function Sidebar({
         {!collapsed && (
           <button
             onClick={() => setShowFeedback(true)}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all duration-200 text-left"
+            className="sidebar-feedback-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-1 text-left"
             style={{ color: isDarkMode ? '#94a3b8' : '#5f6368' }}
           >
             <span><MessageIcon /></span>
@@ -246,7 +257,7 @@ export default function Sidebar({
         {collapsed && (
           <button
             onClick={() => setShowFeedback(true)}
-            className="w-full flex items-center justify-center px-4 py-3 rounded-xl mb-1 transition-all duration-200"
+            className="sidebar-feedback-btn w-full flex items-center justify-center px-4 py-3 rounded-xl mb-1"
             title="Send Feedback"
             style={{ color: isDarkMode ? '#94a3b8' : '#5f6368' }}
           >
@@ -256,7 +267,7 @@ export default function Sidebar({
         <div className="mt-3 pt-3 border-t" style={{ borderColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0' }}>
           <button
             onClick={() => { onSignOut(); setMobileOpen(false); }}
-            className={`w-full flex items-center ${collapsed ? 'justify-center' : ''} gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-left`}
+            className={`sidebar-signout-btn w-full flex items-center ${collapsed ? 'justify-center' : ''} gap-3 px-4 py-3 rounded-xl text-left`}
             title={collapsed ? 'Sign Out' : undefined}
             style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.2)' }}
           >
