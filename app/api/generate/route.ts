@@ -147,10 +147,11 @@ async function getOrCreateUser(userId: string): Promise<UserStatus | null> {
       
       // Owner user always has premium
       const isOwnerUser = data.email === 'studymaxxer@gmail.com';
+      const isGrandfatheredUser = data.is_grandfathered || false;
       
       // Check if premium has expired
       let isPremium = data.is_premium || isOwnerUser;
-      if (data.premium_expires_at && !isOwnerUser) {
+      if (data.premium_expires_at && !isOwnerUser && !isGrandfatheredUser) {
         const expirationDate = new Date(data.premium_expires_at);
         const now = new Date();
         

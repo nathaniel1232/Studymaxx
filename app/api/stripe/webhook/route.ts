@@ -326,7 +326,12 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     return;
   }
 
-  // Get the period end date - user keeps premium until then
+  // Skip grandfathered users — they keep premium regardless of Stripe status
+  const { data: gfUser } = await supabase.from('users').select('is_grandfathered').eq('id', userId).single();
+  if (gfUser?.is_grandfathered) {
+    console.log(`[Webhook] ⭐ Grandfathered user ${userId} — skipping subscription.deleted downgrade`);
+    return;
+  }
   let periodEnd = null;
   
   // Try to get current_period_end from subscription items
@@ -411,7 +416,12 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     return;
   }
 
-  // past_due = payment is overdue but Stripe is still retrying — keep premium during grace period
+  // For grandfathered users: only allow premium renewals (isActive=true), never downgrades
+  const { data: gfUserUpd } = await supabase.from('users').select('is_grandfathered').eq('id', userId).single();
+  if (gfUserUpd?.is_grandfathered && !isActive) {
+    console.log(`[Webhook] ⭐ Grandfathered user ${userId} — skipping subscription.updated downgrade (status: ${subscription.status})`);
+    return;
+  }
   const isActive = subscription.status === "active" || subscription.status === "trialing" || subscription.status === "past_due";
   const isCanceled = subscription.cancel_at_period_end;
   

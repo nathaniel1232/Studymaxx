@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
       .from('users')
       .select('id, email, premium_expires_at')
       .eq('is_premium', true)
+      .neq('is_grandfathered', true)  // Never expire grandfathered (legacy plan) users
       .not('premium_expires_at', 'is', null)
       .lt('premium_expires_at', now);
 
