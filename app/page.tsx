@@ -308,6 +308,10 @@ export default function Home() {
 
   // Auto-redirect logged-in users to dashboard instead of showing the landing page
   const hasRedirected = useRef(false);
+  // Reset hasRedirected when user logs out so next login also redirects
+  useEffect(() => {
+    if (!user) hasRedirected.current = false;
+  }, [user]);
   useEffect(() => {
     if (user && viewMode === 'home' && !hasRedirected.current && !showGradeAscendOnboarding) {
       try {
@@ -315,7 +319,16 @@ export default function Home() {
         if (pending) {
           const parsed = JSON.parse(pending);
           if (parsed.data && Date.now() - parsed.timestamp < 30 * 60 * 1000) {
-            // User logged in during onboarding — restore paywall flow
+            // If forFinish is set the user already finished the quiz and just signed in —
+            // clear the pending data and go straight to dashboard (do NOT re-show the quiz)
+            if (parsed.forFinish) {
+              localStorage.removeItem('studymaxx_pending_paywall');
+              hasRedirected.current = true;
+              setViewMode('dashboard');
+              window.history.replaceState({}, '', '/dashboard');
+              return;
+            }
+            // Otherwise user was mid-onboarding — restore paywall flow
             hasRedirected.current = true;
             setShowGradeAscendOnboarding(true);
             return;
