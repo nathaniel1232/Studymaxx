@@ -86,7 +86,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   }, [initialText, initialSubject]);
   
   // Output language preference
-  const [outputLanguage, setOutputLanguage] = useState<"auto" | "en">("auto");
+  const [outputLanguage, setOutputLanguage] = useState<string>("auto");
   const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
   const [detectedLanguages, setDetectedLanguages] = useState<string[]>([]);
   const [languagesFromImage, setLanguagesFromImage] = useState(false); // Flag: GPT detected from image
@@ -1190,7 +1190,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       if (!isPremium) {
         const latestSets = await getSavedFlashcardSets();
         const latestUserSets = latestSets.filter(set => set.userId === userIdForGen);
-        if (latestUserSets.length >= 2) {
+        if (latestUserSets.length >= 3) {
           throw new Error("You've reached your daily limit. Upgrade to Premium for unlimited study sets!");
         }
       }
@@ -2111,85 +2111,74 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     </div>
                   )}
 
-                  {/* Language selection - only show when we have text and NOT a language subject */}
+                  {/* Language selection - always show when text is entered and NOT a language subject */}
                   {textInput.length >= 50 && !isLanguageSubject && (
-                    <div className="mt-3 p-3 rounded-md" style={{ background: (isDarkMode ? 'rgba(255,255,255,0.1)' : '#f5f5f4'), border: "1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}" }}>
-                      <div className="mb-2 flex items-baseline justify-between">
-                        <h4 className="text-sm font-semibold" style={{ color: (isDarkMode ? '#ffffff' : '#000000') }}>
+                    <div className="mt-3 p-3 rounded-md" style={{ background: isDarkMode ? 'rgba(255,255,255,0.05)' : '#f5f5f4', border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}` }}>
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="text-base">🌍</span>
+                        <h4 className="text-sm font-semibold" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
                           Output Language
                         </h4>
+                        <span className="text-xs px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: 'rgba(6,182,212,0.12)', color: '#06b6d4' }}>Free &amp; Premium</span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Card
-                          onClick={() => setOutputLanguage("auto")}
-                          className="cursor-pointer border-2 transition-all duration-200 rounded-md overflow-hidden"
-                          style={{
-                            background: outputLanguage === "auto"
-                              ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
-                              : 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(8, 145, 178, 0.04) 100%)',
-                            borderColor: outputLanguage === "auto" ? '#0891b2' : 'rgba(6, 182, 212, 0.3)',
-                            boxShadow: outputLanguage === "auto" ? '0 4px 15px rgba(6, 182, 212, 0.4)' : '0 2px 8px rgba(0, 0, 0, 0.05)'
-                          }}
-                          onMouseEnter={(e) => {
-                            if (outputLanguage !== "auto") {
-                              e.currentTarget.style.borderColor = '#06b6d4';
-                              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.1) 100%)';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (outputLanguage !== "auto") {
-                              e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.3)';
-                              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(8, 145, 178, 0.04) 100%)';
-                            }
-                          }}
-                        >
-                          <CardContent className="flex items-center justify-between p-3">
-                           <div className="flex items-center gap-2">
-                              <span className="text-lg">🌍</span>
-                              <div className="text-left">
-                                  <div className="font-medium text-sm" style={{ color: outputLanguage === "auto" ? 'white' : (isDarkMode ? '#ffffff' : '#000000') }}>
-                                    Auto
-                                  </div>
-                              </div>
-                           </div>
-                           {outputLanguage === "auto" && <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                          </CardContent>
-                        </Card>
-
-                        <Card
-                          onClick={() => setOutputLanguage("en")}
-                          className="cursor-pointer border-2 transition-all duration-200 rounded-md overflow-hidden"
-                          style={{
-                            background: outputLanguage === "en"
-                              ? 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)'
-                              : 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(8, 145, 178, 0.04) 100%)',
-                            borderColor: outputLanguage === "en" ? '#0891b2' : 'rgba(6, 182, 212, 0.3)',
-                            boxShadow: outputLanguage === "en" ? '0 4px 15px rgba(6, 182, 212, 0.4)' : '0 2px 8px rgba(0, 0, 0, 0.05)'
-                          }}
-                          onMouseEnter={(e) => {
-                            if (outputLanguage !== "en") {
-                              e.currentTarget.style.borderColor = '#06b6d4';
-                              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(8, 145, 178, 0.1) 100%)';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (outputLanguage !== "en") {
-                              e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.3)';
-                              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(8, 145, 178, 0.04) 100%)';
-                            }
-                          }}
-                        >
-                          <CardContent className="flex items-center justify-between p-3">
-                           <div className="flex items-center gap-2">
-                              <span className="text-lg">🇺🇸</span>
-                              <div className="text-left">
-                                  <div className="font-medium text-sm" style={{ color: outputLanguage === "en" ? 'white' : (isDarkMode ? '#ffffff' : '#000000') }}>English</div>
-                              </div>
-                           </div>
-                           {outputLanguage === "en" && <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                          </CardContent>
-                        </Card>
-                      </div>
+                      <select
+                        value={outputLanguage}
+                        onChange={e => setOutputLanguage(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-lg text-sm font-medium outline-none cursor-pointer"
+                        style={{
+                          backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : '#ffffff',
+                          color: isDarkMode ? '#e2e8f0' : '#0f172a',
+                          border: `1.5px solid ${isDarkMode ? 'rgba(255,255,255,0.15)' : '#e2e8f0'}`,
+                        }}
+                      >
+                        <option value="auto">🌍 Auto-detect (match input language)</option>
+                        <optgroup label="Most Common">
+                          <option value="English">🇺🇸 English</option>
+                          <option value="Spanish">🇪🇸 Spanish</option>
+                          <option value="French">🇫🇷 French</option>
+                          <option value="German">🇩🇪 German</option>
+                          <option value="Portuguese">🇧🇷 Portuguese</option>
+                          <option value="Italian">🇮🇹 Italian</option>
+                          <option value="Dutch">🇳🇱 Dutch</option>
+                          <option value="Russian">🇷🇺 Russian</option>
+                          <option value="Chinese">🇨🇳 Chinese</option>
+                          <option value="Japanese">🇯🇵 Japanese</option>
+                          <option value="Korean">🇰🇷 Korean</option>
+                          <option value="Arabic">🇸🇦 Arabic</option>
+                          <option value="Hindi">🇮🇳 Hindi</option>
+                        </optgroup>
+                        <optgroup label="Scandinavian">
+                          <option value="Norwegian">🇳🇴 Norwegian</option>
+                          <option value="Swedish">🇸🇪 Swedish</option>
+                          <option value="Danish">🇩🇰 Danish</option>
+                          <option value="Finnish">🇫🇮 Finnish</option>
+                          <option value="Icelandic">🇮🇸 Icelandic</option>
+                        </optgroup>
+                        <optgroup label="European">
+                          <option value="Polish">🇵🇱 Polish</option>
+                          <option value="Turkish">🇹🇷 Turkish</option>
+                          <option value="Greek">🇬🇷 Greek</option>
+                          <option value="Czech">🇨🇿 Czech</option>
+                          <option value="Hungarian">🇭🇺 Hungarian</option>
+                          <option value="Romanian">🇷🇴 Romanian</option>
+                          <option value="Ukrainian">🇺🇦 Ukrainian</option>
+                        </optgroup>
+                        <optgroup label="Asian &amp; Other">
+                          <option value="Vietnamese">🇻🇳 Vietnamese</option>
+                          <option value="Thai">🇹🇭 Thai</option>
+                          <option value="Indonesian">🇮🇩 Indonesian</option>
+                          <option value="Malay">🇲🇾 Malay</option>
+                          <option value="Mongolian">🇲🇳 Mongolian</option>
+                          <option value="Hebrew">🇮🇱 Hebrew</option>
+                          <option value="Persian">🇮🇷 Persian</option>
+                          <option value="Swahili">🌍 Swahili</option>
+                        </optgroup>
+                      </select>
+                      {outputLanguage !== "auto" && (
+                        <p className="mt-1.5 text-xs" style={{ color: isDarkMode ? '#94a3b8' : '#64748b' }}>
+                          AI will generate all flashcards in <strong>{outputLanguage}</strong> regardless of your input language.
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -2206,17 +2195,15 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                       }
                       handleContinueFromStep2();
                     }}
-                    disabled={selectedMaterial !== "image" && textInput.length >= 50 && !outputLanguage}
+                    disabled={false}
                     variant="primary"
                     size="lg"
                     className="w-full"
                   >
-                    {selectedMaterial !== "image" && textInput.length >= 50 && !outputLanguage ? "Select language" : t("continue")}
-                    {!(selectedMaterial !== "image" && textInput.length >= 50 && !outputLanguage) && (
-                      <svg className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    )}
+                    {t("continue")}
+                    <svg className="w-5 h-5 ml-2 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
                   </Button>
                 </>
               )}

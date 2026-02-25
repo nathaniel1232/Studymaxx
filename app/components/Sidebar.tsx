@@ -87,7 +87,8 @@ const MicIcon = () => (
 
 const NAV_ITEMS_BASE = [
   { id: "dashboard" as const, label: "Dashboard", Icon: HomeIcon },
-  { id: "audio" as const, label: "AI Note Taker", Icon: MicIcon },
+  // AI Note Taker temporarily hidden
+  // { id: "audio" as const, label: "AI Note Taker", Icon: MicIcon },
   { id: "summarizer" as const, label: "Summarizer", Icon: SummarizerIcon },
   { id: "settings" as const, label: "Settings", Icon: SettingsIcon },
   { id: "tips" as const, label: "Study Tips", Icon: LightbulbIcon },

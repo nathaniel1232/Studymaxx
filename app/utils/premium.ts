@@ -34,9 +34,9 @@ export interface UsageLimits {
 // Free tier limits - HARD LIMITS enforced server-side
 // Free users get: 2 flashcards/day, 1 summary/day, 5 MathMaxx messages/day, 1 quiz/day
 export const FREE_LIMITS: UsageLimits = {
-  maxStudySets: 2, // 2 flashcard sets per 24 hours (from notes or YouTube)
-  maxFlashcardsPerSet: 15, // Up to 15 cards per set for free
-  maxAIGenerationsPerDay: 2, // 2 flashcard generation sessions per day
+  maxStudySets: 3, // 3 flashcard sets per 24 hours (from notes or YouTube)
+  maxFlashcardsPerSet: 20, // Up to 20 cards per set for free
+  maxAIGenerationsPerDay: 3, // 3 flashcard generation sessions per day
   maxChatMessagesPerDay: 5, // 5 MathMaxx chat messages per day
   maxSummarizationsPerDay: 1, // 1 summary per day (text only for free)
   maxQuizzesPerDay: 1, // 1 quiz generation per day

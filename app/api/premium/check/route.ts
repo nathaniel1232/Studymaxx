@@ -101,8 +101,8 @@ export async function GET(request: NextRequest) {
     console.log('[/api/premium/check] ================================');
     
     // Limits
-    const MAX_FREE_SETS = 2;
-    const MAX_FREE_DAILY = 2;
+    const MAX_FREE_SETS = 3;
+    const MAX_FREE_DAILY = 3;
     
     // Determine if user can create more sets
     const canCreateMore = isPremium ? true : (setsCreated < MAX_FREE_SETS);
@@ -131,11 +131,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       isPremium: false,
       setsCreated: 0,
-      maxSets: 2,
+      maxSets: 3,
       canCreateMore: true,
       dailyAiCount: 0,
-      maxDailyAi: 2,
-      remainingDailyGenerations: 2,
+      maxDailyAi: 3,
+      remainingDailyGenerations: 3,
       error: 'Failed to check premium status - defaulting to free',
       errorDetails: error instanceof Error ? error.message : String(error)
     });

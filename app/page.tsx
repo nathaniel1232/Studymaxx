@@ -306,7 +306,7 @@ export default function Home() {
     }
   }, [user]);
 
-  // Restore pending paywall flow if user logged in during onboarding
+  // Auto-redirect logged-in users to dashboard instead of showing the landing page
   const hasRedirected = useRef(false);
   useEffect(() => {
     if (user && viewMode === 'home' && !hasRedirected.current && !showGradeAscendOnboarding) {
@@ -326,7 +326,10 @@ export default function Home() {
       } catch (e) {
         localStorage.removeItem('studymaxx_pending_paywall');
       }
-      // Do NOT auto-redirect to dashboard — let user click Ascend or Dashboard themselves
+      // Logged-in users always go to dashboard
+      hasRedirected.current = true;
+      setViewMode('dashboard');
+      window.history.replaceState({}, '', '/dashboard');
     }
   }, [user, viewMode, showGradeAscendOnboarding]);
 
@@ -698,6 +701,22 @@ export default function Home() {
     if (subject) setCurrentSubject(subject);
     if (grade) setCurrentGrade(grade);
     navigateTo("studying", "/study");
+
+    // For free users: show premium upsell after they've had a chance to enjoy their
+    // new flashcards — dopamine is highest right after seeing the AI do its magic.
+    if (!isPremium) {
+      try {
+        const prev = parseInt(localStorage.getItem('studymaxx_sets_created') || '0', 10);
+        const next = prev + 1;
+        localStorage.setItem('studymaxx_sets_created', next.toString());
+        // Fire on 1st set (10 s delay) and every 3rd set after that
+        if (next === 1 || next % 3 === 0) {
+          setTimeout(() => {
+            setShowPremiumModal(true);
+          }, 10000);
+        }
+      } catch { /* ignore */ }
+    }
   };
 
   const handleLoadSet = (cards: Flashcard[], setId: string) => {
@@ -718,12 +737,13 @@ export default function Home() {
   };
 
   const handleCreateNew = () => {
-    // Check if grade-ascend onboarding has been completed (localStorage flag)
-    const ascendDone = typeof window !== 'undefined' && (
-      localStorage.getItem('studymaxx_grade_ascend_done') === 'true'
-    );
+    // If already logged in, skip the onboarding quiz and go straight to the dashboard
+    if (user) {
+      navigateTo('dashboard', '/dashboard');
+      return;
+    }
 
-    // Always show onboarding — the "Already have an account?" button handles existing users
+    // New / guest user — show personalisation questions first
     setShowGradeAscendOnboarding(true);
   };
 
@@ -985,7 +1005,7 @@ export default function Home() {
             
             {/* Subheadline */}
             <p className="text-lg md:text-xl text-center max-w-2xl mb-3 animate-fade-in-up animation-delay-200" style={{ color: '#5f6368' }}>
-              Notes, PDFs, YouTube videos, audio — drop anything in and get flashcards, quizzes, and study material optimized for how your brain actually learns.
+              Notes, PDFs, YouTube videos — drop anything in and get flashcards, quizzes, and study material optimized for how your brain actually learns.
             </p>
             <p className="text-base text-center max-w-xl mb-10 animate-fade-in-up animation-delay-200 font-medium" style={{ color: isDarkMode ? '#94a3b8' : '#475569' }}>
               Study less. Remember more.
@@ -1388,7 +1408,7 @@ export default function Home() {
                           { text: "Unlimited study sets, every day", highlight: true },
                           { text: "Up to 75 cards per set", highlight: false },
                           { text: "PDF, images, Word & PowerPoint uploads", highlight: false },
-                          { text: "YouTube & audio → flashcards", highlight: false },
+                          { text: "YouTube videos → flashcards", highlight: false },
                           { text: "AI chat about your material", highlight: false },
                           { text: "Priority AI processing", highlight: false },
                         ].map(item => (
