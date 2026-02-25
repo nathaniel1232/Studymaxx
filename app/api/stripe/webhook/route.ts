@@ -416,14 +416,15 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     return;
   }
 
+  const isActive = subscription.status === "active" || subscription.status === "trialing" || subscription.status === "past_due";
+  const isCanceled = subscription.cancel_at_period_end;
+
   // For grandfathered users: only allow premium renewals (isActive=true), never downgrades
   const { data: gfUserUpd } = await supabase.from('users').select('is_grandfathered').eq('id', userId).single();
   if (gfUserUpd?.is_grandfathered && !isActive) {
     console.log(`[Webhook] ⭐ Grandfathered user ${userId} — skipping subscription.updated downgrade (status: ${subscription.status})`);
     return;
   }
-  const isActive = subscription.status === "active" || subscription.status === "trialing" || subscription.status === "past_due";
-  const isCanceled = subscription.cancel_at_period_end;
   
   // Calculate expiration date - check multiple sources
   let premiumExpiresAt = null;
