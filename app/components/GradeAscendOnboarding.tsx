@@ -66,6 +66,8 @@ export default function GradeAscendOnboarding({
   const [showLoginGate, setShowLoginGate] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  // When true, after login we go directly to dashboard (handleFinish) instead of paywall
+  const [loginForFinish, setLoginForFinish] = useState(false);
 
   // Exam date step is inserted after Study Goal when studyGoal === 'upcoming_exam'
   const showExamStep = data.studyGoal === 'upcoming_exam';
@@ -95,7 +97,7 @@ export default function GradeAscendOnboarding({
     return () => subscription?.unsubscribe();
   }, []);
 
-  // Restore pending paywall state (after Google OAuth redirect or page reload)
+  // Restore pending state (after Google OAuth redirect or page reload)
   useEffect(() => {
     if (!authChecked) return;
     try {
@@ -106,10 +108,21 @@ export default function GradeAscendOnboarding({
         if (parsed.data && Date.now() - parsed.timestamp < 30 * 60 * 1000) {
           setData(parsed.data);
           localStorage.removeItem('studymaxx_pending_paywall');
-          if (isLoggedIn) {
-            setShowPaywall(true);
+          if (parsed.forFinish) {
+            // User was on "Start Studying Free" flow before OAuth redirect
+            if (isLoggedIn) {
+              // Already logged in after redirect — finish immediately
+              onComplete(parsed.data);
+            } else {
+              setLoginForFinish(true);
+              setShowLoginGate(true);
+            }
           } else {
-            setShowLoginGate(true);
+            if (isLoggedIn) {
+              setShowPaywall(true);
+            } else {
+              setShowLoginGate(true);
+            }
           }
         } else {
           localStorage.removeItem('studymaxx_pending_paywall');
@@ -120,13 +133,18 @@ export default function GradeAscendOnboarding({
     }
   }, [authChecked]);  // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-advance to paywall after login completes (when user came from login gate)
+  // Auto-advance after login completes (when user came from login gate)
   useEffect(() => {
     if (isLoggedIn && showLoginGate) {
       setShowLoginGate(false);
-      setShowPaywall(true);
+      if (loginForFinish) {
+        setLoginForFinish(false);
+        handleFinish();
+      } else {
+        setShowPaywall(true);
+      }
     }
-  }, [isLoggedIn, showLoginGate]);
+  }, [isLoggedIn, showLoginGate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   //  Navigation 
 
@@ -233,11 +251,16 @@ export default function GradeAscendOnboarding({
       <div style={{ position: "fixed", inset: 0, zIndex: 10002 }}>
         <LoginModal
           onClose={() => {
-            // If user just logged in, advance to paywall. Otherwise back to preview.
             setShowLoginGate(false);
             if (isLoggedIn) {
-              setShowPaywall(true);
+              if (loginForFinish) {
+                setLoginForFinish(false);
+                handleFinish();
+              } else {
+                setShowPaywall(true);
+              }
             } else {
+              setLoginForFinish(false);
               setShowPreview(true);
             }
             // Clean up pending flag
@@ -404,24 +427,32 @@ export default function GradeAscendOnboarding({
               </p>
             </div>
 
-            {/* CTA */}
+            {/* CTA — if not logged in, gate behind login first */}
             <button
-              onClick={handleUnlockFromPreview}
+              onClick={() => {
+                if (!isLoggedIn) {
+                  // Persist intent so it survives a Google OAuth page reload
+                  try {
+                    localStorage.setItem('studymaxx_pending_paywall', JSON.stringify({ data, timestamp: Date.now(), forFinish: true }));
+                  } catch (e) { /* ignore */ }
+                  setLoginForFinish(true);
+                  setShowPreview(false);
+                  setShowLoginGate(true);
+                } else {
+                  handleFinish();
+                }
+              }}
               className="pw-cta pw-pulse w-full py-3.5 rounded-xl font-bold text-sm text-white mb-2"
               style={{
                 background: "linear-gradient(135deg,#06b6d4 0%,#3b82f6 100%)",
                 boxShadow: "0 4px 18px rgba(6,182,212,0.3)",
               }}
             >
-              Get Premium Access →
+              Start Studying Free →
             </button>
-            <button
-              onClick={handleFinish}
-              className="w-full py-2 text-xs font-medium hover:underline"
-              style={{ color: C.muted }}
-            >
-              Continue with free plan
-            </button>
+            <p className="w-full text-center text-xs" style={{ color: C.muted }}>
+              No credit card needed · upgrade anytime
+            </p>
           </div>
         </div>
       </>
