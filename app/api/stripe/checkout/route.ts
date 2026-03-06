@@ -115,8 +115,7 @@ export async function POST(req: NextRequest) {
 
     // Create Stripe Checkout Session with your product Price IDs
     const sessionParams: any = {
-      // No payment_method_types — Stripe will automatically show all methods
-      // enabled in your Stripe Dashboard (card, PayPal, etc.)
+      payment_method_types: ["card", "paypal"],
       mode: "subscription",
       line_items: [
         {

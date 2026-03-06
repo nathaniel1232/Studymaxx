@@ -21,6 +21,7 @@ import { getCurrentUser, onAuthStateChange, supabase } from "./utils/supabase";
 import Sidebar from "./components/Sidebar";
 import PremiumModal from "./components/PremiumModal";
 import GradeAscendOnboarding from "./components/GradeAscendOnboarding";
+import ExitIntentPopup from "./components/ExitIntentPopup";
 import { OnboardingData } from "./utils/onboardingTypes";
 import { buildPersonalizationProfile, buildAIContext } from "./utils/personalizationEngine";
 
@@ -919,6 +920,13 @@ export default function Home() {
       {analyticsEnabled && <Analytics />}
       {viewMode === "home" && (
         <div className="min-h-screen flex flex-col" style={{ backgroundColor: isDarkMode ? '#1a1a2e' : '#f1f5f9', color: isDarkMode ? '#e2e8f0' : '#0f172a' }}>
+          {/* Exit-intent popup — only for visitors who haven't signed in */}
+          {!user && (
+            <ExitIntentPopup
+              onSignUp={handleOpenSignUpModal}
+              isDarkMode={isDarkMode}
+            />
+          )}
           {/* Background gradient effects - Soft blue accent */}
           <div className="fixed inset-0 pointer-events-none overflow-hidden">
             <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[120px]" />

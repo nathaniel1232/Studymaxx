@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, ChangeEvent, FormEvent, useEffect } from "react";
+import { useState, ChangeEvent, FormEvent, useEffect, useRef } from "react";
 import { generateFlashcards } from "../utils/flashcardGenerator";
 import { Flashcard, getOrCreateUserId, getSavedFlashcardSets, saveFlashcardSet } from "../utils/storage";
 import { getStudyFact } from "../utils/studyFacts";
@@ -62,6 +62,19 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [isExtractingYouTube, setIsExtractingYouTube] = useState(false);
   const [userTier, setUserTier] = useState<TierName>('free');
+
+  // Ref for notes textarea - used to scroll into view on mobile
+  const notesTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Scroll notes textarea into view when selected on mobile
+  useEffect(() => {
+    if (selectedMaterial === "notes" && notesTextareaRef.current) {
+      const timer = setTimeout(() => {
+        notesTextareaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedMaterial]);
   
   // Handle initial material type from dashboard
   useEffect(() => {
@@ -1754,11 +1767,11 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                     {/* Notes input */}
                     {selectedMaterial === "notes" && (
                       <Textarea
+                        ref={notesTextareaRef}
                         value={textInput}
                         onChange={(e) => setTextInput(e.target.value)}
                         placeholder={t("paste_notes_here")}
                         className="min-h-40 text-sm"
-                        autoFocus
                       />
                     )}
 
@@ -2302,7 +2315,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
                      value={targetGrade === 'A' ? 50 : targetGrade === 'B' ? 35 : targetGrade === 'C' ? 20 : targetGrade === 'D' ? 15 : 10}
                      onChange={(e) => {
                        const value = parseInt(e.target.value);
-                       if (!isPremium && value > 15) {
+                       if (!isPremium && value > 20) {
                          window.dispatchEvent(new Event('showPremium'));
                          return;
                        }

@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const audioFile = formData.get('audio') as File;
+    const skipSummary = formData.get('skipSummary') === '1';
 
     if (!audioFile) {
       return NextResponse.json(
@@ -219,6 +220,12 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`[Transcribe] Final transcription: ${transcription.length} characters transcribed`);
+
+    // When called for chunked uploads, skip Gemini summary — the client will
+    // generate one summary after all chunks are concatenated.
+    if (skipSummary) {
+      return NextResponse.json({ text: transcription, success: true });
+    }
 
     // Generate summary using Gemini 2.0 Flash (non-fatal — transcription always returned)
     let summary = '';

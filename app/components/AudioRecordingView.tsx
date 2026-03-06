@@ -96,6 +96,8 @@ export default function AudioRecordingView({
   const [subject, setSubject] = useState(initialSubject || "");
   const [audioLevel, setAudioLevel] = useState(0);
   
+  const [chunkStatus, setChunkStatus] = useState(""); // progress label during chunked transcription
+
   // Note taker state
   const [activeTab, setActiveTab] = useState<"record" | "notes" | "saved">("record");
   const [isEditing, setIsEditing] = useState(false);
@@ -138,6 +140,7 @@ export default function AudioRecordingView({
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const initChunkRef = useRef<Blob | null>(null); // WebM EBML header — needed to reconstruct valid segments
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -308,7 +311,8 @@ export default function AudioRecordingView({
       };
       updateAudioLevel();
       
-      const options: MediaRecorderOptions = { mimeType: 'audio/webm;codecs=opus', audioBitsPerSecond: 64000 };
+      // 24 kbps is excellent quality for speech and keeps file sizes small
+      const options: MediaRecorderOptions = { mimeType: 'audio/webm;codecs=opus', audioBitsPerSecond: 24000 };
       if (!MediaRecorder.isTypeSupported(options.mimeType!)) {
         options.mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
       }
@@ -318,7 +322,12 @@ export default function AudioRecordingView({
       chunksRef.current = [];
 
       mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
+        if (e.data.size > 0) {
+          // First chunk always contains the WebM EBML/Tracks header — save it
+          // so we can reconstruct valid sub-segments for chunked uploads.
+          if (chunksRef.current.length === 0) initChunkRef.current = e.data;
+          chunksRef.current.push(e.data);
+        }
       };
 
       mediaRecorder.onstop = () => {
@@ -377,6 +386,9 @@ export default function AudioRecordingView({
     setSelectedNote(null);
     setIsEditing(false);
     setActiveTab("record");
+    chunksRef.current = [];
+    initChunkRef.current = null;
+    setChunkStatus("");
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -389,44 +401,132 @@ export default function AudioRecordingView({
     setAudioUrl(URL.createObjectURL(file));
   };
 
+  // ─── Transcription helpers ────────────────────────────────────────────────
+
+  /** Upload one audio segment to /api/transcribe. skipSummary=true skips Gemini summary. */
+  const uploadSegment = async (blob: Blob, skipSummary: boolean): Promise<{ text: string; summary?: string }> => {
+    const fd = new FormData();
+    fd.append('audio', blob, 'audio.webm');
+    if (skipSummary) fd.append('skipSummary', '1');
+
+    const res = await fetch('/api/transcribe', { method: 'POST', body: fd });
+
+    if (!res.ok) {
+      if (res.status === 413) throw new Error('Audio segment still too large. Please record a shorter clip.');
+      if (res.status === 429) throw new Error('AI service is busy. Please wait 10–20 seconds and try again.');
+      let msg = 'Transcription failed';
+      try { const d = await res.json(); msg = d.error || msg; } catch { /* non-JSON */ }
+      throw new Error(msg);
+    }
+    return res.json();
+  };
+
+  /**
+   * Split large WebM recordings into <2.5 MB segments using the saved 1-second
+   * MediaRecorder chunks. Each segment gets the WebM init chunk prepended so the
+   * decoder can start fresh on every segment.
+   */
+  const transcribeInChunks = async (blob: Blob) => {
+    const mime = blob.type || 'audio/webm';
+    const SEGMENT_LIMIT = 2.5 * 1024 * 1024; // 2.5 MB — safe below Vercel 4.5 MB
+    const allChunks = chunksRef.current;
+    const init    = initChunkRef.current;
+
+    // Build segments
+    const segments: Blob[] = [];
+
+    if (init && allChunks.length > 1) {
+      // Recorded audio: group 1-second blobs, prepend init header to each segment
+      let seg: Blob[] = [init];
+      let segSize = init.size;
+
+      for (let i = 1; i < allChunks.length; i++) {
+        const c = allChunks[i];
+        if (segSize + c.size > SEGMENT_LIMIT && seg.length > 1) {
+          segments.push(new Blob(seg, { type: mime }));
+          seg     = [init, c];
+          segSize = init.size + c.size;
+        } else {
+          seg.push(c);
+          segSize += c.size;
+        }
+      }
+      if (seg.length > 1) segments.push(new Blob(seg, { type: mime }));
+    } else {
+      // Uploaded file or edge case: byte-slice (Whisper handles partial audio well)
+      for (let start = 0; start < blob.size; start += SEGMENT_LIMIT) {
+        segments.push(blob.slice(start, Math.min(start + SEGMENT_LIMIT, blob.size)));
+      }
+    }
+
+    if (segments.length === 0) throw new Error('Unable to split audio. Please try a shorter recording.');
+
+    // Transcribe each segment
+    let fullText = '';
+    for (let i = 0; i < segments.length; i++) {
+      setChunkStatus(`Transcribing part ${i + 1} of ${segments.length}…`);
+      setTranscribeProgress(10 + Math.round(((i + 0.5) / segments.length) * 65));
+      const res = await uploadSegment(segments[i], true /* skipSummary */);
+      if (res.text) fullText += (fullText ? ' ' : '') + res.text.trim();
+    }
+
+    setTranscribeProgress(80);
+    setTranscription(fullText);
+    setChunkStatus('Generating summary…');
+
+    // Generate summary for the full concatenated text
+    try {
+      const sumRes = await fetch('/api/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: fullText, length: 'medium', sourceType: 'text' }),
+      });
+      if (sumRes.ok) {
+        const sd = await sumRes.json();
+        if (sd.summary) { setSummary(sd.summary); setEditContent(sd.summary); }
+      }
+    } catch { /* non-fatal — transcription is already set */ }
+
+    setTranscribeProgress(100);
+    setChunkStatus('');
+  };
+
+  // ─── Main transcribe entry point ──────────────────────────────────────────
+
+  const SAFE_LIMIT = 3 * 1024 * 1024; // 3 MB — fits comfortably under Vercel 4.5 MB
+
   const transcribeAudio = async () => {
     if (!audioBlob) return;
-    
+
     setIsTranscribing(true);
-    setTranscribeProgress(10);
-    setError("");
+    setTranscribeProgress(5);
+    setChunkStatus('');
+    setError('');
 
     try {
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
-
-      setTranscribeProgress(30);
-      const response = await fetch('/api/transcribe', { method: 'POST', body: formData });
-      setTranscribeProgress(70);
-
-      if (!response.ok) {
-        if (response.status === 413) throw new Error('Recording file is too large to upload. Please try a shorter recording or compress the audio file.');
-        if (response.status === 429) throw new Error('AI service is temporarily busy. Please wait 5-10 seconds and try again.');
-        let errorMsg = 'Transcription failed';
-        try { const errorData = await response.json(); errorMsg = errorData.error || errorMsg; } catch { /* non-JSON error page */ }
-        throw new Error(errorMsg);
+      if (audioBlob.size <= SAFE_LIMIT) {
+        // ── Fast path: single upload ────────────────────────────────────────
+        setChunkStatus('Transcribing…');
+        setTranscribeProgress(20);
+        const data = await uploadSegment(audioBlob, false);
+        setTranscribeProgress(90);
+        setTranscription(data.text);
+        if (data.summary) { setSummary(data.summary); setEditContent(data.summary); }
+        setTranscribeProgress(100);
+        setChunkStatus('');
+      } else {
+        // ── Chunked path: split and transcribe sequentially ─────────────────
+        setChunkStatus('Recording is large — splitting into parts…');
+        setTranscribeProgress(8);
+        await transcribeInChunks(audioBlob);
       }
-
-      const data = await response.json();
-      setTranscribeProgress(90);
-      setTranscription(data.text);
-      if (data.summary) {
-        setSummary(data.summary);
-        setEditContent(data.summary);
-      }
-      setTranscribeProgress(100);
-      
     } catch (err: any) {
       setError(err.message || 'Failed to transcribe audio. Please try again.');
     } finally {
       setTimeout(() => {
         setIsTranscribing(false);
         setTranscribeProgress(0);
+        setChunkStatus('');
       }, 300);
     }
   };
@@ -706,7 +806,7 @@ export default function AudioRecordingView({
                               </svg>
                               <div className="text-left">
                                 <p className="font-semibold text-sm" style={{ color: colors.text }}>Upload audio file</p>
-                                <p className="text-xs" style={{ color: colors.textMuted }}>MP3, WAV, M4A &middot; Max 25MB</p>
+                                <p className="text-xs" style={{ color: colors.textMuted }}>MP3, WAV, M4A &middot; Large files auto-split</p>
                               </div>
                             </div>
                           </label>
@@ -774,7 +874,7 @@ export default function AudioRecordingView({
                             <div className="absolute inset-0 bg-white/20" style={{ width: `${transcribeProgress}%`, transition: 'width 0.3s ease' }} />
                           )}
                           <span className="relative z-10 flex items-center justify-center gap-2">
-                            {isTranscribing ? <><SpinnerIcon /> Processing...</> : 'Create AI Notes'}
+                            {isTranscribing ? <><SpinnerIcon /> {chunkStatus || 'Processing…'}</> : 'Create AI Notes'}
                           </span>
                         </button>
                       </div>
