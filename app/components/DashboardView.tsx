@@ -66,6 +66,7 @@ const INPUT_OPTIONS = [
     color: "#1a73e8",
     bgColor: "rgba(26, 115, 232, 0.1)",
     hoverBg: "rgba(26, 115, 232, 0.15)",
+    badge: "premium" as const,
   },
   {
     id: "mathmaxx" as const,
@@ -75,6 +76,7 @@ const INPUT_OPTIONS = [
     color: "#8b5cf6",
     bgColor: "rgba(139, 92, 246, 0.1)",
     hoverBg: "rgba(139, 92, 246, 0.15)",
+    badge: "trial" as const,
   },
   {
     id: "youtube" as const,
@@ -84,6 +86,7 @@ const INPUT_OPTIONS = [
     color: "#34a853",
     bgColor: "rgba(52, 168, 83, 0.1)",
     hoverBg: "rgba(52, 168, 83, 0.15)",
+    badge: "trial" as const,
   },
   {
     id: "notes" as const,
@@ -283,6 +286,21 @@ export default function DashboardView({
                   transition: 'all 0.18s ease',
                 }}
               >
+                {/* Premium / trial badge — top-right corner, only for free users */}
+                {!isPremium && option.badge === 'premium' && (
+                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(6,182,212,0.12)', border: '1px solid rgba(6,182,212,0.4)' }}>
+                    <svg className="w-3 h-3" style={{ color: '#06b6d4' }} fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/>
+                    </svg>
+                    <span className="text-xs font-semibold" style={{ color: '#06b6d4' }}>Premium</span>
+                  </div>
+                )}
+                {!isPremium && option.badge === 'trial' && (
+                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.4)' }}>
+                    <span className="text-xs font-semibold" style={{ color: '#f59e0b' }}>1 free try</span>
+                  </div>
+                )}
+
                 <div className="flex items-start gap-4">
                   {/* Icon */}
                   <div 
@@ -310,8 +328,8 @@ export default function DashboardView({
           })}
         </div>
 
-        {/* Locked Feature Teaser — shown only for free users */}
-        {!isPremium && (
+        {/* Locked Feature Teaser — removed; badges are now inline on each card */}
+        {false && (
           <div className="mb-8">
             <p className="text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5" style={{ color: isDarkMode ? '#64748b' : '#94a3b8' }}>
               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
