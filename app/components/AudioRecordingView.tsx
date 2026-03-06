@@ -408,6 +408,7 @@ export default function AudioRecordingView({
     const fd = new FormData();
     fd.append('audio', blob, 'audio.webm');
     if (skipSummary) fd.append('skipSummary', '1');
+    if (user?.id) fd.append('userId', user.id);
 
     const res = await fetch('/api/transcribe', { method: 'POST', body: fd });
 

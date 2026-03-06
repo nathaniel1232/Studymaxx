@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { VertexAI } from '@google-cloud/vertexai';
 import { checkServerRateLimit, getClientIP } from '../../utils/serverRateLimit';
+import { createClient } from '@supabase/supabase-js';
+
+async function isUserPremium(userId: string | null | undefined): Promise<boolean> {
+  if (!userId || userId.startsWith('anon')) return false;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return false;
+  try {
+    const supabase = createClient(url, key);
+    const { data } = await supabase.from('users').select('is_premium').eq('id', userId).single();
+    return data?.is_premium === true;
+  } catch { return false; }
+}
 
 // Lazy-initialize Vertex AI at runtime (not build time)
 let vertexAI: VertexAI | null = null;
@@ -43,17 +56,20 @@ function getVertexAI() {
 
 export async function POST(request: NextRequest) {
   try {
-    // Basic server-side rate limiting: 15 chat messages per IP per day
-    const clientIP = getClientIP(request);
-    const rateCheck = checkServerRateLimit(`chat:${clientIP}`, 15);
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        { error: 'Daily chat limit reached. Upgrade to Premium for unlimited chat.' },
-        { status: 429 }
-      );
-    }
-
     const { message, userId, context, history, outputLanguage } = await request.json();
+
+    // Premium users bypass rate limit; free users capped at 15/IP/day
+    const premium = await isUserPremium(userId);
+    if (!premium) {
+      const clientIP = getClientIP(request);
+      const rateCheck = checkServerRateLimit(`chat:${clientIP}`, 15);
+      if (!rateCheck.allowed) {
+        return NextResponse.json(
+          { error: 'Daily chat limit reached. Upgrade to Premium for unlimited chat.' },
+          { status: 429 }
+        );
+      }
+    }
 
     if (!message || !message.trim()) {
       return NextResponse.json(

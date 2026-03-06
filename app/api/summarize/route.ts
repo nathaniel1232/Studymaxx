@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { checkServerRateLimit, getClientIP } from '../../utils/serverRateLimit';
+import { createClient } from '@supabase/supabase-js';
 
 export const maxDuration = 120;
 
@@ -8,19 +9,34 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY 
 });
 
+async function isUserPremium(userId: string | null | undefined): Promise<boolean> {
+  if (!userId || userId.startsWith('anon')) return false;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return false;
+  try {
+    const supabase = createClient(url, key);
+    const { data } = await supabase.from('users').select('is_premium').eq('id', userId).single();
+    return data?.is_premium === true;
+  } catch { return false; }
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // Basic server-side rate limiting: 3 summarizations per IP per day
-    const clientIP = getClientIP(request);
-    const rateCheck = checkServerRateLimit(`summarize:${clientIP}`, 3);
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        { error: 'Daily summary limit reached. Upgrade to Premium for unlimited summaries.' },
-        { status: 429 }
-      );
-    }
+    const { text, length = 'medium', sourceType = 'text', outputLanguage, userId } = await request.json();
 
-    const { text, length = 'medium', sourceType = 'text', outputLanguage } = await request.json();
+    // Premium users bypass rate limit; free users capped at 3/IP/day
+    const premium = await isUserPremium(userId);
+    if (!premium) {
+      const clientIP = getClientIP(request);
+      const rateCheck = checkServerRateLimit(`summarize:${clientIP}`, 3);
+      if (!rateCheck.allowed) {
+        return NextResponse.json(
+          { error: 'Daily summary limit reached. Upgrade to Premium for unlimited summaries.' },
+          { status: 429 }
+        );
+      }
+    }
 
     if (!text || !text.trim()) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });

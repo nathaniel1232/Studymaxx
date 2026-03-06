@@ -2,8 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { VertexAI } from '@google-cloud/vertexai';
 import { createClient } from '@deepgram/sdk';
 import OpenAI from 'openai';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { checkServerRateLimit, getClientIP } from '../../utils/serverRateLimit';
 
 export const maxDuration = 120; // Allow up to 120s for long audio transcription
+
+async function isUserPremium(userId: string | null | undefined): Promise<boolean> {
+  if (!userId || userId.startsWith('anon')) return false;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return false;
+  try {
+    const supabase = createSupabaseClient(url, key);
+    const { data } = await supabase.from('users').select('is_premium').eq('id', userId).single();
+    return data?.is_premium === true;
+  } catch { return false; }
+}
 
 // Lazy initialization to avoid build-time errors
 let vertexAI: VertexAI | null = null;
@@ -89,12 +103,26 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const audioFile = formData.get('audio') as File;
     const skipSummary = formData.get('skipSummary') === '1';
+    const userId = formData.get('userId') as string | null;
 
     if (!audioFile) {
       return NextResponse.json(
         { error: 'No audio file provided' },
         { status: 400 }
       );
+    }
+
+    // Premium users get unlimited transcriptions; free users capped at 5/IP/day
+    const premium = await isUserPremium(userId);
+    if (!premium) {
+      const clientIP = getClientIP(request);
+      const rateCheck = checkServerRateLimit(`transcribe:${clientIP}`, 5);
+      if (!rateCheck.allowed) {
+        return NextResponse.json(
+          { error: 'Daily transcription limit reached. Upgrade to Premium for unlimited audio transcription.' },
+          { status: 429 }
+        );
+      }
     }
 
     // Check file size (max 100MB)
