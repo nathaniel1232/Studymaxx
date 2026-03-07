@@ -1,17 +1,5 @@
 "use client";
 
-/**
- * MathMaxxView — Production-quality AI math tutor
- *
- * Key features:
- * - KaTeX for proper mathematical rendering
- * - Chat + Quiz tabs with shared context (chat knows your quiz results)
- * - 3 free messages for free users, premium popup after 3rd
- * - Language-aware UI (English / Norwegian)
- * - Post-quiz AI review (auto-sends to chat)
- * - Daily rate limits for premium users
- */
-
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSettings, useTranslation } from "../contexts/SettingsContext";
 import katex from "katex";

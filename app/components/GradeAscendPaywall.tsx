@@ -1,13 +1,5 @@
 ﻿"use client";
 
-/**
- * GradeAscendPaywall — Personalised Paywall
- *
- * Shown after completing the onboarding quiz.
- * Embeds LoginModal inline (z-[10002]) as a safety fallback.
- * Simple $5.99/mo or $52.99/yr pricing via Stripe.
- */
-
 import { useState, useEffect, useRef } from "react";
 import { OnboardingData } from "../utils/onboardingTypes";
 import { supabase } from "../utils/supabase";

@@ -1,16 +1,5 @@
 "use client";
 
-/**
- * StudyPlanWidget — Shows the user's active study plan on the dashboard.
- * 
- * Features:
- * - Auto-loads plan from Supabase API
- * - Check off completed items (persists immediately)
- * - Shows progress bar
- * - Collapsible by day
- * - Falls back to localStorage for offline use
- */
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../utils/supabase";
 

@@ -1,8 +1,3 @@
-/**
- * Email Templates for StudyMaxx
- * Simple HTML templates for transactional emails
- */
-
 export const emailTemplates = {
   /**
    * Streak Reminder Email - sent when user is about to lose their streak

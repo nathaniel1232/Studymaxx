@@ -14,18 +14,6 @@ import {
 import { supabase } from "@/app/utils/supabase";
 import { canUseFeature } from "@/app/utils/premium";
 
-/**
- * ROBUST FILE-TO-TEXT EXTRACTION PIPELINE
- * 
- * Flow:
- * 1. User uploads file or link
- * 2. Backend ingestion service (this route)
- * 3. Text extraction (multiple strategies)
- * 4. Validation & cleanup
- * 5. Language detection
- * 6. Return structured result for AI generation
- */
-
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();

@@ -1,8 +1,3 @@
-/**
- * Subscription Tier System
- * Centralized tier management and feature checks
- */
-
 export type TierName = 'free' | 'premium' | 'pro' | 'team';
 export type BillingInterval = 'monthly' | 'yearly';
 

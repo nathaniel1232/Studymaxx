@@ -1,10 +1,3 @@
-/**
- * Personalization Engine
- * 
- * Converts raw onboarding answers into actionable personalization settings.
- * This engine makes the app feel like it truly "understands" each student.
- */
-
 import {
   OnboardingData,
   PersonalizationProfile,

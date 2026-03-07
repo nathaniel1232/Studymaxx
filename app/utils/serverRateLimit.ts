@@ -1,8 +1,3 @@
-/**
- * Simple server-side rate limiter using in-memory Map
- * Resets on server restart, but provides basic protection against abuse
- */
-
 interface RateLimitEntry {
   count: number;
   resetAt: number;

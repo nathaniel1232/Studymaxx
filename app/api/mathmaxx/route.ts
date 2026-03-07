@@ -1,18 +1,3 @@
-/**
- * /api/mathmaxx — Main chat endpoint for MathMaxx AI math tutor
- * 
- * Flow:
- * 1. Receive user message + chat history
- * 2. Run message through math.js to detect/compute expressions
- * 3. Build enhanced prompt with computed results (when available)
- * 4. Send to Gemini 2.5 Flash with pedagogical system prompt
- * 5. Stream response back via SSE
- * 
- * The math engine pre-computes answers so Gemini can focus on
- * explaining the steps — this ensures correct answers even when
- * the LLM might otherwise make arithmetic mistakes.
- */
-
 import { NextRequest, NextResponse } from 'next/server';
 import { VertexAI } from '@google-cloud/vertexai';
 import { buildMathContext } from './mathEngine';

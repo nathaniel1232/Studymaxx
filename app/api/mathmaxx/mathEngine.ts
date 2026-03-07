@@ -1,12 +1,3 @@
-/**
- * mathEngine.ts — Server-side math computation using math.js
- * 
- * This module handles:
- * 1. Detecting mathematical expressions in user input
- * 2. Evaluating them with math.js for verified answers
- * 3. Providing computed results to Gemini so it can explain step-by-step
- */
-
 import { create, all } from 'mathjs';
 
 // Create a math.js instance with all functions

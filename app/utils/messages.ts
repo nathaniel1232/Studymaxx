@@ -1,14 +1,3 @@
-/**
- * MESSAGING SYSTEM - Human-friendly, warm, professional copy
- * 
- * This file centralizes all user-facing messages to ensure consistent
- * tone across the app. Messages should feel:
- * - Warm and human (not robotic)
- * - Clear and concise
- * - Helpful and encouraging
- * - Professional and trustworthy
- */
-
 export const messages = {
   // ========== SUCCESS MESSAGES ==========
   success: {

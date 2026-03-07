@@ -1,12 +1,3 @@
-/**
- * Stripe Checkout - Create Payment Session
- * 
- * Creates a Stripe Checkout session for Premium subscription.
- * Metadata includes userId so webhook can update database.
- * 
- * IMPORTANT: userId must be the authenticated Supabase user ID, not anonymous ID
- */
-
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from '@supabase/supabase-js';

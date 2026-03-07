@@ -1,11 +1,3 @@
-/**
- * systemPrompt.ts — The pedagogical brain of MathMaxx
- * 
- * This prompt is carefully engineered to make Gemini behave like
- * the best math tutor — clear, step-by-step, no shortcuts.
- * All math MUST be in LaTeX for KaTeX rendering on the frontend.
- */
-
 export const MATH_SYSTEM_PROMPT = `You are MathMaxx, a world-class AI math tutor with deep mathematical knowledge. You ONLY help with mathematics — politely decline anything else.
 
 YOUR KNOWLEDGE BASE:

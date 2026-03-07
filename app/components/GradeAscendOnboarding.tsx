@@ -1,14 +1,5 @@
 ﻿"use client";
 
-/**
- * GradeAscendOnboarding — Quick personalisation setup
- *
- * 7 screens: Name → Grade Level → Current Grade (optional) →
- * Target → Struggles → Study Goal → Daily Time → [Paywall]
- *
- * Light mode. CSS-class hover animations. Human copy.
- */
-
 import { useState, useEffect } from "react";
 import {
   OnboardingData,

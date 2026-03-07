@@ -1,8 +1,3 @@
-/**
- * Onboarding + Personalization Types
- * High-converting onboarding flow data model
- */
-
 // ── Step Data Types ──────────────────────────────────────────
 
 export interface OnboardingData {

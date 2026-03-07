@@ -1,18 +1,3 @@
-/**
- * Cron Job: Expire Premium Subscriptions
- * 
- * This endpoint should be called daily (e.g., via Vercel Cron or external scheduler)
- * to check for and expire premium subscriptions that have reached their expiration date.
- * 
- * Setup in vercel.json:
- * {
- *   "crons": [{
- *     "path": "/api/cron/expire-premium",
- *     "schedule": "0 0 * * *"
- *   }]
- * }
- */
-
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 

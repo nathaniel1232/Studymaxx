@@ -1,8 +1,3 @@
-/**
- * Folders API Route
- * Handles CRUD operations for flashcard folders
- */
-
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
