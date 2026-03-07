@@ -248,7 +248,7 @@ export async function POST(req: Request) {
         
         // Extract INNERTUBE_API_KEY
         const apiKeyMatch = pageHtml.match(/"INNERTUBE_API_KEY"\s*:\s*"([a-zA-Z0-9_-]+)"/);
-        const apiKey = apiKeyMatch?.[1] || 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8'; // fallback key
+        const apiKey = apiKeyMatch?.[1] || process.env.YOUTUBE_INNERTUBE_API_KEY || '';
 
         const playerRes = await fetch(`https://www.youtube.com/youtubei/v1/player?key=${apiKey}`, {
           method: 'POST',
