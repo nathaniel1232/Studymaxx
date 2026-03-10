@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const model = ai.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+      const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
       const base64Pdf = buffer.toString('base64');
       console.log(`[Extract PDF] Sending ${(base64Pdf.length / 1024).toFixed(0)} KB to Gemini...`);
 

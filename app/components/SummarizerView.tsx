@@ -90,7 +90,7 @@ const SaveIcon = () => (
 
 const SOURCE_TABS: { id: SourceType; label: string; Icon: React.FC }[] = [
   { id: "text", label: "Notes", Icon: NotesIcon },
-  { id: "pdf", label: "PDF / PPTX", Icon: FileIcon },
+  { id: "pdf", label: "File Upload", Icon: FileIcon },
   { id: "youtube", label: "YouTube", Icon: YoutubeIcon },
   { id: "website", label: "Website", Icon: GlobeIcon },
 ];
@@ -178,11 +178,11 @@ export default function SummarizerView({ onBack, isPremium, user }: SummarizerVi
     if (!file) return;
     if (!isPremium) { setShowPremiumModal(true); if (fileInputRef.current) fileInputRef.current.value = ""; return; }
     const ext = file.name.split(".").pop()?.toLowerCase();
-    if (!["pdf", "pptx", "ppt"].includes(ext || "")) { setError("Only PDF and PPTX files are supported."); return; }
+    if (!["pdf", "pptx", "ppt", "docx", "doc"].includes(ext || "")) { setError("Only PDF, PPTX, and Word files are supported."); return; }
     setIsExtracting(true); setError(""); setFileName(file.name);
     try {
       const fd = new FormData(); fd.append("file", file);
-      const endpoint = ext === "pdf" ? "/api/extract-pdf" : "/api/extract-pptx";
+      const endpoint = ext === "pdf" ? "/api/extract-pdf" : (ext === "docx" || ext === "doc") ? "/api/extract-docx" : "/api/extract-pptx";
       const res = await fetch(endpoint, { method: "POST", body: fd });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error || "Extraction failed"); }
       const d = await res.json();
@@ -568,10 +568,10 @@ export default function SummarizerView({ onBack, isPremium, user }: SummarizerVi
                 </>
               )}
 
-              {/* PDF / PPTX */}
+              {/* File Upload (PDF / PPTX / DOCX) */}
               {sourceType === "pdf" && (
                 <>
-                  <input ref={fileInputRef} type="file" accept=".pdf,.pptx,.ppt" onChange={handleFileUpload} style={{ display: "none" }} />
+                  <input ref={fileInputRef} type="file" accept=".pdf,.pptx,.ppt,.docx,.doc" onChange={handleFileUpload} style={{ display: "none" }} />
                   {isExtracting ? (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", padding: "40px 0", color: ACCENT }}>
                       <SpinnerIcon /> Extracting text from {fileName}...
@@ -592,8 +592,8 @@ export default function SummarizerView({ onBack, isPremium, user }: SummarizerVi
                     <button onClick={() => fileInputRef.current?.click()}
                       style={{ width: "100%", padding: "40px 24px", borderRadius: "14px", border: `2px dashed ${border}`, background: "transparent", cursor: "pointer", textAlign: "center", color: text2 }}>
                       <div style={{ marginBottom: "8px" }}><FileIcon /></div>
-                      <p style={{ fontSize: "15px", fontWeight: 500, margin: "0 0 4px", color: text1 }}>Upload PDF or PowerPoint</p>
-                      <p style={{ fontSize: "13px", margin: 0 }}>Click to browse (.pdf, .pptx)</p>
+                      <p style={{ fontSize: "15px", fontWeight: 500, margin: "0 0 4px", color: text1 }}>Upload PDF, PowerPoint, or Word</p>
+                      <p style={{ fontSize: "13px", margin: 0 }}>Click to browse (.pdf, .pptx, .docx)</p>
                     </button>
                   )}
                 </>

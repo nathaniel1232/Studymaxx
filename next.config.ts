@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
-  serverExternalPackages: ['canvas', 'pdfjs-dist'],
+  serverExternalPackages: ['canvas', 'pdfjs-dist', 'pdf-parse'],
   
   // Performance optimizations
   compress: true, // Enable gzip compression
