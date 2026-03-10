@@ -87,12 +87,11 @@ export async function POST(request: NextRequest) {
       ur: 'Urdu', fa: 'Persian', he: 'Hebrew',
       sw: 'Swahili', am: 'Amharic',
     };
-    const explicitLang = outputLanguage ? LANG_NAMES[outputLanguage] : null;
+    const explicitLang = outputLanguage && outputLanguage !== 'auto' ? LANG_NAMES[outputLanguage] : null;
 
-    // Detect input language from the first 500 chars for auto-detect mode
+    // Detect input language — always ensure we know the exact language name
     let targetLang = explicitLang || null;
     if (!targetLang) {
-      // Quick heuristic: detect language from sample text
       const sample = text.substring(0, 500);
       // Script-based detection
       if ((sample.match(/[\u0400-\u04FF]/g)?.length ?? 0) > 10) targetLang = 'Russian';
@@ -103,7 +102,6 @@ export async function POST(request: NextRequest) {
       else if ((sample.match(/[\u4E00-\u9FFF]/g)?.length ?? 0) > 5) targetLang = 'Chinese';
       else if ((sample.match(/[\u0900-\u097F]/g)?.length ?? 0) > 5) targetLang = 'Hindi';
       else {
-        // For Latin-script languages, detect via common words (need 3+ matches)
         const countMatches = (regex: RegExp) => (sample.match(regex)?.length ?? 0);
         if (countMatches(/\b(og|er|det|som|til|på|har|med|ikke|fra|kan|vil|var|skal|også|eller|dette|denne|etter|mange|andre|noen|hvordan)\b/gi) >= 3) targetLang = 'Norwegian';
         else if (countMatches(/\b(und|der|die|das|ist|ein|eine|nicht|auch|sich|mit|auf|für|werden|haben|sind|wird|kann|nach|über)\b/gi) >= 3) targetLang = 'German';
@@ -115,6 +113,21 @@ export async function POST(request: NextRequest) {
         else if (countMatches(/\b(ja|on|ei|se|että|oli|kun|niin|hän|sitten|mutta|tai|ovat|voi|myös|nyt|kuin)\b/gi) >= 3) targetLang = 'Finnish';
         else if (countMatches(/\b(di|il|che|non|sono|per|una|del|con|più|anche|come|questo|dalla|della|alla|nella|sulla)\b/gi) >= 3) targetLang = 'Italian';
         else if (countMatches(/\b(não|para|com|uma|dos|das|por|mais|como|tem|foi|está|são|mas|entre|até)\b/gi) >= 3) targetLang = 'Portuguese';
+      }
+
+      // If heuristics failed, use Gemini to detect the language (fast 1-token call)
+      if (!targetLang) {
+        try {
+          const detectModel = getVertexAI().getGenerativeModel({ model: 'gemini-2.5-flash' });
+          const detectResult = await detectModel.generateContent({
+            contents: [{ role: 'user', parts: [{ text: `What language is this text written in? Reply with ONLY the language name in English (e.g. "Norwegian", "French", "Spanish"). Text: "${sample}"` }] }],
+            generationConfig: { temperature: 0, maxOutputTokens: 10 },
+          });
+          const detected = detectResult.response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim().replace(/[".]/g, '');
+          if (detected && detected.length < 30) targetLang = detected;
+        } catch (e) {
+          console.warn('[Summarize] Language detection call failed, will use prompt-based detection', e);
+        }
       }
     }
     console.log('[Summarize API] Output language:', outputLanguage, '→', targetLang || 'auto-detect (will match input)');
@@ -134,12 +147,49 @@ export async function POST(request: NextRequest) {
     };
     const srcLabel = sourceLabel[sourceType] || 'material';
 
-    // Build the language instruction for the system prompt
-    const langForSystem = targetLang
-      ? `ABSOLUTE RULE: You MUST write the ENTIRE summary in ${targetLang}. Every heading, bullet, and sentence MUST be in ${targetLang}. NEVER use English unless ${targetLang} IS English.`
-      : `ABSOLUTE RULE: Detect what language the input text is written in, then write your ENTIRE summary in that SAME language. NEVER default to English. If the input is Norwegian, output Norwegian. If Spanish, output Spanish. Match the input language exactly.`;
+    const isNonEnglish = targetLang && targetLang.toLowerCase() !== 'english';
 
-    const prompt = `Create a comprehensive, well-structured summary of this ${srcLabel}.
+    // Build language-specific system instruction
+    const langForSystem = targetLang
+      ? (isNonEnglish
+          ? `You are an expert academic summarizer. You ONLY write in ${targetLang}. You NEVER use English. Every single word you output must be in ${targetLang}. This is non-negotiable.`
+          : `You are an expert academic summarizer that creates comprehensive study summaries in English.`)
+      : `You are an expert academic summarizer. Detect the language of the input and write your entire output in that same language. Never default to English unless the input is in English.`;
+
+    const prompt = isNonEnglish
+      ? `SKRIV ALT PÅ ${targetLang!.toUpperCase()}. IKKE BRUK ENGELSK.
+
+Lag et omfattende, velstrukturert sammendrag av dette ${srcLabel} på ${targetLang}.
+
+LENGDEKRAV: ${lengthInstruction}
+
+Inkluder ALLE nøkkelkonsepter, definisjoner, termer, viktige navn, datoer, tall, statistikk, hovedargumenter, teorier, forklaringer, spesifikke eksempler, kontekst og sammenhenger mellom konsepter.
+
+FORMAT — Følg denne EKSAKTE strukturen (alle overskrifter og tekst MÅ være på ${targetLang}):
+
+1. Tittellinje: Start med en relevant emoji + tittel på ${targetLang}
+
+2. 📋 Oversikt-seksjon på ${targetLang} (2-3 setninger som forklarer hva innholdet dekker)
+
+3. Innholdsseksjoner — Del inn i logiske emneseksjoner. Hver seksjon MÅ ha:
+   - Emoji + tydelig overskrift på ${targetLang}
+   - Flere kulepunkter (•) med DETALJERT informasjon (1-2 setninger hver)
+   - Under-kulepunkter (◦) for relaterte detaljer ved behov
+
+4. 💡 Nøkkelpunkter — Siste seksjon med 3-5 setninger som oppsummerer de viktigste punktene på ${targetLang}
+
+FORMATREGLER:
+• Bruk emojier for alle seksjonsoverskrifter
+• Hvert punkt bruker et kulepunkt (•), underpunkter bruker (◦)
+• INGEN markdown-formatering (ingen **, ##, __)
+• INGEN metatekst — start direkte med tittelen
+• ALT må være på ${targetLang} — INGEN engelske ord eller overskrifter
+
+INNDATA:
+${text}
+
+PÅMINNELSE: HELE oppsummeringen MÅ være på ${targetLang}. Ikke bruk engelsk.`
+      : `Create a comprehensive, well-structured summary of this ${srcLabel}.
 
 LENGTH REQUIREMENT: ${lengthInstruction}
 
@@ -172,7 +222,7 @@ ${text}`;
       model: 'gemini-2.5-flash',
       systemInstruction: {
         role: 'system',
-        parts: [{ text: `You are an expert academic summarizer that creates comprehensive study summaries.\n\n${langForSystem}` }],
+        parts: [{ text: langForSystem }],
       },
     });
 
