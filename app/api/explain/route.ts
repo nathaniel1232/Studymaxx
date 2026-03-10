@@ -41,33 +41,26 @@ export async function POST(request: NextRequest) {
     }
 
     const langInstruction = language && language !== 'en' && language !== 'auto'
-      ? `IMPORTANT: Respond in the same language as the question. If the question is not in English, write your explanation in that language.`
-      : `IMPORTANT: Always respond in the SAME language as the question. If the question is in Swedish, respond in Swedish. If in Spanish, respond in Spanish. Match the question's language.`;
+      ? `Respond in the same language as the question.`
+      : `Respond in the SAME language as the question. Match the question's language exactly.`;
 
     const model = getVertexAI().getGenerativeModel({
       model: 'gemini-2.5-flash',
+      systemInstruction: {
+        role: 'system',
+        parts: [{ text: `You are a helpful tutor explaining why an answer is wrong. Keep explanations brief (1-2 sentences), clear, and educational. ${langInstruction}` }],
+      },
     });
 
     const completion = await model.generateContent({
       contents: [{
         role: 'user',
         parts: [{
-          text: `You are a helpful tutor explaining why an answer is wrong. Keep explanations brief (1-2 sentences), clear, and educational. Focus on helping the student understand the correct answer without being condescending.
-
-Rules:
-- Be concise and direct
-- Explain why the correct answer is right
-- If relevant, briefly mention why the user's answer was wrong
-- Use simple language
-- Don't repeat the question or answers in full
-- Maximum 50 words
-${langInstruction}
-
-Question: "${question}"
+          text: `Question: "${question}"
 Correct answer: "${correctAnswer}"
 Student answered: "${userAnswer}"
 
-Briefly explain why the correct answer is right.`
+Briefly explain why the correct answer is right (max 50 words). Be concise and direct.`
         }]
       }],
       generationConfig: {

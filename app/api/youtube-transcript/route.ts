@@ -80,6 +80,9 @@ function pickBestTrack(tracks: any[]): any {
   return tracks[0];
 }
 
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36';
+const CONSENT_COOKIE = 'CONSENT=PENDING+999; SOCS=CAISNQgDEitib3FfaWRlbnRpdHlmcm9udGVuZHVpc2VydmVyXzIwMjUwMjI0LjA3X3AxGgJlbiACGgYIgJnSmgY';
+
 // Fetch caption text from a baseUrl
 async function fetchCaptionsFromUrl(baseUrl: string): Promise<string> {
   // Try JSON3 format first (more reliable for auto-generated)
@@ -90,7 +93,7 @@ async function fetchCaptionsFromUrl(baseUrl: string): Promise<string> {
   try {
     const jsonRes = await fetch(json3Url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'User-Agent': UA,
         'Accept-Language': 'en-US,en;q=0.9',
       },
       signal: AbortSignal.timeout(10000),
@@ -114,7 +117,7 @@ async function fetchCaptionsFromUrl(baseUrl: string): Promise<string> {
 
   const xmlRes = await fetch(xmlUrl, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      'User-Agent': UA,
       'Accept-Language': 'en-US,en;q=0.9',
     },
     signal: AbortSignal.timeout(10000),
@@ -156,15 +159,31 @@ export async function POST(req: Request) {
     console.log('[YouTube API] Fetching transcript for video:', videoId);
 
     const transcriptMethods = [
-      // Method 1: Scrape watch page HTML for ytInitialPlayerResponse
-      // This is the most reliable method as it gets the data YouTube embeds in the page
+      // Method 1: youtube-transcript npm package (community-maintained, updated most often)
+      async () => {
+        console.log('[YouTube API] Trying youtube-transcript npm package...');
+        const { YoutubeTranscript } = await import('youtube-transcript');
+        const transcriptItems = await YoutubeTranscript.fetchTranscript(videoId);
+        if (!transcriptItems || transcriptItems.length === 0) throw new Error('No transcript from npm package');
+        const text = transcriptItems
+          .map((item: any) => decodeHtmlEntities(item.text))
+          .filter((t: string) => t.length > 0)
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        if (text.length < 50) throw new Error(`NPM transcript too short (${text.length} chars)`);
+        return text;
+      },
+
+      // Method 2: Scrape watch page HTML for ytInitialPlayerResponse
       async () => {
         console.log('[YouTube API] Trying HTML page scrape (ytInitialPlayerResponse)...');
         const watchRes = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+            'User-Agent': UA,
             'Accept-Language': 'en-US,en;q=0.9',
-            'Cookie': 'CONSENT=PENDING+999; SOCS=CAISNQgDEitib3FfaWRlbnRpdHlmcm9udGVuZHVpc2VydmVyXzIwMjMxMTE0LjA3X3AxGgJlbiACGgYIgJnSmgY',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Cookie': CONSENT_COOKIE,
           },
           signal: AbortSignal.timeout(15000),
         });
@@ -232,15 +251,15 @@ export async function POST(req: Request) {
         return text;
       },
 
-      // Method 2: InnerTube WEB API (like youtube-transcript-api Python library)
+      // Method 3: InnerTube WEB API
       async () => {
         console.log('[YouTube API] Trying InnerTube WEB API...');
         
-        // First fetch the page to get the API key
+        // First fetch the page to get the API key and client version
         const pageRes = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-            'Cookie': 'CONSENT=PENDING+999',
+            'User-Agent': UA,
+            'Cookie': CONSENT_COOKIE,
           },
           signal: AbortSignal.timeout(10000),
         });
@@ -248,13 +267,17 @@ export async function POST(req: Request) {
         
         // Extract INNERTUBE_API_KEY
         const apiKeyMatch = pageHtml.match(/"INNERTUBE_API_KEY"\s*:\s*"([a-zA-Z0-9_-]+)"/);
-        const apiKey = apiKeyMatch?.[1] || process.env.YOUTUBE_INNERTUBE_API_KEY || '';
+        const apiKey = apiKeyMatch?.[1] || 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
+
+        // Extract client version dynamically
+        const clientVersionMatch = pageHtml.match(/"clientVersion"\s*:\s*"([0-9.]+)"/);
+        const clientVersion = clientVersionMatch?.[1] || '2.20260301.00.00';
 
         const playerRes = await fetch(`https://www.youtube.com/youtubei/v1/player?key=${apiKey}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+            'User-Agent': UA,
             'Origin': 'https://www.youtube.com',
             'Referer': `https://www.youtube.com/watch?v=${videoId}`,
           },
@@ -262,7 +285,7 @@ export async function POST(req: Request) {
             context: {
               client: {
                 clientName: 'WEB',
-                clientVersion: '2.20241126.01.00',
+                clientVersion: clientVersion,
                 hl: 'en',
                 gl: 'US',
               }
@@ -291,37 +314,21 @@ export async function POST(req: Request) {
         return text;
       },
 
-      // Method 3: youtube-transcript npm package
+      // Method 4: InnerTube ANDROID API
       async () => {
-        console.log('[YouTube API] Trying youtube-transcript npm package...');
-        const { YoutubeTranscript } = await import('youtube-transcript');
-        const transcriptItems = await YoutubeTranscript.fetchTranscript(videoId);
-        if (!transcriptItems || transcriptItems.length === 0) throw new Error('No transcript from npm package');
-        const text = transcriptItems
-          .map((item: any) => decodeHtmlEntities(item.text))
-          .filter((t: string) => t.length > 0)
-          .join(' ')
-          .replace(/\s+/g, ' ')
-          .trim();
-        if (text.length < 50) throw new Error(`NPM transcript too short (${text.length} chars)`);
-        return text;
-      },
-
-      // Method 4: InnerTube ANDROID API (legacy fallback)
-      async () => {
-        console.log('[YouTube API] Trying InnerTube ANDROID API (legacy)...');
-        const playerRes = await fetch('https://www.youtube.com/youtubei/v1/player', {
+        console.log('[YouTube API] Trying InnerTube ANDROID API...');
+        const playerRes = await fetch('https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'User-Agent': 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip',
+            'User-Agent': 'com.google.android.youtube/19.44.38 (Linux; U; Android 14) gzip',
           },
           body: JSON.stringify({
             context: {
               client: {
                 clientName: 'ANDROID',
-                clientVersion: '19.09.37',
-                androidSdkVersion: 30,
+                clientVersion: '19.44.38',
+                androidSdkVersion: 34,
                 hl: 'en',
                 gl: 'US',
               }
@@ -348,13 +355,56 @@ export async function POST(req: Request) {
         if (!text || text.length < 50) throw new Error(`Caption text too short (${text.length} chars)`);
         return text;
       },
+
+      // Method 5: InnerTube iOS client (different fingerprint, sometimes bypasses blocks)
+      async () => {
+        console.log('[YouTube API] Trying InnerTube iOS API...');
+        const playerRes = await fetch('https://www.youtube.com/youtubei/v1/player?key=AIzaSyB-63vPrdThhKuerbB2N_l7Kwwcxj6yUAc', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'com.google.ios.youtube/19.45.4 (iPhone16,2; U; CPU iOS 18_1_0 like Mac OS X;)',
+          },
+          body: JSON.stringify({
+            context: {
+              client: {
+                clientName: 'IOS',
+                clientVersion: '19.45.4',
+                deviceMake: 'Apple',
+                deviceModel: 'iPhone16,2',
+                hl: 'en',
+                gl: 'US',
+              }
+            },
+            videoId: videoId,
+            contentCheckOk: true,
+            racyCheckOk: true,
+          }),
+          signal: AbortSignal.timeout(10000),
+        });
+
+        if (!playerRes.ok) throw new Error(`iOS API returned ${playerRes.status}`);
+        
+        const playerData = await playerRes.json();
+        const captions = playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+        
+        if (!captions || captions.length === 0) throw new Error('No caption tracks from iOS API');
+
+        const track = pickBestTrack(captions);
+        const captionUrl = track.baseUrl;
+        if (!captionUrl) throw new Error('No caption URL');
+
+        const text = await fetchCaptionsFromUrl(captionUrl);
+        if (!text || text.length < 50) throw new Error(`Caption text too short (${text.length} chars)`);
+        return text;
+      },
     ];
 
     let fullText = '';
 
     for (const [index, method] of transcriptMethods.entries()) {
       try {
-        console.log(`[YouTube API] Trying method ${index + 1}/4...`);
+        console.log(`[YouTube API] Trying method ${index + 1}/${transcriptMethods.length}...`);
         fullText = await method();
         if (fullText && fullText.length > 50) {
           console.log(`[YouTube API] ✅ Success with method ${index + 1} (${fullText.length} chars)`);

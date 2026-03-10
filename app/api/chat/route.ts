@@ -164,12 +164,7 @@ FORMATTING:
 ${context ? `\nSTUDY MATERIAL:\n${context.substring(0, contextLimit)}` : ''}`;
 
     // Build conversation contents for Gemini
-    // Start with system instruction as the first user message, then alternate user/model
     const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
-    
-    // Add system prompt as first turn
-    contents.push({ role: 'user', parts: [{ text: systemPrompt }] });
-    contents.push({ role: 'model', parts: [{ text: 'Understood! I\'m ready to help you study. Ask me anything about your material.' }] });
 
     // Add conversation history (last 10 messages max to keep tokens low)
     if (history && Array.isArray(history)) {
@@ -188,6 +183,10 @@ ${context ? `\nSTUDY MATERIAL:\n${context.substring(0, contextLimit)}` : ''}`;
 
     const model = getVertexAI().getGenerativeModel({
       model: 'gemini-2.5-flash',
+      systemInstruction: {
+        role: 'system',
+        parts: [{ text: systemPrompt }],
+      },
     });
 
     const streamingResult = await model.generateContentStream({

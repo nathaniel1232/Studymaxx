@@ -88,7 +88,36 @@ export async function POST(request: NextRequest) {
       sw: 'Swahili', am: 'Amharic',
     };
     const explicitLang = outputLanguage ? LANG_NAMES[outputLanguage] : null;
-    console.log('[Summarize API] Output language:', outputLanguage, '→', explicitLang || 'auto-detect');
+
+    // Detect input language from the first 500 chars for auto-detect mode
+    let targetLang = explicitLang || null;
+    if (!targetLang) {
+      // Quick heuristic: detect language from sample text
+      const sample = text.substring(0, 500);
+      // Script-based detection
+      if ((sample.match(/[\u0400-\u04FF]/g)?.length ?? 0) > 10) targetLang = 'Russian';
+      else if ((sample.match(/[\u0370-\u03FF]/g)?.length ?? 0) > 5) targetLang = 'Greek';
+      else if ((sample.match(/[\u0600-\u06FF]/g)?.length ?? 0) > 5) targetLang = 'Arabic';
+      else if ((sample.match(/[\u3040-\u309F\u30A0-\u30FF]/g)?.length ?? 0) > 3) targetLang = 'Japanese';
+      else if ((sample.match(/[\uAC00-\uD7AF]/g)?.length ?? 0) > 5) targetLang = 'Korean';
+      else if ((sample.match(/[\u4E00-\u9FFF]/g)?.length ?? 0) > 5) targetLang = 'Chinese';
+      else if ((sample.match(/[\u0900-\u097F]/g)?.length ?? 0) > 5) targetLang = 'Hindi';
+      else {
+        // For Latin-script languages, detect via common words (need 3+ matches)
+        const countMatches = (regex: RegExp) => (sample.match(regex)?.length ?? 0);
+        if (countMatches(/\b(og|er|det|som|til|på|har|med|ikke|fra|kan|vil|var|skal|også|eller|dette|denne|etter|mange|andre|noen|hvordan)\b/gi) >= 3) targetLang = 'Norwegian';
+        else if (countMatches(/\b(und|der|die|das|ist|ein|eine|nicht|auch|sich|mit|auf|für|werden|haben|sind|wird|kann|nach|über)\b/gi) >= 3) targetLang = 'German';
+        else if (countMatches(/\b(les|des|est|une|dans|pour|avec|sont|pas|qui|sur|mais|cette|comme|tout|plus|fait|elle)\b/gi) >= 3) targetLang = 'French';
+        else if (countMatches(/\b(los|las|una|del|que|con|por|para|está|son|más|como|pero|tiene|esta|todo|entre|desde|sobre)\b/gi) >= 3) targetLang = 'Spanish';
+        else if (countMatches(/\b(het|een|van|zijn|deze|worden|niet|ook|voor|maar|wel|nog|dan|bij|tot|meer|uit|wordt|kan|als)\b/gi) >= 3) targetLang = 'Dutch';
+        else if (countMatches(/\b(och|är|att|det|som|för|med|har|till|den|inte|kan|sig|från|ett|alla|ska)\b/gi) >= 3) targetLang = 'Swedish';
+        else if (countMatches(/\b(og|det|som|til|har|med|ikke|fra|kan|vil|var|skal|denne|efter|alle|mange|andre|blev)\b/gi) >= 3) targetLang = 'Danish';
+        else if (countMatches(/\b(ja|on|ei|se|että|oli|kun|niin|hän|sitten|mutta|tai|ovat|voi|myös|nyt|kuin)\b/gi) >= 3) targetLang = 'Finnish';
+        else if (countMatches(/\b(di|il|che|non|sono|per|una|del|con|più|anche|come|questo|dalla|della|alla|nella|sulla)\b/gi) >= 3) targetLang = 'Italian';
+        else if (countMatches(/\b(não|para|com|uma|dos|das|por|mais|como|tem|foi|está|são|mas|entre|até)\b/gi) >= 3) targetLang = 'Portuguese';
+      }
+    }
+    console.log('[Summarize API] Output language:', outputLanguage, '→', targetLang || 'auto-detect (will match input)');
 
     const lengthMap: Record<string, string> = {
       'short': 'MINIMUM 100-150 words across 3-5 sections. Each section must have 2-4 bullets. This is a QUICK overview, but still comprehensive and informative.',
@@ -105,97 +134,52 @@ export async function POST(request: NextRequest) {
     };
     const srcLabel = sourceLabel[sourceType] || 'material';
 
-    const prompt = `🚨 ABSOLUTE REQUIREMENT - OUTPUT LANGUAGE 🚨
-${explicitLang && explicitLang !== 'English'
-  ? `YOU MUST write this ENTIRE summary in ${explicitLang}. Every word, every heading, every bullet point MUST be in ${explicitLang}.
-DO NOT write in English. DO NOT mix languages. The user specifically chose ${explicitLang} as their language.
-This is NON-NEGOTIABLE.`
-  : explicitLang === 'English'
-  ? `Write this summary in English.`
-  : `Write this summary in the SAME LANGUAGE as the input text below.
-- If input is Norwegian → summary in Norwegian
-- If input is Spanish → summary in Spanish
-- If input is French → summary in French
-- If input is German → summary in German
-- If input is English → summary in English
-DO NOT translate to English. DO NOT use English if the input is another language.
-Match the input language character-by-character. This is MANDATORY.`
-}
+    // Build the language instruction for the system prompt
+    const langForSystem = targetLang
+      ? `ABSOLUTE RULE: You MUST write the ENTIRE summary in ${targetLang}. Every heading, bullet, and sentence MUST be in ${targetLang}. NEVER use English unless ${targetLang} IS English.`
+      : `ABSOLUTE RULE: Detect what language the input text is written in, then write your ENTIRE summary in that SAME language. NEVER default to English. If the input is Norwegian, output Norwegian. If Spanish, output Spanish. Match the input language exactly.`;
 
-===================================================
-
-You are an expert academic summarizer. Create a comprehensive, well-structured summary of this ${srcLabel}.
+    const prompt = `Create a comprehensive, well-structured summary of this ${srcLabel}.
 
 LENGTH REQUIREMENT: ${lengthInstruction}
 
-CRITICAL: DO NOT create a short or vague summary! The user needs a COMPREHENSIVE summary with ALL important information. Include:
-- ALL key concepts, definitions, and terms
-- ALL important names, dates, numbers, and statistics  
-- ALL main arguments, theories, or explanations
-- Specific examples and details (not just generic statements)
-- Context and background information
-- Relationships between concepts
+Include ALL key concepts, definitions, terms, important names, dates, numbers, statistics, main arguments, theories, explanations, specific examples, context, and relationships between concepts.
 
 FORMAT — Follow this EXACT structure:
 
-1. Title Line: Start with a relevant emoji + title (e.g. "📖 Complete Overview: Photosynthesis" or "🌍 Deep Dive: World Geography")
+1. Title Line: Start with a relevant emoji + title (e.g. "📖 Complete Overview: Photosynthesis")
 
 2. "📋 Overview" section (2-3 sentences explaining what this content covers)
 
 3. Content Sections — Break into logical topic sections. Each section MUST have:
-   - Emoji + clear heading (e.g. "🧪 Chemical Process", "📊 Statistical Analysis", "🎯 Key Concepts")
-   - Multiple bullet points (•) with DETAILED information
-   - Each bullet should be 1-2 sentences with specific facts
-   - DO NOT skip important details to save space
-   - Include numbers, percentages, dates, names, technical terms
-   - Add sub-bullets (◦) for related details when needed
+   - Emoji + clear heading (e.g. "🧪 Chemical Process", "📊 Statistical Analysis")
+   - Multiple bullet points (•) with DETAILED information (1-2 sentences each)
+   - Sub-bullets (◦) for related details when needed
 
 4. "💡 Key Takeaways" — Final section with 3-5 sentences summarizing the most important points
 
-CRITICAL RULES FOR QUALITY:
-✅ COMPREHENSIVE: Cover ALL main topics - don't leave out important sections
-✅ SPECIFIC: Use exact terms, names, numbers (not "many studies" but "23 studies from 2020-2023")  
-✅ DETAILED: Each bullet should contain substantial information, not vague statements
-✅ WELL-ORGANIZED: Logical flow between sections
-✅ STUDENT-FRIENDLY: Clear language but don't dumb it down - include proper terminology
-✅ SCANNABLE: Use emojis, bullets, clear spacing
-✅ COMPLETE: If the source has 10 main topics, your summary should cover all 10
-
 FORMAT RULES:
-• Use emojis for all section headings (📌 🔑 📊 🧪 🎯 💡 📝 🌍 🎵 📖 🔬 ⚡ 🎓 🌡️ 💰 ⚙️ 🏛️ 🧬)
-• Every point uses a bullet (•)
-• Sub-points use circle bullets (◦)
+• Use emojis for all section headings
+• Every point uses a bullet (•), sub-points use (◦)
 • NO markdown formatting (no **, ##, __)
 • NO meta-text like "Here is a summary" — start directly with the title
-• NO walls of text — use bullets and spacing
-
-EXAMPLES OF GOOD vs BAD BULLETS:
-❌ BAD: "Birds are diverse and found worldwide"
-✅ GOOD: "Over 11,000 bird species exist worldwide, ranging from the 5.5cm bee hummingbird to the 2.8m ostrich • Found on every continent including Antarctica (penguins)"
-
-❌ BAD: "The process involves several steps"
-✅ GOOD: "Photosynthesis occurs in 3 stages: Light absorption (chlorophyll captures photons), Light reactions (produces ATP + NADPH), Calvin Cycle (converts CO₂ to glucose) • Takes place in chloroplasts"
-
-Remember: This is for STUDY purposes. Students need detailed, complete information to learn from. Don't create a "too long; didn't read" - create a "organized and complete" summary.
-
-🚨 REMINDER: ${explicitLang && explicitLang !== 'English' ? `Write your ENTIRE summary in ${explicitLang}. NOT in English.` : explicitLang === 'English' ? 'Write in English.' : 'Write your summary in the SAME language as the input below. NOT in English unless input is English.'} 🚨
 
 INPUT:
-${text}
+${text}`;
 
-SUMMARY${explicitLang ? ` (in ${explicitLang})` : ' (in the same language as the input above)'}:`;
-
-    // Use Gemini 2.5 Flash for summarization
-    const systemInstruction = `You are an expert academic summarizer. ${explicitLang && explicitLang !== 'English' ? `CRITICAL: You MUST write ALL summaries in ${explicitLang}. The user has chosen ${explicitLang} as their language. NEVER write in English. Every heading, bullet point, and sentence must be in ${explicitLang}.` : explicitLang === 'English' ? 'Write summaries in English.' : 'CRITICAL: You MUST write summaries in the SAME language as the input text. If input is Norwegian, write in Norwegian. If Spanish, write in Spanish. If German, write in German. NEVER translate to English unless the input is English. This is an absolute requirement.'}`;
-
+    // Use Gemini 2.5 Flash with proper systemInstruction for language enforcement
     const model = getVertexAI().getGenerativeModel({
       model: 'gemini-2.5-flash',
+      systemInstruction: {
+        role: 'system',
+        parts: [{ text: `You are an expert academic summarizer that creates comprehensive study summaries.\n\n${langForSystem}` }],
+      },
     });
 
     const completion = await model.generateContent({
       contents: [{
         role: 'user',
-        parts: [{ text: systemInstruction + '\n\n' + prompt }]
+        parts: [{ text: prompt }]
       }],
       generationConfig: {
         temperature: 0.2,
