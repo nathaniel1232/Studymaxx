@@ -249,7 +249,7 @@ export default function SummarizerView({ onBack, isPremium, user }: SummarizerVi
         res = await fetch("/api/summarize", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: inputText, length, sourceType, outputLanguage: settings.language, userId: user?.id }),
+          body: JSON.stringify({ text: inputText, length, sourceType, outputLanguage: 'auto', userId: user?.id }),
           signal: controller.signal,
         });
       } catch (fetchErr: any) {
