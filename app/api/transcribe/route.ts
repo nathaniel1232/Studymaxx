@@ -267,7 +267,7 @@ export async function POST(request: NextRequest) {
     console.log('[Transcribe] Generating summary with Gemini...');
     
     const model = vertexAI.getGenerativeModel({
-      model: 'gemini-2.0-flash-exp',
+      model: 'gemini-2.5-flash',
     });
 
     // Determine language instruction

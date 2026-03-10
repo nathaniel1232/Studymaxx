@@ -33,7 +33,7 @@ Live at [studymaxx.com](https://studymaxx.com)
 - User profiles with avatars
 - Streak reminders via email (Resend)
 - Dark/light theme
-- Multi-language support
+- Multi-language support (50+ languages)
 
 ## Tech Stack
 
@@ -45,9 +45,8 @@ Live at [studymaxx.com](https://studymaxx.com)
 | Auth | Supabase Auth (Google OAuth) |
 | Database | Supabase (PostgreSQL) |
 | Payments | Stripe (Checkout, Webhooks, Customer Portal) |
-| AI - Chat/Math | Google Vertex AI (Gemini 2.5 Flash) |
+| AI - Chat/Math/Summarization | Google Vertex AI (Gemini 2.5 Flash) |
 | AI - Transcription | OpenAI Whisper + Deepgram (fallback) |
-| AI - Summarization | OpenAI GPT |
 | OCR | Tesseract.js |
 | PDF | pdf-parse, pdfjs-dist, pdf-lib |
 | Email | Resend |
@@ -87,8 +86,9 @@ NEXT_PUBLIC_STRIPE_PRICE_ID=
 # Google Vertex AI
 GOOGLE_CLOUD_PROJECT=
 GOOGLE_APPLICATION_CREDENTIALS_JSON=
+VERTEX_AI_PROJECT_ID=
 
-# OpenAI
+# OpenAI (Whisper audio transcription only)
 OPENAI_API_KEY=
 
 # Deepgram

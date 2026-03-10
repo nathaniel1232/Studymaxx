@@ -3,11 +3,35 @@
  * Handles multiple file types with validation and cleanup
  */
 
-import OpenAI from 'openai';
+import { VertexAI } from '@google-cloud/vertexai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy-initialize Vertex AI at runtime (not build time)
+let vertexAI: VertexAI | null = null;
+
+function getVertexAI() {
+  if (!vertexAI) {
+    const projectId = process.env.VERTEX_AI_PROJECT_ID;
+    if (!projectId) {
+      throw new Error('VERTEX_AI_PROJECT_ID not configured');
+    }
+    const credJson = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    if (credJson && credJson.startsWith('{')) {
+      try {
+        const creds = JSON.parse(credJson);
+        vertexAI = new VertexAI({
+          project: projectId,
+          location: 'us-central1',
+          googleAuthOptions: { credentials: creds },
+        });
+      } catch {
+        vertexAI = new VertexAI({ project: projectId, location: 'us-central1' });
+      }
+    } else {
+      vertexAI = new VertexAI({ project: projectId, location: 'us-central1' });
+    }
+  }
+  return vertexAI;
+}
 
 export interface ExtractionResult {
   text: string;
@@ -204,13 +228,12 @@ export async function detectLanguage(text: string): Promise<string> {
     
     const hintText = hints.length > 0 ? `\n\nPattern hints detected: ${hints.join(', ')}` : '';
     
-    // For Latin-script languages, use AI detection with enhanced prompt
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: `You are an expert linguist specializing in precise language identification. Analyze the text and respond with ONLY the language name in English.
+    // For Latin-script languages, use Gemini AI detection with enhanced prompt
+    const model = getVertexAI().getGenerativeModel({
+      model: 'gemini-2.5-flash',
+    });
+
+    const systemPrompt = `You are an expert linguist specializing in precise language identification. Analyze the text and respond with ONLY the language name in English.
 
 🚨 CRITICAL DISTINCTIONS FOR COMMONLY CONFUSED LANGUAGES:
 
@@ -232,32 +255,29 @@ export async function detectLanguage(text: string): Promise<string> {
 - **Portuguese**: "o", "a", "de", "que", "não", "é", "para". Has ã, õ, ç
 - **French**: "le", "la", "de", "et", "est", "dans", "les". Has é, è, ê, à, ç
 
-**Asian Languages:**
-- **Vietnamese**: "không", "và", "của", "là", "có", "này", "được". Has MANY tone marks (à, á, ả, ã, ạ, ă, ằ, etc).
-
 **Other:**
 - **English**: "the", "this", "that", "which", "where", "their", "there"
 - **German**: "der", "die", "das", "und", "nicht", "auch". Has ä, ö, ü, ß.
 - **Polish**: "w", "na", "się", "że", "jest". Has ł, ą, ę, ć, ń, ó, ś, ź, ż
 - **Czech**: "je", "se", "v", "že", "na". Has ř, č, ě, š, ž, ů
 - **Turkish**: "için", "değil", "bir", "bu", "ve". Has ğ, ı, ş, ü, ö, ç
-- **Estonian**: Similar to Finnish but uses "on", "ja", "ei" more. Has õ, ä, ö, ü
-- **Hungarian**: "és", "az", "egy", "van". Has ő, ű, á, é, í, ó, ú
 
 🚨 KEY RULE: If you see double vowels (aa, oo, ii) and long compound words but NO Spanish characters (ñ, ¿, ¡), it's DEFINITELY Finnish, NOT Spanish!
 
-Respond with ONE word only - the language name.`
-        },
-        {
-          role: 'user',
-          content: `What language is this text?${hintText}\n\n"${sample}"`
-        }
-      ],
-      temperature: 0,
-      max_tokens: 10,
+Respond with ONE word only - the language name.`;
+
+    const result = await model.generateContent({
+      contents: [{
+        role: 'user',
+        parts: [{ text: systemPrompt + `\n\nWhat language is this text?${hintText}\n\n"${sample}"` }]
+      }],
+      generationConfig: {
+        temperature: 0,
+        maxOutputTokens: 10,
+      },
     });
     
-    const detectedLanguage = response.choices[0]?.message?.content?.trim() || 'English';
+    const detectedLanguage = result.response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'English';
     console.log('[AI Language Detection]:', detectedLanguage, hints.length > 0 ? `(hints: ${hints.join(', ')})` : '');
     return detectedLanguage;
     

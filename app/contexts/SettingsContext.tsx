@@ -3,11 +3,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 export type Theme = "light" | "dark" | "system";
-export type Language = "en" | "no" | "es" | "fr" | "de" | "sv" | "da" | "fi" | "pt" | "it" | "nl" | "pl" | "tr" | "ru" | "uk" | "ar" | "zh" | "ja" | "ko" | "hi" | "other";
+export type Language = "en" | "no" | "es" | "fr" | "de" | "sv" | "da" | "fi" | "pt" | "it" | "nl" | "pl" | "tr" | "ru" | "uk" | "ar" | "zh" | "ja" | "ko" | "hi" | "auto" | "other";
 export type GradeSystem = "A-F" | "1-6" | "percentage";
 
-// Full language support for AI output
+// Language options shown in settings UI
 export const SUPPORTED_LANGUAGES = [
+  { code: "auto" as Language, label: "Auto-detect", flag: "🌍" },
   { code: "en" as Language, label: "English", flag: "🇬🇧" },
   { code: "no" as Language, label: "Norwegian", flag: "🇳🇴" },
   { code: "es" as Language, label: "Spanish", flag: "🇪🇸" },
@@ -60,7 +61,7 @@ interface SettingsContextType {
 
 const defaultSettings: AppSettings = {
   theme: "light",
-  language: "en",
+  language: "auto",
   gradeSystem: "A-F"
 };
 

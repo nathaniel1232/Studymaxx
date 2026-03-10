@@ -1,13 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { VertexAI } from '@google-cloud/vertexai';
 import { checkServerRateLimit, getClientIP } from '../../utils/serverRateLimit';
 import { createClient } from '@supabase/supabase-js';
 
 export const maxDuration = 120;
 
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY 
-});
+// Lazy-initialize Vertex AI at runtime (not build time)
+let vertexAI: VertexAI | null = null;
+
+function getVertexAI() {
+  if (!vertexAI) {
+    const projectId = process.env.VERTEX_AI_PROJECT_ID;
+    if (!projectId) {
+      throw new Error('VERTEX_AI_PROJECT_ID not configured');
+    }
+    const credJson = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    if (credJson && credJson.startsWith('{')) {
+      try {
+        const creds = JSON.parse(credJson);
+        vertexAI = new VertexAI({
+          project: projectId,
+          location: 'us-central1',
+          googleAuthOptions: { credentials: creds },
+        });
+      } catch {
+        vertexAI = new VertexAI({ project: projectId, location: 'us-central1' });
+      }
+    } else {
+      vertexAI = new VertexAI({ project: projectId, location: 'us-central1' });
+    }
+  }
+  return vertexAI;
+}
 
 async function isUserPremium(userId: string | null | undefined): Promise<boolean> {
   if (!userId || userId.startsWith('anon')) return false;
@@ -53,6 +77,15 @@ export async function POST(request: NextRequest) {
       pt: 'Portuguese', it: 'Italian', nl: 'Dutch', pl: 'Polish',
       tr: 'Turkish', ru: 'Russian', uk: 'Ukrainian', ar: 'Arabic',
       zh: 'Chinese', ja: 'Japanese', ko: 'Korean', hi: 'Hindi',
+      cs: 'Czech', hu: 'Hungarian', ro: 'Romanian', el: 'Greek',
+      bg: 'Bulgarian', hr: 'Croatian', sk: 'Slovak', sl: 'Slovenian',
+      et: 'Estonian', lv: 'Latvian', lt: 'Lithuanian', sr: 'Serbian',
+      bs: 'Bosnian', is: 'Icelandic', ga: 'Irish', cy: 'Welsh',
+      ca: 'Catalan', eu: 'Basque', gl: 'Galician',
+      th: 'Thai', vi: 'Vietnamese', id: 'Indonesian', ms: 'Malay',
+      tl: 'Filipino', bn: 'Bengali', ta: 'Tamil', te: 'Telugu',
+      ur: 'Urdu', fa: 'Persian', he: 'Hebrew',
+      sw: 'Swahili', am: 'Amharic',
     };
     const explicitLang = outputLanguage ? LANG_NAMES[outputLanguage] : null;
     console.log('[Summarize API] Output language:', outputLanguage, '→', explicitLang || 'auto-detect');
@@ -152,24 +185,26 @@ ${text}
 
 SUMMARY${explicitLang ? ` (in ${explicitLang})` : ' (in the same language as the input above)'}:`;
 
-    // Use OpenAI GPT-4o-mini for summarization
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: `You are an expert academic summarizer. ${explicitLang && explicitLang !== 'English' ? `CRITICAL: You MUST write ALL summaries in ${explicitLang}. The user has chosen ${explicitLang} as their language. NEVER write in English. Every heading, bullet point, and sentence must be in ${explicitLang}.` : explicitLang === 'English' ? 'Write summaries in English.' : 'CRITICAL: You MUST write summaries in the SAME language as the input text. If input is Norwegian, write in Norwegian. If Spanish, write in Spanish. If German, write in German. NEVER translate to English unless the input is English. This is an absolute requirement.'}`
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.2,
-      max_tokens: length === 'long' ? 8192 : length === 'medium' ? 5120 : 3072,
+    // Use Gemini 2.5 Flash for summarization
+    const systemInstruction = `You are an expert academic summarizer. ${explicitLang && explicitLang !== 'English' ? `CRITICAL: You MUST write ALL summaries in ${explicitLang}. The user has chosen ${explicitLang} as their language. NEVER write in English. Every heading, bullet point, and sentence must be in ${explicitLang}.` : explicitLang === 'English' ? 'Write summaries in English.' : 'CRITICAL: You MUST write summaries in the SAME language as the input text. If input is Norwegian, write in Norwegian. If Spanish, write in Spanish. If German, write in German. NEVER translate to English unless the input is English. This is an absolute requirement.'}`;
+
+    const model = getVertexAI().getGenerativeModel({
+      model: 'gemini-2.5-flash',
     });
 
-    const summary = completion.choices[0]?.message?.content?.trim() || '';
+    const completion = await model.generateContent({
+      contents: [{
+        role: 'user',
+        parts: [{ text: systemInstruction + '\n\n' + prompt }]
+      }],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: length === 'long' ? 8192 : length === 'medium' ? 5120 : 3072,
+      },
+    });
+
+    const response = completion.response;
+    const summary = response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
 
     if (!summary) {
       return NextResponse.json({ error: 'Failed to generate summary' }, { status: 500 });

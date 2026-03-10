@@ -1,13 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { VertexAI } from '@google-cloud/vertexai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy-initialize Vertex AI at runtime (not build time)
+let vertexAI: VertexAI | null = null;
+
+function getVertexAI() {
+  if (!vertexAI) {
+    const projectId = process.env.VERTEX_AI_PROJECT_ID;
+    if (!projectId) {
+      throw new Error('VERTEX_AI_PROJECT_ID not configured');
+    }
+    const credJson = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    if (credJson && credJson.startsWith('{')) {
+      try {
+        const creds = JSON.parse(credJson);
+        vertexAI = new VertexAI({
+          project: projectId,
+          location: 'us-central1',
+          googleAuthOptions: { credentials: creds },
+        });
+      } catch {
+        vertexAI = new VertexAI({ project: projectId, location: 'us-central1' });
+      }
+    } else {
+      vertexAI = new VertexAI({ project: projectId, location: 'us-central1' });
+    }
+  }
+  return vertexAI;
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const { question, correctAnswer, userAnswer } = await request.json();
+    const { question, correctAnswer, userAnswer, language } = await request.json();
 
     if (!question || !correctAnswer || !userAnswer) {
       return NextResponse.json(
@@ -16,12 +40,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: `You are a helpful tutor explaining why an answer is wrong. Keep explanations brief (1-2 sentences), clear, and educational. Focus on helping the student understand the correct answer without being condescending.
+    const langInstruction = language && language !== 'en' && language !== 'auto'
+      ? `IMPORTANT: Respond in the same language as the question. If the question is not in English, write your explanation in that language.`
+      : `IMPORTANT: Always respond in the SAME language as the question. If the question is in Swedish, respond in Swedish. If in Spanish, respond in Spanish. Match the question's language.`;
+
+    const model = getVertexAI().getGenerativeModel({
+      model: 'gemini-2.5-flash',
+    });
+
+    const completion = await model.generateContent({
+      contents: [{
+        role: 'user',
+        parts: [{
+          text: `You are a helpful tutor explaining why an answer is wrong. Keep explanations brief (1-2 sentences), clear, and educational. Focus on helping the student understand the correct answer without being condescending.
 
 Rules:
 - Be concise and direct
@@ -29,22 +60,24 @@ Rules:
 - If relevant, briefly mention why the user's answer was wrong
 - Use simple language
 - Don't repeat the question or answers in full
-- Maximum 50 words`
-        },
-        {
-          role: 'user',
-          content: `Question: "${question}"
+- Maximum 50 words
+${langInstruction}
+
+Question: "${question}"
 Correct answer: "${correctAnswer}"
 Student answered: "${userAnswer}"
 
 Briefly explain why the correct answer is right.`
-        }
-      ],
-      max_tokens: 100,
-      temperature: 0.7,
+        }]
+      }],
+      generationConfig: {
+        maxOutputTokens: 100,
+        temperature: 0.7,
+      },
     });
 
-    const explanation = completion.choices[0]?.message?.content?.trim() || '';
+    const response = completion.response;
+    const explanation = response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
 
     return NextResponse.json({ explanation });
   } catch (error) {

@@ -8,12 +8,11 @@
  * 1. Get user from database
  * 2. Reset daily counter if new day
  * 3. Check if user can use AI (premium limits)
- * 4. Call GPT-4o mini with cost controls
+ * 4. Call Gemini 2.5 Flash with cost controls
  * 5. Increment counters on success
  * 6. Return flashcards
  */
 
-import OpenAI from "openai";
 import { VertexAI } from '@google-cloud/vertexai';
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/app/utils/supabase";
@@ -33,8 +32,6 @@ import {
 
 // Allow up to 5 minutes for batched generation (Vercel free tier limit)
 export const maxDuration = 300;
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || 'placeholder' });
 
 // Lazy-initialize Vertex AI at runtime (not build time)
 let vertexAI: VertexAI | null = null;
@@ -412,7 +409,7 @@ async function generateWithAIGuaranteed(
 }
 
 /**
- * Generate flashcards using GPT-4o mini with cost controls and count enforcement
+ * Generate flashcards using Gemini 2.5 Flash with cost controls and count enforcement
  */
 async function generateWithAI(
   text: string,
@@ -771,7 +768,7 @@ REQUIRED JSON OUTPUT FORMAT:
 Generate ${bufferedCount} unique, high-quality educational flashcards now. Output ONLY the JSON above.`;
 
   try {
-    console.log("[API /generate] Starting OpenAI request...");
+    console.log("[API /generate] Starting Gemini 2.5 Flash request...");
     const startTime = Date.now();
     
     // Extended timeout - allow full duration for processing

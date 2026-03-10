@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     // Build language instruction
     const langInstruction = langName && langName !== 'English'
       ? `\n\n🚨 LANGUAGE REQUIREMENT: You MUST respond ENTIRELY in ${langName}. The user has chosen ${langName} as their language. ALL your responses — explanations, examples, summaries — must be in ${langName}. Do NOT respond in English unless the user explicitly writes in English.`
-      : '';
+      : `\n\nLANGUAGE: Always respond in the SAME language the user writes in. If the user writes in Swedish, respond in Swedish. If in Spanish, respond in Spanish. Match the user's language naturally.`;
 
     const systemPrompt = `You are StudyMaxx AI — an expert study tutor built into the StudyMaxx learning platform.
 

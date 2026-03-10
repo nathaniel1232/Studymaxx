@@ -889,7 +889,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
   const handleProcessImages = async () => {
     if (selectedImages.length === 0) return;
     
-    console.log('[CreateFlow] Starting GPT-4 Vision image processing...');
+    console.log('[CreateFlow] Starting Gemini Vision image processing...');
     setGenerationStartTime(Date.now());
     setElapsedSeconds(0);
     setIsGenerating(true);
@@ -914,7 +914,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         base64Images.push(base64);
       }
       
-      console.log(`[CreateFlow] ✅ All images converted. Sending to GPT-4 Vision API...`);
+      console.log(`[CreateFlow] ✅ All images converted. Sending to Gemini Vision API...`);
       
       // Send to our backend API
       const response = await fetch('/api/extract-image', {
@@ -932,7 +932,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
       
       const data = await response.json();
       
-      console.log(`[CreateFlow] ✅ GPT-4 Vision extraction complete!`);
+      console.log(`[CreateFlow] ✅ Gemini Vision extraction complete!`);
       console.log(`  - Processed: ${data.imagesProcessed}/${data.totalImages} images`);
       console.log(`  - Total characters: ${data.text.length}`);
       console.log(`  - Preview: ${data.text.substring(0, 150)}...`);
@@ -998,10 +998,10 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
         setError(messages.errors.uploadFailed); // FIX: Use uploadFailed
       }
     } else if (file.type.startsWith("image/")) {
-      // Handle image with GPT-4 Vision API
+      // Handle image with Gemini Vision API
       setIsExtractingImage(true);
       try {
-        console.log('[CreateFlowView] Processing single image with GPT-4 Vision...');
+        console.log('[CreateFlowView] Processing single image with Gemini Vision...');
         
         // Convert to base64
         const base64 = await new Promise<string>((resolve, reject) => {
@@ -1055,7 +1055,7 @@ export default function CreateFlowView({ onGenerateFlashcards, onBack, onRequest
           }
         }
         
-        console.log('[CreateFlowView] ✅ GPT-4 Vision extracted:', extractedText.length, 'characters');
+        console.log('[CreateFlowView] ✅ Gemini Vision extracted:', extractedText.length, 'characters');
         setTextInput(extractedText);
         setIsExtractingImage(false);
       } catch (err: any) {

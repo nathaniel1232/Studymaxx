@@ -1,7 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { VertexAI } from '@google-cloud/vertexai';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Lazy-initialize Vertex AI at runtime (not build time)
+let vertexAI: VertexAI | null = null;
+
+function getVertexAI() {
+  if (!vertexAI) {
+    const projectId = process.env.VERTEX_AI_PROJECT_ID;
+    if (!projectId) {
+      throw new Error('VERTEX_AI_PROJECT_ID not configured');
+    }
+    const credJson = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    if (credJson && credJson.startsWith('{')) {
+      try {
+        const creds = JSON.parse(credJson);
+        vertexAI = new VertexAI({
+          project: projectId,
+          location: 'us-central1',
+          googleAuthOptions: { credentials: creds },
+        });
+      } catch {
+        vertexAI = new VertexAI({ project: projectId, location: 'us-central1' });
+      }
+    } else {
+      vertexAI = new VertexAI({ project: projectId, location: 'us-central1' });
+    }
+  }
+  return vertexAI;
+}
 
 export const maxDuration = 60;
 
@@ -45,26 +71,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`[Extract Image] Processing ${images.length} images with GPT-4 Vision`);
+    console.log(`[Extract Image] Processing ${images.length} images with Gemini 2.5 Flash Vision`);
 
     const extractedTexts: string[] = [];
 
-    // Process each image with GPT-4 Vision
-    for (let i = 0; i < images.length; i++) {
-      const imageData = images[i];
-      
-      console.log(`[Extract Image] Processing image ${i + 1}/${images.length}`);
+    const model = getVertexAI().getGenerativeModel({
+      model: 'gemini-2.5-flash',
+    });
 
-      try {
-        const response = await openai.chat.completions.create({
-          model: 'gpt-4o',
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'text',
-                  text: `You are an expert OCR and language detection system. Transcribe all text from this image with PERFECT ACCURACY.
+    const ocrPrompt = `You are an expert OCR and language detection system. Transcribe all text from this image with PERFECT ACCURACY.
 
 🚨 CRITICAL RULES (FOLLOW EXACTLY):
 1. Keep text in ORIGINAL languages - NEVER translate
@@ -73,58 +88,47 @@ export async function POST(request: NextRequest) {
 4. Ignore dates, page numbers, and non-educational content
 5. If multiple languages exist, preserve them ALL exactly as shown
 
-🌍 LANGUAGE DETECTION (MOST IMPORTANT):
-You MUST identify the language(s) with EXTREME PRECISION. Look for these clues:
-- Special characters: å,ø,æ = Norwegian/Danish, ü,ö,ä,ß = German, ñ,¿,¡ = Spanish, à,è,é,ê,ç = French
-- Common words: "og","det","som","en" = Norwegian, "und","der","die" = German, "y","el","la" = Spanish
-- Word patterns: Finnish has lots of vowels and long words (Suomi, hyvää, tervetuloa)
-- Text structure: Check headers, labels, and consistent patterns
-
-🚨 ULTRA-SPECIFIC LANGUAGE IDENTIFICATION:
-Spanish: ñ, ¿, ¡, words like: y, el, la, de, que, es, por, con
-French: à, è, é, ê, ç, words like: le, la, de, et, un, est, pour, avec
-German: ü, ö, ä, ß, words like: der, die, das, und, ist, zu, den, mit
-Finnish: MANY double vowels (aa, oo, ee, ii, uu, yy, ää, öö), VERY long compound words, words like: ja, on, ei, että, se, tämä, hän, mikä
-Norwegian: å, ø, æ, words like: og, er, det, som, en, av, på, til
-Swedish: å, ä, ö, words like: och, är, det, som, en, av, för, att
-Danish: Similar to Norwegian but uses "af" instead of "av"
-Dutch: ij, words like: de, het, en, van, een, is, op, te
-Italian: No special chars, words like: di, e, il, la, che, in, per, un
-Portuguese: ã, õ, ç, words like: de, a, o, que, e, do, em, para
-
-🚨 CRITICAL DISTINCTIONS:
-- **Finnish vs German MUST BE DISTINGUISHED**: Finnish has MANY double vowels (aa, oo, ii), German has ß (German ONLY)
-- If text has ß character = DEFINITELY German, NOT Finnish
-- If text has many double vowels (aa, oo, uu, yy) = LIKELY Finnish
-- If text has ñ character = DEFINITELY Spanish, NOT Finnish or German
-- Finnish words are extremely long with many vowels, German words are shorter
-
 At the END of your response, add a line with the detected language(s):
 DETECTED_LANGUAGES: [Exact Language Name]
 
-Examples:
-- If text is in Finnish → DETECTED_LANGUAGES: Finnish
-- If text is in Spanish → DETECTED_LANGUAGES: Spanish
-- If text is bilingual Finnish-English → DETECTED_LANGUAGES: Finnish, English
-- If text is in German → DETECTED_LANGUAGES: German
+🚨 CRITICAL: Do NOT guess! Use character and word patterns to make an ACCURATE identification.`;
 
-🚨 CRITICAL: Do NOT guess! Use the character and word patterns above to make an ACCURATE identification.`,
+    // Process each image with Gemini 2.5 Flash Vision
+    for (let i = 0; i < images.length; i++) {
+      const imageData = images[i];
+      
+      console.log(`[Extract Image] Processing image ${i + 1}/${images.length}`);
+
+      try {
+        // Parse data URL to get mime type and base64 data
+        const dataUrlMatch = imageData.match(/^data:(.+?);base64,(.+)$/);
+        if (!dataUrlMatch) {
+          console.warn(`[Extract Image] ⚠️ Image ${i + 1}: Invalid data URL format`);
+          continue;
+        }
+        const mimeType = dataUrlMatch[1];
+        const base64Data = dataUrlMatch[2];
+
+        const result = await model.generateContent({
+          contents: [{
+            role: 'user',
+            parts: [
+              { text: ocrPrompt },
+              {
+                inlineData: {
+                  mimeType: mimeType,
+                  data: base64Data,
                 },
-                {
-                  type: 'image_url',
-                  image_url: {
-                    url: imageData,
-                    detail: 'high',
-                  },
-                },
-              ],
-            },
-          ],
-          max_tokens: 2000,
-          temperature: 0,
+              },
+            ],
+          }],
+          generationConfig: {
+            maxOutputTokens: 2000,
+            temperature: 0,
+          },
         });
 
-        const extractedText = response.choices[0]?.message?.content?.trim() || '';
+        const extractedText = result.response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
         
         if (extractedText.length > 10) {
           console.log(`[Extract Image] ✅ Image ${i + 1}: Extracted ${extractedText.length} characters`);
